@@ -272,9 +272,9 @@ public class QRDecomposition {
     }
 
     /**
-     * Generates and returns the (economy-sized - first <tt>p</tt> columns only) orthogonal factor <tt>Q</tt>.
+     * Generates and returns the (economy-sized - first {@code p} columns only) orthogonal factor {@code Q}.
      * 
-     * @return first <tt>p</tt> columns of <tt>Q</tt>
+     * @return first {@code p} columns of {@code Q}
      */
     public DoubleMatrix2D getQ() {
 
@@ -323,9 +323,9 @@ public class QRDecomposition {
     }
 
     /**
-     * Returns the upper triangular factor, <tt>R</tt>.
+     * Returns the upper triangular factor, {@code R}.
      * 
-     * @return <tt>R</tt>
+     * @return {@code R}
      */
     public DoubleMatrix2D getR() {
         DoubleMatrix2D R = QR.like( p, p );
@@ -354,9 +354,9 @@ public class QRDecomposition {
     }
 
     /**
-     * Returns whether the matrix <tt>A</tt> has full rank.
+     * Returns whether the matrix {@code A} has full rank.
      * 
-     * @return true if <tt>R</tt>, and hence <tt>A</tt>, has full rank.
+     * @return true if {@code R}, and hence {@code A}, has full rank.
      */
     public boolean hasFullRank() {
         return rank == p;
@@ -370,13 +370,13 @@ public class QRDecomposition {
     }
 
     /**
-     * Least squares solution of <tt>A*X = y</tt>; <tt>returns X</tt> using the stored QR decomposition of A.
+     * Least squares solution of {@code A*X = y}; {@code returns X} using the stored QR decomposition of A.
      * 
-     * @param y A matrix with as many rows as <tt>A</tt> and any number of columns. Least squares is fit for each column
+     * @param y A matrix with as many rows as {@code A} and any number of columns. Least squares is fit for each column
      *        of y.
-     * @return <tt>X</tt> that minimizes the two norm of <tt>Q*R*X - B</tt>.
-     * @exception IllegalArgumentException if <tt>y.rows() != A.rows()</tt>.
-     * @exception IllegalArgumentException if <tt>!this.hasFullRank()</tt> (<tt>A</tt> is rank deficient). However,
+     * @return {@code X} that minimizes the two norm of {@code Q*R*X - B}.
+     * @exception IllegalArgumentException if {@code y.rows() != A.rows()}.
+     * @exception IllegalArgumentException if {@code !this.hasFullRank()} ({@code A} is rank deficient). However,
      *            rank-deficient cases are handled by pivoting, so if you are using pivoting you should not see this
      *            happening.
      */

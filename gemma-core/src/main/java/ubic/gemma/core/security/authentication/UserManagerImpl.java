@@ -33,6 +33,7 @@ import org.springframework.security.access.intercept.RunAsUserToken;
 import org.springframework.security.access.vote.AuthenticatedVoter;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 // Spring Security 5 removed the salt-based PasswordEncoder (org.springframework.security.authentication.encoding)
 // in favour of the algorithm-internal-salt one in org.springframework.security.crypto.password. Legacy hashes
@@ -419,6 +420,19 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
         logger.debug( "Changing password for user '" + username + "'" );
 
         User u = this.loadUser( username );
+
+        // Re-verify the current password before allowing the change. An authenticated
+        // session (or a leaked bearer token) must still prove knowledge of the existing
+        // credential, so a hijacked session can't silently rotate the password out from
+        // under the owner. matches() covers {bcrypt} and bare-BCrypt rows; legacy SHA-1
+        // rows are rewritten to {bcrypt} on successful login (upgradeEncoding), so a
+        // logged-in user's stored hash is already BCrypt by the time we get here.
+        if ( oldPassword == null || !passwordEncoder.matches( oldPassword, u.getPassword() ) ) {
+            throw new BadCredentialsException( "The current password is incorrect." );
+        }
+
+        validateNewPassword( newPassword );
+
         u.setPassword( passwordEncoder.encode( newPassword ) );
         userService.update( u );
 
@@ -426,6 +440,34 @@ public class UserManagerImpl implements UserManager, UserDetailsPasswordService 
                 .setAuthentication( this.createNewAuthentication( currentAuthentication, u.getPassword() ) );
 
         userCache.removeUserFromCache( username );
+    }
+
+    @Override
+    @Transactional
+    public void adminChangePassword( String username, String newPassword ) {
+        User u = userService.findByUserName( username );
+        if ( u == null ) {
+            throw new UsernameNotFoundException( "No user found with name=" + username );
+        }
+        validateNewPassword( newPassword );
+        // Encode here — updateUser/createUser(UserDetails) store the password verbatim,
+        // so the encoding responsibility sits with the password-mutating methods.
+        u.setPassword( passwordEncoder.encode( newPassword ) );
+        userService.update( u );
+        userCache.removeUserFromCache( username );
+    }
+
+    /**
+     * Minimum length for a user-chosen or admin-reset password. Admin-generated
+     * temporary passwords are 16 characters, comfortably above this floor.
+     */
+    private static final int MIN_PASSWORD_LENGTH = 8;
+
+    private void validateNewPassword( String newPassword ) {
+        if ( newPassword == null || newPassword.length() < MIN_PASSWORD_LENGTH ) {
+            throw new IllegalArgumentException(
+                    "New password must be at least " + MIN_PASSWORD_LENGTH + " characters long." );
+        }
     }
 
     @Override

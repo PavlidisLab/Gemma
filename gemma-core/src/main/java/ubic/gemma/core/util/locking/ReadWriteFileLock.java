@@ -128,35 +128,46 @@ class ReadWriteFileLock implements ReadWriteLock {
         @Override
         public void lock() {
             lock.lock();
-            if ( fileLock != null ) {
-                incrementHolders();
-                return;
-            }
-            try {
-                fileLock = getChannel().lock( 0, Long.MAX_VALUE, shared );
-                incrementHolders();
-            } catch ( IOException e ) {
-                lock.unlock();
-                throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+            // 🛑 The rwLock admits any number of concurrent readers, so the OS-lock state
+            // (channel, fileLock, the holder counters) must be serialized separately: without
+            // the monitor, two readers hitting an unheld lock both call channel.lock() and the
+            // second throws OverlappingFileLockException, and a reader can race the last
+            // holder's release the same way. Holding the monitor across the blocking
+            // channel.lock() cannot deadlock: a thread only reaches it when fileLock == null,
+            // which means zero holders, which means no unlock() is waiting for the monitor.
+            synchronized ( ReadWriteFileLock.this ) {
+                if ( fileLock != null ) {
+                    incrementHolders();
+                    return;
+                }
+                try {
+                    fileLock = getChannel().lock( 0, Long.MAX_VALUE, shared );
+                    incrementHolders();
+                } catch ( IOException e ) {
+                    lock.unlock();
+                    throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+                }
             }
         }
 
         @Override
         public void lockInterruptibly() throws InterruptedException {
             lock.lockInterruptibly();
-            if ( fileLock != null ) {
-                incrementHolders();
-                return;
-            }
-            try {
-                fileLock = getChannel().lock( 0, Long.MAX_VALUE, shared );
-                incrementHolders();
-            } catch ( FileLockInterruptionException e ) {
-                lock.unlock();
-                throw new InterruptedException( e.getMessage() );
-            } catch ( IOException e ) {
-                lock.unlock();
-                throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+            synchronized ( ReadWriteFileLock.this ) {
+                if ( fileLock != null ) {
+                    incrementHolders();
+                    return;
+                }
+                try {
+                    fileLock = getChannel().lock( 0, Long.MAX_VALUE, shared );
+                    incrementHolders();
+                } catch ( FileLockInterruptionException e ) {
+                    lock.unlock();
+                    throw new InterruptedException( e.getMessage() );
+                } catch ( IOException e ) {
+                    lock.unlock();
+                    throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+                }
             }
         }
 
@@ -166,23 +177,25 @@ class ReadWriteFileLock implements ReadWriteLock {
                 return false;
             }
 
-            if ( fileLock != null ) {
-                incrementHolders();
-                return true;
-            }
-
-            try {
-                java.nio.channels.FileLock fl = getChannel().tryLock( 0, Long.MAX_VALUE, shared );
-                if ( fl == null ) {
-                    lock.unlock();
-                    return false;
+            synchronized ( ReadWriteFileLock.this ) {
+                if ( fileLock != null ) {
+                    incrementHolders();
+                    return true;
                 }
-                fileLock = fl;
-                incrementHolders();
-                return true;
-            } catch ( IOException e ) {
-                lock.unlock();
-                throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+
+                try {
+                    java.nio.channels.FileLock fl = getChannel().tryLock( 0, Long.MAX_VALUE, shared );
+                    if ( fl == null ) {
+                        lock.unlock();
+                        return false;
+                    }
+                    fileLock = fl;
+                    incrementHolders();
+                    return true;
+                } catch ( IOException e ) {
+                    lock.unlock();
+                    throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+                }
             }
         }
 
@@ -193,27 +206,33 @@ class ReadWriteFileLock implements ReadWriteLock {
                 return false;
             }
 
-            if ( fileLock != null ) {
-                incrementHolders();
-                return true;
-            }
-
-            // use the remaining time to acquire a file lock
-            while ( ( System.nanoTime() - startNs ) < timeUnit.toNanos( l ) ) {
+            // use the remaining time to acquire a file lock; each attempt is atomic under the
+            // monitor (see lock()), but the monitor is NOT held between attempts, so another
+            // thread that succeeds lets this one take the refcount path on its next attempt
+            while ( true ) {
                 if ( Thread.interrupted() ) {
                     lock.unlock();
                     throw new InterruptedException( "Current thread was interrupted while waiting for a " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + "." );
                 }
-                try {
-                    java.nio.channels.FileLock fl = getChannel().tryLock( 0, Long.MAX_VALUE, shared );
-                    if ( fl != null ) {
-                        fileLock = fl;
+                synchronized ( ReadWriteFileLock.this ) {
+                    if ( fileLock != null ) {
                         incrementHolders();
                         return true;
                     }
-                } catch ( IOException e ) {
-                    lock.unlock();
-                    throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+                    try {
+                        java.nio.channels.FileLock fl = getChannel().tryLock( 0, Long.MAX_VALUE, shared );
+                        if ( fl != null ) {
+                            fileLock = fl;
+                            incrementHolders();
+                            return true;
+                        }
+                    } catch ( IOException e ) {
+                        lock.unlock();
+                        throw new RuntimeException( "Failed to acquire " + ( shared ? "shared" : "exclusive" ) + " lock on " + path + ".", e );
+                    }
+                }
+                if ( ( System.nanoTime() - startNs ) >= timeUnit.toNanos( l ) ) {
+                    break;
                 }
             }
 
@@ -225,7 +244,11 @@ class ReadWriteFileLock implements ReadWriteLock {
         @Override
         public void unlock() {
             try {
-                decrementHolders();
+                // same monitor as the acquire paths: releasing the OS lock and closing the
+                // channel must not interleave with a concurrent reader's acquisition
+                synchronized ( ReadWriteFileLock.this ) {
+                    decrementHolders();
+                }
             } catch ( IOException e ) {
                 throw new RuntimeException( "Failed to release lock on " + path + ".", e );
             } finally {

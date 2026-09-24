@@ -18,7 +18,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * This implementation is using the Hibernate Criteria API, so we want to minimally test the logic of translating
- * {@link Filters} and {@link Sort} into proper {@link org.hibernate.Criteria} queries.
+ * {@link Filters} and {@link Sort} into proper {@code org.hibernate.Criteria} queries. (That type was removed in Hibernate 6; the
+ * name is kept here because it is what the code being described used to build.)
  * @author poirigui
  */
 public class ExpressionAnalysisResultSetServiceTest extends BaseSpringContextTest5 {

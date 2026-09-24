@@ -5,12 +5,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
+import org.hibernate.LazyInitializationException;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 import java.util.Date;
+import java.util.function.Supplier;
 
 /**
  * Created by tesarst on 07/03/17.
@@ -63,14 +65,44 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
         this.troubled = curatable.getCurationDetails().getTroubled();
         this.needsAttention = curatable.getCurationDetails().getNeedsAttention();
         if ( !skipEvents ) {
-            this.lastTroubledEvent = curatable.getCurationDetails().getLastTroubledEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) : null;
-            this.lastNeedsAttentionEvent = curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) : null;
+            this.lastTroubledEvent = lastEventVo( () -> curatable.getCurationDetails().getLastTroubledEvent(), curatable, "lastTroubledEvent" );
+            this.lastNeedsAttentionEvent = lastEventVo( () -> curatable.getCurationDetails().getLastNeedsAttentionEvent(), curatable, "lastNeedsAttentionEvent" );
         }
         if ( SecurityUtil.isUserAdmin() ) {
             this.curationNote = curatable.getCurationDetails().getCurationNote();
             if ( !skipEvents ) {
-                this.lastNoteUpdateEvent = curatable.getCurationDetails().getLastNoteUpdateEvent() != null ? new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) : null;
+                this.lastNoteUpdateEvent = lastEventVo( () -> curatable.getCurationDetails().getLastNoteUpdateEvent(), curatable, "lastNoteUpdateEvent" );
             }
+        }
+    }
+
+    /**
+     * Read one of the three {@code last*Event} associations off a {@link CurationDetails} and wrap it
+     * in an {@link AuditEventValueObject}, tolerating a reference that can no longer be resolved
+     * because the owning entity has left the session it was loaded in.
+     * <p>
+     * A value object built from a detached entity hits a dead {@link AuditEvent} proxy for any of the
+     * three, because they are lazy and are not covered by simply initializing the
+     * {@link CurationDetails} itself. That turned {@code GET /datasets/{id}/refresh} into a 500 on
+     * every call. The thaw now covers them ({@code Thaws#thawCurationDetails}); this is the backstop
+     * for a caller that builds the VO outside the transaction that thawed — the field comes back
+     * {@code null}, matching how every other lazy association is treated in
+     * {@code ExpressionExperimentValueObject}, and the warning names the entity so the missing thaw
+     * is findable.
+     * <p>
+     * Note that testing {@code Hibernate.isInitialized} instead would be wrong here: an
+     * uninitialized-but-still-attached proxy is the normal case for an in-session VO build, and
+     * skipping on that would drop the events from every ordinary response.
+     */
+    @Nullable
+    static AuditEventValueObject lastEventVo( Supplier<AuditEvent> ref, Object owner, String field ) {
+        try {
+            AuditEvent ae = ref.get();
+            return ae != null ? new AuditEventValueObject( ae ) : null;
+        } catch ( LazyInitializationException e ) {
+            log.warn( "Could not read {} of {}; it was built outside the session that loaded it. "
+                    + "Thaw the curation details (Thaws#thawCurationDetails) in the transaction that builds the value object.", field, owner, e );
+            return null;
         }
     }
 

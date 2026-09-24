@@ -28,11 +28,18 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.PreboardedExperimentService;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
 import ubic.gemma.persistence.util.CursorPage;
@@ -59,11 +66,16 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -93,13 +105,103 @@ public class TicketsWebService {
     private final TicketService ticketService;
     private final UserManager userManager;
     private final UserReadService userReadService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final PreboardedExperimentService preboardedExperimentService;
 
     @Autowired
-    public TicketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService ) {
+    public TicketsWebService( TicketService ticketService, UserManager userManager, UserReadService userReadService,
+            ExpressionExperimentService expressionExperimentService,
+            PreboardedExperimentService preboardedExperimentService ) {
         this.ticketService = ticketService;
         this.userManager = userManager;
         this.userReadService = userReadService;
+        this.expressionExperimentService = expressionExperimentService;
+        this.preboardedExperimentService = preboardedExperimentService;
     }
+
+    /**
+     * Fill in {@code displayLabel} / {@code displayName} on every EXPRESSION_EXPERIMENT target, and
+     * {@code displayLabel} on every PREBOARDED_EXPERIMENT target, across the given tickets — one query per
+     * kind for the whole batch.
+     * <p>
+     * The fields have been on {@link TicketTargetValueObject} since Phase B-2 and nothing ever wrote
+     * them, so a ticket's targets arrived as bare ids and the navigator rendered "31491 (no title)"
+     * however many rows deep the ticket went. The UI resolved them itself at five requests per ticket
+     * (/datasets/{ids} caps limit at 100); a populated label makes that resolver dead code.
+     * <p>
+     * 🛑 Batched across ALL the tickets passed, not per ticket: the dashboard renders a page of them,
+     * and one query per ticket would just move uib's N+1 onto the server.
+     * <p>
+     * Ids the caller cannot read are not resolved and keep their null, which is the documented
+     * fallback — {@code loadIdentifiers} is ACL-filtered, so a ticket cannot be used to read out the
+     * name of a dataset the caller cannot see.
+     */
+    private void resolveTargetLabels( Collection<TicketValueObject> tickets ) {
+        Set<Long> eeIds = new HashSet<>();
+        Set<Long> preboardedIds = new HashSet<>();
+        for ( TicketValueObject t : tickets ) {
+            if ( t == null || t.getTargets() == null ) {
+                continue;
+            }
+            for ( TicketTargetValueObject tt : t.getTargets() ) {
+                if ( tt.getTargetId() == null ) {
+                    continue;
+                }
+                if ( tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT ) {
+                    eeIds.add( tt.getTargetId() );
+                } else if ( tt.getTargetType() == TicketTargetType.PREBOARDED_EXPERIMENT ) {
+                    preboardedIds.add( tt.getTargetId() );
+                }
+            }
+        }
+        if ( eeIds.isEmpty() && preboardedIds.isEmpty() ) {
+            return;
+        }
+        Map<Long, ExpressionExperimentDao.Identifiers> byId = new HashMap<>();
+        for ( ExpressionExperimentDao.Identifiers i : expressionExperimentService.loadIdentifiers( eeIds ) ) {
+            byId.put( i.getId(), i );
+        }
+        // One query for every preboarded target across the whole page, for the same reason the EE lookup is
+        // batched: a batch triage ticket carries every candidate from its scrape, so per-target loads would
+        // put the navigator's N+1 on the server instead of the client.
+        Map<Long, String> preboardedAccessions = preboardedIds.isEmpty()
+                ? Collections.emptyMap()
+                : preboardedExperimentService.loadAccessions( preboardedIds );
+        for ( TicketValueObject t : tickets ) {
+            if ( t == null || t.getTargets() == null ) {
+                continue;
+            }
+            for ( TicketTargetValueObject tt : t.getTargets() ) {
+                if ( tt.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT ) {
+                    ExpressionExperimentDao.Identifiers i = byId.get( tt.getTargetId() );
+                    if ( i != null ) {
+                        tt.setDisplayLabel( i.getShortName() );
+                        tt.setDisplayName( i.getName() );
+                    }
+                } else if ( tt.getTargetType() == TicketTargetType.PREBOARDED_EXPERIMENT ) {
+                    String accession = preboardedAccessions.get( tt.getTargetId() );
+                    if ( accession != null ) {
+                        // A preboarded row has no name of its own -- it is an accession Gemma has not loaded.
+                        tt.setDisplayLabel( accession );
+                    }
+                }
+            }
+        }
+    }
+
+    /** Single-ticket form of {@link #resolveTargetLabels(Collection)}; returns its argument. */
+    private TicketValueObject withTargetLabels( TicketValueObject vo ) {
+        resolveTargetLabels( Collections.singletonList( vo ) );
+        return vo;
+    }
+
+    /** Collection form of {@link #resolveTargetLabels(Collection)}; returns its argument. CursorPage is
+     * itself a List, so a page of tickets goes through here too. */
+    private <C extends Collection<TicketValueObject>> C withTargetLabels( C vos ) {
+        resolveTargetLabels( vos );
+        return vos;
+    }
+
 
     /**
      * List tickets with optional filters and offset/limit or cursor pagination.
@@ -132,7 +234,10 @@ public class TicketsWebService {
                     + "Filter precedence note: `state` and `openOnly` are mutually exclusive — "
                     + "a passed `state` pins the predicate to that single state and the "
                     + "`openOnly` flag is ignored. With no `state` parameter, `openOnly=true` "
-                    + "retains its legacy OPEN+IN_PROGRESS semantics.",
+                    + "retains its legacy OPEN+IN_PROGRESS semantics.\n\n"
+                    + "Curator scratchpads are INCLUDED here and reachable with `type=SCRATCHPAD`. This is a "
+                    + "list, not a workload figure, so it is not filtered — the exclusion applies to the counts "
+                    + "on `GET /tickets/summary`. Use `GET /tickets/scratchpad` for the caller's own.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(schema = @Schema(oneOf = {
@@ -171,7 +276,7 @@ public class TicketsWebService {
             CursorPage<Ticket> page = ticketService.findTicketsByCursor(
                     openOnly, assigneeId, priority, type, state, targetType, updatedSince,
                     cursorArg.getValue(), limit );
-            CursorPage<TicketValueObject> voPage = page.map( TicketValueObject::from );
+            CursorPage<TicketValueObject> voPage = withTargetLabels( page.map( TicketValueObject::from ) );
             return paginateByCursor( voPage, new String[] { "id" } );
         }
         int offset = offsetArg.getValue();
@@ -179,9 +284,9 @@ public class TicketsWebService {
                 type, state, targetType, updatedSince, offset, limit );
         long total = ticketService.countTickets( openOnly, assigneeId, priority,
                 type, state, targetType, updatedSince );
-        List<TicketValueObject> vos = tickets.stream()
+        List<TicketValueObject> vos = withTargetLabels( tickets.stream()
                 .map( TicketValueObject::from )
-                .collect( Collectors.toList() );
+                .collect( Collectors.toList() ) );
         Slice<TicketValueObject> slice = new Slice<>( vos, null, offset, limit, total );
         return paginate( slice, new String[] { "id" } );
     }
@@ -191,16 +296,20 @@ public class TicketsWebService {
      * back a "My Queue" card in the curation-UI. Splits assigned tickets into open
      * (OPEN + IN_PROGRESS) and recently-resolved buckets — both capped per request
      * to keep the response compact.
+     * <p>
+     * Carries no scratchpad filter and needs none: every list here is scoped by ASSIGNEE, and a
+     * scratchpad is provisioned with a reporter and no assignee, so it does not reach this queue.
+     * The scratchpad has its own handle at {@code GET /tickets/scratchpad}; a curator who does
+     * assign one to themselves has asked for it in their queue.
      */
     @GET
     @Path("/mine")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "List tickets assigned to the calling admin",
             description = "Convenience view over `GET /tickets?assignee={me}`. Returns two lists: `open` (OPEN + IN_PROGRESS, capped at `limit`, default 50) sorted by `updatedAt desc`; and `recentlyResolved` (RESOLVED + CANCELLED with updatedAt within the last `resolvedWithinDays` days, default 7, capped at `limit`). Sorted by updatedAt desc. Both lists carry the lightweight TicketValueObject (no event log). Use `GET /tickets/{id}` for the full ticket including events.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MyQueueResponse> getMyQueue(
@@ -236,8 +345,8 @@ public class TicketsWebService {
         body.assigneeContactId = meId;
         body.openLimit = cappedLimit;
         body.resolvedWithinDays = resolvedWithinDays;
-        body.open = open.stream().map( TicketValueObject::from ).collect( Collectors.toList() );
-        body.recentlyResolved = recentlyResolved.stream().map( TicketValueObject::from ).collect( Collectors.toList() );
+        body.open = withTargetLabels( open.stream().map( TicketValueObject::from ).collect( Collectors.toList() ) );
+        body.recentlyResolved = withTargetLabels( recentlyResolved.stream().map( TicketValueObject::from ).collect( Collectors.toList() ) );
         body.openCount = body.open.size();
         body.recentlyResolvedCount = body.recentlyResolved.size();
         return respond( body );
@@ -246,16 +355,18 @@ public class TicketsWebService {
     /**
      * Lightweight counters about the calling admin's ticket workload. Cheap (two count
      * queries + one find for oldest-open); intended for top-of-page badges.
+     * <p>
+     * Assignee-scoped like {@link #getMyQueue}, so a scratchpad — reported by the curator, assigned
+     * to nobody — is already out of these counts without a type filter.
      */
     @GET
     @Path("/summary/me")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Workload summary for the calling admin",
             description = "Returns counts of open (OPEN+IN_PROGRESS) and total tickets assigned to the calling admin, plus the age of the oldest open ticket in days. No event logs, no list of tickets — see `/tickets/mine` for those.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<MyQueueSummaryResponse> getMyQueueSummary() {
@@ -320,22 +431,31 @@ public class TicketsWebService {
     @GET
     @Path("/summary")
     @Produces(MediaType.APPLICATION_JSON)
-    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @PreAuthorize("hasAuthority('GROUP_CURATOR')")
     @Operation(summary = "Open-ticket roll-up across the corpus",
-            description = "Returns the total open ticket count and a per-{@link TicketType} breakdown. Cheap (single grouped count query); intended for the admin Systems Monitoring dashboard panel.",
+            description = "Returns the total open ticket count and a per-TicketType breakdown. Cheap (single grouped count query); intended for the admin Systems Monitoring dashboard panel.\n\n"
+                    + "`totalOpen` EXCLUDES scratchpads. A SCRATCHPAD ticket is never resolved — a curator "
+                    + "finishes with a dataset by removing it from the scratchpad — so counting one as open work "
+                    + "would add a permanent +1 per curator. The count is not hidden: it is reported as "
+                    + "`scratchpadOpen` and the `byType` breakdown still carries its `SCRATCHPAD` entry, so "
+                    + "`totalOpen + scratchpadOpen == sum(byType)`.",
             responses = {
-                    @ApiResponse(responseCode = "200",
-                            content = @Content(schema = @Schema(implementation = ResponseDataObject.class))),
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "401", description = "Not authenticated.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<OpenTicketSummaryResponse> getOpenTicketSummary() {
         java.util.Map<TicketType, Long> byType = ticketService.countOpenByType();
         long total = 0;
-        for ( Long v : byType.values() ) {
-            if ( v != null ) total += v;
+        for ( java.util.Map.Entry<TicketType, Long> e : byType.entrySet() ) {
+            // Scratchpads are open forever by design, so they are not curation work to be got
+            // through. They stay out of totalOpen and are reported on their own field instead;
+            // byType still carries the SCRATCHPAD entry, so the exclusion is visible and
+            // totalOpen + scratchpadOpen == sum(byType) holds.
+            if ( e.getValue() != null && e.getKey() != TicketType.SCRATCHPAD ) total += e.getValue();
         }
         OpenTicketSummaryResponse body = new OpenTicketSummaryResponse();
         body.totalOpen = total;
+        body.scratchpadOpen = byType.getOrDefault( TicketType.SCRATCHPAD, 0L );
         body.byType = new java.util.EnumMap<>( TicketType.class );
         // Ensure every enum value appears in the map even if count is zero — UI table
         // doesn't have to handle "missing key" vs "zero" specially.
@@ -346,8 +466,119 @@ public class TicketsWebService {
     }
 
     public static class OpenTicketSummaryResponse {
+        /**
+         * Open tickets across the corpus, EXCLUDING {@link TicketType#SCRATCHPAD}. See
+         * {@link #scratchpadOpen} — this is deliberately not the sum of {@link #byType}.
+         */
         public long totalOpen;
+        /**
+         * Open scratchpads, held out of {@link #totalOpen} so the exclusion is a number a caller can
+         * see and add back rather than a filter it has to know about. Equals the {@code SCRATCHPAD}
+         * entry of {@link #byType}, and roughly tracks the number of curators who have used one.
+         */
+        public long scratchpadOpen;
+        /** Per-type open counts. Every {@link TicketType} appears, including {@code SCRATCHPAD}. */
         public java.util.Map<TicketType, Long> byType;
+    }
+
+    /**
+     * The calling curator's scratchpad, provisioned on first access.
+     * <p>
+     * A scratchpad is one ticket per curator, kept open indefinitely, holding whatever they are
+     * currently looking at; finishing with a dataset means removing it with
+     * {@code DELETE /tickets/{id}/targets/{targetType}/{targetId}}, not resolving the ticket (Paul,
+     * 2026-08-31). This route exists so a client has a direct handle on it without listing and
+     * filtering — the dashboard pins it first, which is the client's job, not this route's.
+     * <p>
+     * ⚠️ The literal {@code /scratchpad} segment beats {@code /{id}}: JAX-RS sorts candidate methods
+     * by literal character count before template count (JSR-370 §3.7.2), so this never reaches
+     * {@link #getTicket} to be parsed as a {@code Long}. The sibling {@code /mine},
+     * {@code /summary} and {@code /summary/me} routes rely on the same rule.
+     */
+    @GET
+    @Path("/scratchpad")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Retrieve (and provision on first access) the calling curator's scratchpad",
+            description = "Returns the caller's SCRATCHPAD ticket, creating it if they do not have one yet. "
+                    + "The scratchpad is a single ticket per curator that stays open indefinitely; it carries "
+                    + "`acceptsTargets: true`, so datasets are added with `POST /tickets/{id}/targets` and — this "
+                    + "is how a scratchpad is finished with — removed again with "
+                    + "`DELETE /tickets/{id}/targets/{targetType}/{targetId}`. The response includes the full event "
+                    + "log, as `GET /tickets/{id}` does. Scratchpads are excluded from `totalOpen` on "
+                    + "`GET /tickets/summary` (reported separately as `scratchpadOpen`) because a ticket that is "
+                    + "never resolved is not outstanding work.",
+            responses = {
+                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "401", description = "Not authenticated.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public ResponseDataObject<TicketValueObject> getScratchpad() {
+        User me = userManager.getCurrentUser();
+        if ( me == null ) {
+            // Defensive — @PreAuthorize already excludes anonymous. Mirrors currentUserContactId().
+            throw new jakarta.ws.rs.NotAuthorizedException( "anonymous callers have no scratchpad" );
+        }
+        // The service initializes the lazy fields inside its transaction, so this projection is safe
+        // after it returns. See TicketServiceImpl#initializeForProjection.
+        Ticket scratchpad = ticketService.getOrCreateScratchpad( me );
+        return respond( withTargetLabels( TicketValueObject.from( scratchpad, true ) ) );
+    }
+
+    /**
+     * Ticket picker: "choose a ticket by typing". Distinct from {@code GET /tickets?query=} in one
+     * respect that matters — a hit carries {@code targetCount}, not the {@code targets} array, so
+     * drawing twenty rows does not pull several hundred target rows to do it.
+     */
+    @GET
+    @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Search tickets by id or title, for a ticket picker",
+            description = "Matches `query` against a ticket id typed verbatim — `6` finds ticket 6, listed first — "
+                    + "or, case-insensitively, against any substring of the title. A curator has whichever of the "
+                    + "two is to hand. A `query` that parses as an id but names no ticket is simply not a hit; it is "
+                    + "NOT a 404.\n\n"
+                    + "Hits are ordered exact-id-match first, then by `updatedAt` descending — the ticket wanted is "
+                    + "usually one being worked.\n\n"
+                    + "Each hit carries `targetCount` rather than the `targets` array, counted in SQL, so a picker "
+                    + "rendering 20 hits does not fetch the targets of each. Use `GET /tickets/{id}` for the targets "
+                    + "themselves.\n\n"
+                    + "`openOnly` defaults to **true**: work is rarely added to a closed ticket.\n\n"
+                    + "Scratchpad tickets (`type=SCRATCHPAD`) are offered only to the curator who reported them — "
+                    + "your own scratchpad is a reasonable place to file the experiment in hand, another curator's "
+                    + "is not — and to nobody when the caller is anonymous. This is a relevance rule, not an access "
+                    + "control: a scratchpad left out here is still readable through `GET /tickets` and "
+                    + "`GET /tickets/{id}`.\n\n"
+                    + "`limit` defaults to 20 and is refused with a 400 above 100 rather than silently clamped.")
+    public ResponseDataObject<List<TicketSearchHitValueObject>> searchTickets(
+            @Parameter(description = "A ticket id typed verbatim, or a fragment of a ticket title. Required.", required = true)
+            @QueryParam("query") String query,
+            @Parameter(description = "If true (the default), restrict to OPEN/IN_PROGRESS tickets.")
+            @QueryParam("openOnly") @DefaultValue("true") boolean openOnly,
+            @Parameter(description = "Maximum number of hits to return.",
+                    schema = @Schema(type = "integer", defaultValue = "20", minimum = "1"))
+            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+    ) {
+        if ( query == null || query.trim().isEmpty() ) {
+            throw new BadRequestException( "A query must be supplied." );
+        }
+        // getValue() raises MalformedArgException — a 400 — above LimitArg.MAXIMUM rather than
+        // clamping, so a client asking for 500 is told no instead of quietly getting 100. Same
+        // rule the rest of this API already applies (/experiment-sets, /datasets/search).
+        int limit = limitArg.getValue();
+        return respond( ticketService.searchTickets( query, openOnly, callerContactIdOrNull(), limit ) );
+    }
+
+    /**
+     * The calling user's contact id, or null when the caller is anonymous.
+     * <p>
+     * Deliberately not {@link #currentUserContactId()}, which refuses anonymous callers: the ticket
+     * read surface is open to whoever the rest of the v2 read surface is open to, and this id is
+     * used only to decide whose scratchpad is worth offering.
+     */
+    @Nullable
+    private Long callerContactIdOrNull() {
+        User u = userManager.getCurrentUser();
+        return u != null ? u.getId() : null;
     }
 
     /**
@@ -364,7 +595,7 @@ public class TicketsWebService {
         // each event's actor) initialize INSIDE the service's @Transactional rather than
         // raising LazyInitializationException once the session closes. See
         // TicketServiceImpl.loadValueObject + the regression IT.
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             throw new NotFoundException( "No ticket with id " + id );
         }
@@ -416,12 +647,20 @@ public class TicketsWebService {
             throw new NotFoundException( "No ticket with id " + id );
         }
         if ( cursorArg != null ) {
+            // the service initializes each event's actor; the map() below runs after its transaction
             CursorPage<TicketEventValueObject> page = ticketService
                     .findEventsByCursor( t, cursorArg.getValue(), limitArg.getValue() )
                     .map( TicketEventValueObject::from );
             return paginateByCursor( page, new String[] { "id" } );
         }
-        TicketValueObject vo = TicketValueObject.from( t, true );
+        // 🛑 Projected by the service, inside its transaction. Building the VO here from the entity
+        // `t` above -- which this did -- reads the event log and each event's actor on a ticket
+        // loaded and detached, and answered 500 "Could not initialize proxy [Contact#1] - no
+        // session" for every ticket whose events have an actor, which is all of them.
+        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        if ( vo == null ) {
+            throw new NotFoundException( "No ticket with id " + id );
+        }
         return respond( vo.getEvents() );
     }
 
@@ -441,7 +680,11 @@ public class TicketsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Open a new curation ticket",
             description = "Creates a new ticket; the authenticated user is recorded as the reporter. "
-                    + "The response includes the seeded OPENED event.")
+                    + "The response includes the seeded OPENED event.\n\n"
+                    + "Each entry in `targets` may carry its own `payload` — opaque JSON text, with an "
+                    + "optional `payloadSchemaVersion` — holding the task for that one target, written in "
+                    + "this call rather than by a follow-up per target. The ticket's own `body` and "
+                    + "`payload` are one per ticket, so a finding that differs per target belongs here.")
     public Response createTicket( CreateTicketRequest req ) {
         if ( req == null ) {
             throw new BadRequestException( "Request body is required." );
@@ -470,9 +713,19 @@ public class TicketsWebService {
             if ( tr.getStatus() != null ) {
                 tt.setStatus( tr.getStatus() );
             }
+            // Set on the target itself, so the whole batch is written by openTicket's single insert.
+            tt.setPayload( tr.getPayload() );
+            tt.setPayloadSchemaVersion( tr.getPayloadSchemaVersion() );
             targets.add( tt );
         }
-        Ticket created = ticketService.openTicket( reporter, req.getType(), req.getTitle(), targets );
+        Ticket created;
+        try {
+            created = ticketService.openTicket( reporter, req.getType(), req.getTitle(), targets );
+        } catch ( IllegalStateException e ) {
+            // a rule about the caller's existing tickets, not a malformed request -- currently the
+            // one-scratchpad-per-curator rule, which used to surface as a raw constraint violation
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
 
         // Optional follow-up mutations seeded from the create payload.
         List<String> changedFields = new ArrayList<>();
@@ -488,9 +741,23 @@ public class TicketsWebService {
             created.setBody( req.getBody() );
             changedFields.add( "body" );
         }
+        if ( req.getAcceptsTargets() != null ) {
+            created.setAcceptsTargets( req.getAcceptsTargets() );
+            changedFields.add( "acceptsTargets" );
+        }
         if ( req.getMode() != null ) {
             created.setMode( req.getMode() );
             changedFields.add( "mode" );
+        }
+        // Create-only: the payload records what question the screen asked, so rewriting it later would
+        // rewrite what curators were shown. PATCH deliberately does not offer it.
+        if ( req.getPayload() != null ) {
+            created.setPayload( req.getPayload() );
+            changedFields.add( "payload" );
+        }
+        if ( req.getPayloadSchemaVersion() != null ) {
+            created.setPayloadSchemaVersion( req.getPayloadSchemaVersion() );
+            changedFields.add( "payloadSchemaVersion" );
         }
         if ( !changedFields.isEmpty() ) {
             // No TicketEvent for metadata edits, but the governance audit
@@ -504,9 +771,99 @@ public class TicketsWebService {
             }
             created = ticketService.assign( created, reporter, assignee );
         }
+        // 🛑 Projected by the service, inside its transaction -- same rule as the GET and PUT paths.
+        // Building the VO from `created` read the reporter through whatever instance the last
+        // service call returned; assign() hands back a REATTACHED ticket whose reporter is an
+        // uninitialized proxy, so every create that named an assignee answered 500 "Could not
+        // initialize proxy [Contact#6886] - the owning session was closed" AFTER the ticket had been
+        // committed. A client retrying on 5xx minted duplicates (frinkbro, 2026-09-11).
+        TicketValueObject vo = ticketService.loadValueObject( created.getId(), true );
+        if ( vo == null ) {
+            throw new IllegalStateException( "Ticket " + created.getId() + " disappeared immediately after creation." );
+        }
         return Response.status( Response.Status.CREATED )
-                .entity( new ResponseDataObject<>( TicketValueObject.from( created, true ) ) )
+                .entity( new ResponseDataObject<>( withTargetLabels( vo ) ) )
                 .build();
+    }
+
+    /**
+     * Open a ticket over an experiment named by accession, resolving the
+     * accession to the dataset(s) in one call.
+     *
+     * <p>The seam the curation store has as {@code POST /tickets/from-accession},
+     * minus the half that does not apply here. In the store that route imports
+     * the experiment from Gemma and then opens the ticket; against Gemma the
+     * experiment is already the source, so what is left is the resolution
+     * step — which is exactly the part a caller holding an accession cannot do
+     * without a second round trip.</p>
+     *
+     * @return 201 Created with the new ticket, targets attached.
+     */
+    @POST
+    @Path("/from-accession")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Open a ticket over an experiment named by accession",
+            description = "Resolves `accession` to the dataset(s) it names and opens a ticket over them, "
+                    + "so a caller holding a GEO accession does not have to look the id up first.\n\n"
+                    + "Resolution tries the external accession (`GSE12345`) and then the Gemma short "
+                    + "name; for GEO-sourced datasets these are usually the same string, and trying both "
+                    + "means a caller need not know which they hold.\n\n"
+                    + "🛑 ONE ACCESSION CAN NAME SEVERAL DATASETS. A GSE that was split during import "
+                    + "backs one experiment per split, and all of them become targets of the one ticket "
+                    + "— a review of that accession is a review of every part. Picking one arbitrarily "
+                    + "would silently drop the rest, and a caller that wants a single dataset should "
+                    + "open the ticket by id through `POST /tickets` instead.\n\n"
+                    + "`type` defaults to `CURATION`, which is where the store's own `REVIEW` maps. "
+                    + "An accession naming nothing is a 404 and opens no ticket.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The ticket was opened.",
+                            content = @Content(schema = @Schema(implementation = ResponseDataObjectTicketValueObject.class))),
+                    @ApiResponse(responseCode = "400", description = "`accession` is missing or blank.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "404", description = "No dataset carries that accession or short name.",
+                            content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
+    public Response createTicketFromAccession( CreateTicketFromAccessionRequest req ) {
+        if ( req == null || req.getAccession() == null || req.getAccession().trim().isEmpty() ) {
+            throw new BadRequestException( "accession is required." );
+        }
+        String accession = req.getAccession().trim();
+
+        // Accession first, short name second. For a GEO import the two are usually the same string, so
+        // this is one lookup in the common case and a fallback for a caller holding the other kind.
+        List<ExpressionExperiment> matches =
+                new ArrayList<>( expressionExperimentService.findByAccession( accession ) );
+        if ( matches.isEmpty() ) {
+            ExpressionExperiment byShortName = expressionExperimentService.findByShortName( accession );
+            if ( byShortName != null ) {
+                matches.add( byShortName );
+            }
+        }
+        if ( matches.isEmpty() ) {
+            throw new NotFoundException( "No dataset carries the accession or short name " + accession + "." );
+        }
+
+        CreateTicketRequest delegate = new CreateTicketRequest();
+        delegate.setType( req.getType() != null ? req.getType() : TicketType.CURATION );
+        delegate.setTitle( req.getTitle() != null && !req.getTitle().trim().isEmpty()
+                ? req.getTitle()
+                : accession + " — ad-hoc review" );
+        delegate.setBody( req.getBody() );
+        delegate.setPriority( req.getPriority() );
+        delegate.setMode( req.getMode() );
+        delegate.setAssigneeId( req.getAssigneeId() );
+        List<TicketTargetRequest> targets = new ArrayList<>( matches.size() );
+        for ( ExpressionExperiment ee : matches ) {
+            TicketTargetRequest t = new TicketTargetRequest();
+            t.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+            t.setTargetId( ee.getId() );
+            targets.add( t );
+        }
+        delegate.setTargets( targets );
+        // Through the same method the ordinary create goes through, so the seeded OPENED event, the
+        // scratchpad rule and the metadata follow-ups behave identically however the ticket was opened.
+        return createTicket( delegate );
     }
 
     /**
@@ -569,6 +926,10 @@ public class TicketsWebService {
             ticket.setBody( req.getBody() );
             changedFields.add( "body" );
         }
+        if ( req.getAcceptsTargets() != null ) {
+            ticket.setAcceptsTargets( req.getAcceptsTargets() );
+            changedFields.add( "acceptsTargets" );
+        }
         if ( req.getMode() != null ) {
             ticket.setMode( req.getMode() );
             changedFields.add( "mode" );
@@ -603,7 +964,7 @@ public class TicketsWebService {
         // the service's @Transactional. Building from the handler-side `ticket` reference
         // would raise LazyInitializationException — same bug class as the GET path
         // (see TicketServiceImpl.loadValueObject + DetachedEntityRegression tests).
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             // Race: ticket deleted between the mutation and the read. Surface as 404.
             throw new NotFoundException( "Ticket " + id + " disappeared after update." );
@@ -639,7 +1000,7 @@ public class TicketsWebService {
      * open ticket, marks each target {@link TicketTargetStatus#UNDERWAY}
      * when it starts work on it, then {@link TicketTargetStatus#DONE} when
      * it finishes. Appends a
-     * {@link TicketEventType#TARGET_STATUS_CHANGED} event and a
+     * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType#TARGET_STATUS_CHANGED} event and a
      * {@code TicketTargetStatusChangedEvent} audit-trail row in lockstep.
      * No-op when the target is already at {@code status}.
      *
@@ -647,6 +1008,128 @@ public class TicketsWebService {
      * primary key (the row id), NOT the {@code targetId} field (which is
      * the FK to the targeted entity like an EE).</p>
      */
+    /**
+     * Add a target to a ticket that is open to additions.
+     * <p>
+     * The sibling of the PATCH below, which can only address a row that already exists and so cannot
+     * create membership. Until this route a ticket's targets were fixed at creation.
+     * <p>
+     * Refused with 409 when the ticket does not accept additions, when it is RESOLVED, or when the
+     * target is already on the ticket. The last is deliberately a 409 rather than a silent success:
+     * "it was already there" is something the caller wants to know, and it matches how a duplicate
+     * experiment tag is refused on {@code POST /annotations/datasets/{id}/annotations}.
+     */
+    @POST
+    @Path("/{id}/targets")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Add a target to a ticket that accepts additions",
+            description = "Appends targets to an existing ticket. Requires the ticket's `acceptsTargets` flag — it is "
+                    + "false by default, so a ticket's targets stay as they were opened unless a curator opens it up, "
+                    + "which is what makes a scratchpad. Idempotent on (targetType, targetId): re-adding is not an "
+                    + "error, and the response splits the ids into `added` and `alreadyPresent` so a bulk call can be "
+                    + "reported honestly. A RESOLVED or CANCELLED ticket is a 409, as is a ticket whose flag is off; "
+                    + "an empty `targets` array is a 400, since an add that adds nothing is the bug. Each entry "
+                    + "may carry its own `payload` / `payloadSchemaVersion`, the task for that target; a target "
+                    + "already on the ticket is left exactly as it is, payload included, so a re-add cannot "
+                    + "overwrite the task a curator is working from.")
+    public ResponseDataObject<AddTargetsResult> addTicketTarget(
+            @PathParam("id") Long id,
+            AddTargetRequest req
+    ) {
+        if ( req == null || req.getTargets() == null || req.getTargets().isEmpty() ) {
+            // An add that adds nothing is the bug, not a no-op worth honouring.
+            throw new BadRequestException( "Request body with a non-empty `targets` array is required." );
+        }
+        Ticket ticket = ticketService.load( id );
+        if ( ticket == null ) {
+            throw new NotFoundException( "No ticket with id " + id );
+        }
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            throw new BadRequestException( "No authenticated user resolved." );
+        }
+        List<Long> added = new ArrayList<>();
+        List<Long> alreadyPresent = new ArrayList<>();
+        for ( AddTargetRequest.TargetRef ref : req.getTargets() ) {
+            if ( ref == null || ref.getTargetId() == null ) {
+                throw new BadRequestException( "Each `targets` entry needs a `targetId`." );
+            }
+            TicketTargetType type = ref.getTargetType() != null ? ref.getTargetType() : TicketTargetType.EXPRESSION_EXPERIMENT;
+            TicketService.TargetAddition outcome;
+            try {
+                outcome = ticketService.addTarget( ticket, type, ref.getTargetId(), actor,
+                        ref.getPayload(), ref.getPayloadSchemaVersion() );
+            } catch ( IllegalStateException e ) {
+                // flag off, or the ticket is finished — a conflict with the ticket's state, not a
+                // malformed request. Adding is idempotent, so a duplicate never reaches here.
+                throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+            }
+            // 🛑 The service says whether it added. Comparing ticket.getTargets().size() before and
+            // after -- which this did -- reads a LAZY collection on a ticket this handler holds
+            // detached, and threw LazyInitializationException before addTarget was ever reached.
+            ticket = outcome.getTicket();
+            if ( outcome.isAdded() ) {
+                added.add( ref.getTargetId() );
+            } else {
+                alreadyPresent.add( ref.getTargetId() );
+            }
+        }
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
+        if ( vo == null ) {
+            throw new NotFoundException( "Ticket " + id + " disappeared after adding targets." );
+        }
+        return respond( new AddTargetsResult( added, alreadyPresent, vo ) );
+    }
+
+    /**
+     * Remove a target from a ticket.
+     * <p>
+     * On a curator scratchpad this is what finishing looks like: the ticket stays open indefinitely and
+     * the dataset leaves it (Paul, 2026-08-31). Addressed by {@code (targetType, targetId)} rather than
+     * by row id, because the caller knows the experiment it is looking at, not the row id the server
+     * minted.
+     */
+    @DELETE
+    @Path("/{id}/targets/{targetType}/{targetId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Remove a target from a ticket",
+            description = "Removes one target, addressed by type and Gemma id. Idempotent: removing a target the "
+                    + "ticket does not have is a 204, not a 404 — the caller has already reached the state it asked "
+                    + "for. A RESOLVED or CANCELLED ticket is a 409. Removing a target whose status is past NOT_DONE "
+                    + "is permitted and the removed status is reported, so the caller can say what it discarded; the "
+                    + "membership goes but the TARGET_REMOVED event stays on the ticket log.")
+    public Response removeTicketTarget(
+            @PathParam("id") Long id,
+            @PathParam("targetType") TicketTargetType targetType,
+            @PathParam("targetId") Long targetId
+    ) {
+        Ticket ticket = ticketService.load( id );
+        if ( ticket == null ) {
+            throw new NotFoundException( "No ticket with id " + id );
+        }
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            throw new BadRequestException( "No authenticated user resolved." );
+        }
+        TicketTargetStatus removed;
+        try {
+            removed = ticketService.removeTarget( ticket, targetType, targetId, actor );
+        } catch ( IllegalStateException e ) {
+            throw new ClientErrorException( e.getMessage(), Response.Status.CONFLICT, e );
+        }
+        if ( removed == null ) {
+            return Response.noContent().build();
+        }
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
+        if ( vo == null ) {
+            throw new NotFoundException( "Ticket " + id + " disappeared after removing a target." );
+        }
+        return Response.ok( respond( new RemovedTargetResult( targetType, targetId, removed, vo ) ) ).build();
+    }
+
     @PATCH
     @Path("/{id}/targets/{targetRowId}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -660,8 +1143,8 @@ public class TicketsWebService {
             @PathParam("targetRowId") Long targetRowId,
             UpdateTargetStatusRequest req
     ) {
-        if ( req == null || req.getStatus() == null ) {
-            throw new BadRequestException( "Request body with `status` is required." );
+        if ( req == null || ( req.getStatus() == null && !req.hasScreeningResult() ) ) {
+            throw new BadRequestException( "Request body with `status` and/or `screeningResult` is required." );
         }
         Ticket ticket = ticketService.load( id );
         if ( ticket == null ) {
@@ -672,12 +1155,17 @@ public class TicketsWebService {
             throw new BadRequestException( "No authenticated user resolved." );
         }
         try {
-            ticketService.updateTargetStatus( ticket, targetRowId, req.getStatus(), actor );
+            if ( req.getStatus() != null ) {
+                ticketService.updateTargetStatus( ticket, targetRowId, req.getStatus(), actor );
+            }
+            if ( req.hasScreeningResult() ) {
+                ticketService.updateTargetScreeningResult( ticket, targetRowId, req.getScreeningResult(), req.getScreeningResultReason(), req.hasScreeningResultReason(), actor );
+            }
         } catch ( IllegalArgumentException e ) {
-            // updateTargetStatus throws IAE when the targetRowId isn't on this ticket.
+            // the update methods throw IAE when the targetRowId isn't on this ticket.
             throw new NotFoundException( e.getMessage() );
         }
-        TicketValueObject vo = ticketService.loadValueObject( id, true );
+        TicketValueObject vo = withTargetLabels( ticketService.loadValueObject( id, true ) );
         if ( vo == null ) {
             throw new NotFoundException( "Ticket " + id + " disappeared after target update." );
         }
@@ -722,7 +1210,7 @@ public class TicketsWebService {
         for ( Ticket t : tickets ) {
             out.add( TicketValueObject.from( t ) );
         }
-        return out;
+        return withTargetLabels( out );
     }
 
     /**
@@ -743,6 +1231,20 @@ public class TicketsWebService {
     }
 
     /**
+     * Public hook for {@link DatasetsWebService}'s bulk {@code POST /datasets/tickets}: the same
+     * question {@link #openTicketsForExpressionExperiment} answers for one dataset, asked about a
+     * page of them in one query.
+     * <p>
+     * Only datasets that ARE on an open ticket get a key; an absent id is on none. Callers must have
+     * filtered the ids for readability first — this reads the ticket table, which carries no ACL of
+     * its own.
+     */
+    public Map<Long, List<TicketSummaryForTargetValueObject>> openTicketSummariesForExpressionExperiments(
+            Collection<Long> eeIds ) {
+        return ticketService.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT, eeIds );
+    }
+
+    /**
      * Cursor-mode counterpart to {@link #openTicketsForExpressionExperiment(Long)}
      * (step 1p of {@code CURSOR_PAGINATION_STEP1_PLAN.md}). Returns a
      * {@link CursorPage} of {@link TicketValueObject} so the
@@ -753,7 +1255,7 @@ public class TicketsWebService {
             @org.springframework.lang.Nullable ubic.gemma.persistence.util.Cursor cursor, int limit ) {
         CursorPage<Ticket> page = ticketService.findOpenForTargetByCursor(
                 TicketTargetType.EXPRESSION_EXPERIMENT, eeId, cursor, limit );
-        return page.map( TicketValueObject::from );
+        return withTargetLabels( page.map( TicketValueObject::from ) );
     }
 
     /**
@@ -769,7 +1271,7 @@ public class TicketsWebService {
             @org.springframework.lang.Nullable ubic.gemma.persistence.util.Cursor cursor, int limit ) {
         CursorPage<Ticket> page = ticketService.findOpenForTargetByCursor(
                 TicketTargetType.ARRAY_DESIGN, adId, cursor, limit );
-        return page.map( TicketValueObject::from );
+        return withTargetLabels( page.map( TicketValueObject::from ) );
     }
 
     /* ====== Request DTOs (kept inner-class for proximity to the endpoints) ====== */
@@ -794,6 +1296,38 @@ public class TicketsWebService {
         /** Advance mode; optional, defaults to {@link TicketMode#MANUAL}. */
         @Nullable
         private TicketMode mode;
+
+        /**
+         * Whether experiments may be added to this ticket after it is opened — a curator scratchpad.
+         * Boxed on purpose: absent must be distinguishable from an explicit {@code false}, or an
+         * unrelated metadata edit would silently close an open scratchpad. Defaults to false.
+         */
+        @Nullable
+        private Boolean acceptsTargets;
+
+        /**
+         * What the screen that produced this ticket asked — opaque JSON, stored and served verbatim.
+         * Gemma never parses it; the schema belongs to the producing agent.
+         */
+        @Nullable
+        private String payload;
+
+        /** Which schema {@link #payload} follows. Null means the writer declared none. */
+        @Nullable
+        private Integer payloadSchemaVersion;
+
+        @Nullable
+        public Boolean getAcceptsTargets() { return acceptsTargets; }
+        public void setAcceptsTargets( @Nullable Boolean acceptsTargets ) { this.acceptsTargets = acceptsTargets; }
+
+        @Nullable
+        public String getPayload() { return payload; }
+        public void setPayload( @Nullable String payload ) { this.payload = payload; }
+
+        @Nullable
+        public Integer getPayloadSchemaVersion() { return payloadSchemaVersion; }
+        public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) { this.payloadSchemaVersion = payloadSchemaVersion; }
+
 
         public TicketType getType() { return type; }
         public void setType( TicketType type ) { this.type = type; }
@@ -825,12 +1359,88 @@ public class TicketsWebService {
         public void setMode( @Nullable TicketMode mode ) { this.mode = mode; }
     }
 
+    /**
+     * Body for {@link #createTicketFromAccession(CreateTicketFromAccessionRequest)}.
+     * Only {@code accession} is required.
+     */
+    /**
+     * The 201 body of {@link #createTicketFromAccession(CreateTicketFromAccessionRequest)}.
+     * <p>
+     * A named subclass rather than {@code ResponseDataObject.class}, because the erased form publishes
+     * a {@code data} of no particular type — the defect 36 operations were corrected for on
+     * 2026-09-04. The route returns a raw {@link Response} to set 201, so {@code useReturnTypeSchema}
+     * has no typed return to read and the envelope has to be named here.
+     */
+    public static class ResponseDataObjectTicketValueObject extends ResponseDataObject<TicketValueObject> {
+        public ResponseDataObjectTicketValueObject( TicketValueObject payload ) {
+            super( payload );
+        }
+    }
+
+    public static class CreateTicketFromAccessionRequest {
+        /** A GEO accession (`GSE12345`) or a Gemma short name; both are tried. */
+        private String accession;
+        /** Optional; defaults to "&lt;accession&gt; — ad-hoc review". */
+        @Nullable
+        private String title;
+        @Nullable
+        private String body;
+        /** Optional; defaults to {@link TicketType#CURATION}. */
+        @Nullable
+        private TicketType type;
+        @Nullable
+        private TicketPriority priority;
+        @Nullable
+        private TicketMode mode;
+        @Nullable
+        private Long assigneeId;
+
+        public String getAccession() { return accession; }
+        public void setAccession( String accession ) { this.accession = accession; }
+
+        @Nullable
+        public String getTitle() { return title; }
+        public void setTitle( @Nullable String title ) { this.title = title; }
+
+        @Nullable
+        public String getBody() { return body; }
+        public void setBody( @Nullable String body ) { this.body = body; }
+
+        @Nullable
+        public TicketType getType() { return type; }
+        public void setType( @Nullable TicketType type ) { this.type = type; }
+
+        @Nullable
+        public TicketPriority getPriority() { return priority; }
+        public void setPriority( @Nullable TicketPriority priority ) { this.priority = priority; }
+
+        @Nullable
+        public TicketMode getMode() { return mode; }
+        public void setMode( @Nullable TicketMode mode ) { this.mode = mode; }
+
+        @Nullable
+        public Long getAssigneeId() { return assigneeId; }
+        public void setAssigneeId( @Nullable Long assigneeId ) { this.assigneeId = assigneeId; }
+    }
+
     public static class TicketTargetRequest {
         private TicketTargetType targetType;
         private Long targetId;
         /** Initial status for the target; optional, defaults to {@link TicketTargetStatus#NOT_DONE}. */
         @Nullable
         private TicketTargetStatus status;
+
+        /**
+         * This target's own task — opaque JSON text, stored and served verbatim, never parsed here.
+         * Written with the target, so one call opens a thousand targets each carrying its own finding
+         * rather than a thousand follow-up calls (frinkbro, 2026-09-11).
+         */
+        @Nullable
+        private String payload;
+
+        /** Which schema {@link #payload} follows. Null means the writer declared none. */
+        @Nullable
+        private Integer payloadSchemaVersion;
 
         public TicketTargetType getTargetType() { return targetType; }
         public void setTargetType( TicketTargetType targetType ) { this.targetType = targetType; }
@@ -841,7 +1451,106 @@ public class TicketsWebService {
         @Nullable
         public TicketTargetStatus getStatus() { return status; }
         public void setStatus( @Nullable TicketTargetStatus status ) { this.status = status; }
+
+        @Nullable
+        public String getPayload() { return payload; }
+        public void setPayload( @Nullable String payload ) { this.payload = payload; }
+
+        @Nullable
+        public Integer getPayloadSchemaVersion() { return payloadSchemaVersion; }
+        public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) { this.payloadSchemaVersion = payloadSchemaVersion; }
     }
+
+    /** Body of {@code POST /tickets/{id}/targets}. */
+    public static class AddTargetRequest {
+        /**
+         * An array even though the UI sends one today: a bulk "add these twelve to a ticket" from the
+         * dashboard is the obvious next caller and should not need a second route or twelve round
+         * trips (uib, 2026-08-31).
+         */
+        @Nullable
+        private List<TargetRef> targets;
+
+        @Nullable
+        public List<TargetRef> getTargets() { return targets; }
+        public void setTargets( @Nullable List<TargetRef> targets ) { this.targets = targets; }
+
+        public static class TargetRef {
+            /** Defaults to {@link TicketTargetType#EXPRESSION_EXPERIMENT}, the case this route exists for. */
+            @Nullable
+            private TicketTargetType targetType;
+            @Nullable
+            private Long targetId;
+
+            /** This target's own task; same field and same opacity as on {@link TicketTargetRequest}. */
+            @Nullable
+            private String payload;
+
+            /** Which schema {@link #payload} follows. Null means the writer declared none. */
+            @Nullable
+            private Integer payloadSchemaVersion;
+
+            @Nullable
+            public TicketTargetType getTargetType() { return targetType; }
+            public void setTargetType( @Nullable TicketTargetType targetType ) { this.targetType = targetType; }
+
+            @Nullable
+            public Long getTargetId() { return targetId; }
+            public void setTargetId( @Nullable Long targetId ) { this.targetId = targetId; }
+
+            @Nullable
+            public String getPayload() { return payload; }
+            public void setPayload( @Nullable String payload ) { this.payload = payload; }
+
+            @Nullable
+            public Integer getPayloadSchemaVersion() { return payloadSchemaVersion; }
+            public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) { this.payloadSchemaVersion = payloadSchemaVersion; }
+        }
+    }
+
+    /**
+     * Result of adding targets: which ids landed and which were already there.
+     * <p>
+     * The per-input split is what lets a caller report honestly on a bulk add, where one status code
+     * cannot say that eleven were added and one was already present.
+     */
+    public static class AddTargetsResult {
+        private final List<Long> added;
+        private final List<Long> alreadyPresent;
+        private final TicketValueObject ticket;
+
+        public AddTargetsResult( List<Long> added, List<Long> alreadyPresent, TicketValueObject ticket ) {
+            this.added = added;
+            this.alreadyPresent = alreadyPresent;
+            this.ticket = ticket;
+        }
+
+        public List<Long> getAdded() { return added; }
+        public List<Long> getAlreadyPresent() { return alreadyPresent; }
+        public TicketValueObject getTicket() { return ticket; }
+    }
+
+    /** Result of removing a target: what went, and what state it was in. */
+    public static class RemovedTargetResult {
+        private final TicketTargetType targetType;
+        private final Long targetId;
+        private final TicketTargetStatus status;
+        private final TicketValueObject ticket;
+
+        public RemovedTargetResult( TicketTargetType targetType, Long targetId, TicketTargetStatus status,
+                TicketValueObject ticket ) {
+            this.targetType = targetType;
+            this.targetId = targetId;
+            this.status = status;
+            this.ticket = ticket;
+        }
+
+        public TicketTargetType getTargetType() { return targetType; }
+        public Long getTargetId() { return targetId; }
+        public TicketTargetStatus getStatus() { return status; }
+        public TicketValueObject getTicket() { return ticket; }
+    }
+
 
     /**
      * Body for {@link #updateTicket(Long, UpdateTicketRequest)}. Distinguishes
@@ -873,6 +1582,19 @@ public class TicketsWebService {
         private boolean bodySet = false;
         @Nullable
         private TicketMode mode;
+
+        /**
+         * Whether experiments may be added to this ticket after it is opened — a curator scratchpad.
+         * Boxed on purpose: absent must be distinguishable from an explicit {@code false}, or an
+         * unrelated metadata edit would silently close an open scratchpad. Defaults to false.
+         */
+        @Nullable
+        private Boolean acceptsTargets;
+
+        @Nullable
+        public Boolean getAcceptsTargets() { return acceptsTargets; }
+        public void setAcceptsTargets( @Nullable Boolean acceptsTargets ) { this.acceptsTargets = acceptsTargets; }
+
 
         @Nullable
         public TicketState getState() { return state; }
@@ -929,10 +1651,42 @@ public class TicketsWebService {
      * (e.g. a per-target note) without a v2 endpoint.
      */
     public static class UpdateTargetStatusRequest {
-        @Schema(description = "Desired status for this target.", example = "DONE")
+        @Schema(description = "Desired status for this target. Omit to leave unchanged.", example = "DONE")
         private TicketTargetStatus status;
+
+        @Schema(description = "Screening decision for this target (INCLUDE / REJECT / UNDECIDED). "
+                + "Omit to leave unchanged; send null to clear.", example = "INCLUDE")
+        private ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult screeningResult;
+        private boolean screeningResultSet = false;
 
         public TicketTargetStatus getStatus() { return status; }
         public void setStatus( TicketTargetStatus status ) { this.status = status; }
+
+        public ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult getScreeningResult() { return screeningResult; }
+
+        public void setScreeningResult( ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult screeningResult ) {
+            this.screeningResult = screeningResult;
+            this.screeningResultSet = true;
+        }
+
+        /** True once the JSON carried a {@code screeningResult} key, even if its value was null. */
+        public boolean hasScreeningResult() { return screeningResultSet; }
+
+        @Schema(description = "Free-text reason for the screening decision. Omit the key to leave the "
+                + "existing reason unchanged (including when re-sending the same screeningResult); send "
+                + "an explicit null to clear it. Only applied on a patch that also carries screeningResult.",
+                example = "Superseded by GSE99999")
+        private String screeningResultReason;
+        private boolean screeningResultReasonSet = false;
+
+        public String getScreeningResultReason() { return screeningResultReason; }
+
+        public void setScreeningResultReason( String screeningResultReason ) {
+            this.screeningResultReason = screeningResultReason;
+            this.screeningResultReasonSet = true;
+        }
+
+        /** True once the JSON carried a {@code screeningResultReason} key, even if its value was null. */
+        public boolean hasScreeningResultReason() { return screeningResultReasonSet; }
     }
 }

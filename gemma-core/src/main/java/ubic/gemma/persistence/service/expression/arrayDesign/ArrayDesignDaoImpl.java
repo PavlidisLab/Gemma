@@ -36,6 +36,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueO
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -746,6 +747,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         StopWatch timer = StopWatch.createStarted();
         populateLastEvents( results );
         populateIsMerged( results );
+        populateMergeRelations( results );
         populateBlacklisted( results );
         populateExpressionExperimentCount( results );
         populateSwitchedExpressionExperimentCount( results );
@@ -904,6 +906,29 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
+    public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( @Nullable Long eeId ) {
+        if ( eeId == null ) {
+            return Collections.emptyList();
+        }
+        // A no-op switch — a platform recorded as the original that is ALSO the one in use — is excluded, so
+        // this answers "what was this submitted on, before it became what it is" rather than "what ids appear
+        // in the originalPlatform column". Same rule the details VO applies (ExpressionExperimentDaoImpl,
+        // "omit noop switches"), kept identical so the two cannot drift into disagreeing.
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select op.id from ExpressionExperiment as ee "
+                        + "join ee.bioAssays b join b.originalPlatform op "
+                        + "where ee.id = :eeId and op.id not in ("
+                        + "select ad.id from ExpressionExperiment as ee2 "
+                        + "join ee2.bioAssays b2 join b2.arrayDesignUsed ad where ee2.id = :eeId) "
+                        + "group by op" )
+                .setParameter( "eeId", eeId )
+                .setCacheable( true )
+                .list();
+        return this.loadValueObjectsByIds( ids );
+    }
+
+    @Override
     public long countCompositeSequencesWithBioSequences() {
         return ( Long ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select count(distinct cs) from  CompositeSequence as cs "
@@ -968,6 +993,23 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
                         + " , BioSequence2GeneProduct as bs2gp "
                         + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar" )
                 .setParameter( "ar", arrayDesign ).uniqueResult();
+    }
+
+    @Override
+    public Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign ) {
+        //noinspection unchecked
+        List<Object[]> counts = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ed.name, count(br) from ArrayDesign ad join ad.compositeSequences as cs "
+                        + "join cs.biologicalCharacteristic bs, BlatResult br join br.searchedDatabase ed "
+                        + "where br.querySequence = bs and ad = :ad "
+                        + "group by ed.name" )
+                .setParameter( "ad", arrayDesign )
+                .list();
+        Map<String, Long> result = new HashMap<>();
+        for ( Object[] row : counts ) {
+            result.put( ( String ) row[0], ( Long ) row[1] );
+        }
+        return result;
     }
 
     @Override
@@ -1367,6 +1409,63 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         Map<Long, Boolean> isMergedByArrayDesignId = isMerged( IdentifiableUtils.getIds( results ) );
         for ( ArrayDesignValueObject advo : results ) {
             advo.setIsMerged( isMergedByArrayDesignId.get( advo.getId() ) );
+        }
+    }
+
+    /**
+     * Batch-hydrate {@code mergedInto} + {@code mergees} — which platform this one was merged into,
+     * and which were merged into it.
+     * <p>
+     * Two HQL projections rather than a walk of the entity associations: both edges are
+     * {@code LAZY}, so reading {@code shortName} off the {@code mergedInto} proxy per VO would fire
+     * one query per row. Projecting {@code (owner id, other id, other shortName)} keeps it at two
+     * statements per page regardless of page size, and both sides key off {@code MERGED_INTO_FK}.
+     * <p>
+     * Answers the mergee direction, which had no route at all before: {@code isMergee} said only
+     * THAT a platform was merged, and {@code mergees.id} is not a filterable property, so a mergee
+     * could not name its target from the side a visitor stands on.
+     */
+    private void populateMergeRelations( Collection<ArrayDesignValueObject> results ) {
+        if ( results.isEmpty() ) {
+            return;
+        }
+        List<Long> ids = results.stream()
+                .filter( Objects::nonNull )
+                .map( IdentifiableUtils::getRequiredId )
+                .sorted()
+                .distinct()
+                .collect( Collectors.toList() );
+        //language=HQL
+        //noinspection unchecked
+        List<Object[]> mergedIntoRows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id, m.id, m.shortName from ArrayDesign ad join ad.mergedInto m where ad.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        Map<Long, ArrayDesignReferenceValueObject> mergedIntoByAd = new HashMap<>( mergedIntoRows.size() );
+        for ( Object[] row : mergedIntoRows ) {
+            mergedIntoByAd.put( ( Long ) row[0], new ArrayDesignReferenceValueObject( ( Long ) row[1], ( String ) row[2] ) );
+        }
+        //language=HQL
+        //noinspection unchecked
+        List<Object[]> mergeeRows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ad.id, m.id, m.shortName from ArrayDesign ad join ad.mergees m where ad.id in :ids order by m.shortName" )
+                .setParameterList( "ids", ids )
+                .list();
+        Map<Long, List<ArrayDesignReferenceValueObject>> mergeesByAd = new HashMap<>();
+        for ( Object[] row : mergeeRows ) {
+            mergeesByAd.computeIfAbsent( ( Long ) row[0], k -> new ArrayList<>() )
+                    .add( new ArrayDesignReferenceValueObject( ( Long ) row[1], ( String ) row[2] ) );
+        }
+        for ( ArrayDesignValueObject vo : results ) {
+            if ( vo == null ) {
+                continue;
+            }
+            vo.setMergedInto( mergedIntoByAd.get( vo.getId() ) );
+            // Empty rather than null: the question was asked for every VO on this path, so an empty
+            // list means "nothing was merged into this platform" and null would wrongly read as
+            // "not determined".
+            List<ArrayDesignReferenceValueObject> mergees = mergeesByAd.get( vo.getId() );
+            vo.setMergees( mergees != null ? mergees : Collections.emptyList() );
         }
     }
 

@@ -23,6 +23,9 @@ import io.micrometer.core.annotation.Timed;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +33,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.core.mail.MailEngine;
+import ubic.gemma.core.ontology.relation.OntologyRelationProducer;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -55,6 +60,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -177,6 +184,26 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`)";
 
     /**
+     * MySQL index hint for {@link #EE2C_ED_FACTOR_ANNOTATIONS_QUERY}'s join onto {@code CHARACTERISTIC}.
+     * <p>
+     * Measured on production (2026-08-30): {@code CHARACTERISTIC.EXPERIMENTAL_FACTOR_FK} is NULL on all
+     * 10,790,475 rows, so {@code CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC} reports cardinality 1 and the
+     * optimizer costs a ref lookup at the whole table. It then picks {@code type: ALL} plus a block
+     * nested loop, and full-scans 10.8M rows (1.9 GB) to return nothing. That single branch was
+     * <em>12.1 s of the 12.5 s</em> a one-experiment EE2C refresh took, whatever the experiment's size;
+     * with the hint the same branch runs in 70 ms and a whole-experiment refresh drops to 15-30 ms for a
+     * typical dataset and 0.4 s for the largest conventional ones. Corpus-wide (the nightly job) the hint
+     * is neutral: 11.79 s hinted vs 11.80 s plain, because there the driving scan dominates.
+     * <p>
+     * Emitted only where the dialect parses it — see {@link #ee2cEdQuery()}. H2, which the unit tests run
+     * on even in {@code MODE=MYSQL}, rejects {@code FORCE INDEX} with a syntax error.
+     */
+    private static final String EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT = " FORCE INDEX (CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC)";
+
+    /**
+     * Carries a {@code %s} slot for {@link #EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT}; render it with
+     * {@link #ee2cEdQuery()} rather than using it directly.
+     *
      * @deprecated this is deprecated because {@link ExperimentalFactor#getAnnotations()} is also deprecated. However,
      * there's a possibility that this will be repurposed for annotating continuous FVs, see <a href="https://github.com/PavlidisLab/Gemma/issues/950">#950</a>
      * for more details.
@@ -188,7 +215,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "join CURATION_DETAILS CD on I.CURATION_DETAILS_FK = CD.ID "
                     + "join EXPERIMENTAL_DESIGN ED on I.EXPERIMENTAL_DESIGN_FK = ED.ID "
                     + "join EXPERIMENTAL_FACTOR EF on ED.ID = EF.EXPERIMENTAL_DESIGN_FK "
-                    + "join CHARACTERISTIC C on C.EXPERIMENTAL_FACTOR_FK = EF.ID "
+                    + "join CHARACTERISTIC C%s on C.EXPERIMENTAL_FACTOR_FK = EF.ID "
                     + "where I.class = 'ExpressionExperiment' "
                     + "and " + EE_EQUALS + " "
                     + "and " + CD_LAST_UPDATED_SINCE + " "
@@ -208,10 +235,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + "and " + EE_EQUALS + " "
                     + "and " + CD_LAST_UPDATED_SINCE + " "
                     + "group by I.ID, COALESCE(C.CATEGORY_URI, C.CATEGORY), COALESCE(C.VALUE_URI, C.`VALUE`) ";
-
-    private static final String EE2C_ED_QUERY = EE2C_ED_FACTOR_ANNOTATIONS_QUERY
-            + " union "
-            + EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY;
 
     private static final String EE2AD_QUERY = "insert into EXPRESSION_EXPERIMENT2ARRAY_DESIGN (EXPRESSION_EXPERIMENT_FK, ARRAY_DESIGN_FK, IS_ORIGINAL_PLATFORM, ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK) "
             + "select I.ID, AD.ID, FALSE, (" + SELECT_ANONYMOUS_MASK + ") from INVESTIGATION I "
@@ -329,6 +352,30 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
         return updateExpressionExperiment2CharacteristicEntries( ee, level, null, false );
     }
 
+    /**
+     * The {@code ExperimentalDesign}-level branch, rendered for the running dialect.
+     *
+     * @see #EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT
+     */
+    private String ee2cEdQuery() {
+        String hint = supportsMysqlIndexHints() ? EE2C_ED_FACTOR_ANNOTATIONS_INDEX_HINT : "";
+        return String.format( EE2C_ED_FACTOR_ANNOTATIONS_QUERY, hint )
+                + " union "
+                + EE2C_ED_FACTOR_VALUE_CHARACTERISTICS_QUERY;
+    }
+
+    /**
+     * Whether the running dialect parses MySQL index hints. Answers false when there is no dialect to ask
+     * (a mocked session factory): omitting a hint is always semantically neutral, emitting an unparsable
+     * one is not.
+     */
+    private boolean supportsMysqlIndexHints() {
+        if ( !( sessionFactory instanceof SessionFactoryImplementor ) ) {
+            return false;
+        }
+        return !( ( ( SessionFactoryImplementor ) sessionFactory ).getJdbcServices().getDialect() instanceof H2Dialect );
+    }
+
     private int updateExpressionExperiment2CharacteristicEntries( @Nullable ExpressionExperiment ee, @Nullable Class<?> level, @Nullable Date sinceLastUpdate, boolean truncate ) {
         Assert.isTrue( sinceLastUpdate == null || !truncate, "Cannot perform a partial update with sinceLastUpdate with truncate." );
         StopWatch timer = StopWatch.createStarted();
@@ -342,13 +389,13 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
                     + " union "
                     + EE2C_CLC_QUERY
                     + " union "
-                    + EE2C_ED_QUERY;
+                    + ee2cEdQuery();
         } else if ( level.equals( ExpressionExperiment.class ) ) {
             query = EE2C_EE_QUERY;
         } else if ( level.equals( BioMaterial.class ) ) {
             query = EE2C_BM_QUERY;
         } else if ( level.equals( ExperimentalDesign.class ) ) {
-            query = EE2C_ED_QUERY;
+            query = ee2cEdQuery();
         } else if ( level.equals( CellTypeAssignment.class ) ) {
             query = EE2C_CTA_QUERY;
         } else if ( level.equals( CellLevelCharacteristics.class ) ) {
@@ -440,6 +487,158 @@ public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
     @Override
     public void evictEe2CQueryCache() {
         sessionFactory.getCache().evictQueryRegion( EE2C_QUERY_SPACE );
+    }
+
+    /**
+     * Query space for {@code ANNOTATION_RELATION}, so reads over it are invalidated when a rebuild
+     * writes to it.
+     */
+    private static final String AR_QUERY_SPACE = "ANNOTATION_RELATION";
+
+    /**
+     * Removes the CURATED rows. 🛑 <b>It no longer writes any.</b>
+     *
+     * <p>The harvest turned every EE2C row carrying a predicate and an object into a triple keyed by the
+     * TERM. A statement a curator wrote about ONE experiment's material therefore came back as a property
+     * of that term and landed on every other experiment using it. uib found it on experiment 24976 -- mouse
+     * EAE astrocytes under fingolimod -- which rendered three confident chips, none of them true of it:
+     * {@code astrocyte --derives from part of--> organoid} from ee 31771,
+     * {@code astrocyte --has role--> cell co-culturing} from ee 32195, and {@code nuclear RNA extract
+     * --derived from cell--> vasoactive intestinal peptide secreting cell} from ee 32525.</p>
+     *
+     * <p>🛑 <b>Filtering does not rescue the harvest, and this was measured rather than assumed.</b> 15,007
+     * of ~18,000 curated triples on prod were attested by a single experiment. The ones that recurred were
+     * the common curation PATTERNS rather than truths -- {@code Trp53 --has_genotype--> Homozygous negative}
+     * across 133 experiments, though Trp53 is also overexpressed and heterozygous elsewhere. Adding both
+     * breadth bars on top left a set that still read mostly experiment-local: {@code diabetes mellitus
+     * --induced by--> streptozocin} holds for STZ models rather than for diabetes, {@code Apoe --has_allele
+     * --> APOE4} is simply wrong because Apoe also carries E2 and E3, and {@code induced by} records how one
+     * model was made. Paul, 2026-08-28, having read them: <i>"most of these are not good … let's just delete
+     * all the curated records. We'll just make sure the ones we add are high quality."</i></p>
+     *
+     * <p>The delete is kept, and is what removes the rows already in the table. Curated relations are not
+     * gone as a concept -- what is gone is deriving them wholesale from annotations that were never
+     * assertions about a term. Anything added back has to be curated as a relation in its own right.</p>
+     *
+     * @return always 0; nothing is written. The count of rows REMOVED goes to the log.
+     */
+    @Override
+    @Timed
+    @Transactional
+    public int updateAnnotationRelationEntries( @Nullable ExpressionExperiment ee ) {
+        StopWatch timer = StopWatch.createStarted();
+        String what = ee != null ? " for " + ee : "";
+        log.info( String.format( "Updating CURATED ANNOTATION_RELATION entries%s...", what ) );
+
+        // Delete first, then insert. An upsert can only correct rows the new query still produces, so a
+        // row whose statement a curator has since deleted would outlive the annotation it came from --
+        // the failure mode that left 1,008 uncorrectable rows in EE2C.
+        NativeQuery<?> delete = sessionFactory.getCurrentSession()
+                .createNativeQuery( "delete from ANNOTATION_RELATION where BASIS = 'CURATED'"
+                        + ( ee != null ? " and EXPRESSION_EXPERIMENT_FK = :eeId" : "" ) )
+                .addSynchronizedQuerySpace( AR_QUERY_SPACE );
+        if ( ee != null ) {
+            delete.setParameter( "eeId", ee.getId() );
+        }
+        int removed = delete.executeUpdate();
+
+        log.info( String.format( "Done removing CURATED ANNOTATION_RELATION entries%s; %d removed in %d ms.",
+                what, removed, timer.getTime() ) );
+        return 0;
+    }
+
+    /**
+     * Absent from ontology-free contexts (tests, and any deployment with the ontologies switched off),
+     * which is why this is optional rather than required: {@code TableMaintenanceUtil} must still start.
+     */
+    @Autowired(required = false)
+    private OntologyRelationProducer ontologyRelationProducer;
+
+    /**
+     * Optional for the same reason as the ontology producer: a context without ontologies must still
+     * start, and this one additionally needs MONDO loaded to translate MGI's DOIDs.
+     */
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.relation.MgiRelationProducer mgiRelationProducer;
+
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.relation.CellosaurusRelationProducer cellosaurusRelationProducer;
+
+    /**
+     * Not {@code @Transactional}: the producer spends minutes walking Jena models before it has a row to
+     * write, and its own transaction wraps only the delete-and-insert. Holding a connection open across
+     * the read would be a maintenance job contending with the application for no reason.
+     */
+    @Override
+    @Timed
+    public int updateOntologyRelationEntries( @Nullable Collection<String> sources ) {
+        if ( ontologyRelationProducer == null ) {
+            log.warn( "No ontology relation producer is wired; ONTOLOGY ANNOTATION_RELATION entries are not updated." );
+            return 0;
+        }
+        StopWatch timer = StopWatch.createStarted();
+        String what = sources != null && !sources.isEmpty() ? " for " + sources : "";
+        log.info( String.format( "Updating ONTOLOGY ANNOTATION_RELATION entries%s...", what ) );
+        int written = ontologyRelationProducer.produce( sources );
+        evictAnnotationRelationQueryCache();
+        log.info( String.format( "Done updating ONTOLOGY ANNOTATION_RELATION entries%s; %d written in %d ms.",
+                what, written, timer.getTime() ) );
+        return written;
+    }
+
+    /**
+     * Not {@code @Transactional}, for the same reason as the ontology pass: the fetch and the parse
+     * happen before there is a row to write, and the producer's own transaction wraps only the
+     * delete-and-insert.
+     */
+    @Override
+    @Timed
+    public int updateExternalRelationEntries() {
+        if ( mgiRelationProducer == null ) {
+            log.warn( "No MGI relation producer is wired; EXTERNAL ANNOTATION_RELATION entries are not updated." );
+            return 0;
+        }
+        StopWatch timer = StopWatch.createStarted();
+        log.info( "Updating EXTERNAL ANNOTATION_RELATION entries..." );
+        int written = 0;
+        // 🛑 Each source stands or falls alone. Both deletes are scoped to their own SOURCE, so one
+        // failing download must not cost the other its rows -- and a failure leaves the existing rows
+        // in place rather than emptying them, since rebuilding from nothing is indistinguishable from
+        // the source having retracted everything it ever said.
+        List<String> failed = new ArrayList<>();
+        try {
+            written += mgiRelationProducer.produce();
+        } catch ( java.io.IOException e ) {
+            log.error( "Could not read MGI's reports; its EXTERNAL relation rows are left as they are.", e );
+            failed.add( "MGI: " + e.getMessage() );
+        }
+        if ( cellosaurusRelationProducer != null ) {
+            try {
+                written += cellosaurusRelationProducer.produce();
+            } catch ( java.io.IOException e ) {
+                log.error( "Could not read Cellosaurus; its EXTERNAL relation rows are left as they are.", e );
+                failed.add( "Cellosaurus: " + e.getMessage() );
+            }
+        }
+        evictAnnotationRelationQueryCache();
+        log.info( String.format( "Done updating EXTERNAL ANNOTATION_RELATION entries; %d written in %d ms.",
+                written, timer.getTime() ) );
+        // 🛑 Both sources are attempted before this throws, which is the point -- isolation is about
+        // one source not costing the other its rows, and it says nothing about what the CALLER should
+        // be told. On 2026-08-18 MGI failed on a read-only cache path and the command logged
+        // "Wrote 243212 EXTERNAL relation rows" and exited 0. Half the job had not run, and the only
+        // way to find out was to go and count the table.
+        if ( !failed.isEmpty() ) {
+            throw new IllegalStateException( "EXTERNAL relation update finished with "
+                    + failed.size() + " of its sources failing, and their existing rows untouched: "
+                    + String.join( "; ", failed ) + ". " + written + " rows were written by the rest." );
+        }
+        return written;
+    }
+
+    @Override
+    public void evictAnnotationRelationQueryCache() {
+        sessionFactory.getCache().evictQueryRegion( AR_QUERY_SPACE );
     }
 
     @Override

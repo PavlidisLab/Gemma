@@ -3,7 +3,7 @@
  *
  * @author poirigui
  */
-@NonNullApi
+@ParametersAreNonnullByDefault
 package ubic.gemma.core.loader.expression.cellxgene;
 
-import org.springframework.lang.NonNullApi;
+import javax.annotation.ParametersAreNonnullByDefault;

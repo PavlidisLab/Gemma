@@ -76,6 +76,24 @@ public class EhcacheConfig {
 
     /** Read-only entity defaults: small heap, eternal-ish TTL. */
     private static final CacheSpec L2_READ_ONLY = new CacheSpec( 1000, Duration.ofHours( 24 ) );
+    /**
+     * Entities whose state includes a LONGBLOB.
+     * <p>
+     * 🛑 Every spec here is a count of ENTRIES, which makes it a heap budget only if you know what an entry
+     * weighs. For a {@code Chromosome} or a {@code Unit} that is bytes and 1,000 of them is free. For an
+     * entity carrying a blob it is whatever the blob is, and the L2 runs through JSR-107 ehcache, which
+     * stores by VALUE — so an entry is a serialized copy, not a reference.
+     * <p>
+     * Measured on production 2026-09-17: {@code SingleCellDimension} averages 0.53 MB and reaches 19.18 MB,
+     * {@code GenericCellLevelCharacteristics} averages 0.38 MB and reaches 6.47 MB. At
+     * {@link #L2_READ_ONLY}'s 1,000 entries those are 19 GB and 6 GB of nominal heap. Twenty is a number
+     * someone can multiply out and still sleep; a thousand is not.
+     * <p>
+     * ⚠️ This is a ceiling, not a licence. An entity whose blob has no upper bound belongs out of the L2
+     * entirely — see {@code SampleCoexpressionMatrix}, which reached 110 MB a row and was removed rather than
+     * resized.
+     */
+    private static final CacheSpec L2_BLOB_ENTITY = new CacheSpec( 20, Duration.ofHours( 24 ) );
     /** Read-write entity defaults: larger heap (mutable, more churn), shorter TTL. */
     private static final CacheSpec L2_READ_WRITE = new CacheSpec( 5000, Duration.ofHours( 1 ) );
     /** Nonstrict-read-write entity defaults: small heap, short TTL (high churn, stale-tolerant). */
@@ -103,6 +121,18 @@ public class EhcacheConfig {
         APP_CACHES.put( "OntologyService.search", new CacheSpec( 5000, Duration.ofHours( 1 ) ) );
         APP_CACHES.put( "OntologyService.parents", new CacheSpec( 10000, Duration.ofHours( 6 ) ) );
         APP_CACHES.put( "OntologyService.children", new CacheSpec( 10000, Duration.ofHours( 6 ) ) );
+
+        // OlsTermResolverImpl: IRI -> term fallback lookups against EBI OLS (positive and negative results).
+        APP_CACHES.put( "OlsTermResolver.terms", new CacheSpec( 10000, Duration.ofHours( 12 ) ) );
+        // NcbiGeneResolverImpl: gene id -> NCBI summary, for ids Gemma's gene table does not carry (QTLs,
+        // complexes, pseudogenes, cross-species constructs). Entrez allows 3 req/s unauthenticated and
+        // EntrezUtils.doNicely serializes calls, so the cache is what keeps a multi-statement commit from
+        // waiting one request at a time. Negative answers are cached too.
+        APP_CACHES.put( "NcbiGeneResolver.genes", new CacheSpec( 10000, Duration.ofHours( 12 ) ) );
+
+        // ChemblCodeResolverImpl: trial code -> compound identification against ChEMBL (positive
+        // and negative). Long TTL: a compound's research codes do not change between releases.
+        APP_CACHES.put( "ChemblCodeResolver.compounds", new CacheSpec( 10000, Duration.ofHours( 24 ) ) );
 
         // GeneOntologyServiceImpl: GO term metadata.
         APP_CACHES.put( "GeneOntologyService.goTerms", new CacheSpec( 50000, Duration.ofHours( 12 ) ) );
@@ -138,6 +168,38 @@ public class EhcacheConfig {
         // repeated keystrokes of one editing session, short enough that ontology refreshes
         // become visible without an explicit evict.
         APP_CACHES.put( "AnnotationsSearchResponseCache", new CacheSpec( 500, Duration.ofMinutes( 30 ) ) );
+
+        // Per-string corpus prior for ?rank=commonality: how many distinct experiments were
+        // annotated with a given URI by someone who wrote the query string itself. Keyed by the
+        // normalized string plus a digest of the candidate URI set, and holding only a small
+        // map of counts, so entries are cheap — hence a much higher cap than the response cache
+        // above. 6h TTL because the underlying tally is corpus curation history: it moves when
+        // curators retag experiments, which is slow, and a stale count only nudges an ordering.
+        APP_CACHES.put( "AnnotationsStringPriorCache", new CacheSpec( 20000, Duration.ofHours( 6 ) ) );
+
+        // What prior curators chose for a given value string, behind ?includePriorCuration. Costs a
+        // scan of the annotation corpus rather than an index range, so caching matters more here
+        // than for the sibling above; the result depends only on the string (plus any leave-one-out
+        // exclusion), so entries are complete and shared across every query shape. Same 6h TTL —
+        // it is the same curation history, moving at the same speed.
+        APP_CACHES.put( "AnnotationsPriorCurationCache", new CacheSpec( 20000, Duration.ofHours( 6 ) ) );
+
+        // How many distinct experiments use a given annotation URI — the usageCount shown against
+        // every /annotations/search hit, and the corpus signal ?rank=composite blends in.
+        //
+        // Keyed PER URI rather than per candidate set, which is what makes it work for a typeahead:
+        // successive keystrokes propose overlapping candidates, so after the first query only the
+        // newly-proposed URIs cost anything. A per-result-set key would miss on every keystroke.
+        //
+        // The key carries the caller's read scope because this tally IS ACL-restricted, unlike the
+        // two caches above — a count computed for a curator who can see unpublished data must never
+        // be served to anonymous.
+        //
+        // 12h TTL against a source table refreshed once per working day (SchedulerConfig runs the
+        // ee2c jobs at 19:00/19:10/19:20 MON-FRI), so an entry is stale only for the span between a
+        // refresh and its expiry, and only ever by the day's curation delta. Entry is a single
+        // integer, hence the large cap.
+        APP_CACHES.put( "AnnotationsUsageCountCache", new CacheSpec( 200000, Duration.ofHours( 12 ) ) );
     }
 
     static {
@@ -170,7 +232,15 @@ public class EhcacheConfig {
 
         // --- Read-only entity regions (immutable configuration / reference data) ---
         L2_CACHES.put( "ubic.gemma.model.analysis.AnalysisResultSet", L2_READ_ONLY );
-        L2_CACHES.put( "ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix", L2_READ_ONLY );
+        // 🛑 SampleCoexpressionMatrix is deliberately absent. These specs are in ENTRIES, and one of its
+        // entries is an n-squared LONGBLOB -- 9.5 MB at 1,090 samples, 110 MB at the largest row on
+        // production. L2_READ_ONLY's 1,000 entries was tens of gigabytes of heap written as a small number.
+        // ⚠️ It was NOT what killed corrMat on GSE260875 -- the referrer scan puts 1,899 of those 1,901 blobs
+        // in the MySQL driver's packet payloads and exactly one in this cache. Removed on its own arithmetic,
+        // not on that evidence. See the entity's own header. Anything else here with a LONGBLOB is worth the
+        // same arithmetic before it is
+        // trusted: SingleCellDimension averages 0.53 MB and reaches 19 MB, bounded today only by there being
+        // 550 rows of it.
         L2_CACHES.put( "ubic.gemma.model.analysis.expression.diff.HitListSize", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.analysis.expression.diff.PvalueDistribution", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.analysis.expression.pca.Eigenvalue", L2_READ_ONLY );
@@ -183,9 +253,9 @@ public class EhcacheConfig {
         L2_CACHES.put( "ubic.gemma.model.common.measurement.Unit", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.common.protocol.Protocol", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.BioAssayDimension", L2_READ_ONLY );
-        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics", L2_READ_ONLY );
+        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.GenericCellLevelCharacteristics", L2_BLOB_ENTITY );
         L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation", L2_READ_ONLY );
-        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.SingleCellDimension", L2_READ_ONLY );
+        L2_CACHES.put( "ubic.gemma.model.expression.bioAssayData.SingleCellDimension", L2_BLOB_ENTITY );
         L2_CACHES.put( "ubic.gemma.model.expression.biomaterial.Compound", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.genome.Chromosome", L2_READ_ONLY );
         L2_CACHES.put( "ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult", L2_READ_ONLY );

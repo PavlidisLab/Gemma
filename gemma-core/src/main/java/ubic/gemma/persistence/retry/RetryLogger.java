@@ -24,7 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.listener.RetryListenerSupport;
+import org.springframework.retry.RetryListener;
 import org.springframework.stereotype.Component;
 
 import org.springframework.lang.Nullable;
@@ -36,12 +36,12 @@ import org.springframework.lang.Nullable;
  * @author paul
  */
 @Component
-public class RetryLogger extends RetryListenerSupport {
+public class RetryLogger implements RetryListener {
 
     private static final Log log = LogFactory.getLog( RetryLogger.class );
 
     @Override
-    public <T> void close( RetryContext context, RetryCallback<T> callback, @Nullable Throwable throwable ) {
+    public <T, E extends Throwable> void close( RetryContext context, RetryCallback<T, E> callback, @Nullable Throwable throwable ) {
         if ( context.getRetryCount() > 1 ) {
             if ( throwable == null ) {
                 RetryLogger.log.info( String.format( "Retry was successful after %d attempts!", context.getRetryCount() ) );
@@ -53,7 +53,7 @@ public class RetryLogger extends RetryListenerSupport {
     }
 
     @Override
-    public <T> void onError( RetryContext context, RetryCallback<T> callback, Throwable throwable ) {
+    public <T, E extends Throwable> void onError( RetryContext context, RetryCallback<T, E> callback, Throwable throwable ) {
         if ( context.getRetryCount() > 0 ) {
             // only include a brief & specific stacktrace
             RetryLogger.log.warn( String.format( "Retry attempt #%d failed.", context.getRetryCount() ),

@@ -175,7 +175,7 @@ public class GeneServiceImpl extends AbstractFilteringVoEnabledService<Gene, Gen
 
         for ( Gene2GOAssociation assoc : associations ) {
             AnnotationValueObject annotationValueObject = new AnnotationValueObject( assoc.getOntologyEntry() );
-            annotationValueObject.setTermName( assoc.getOntologyEntry().getValue() );
+            annotationValueObject.setValue( assoc.getOntologyEntry().getValue() );
             ontologies.add( annotationValueObject );
         }
         return annotationAssociationService.removeRootTerms( ontologies );

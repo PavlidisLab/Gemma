@@ -23,6 +23,7 @@ import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.MutableAclService;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -189,8 +190,13 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     public void testNormalizeByValue() {
         assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( null, "test" ) ) )
                 .isEqualTo( "test" );
+        // 🛑 A blank URI is stored as null (Characteristic.setValueUri), so the row normalises by its
+        // VALUE like any other ungrounded row. This used to assert "", which is what the empty string
+        // produced: every `VALUE_URI = ''` row in the corpus -- 80 of them on prod -- grouped together
+        // under one empty key in findByValueLikeGroupedByNormalizedValue and
+        // countByValueUriGroupedByNormalizedValue, whatever term it carried.
         assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( "", "test" ) ) )
-                .isEqualTo( "" );
+                .isEqualTo( "test" );
         assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( "https://EXAMPLE.COM", "test" ) ) )
                 .isEqualTo( "https://example.com" );
     }
@@ -281,6 +287,358 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
         // ranking by level uses the order by field() which is not supported
         Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> results = characteristicDao.findExperimentsByUris( Collections.singleton( "http://example.com" ), true, true, true, taxon, 100, false );
         assertThat( results ).containsKey( ExpressionExperiment.class );
+    }
+
+    /**
+     * The aggregate count has to agree with the number the callers used to derive by loading every
+     * matching experiment and sizing a {@code Set} of their ids. Deriving the expected value that
+     * same way here rather than hard-coding it is the point: it is the two query shapes that have to
+     * stay in agreement, and a literal would still pass if both drifted together.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testCountExperimentsByUrisAgreesWithFindExperimentsByUris() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        String shared = "http://example.com/shared";
+        String lonely = "http://example.com/lonely";
+        for ( String uri : new String[] { shared, shared, lonely } ) {
+            ExpressionExperiment ee = new ExpressionExperiment();
+            ee.setTaxon( taxon );
+            ee.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+            sessionFactory.getCurrentSession().persist( ee );
+            aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        }
+        sessionFactory.getCurrentSession().flush();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Arrays.asList( shared, lonely, "http://example.com/nobody-uses-this" );
+        Map<String, Long> counts = characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() );
+
+        assertThat( counts ).containsEntry( shared, 2L )
+                .containsEntry( lonely, 1L )
+                // a URI nothing references is absent, not zero
+                .doesNotContainKey( "http://example.com/nobody-uses-this" );
+        assertThat( counts ).isEqualTo( distinctEeCountsTheOldWay( uris, Collections.emptySet() ) );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testCountExperimentsByUrisExcludesExperiments() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        String uri = "http://example.com/shared";
+        List<Long> eeIds = new ArrayList<>();
+        for ( int i = 0; i < 2; i++ ) {
+            ExpressionExperiment ee = new ExpressionExperiment();
+            ee.setTaxon( taxon );
+            ee.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+            sessionFactory.getCurrentSession().persist( ee );
+            aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+            eeIds.add( ee.getId() );
+        }
+        sessionFactory.getCurrentSession().flush();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Collections.singleton( uri );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() ) )
+                .containsEntry( uri, 2L );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.singleton( eeIds.get( 0 ) ) ) )
+                .containsEntry( uri, 1L );
+        // excluding every experiment leaves no row at all rather than a zero
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, new HashSet<>( eeIds ) ) )
+                .doesNotContainKey( uri );
+    }
+
+    /**
+     * The count is what a curator is shown as a term's corpus usage, so it must not include
+     * experiments they cannot read — the aggregate carries the same ACL restriction as the
+     * row-returning lookup it replaced.
+     */
+    @Test
+    @WithMockUser(username = "bob")
+    public void testCountExperimentsByUrisRespectsAcl() {
+        assertThat( SecurityUtil.isUserAdmin() ).isFalse();
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        String uri = "http://example.com/shared";
+
+        ExpressionExperiment readable = new ExpressionExperiment();
+        readable.setTaxon( taxon );
+        readable.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+        sessionFactory.getCurrentSession().persist( readable );
+
+        ExpressionExperiment hidden = new ExpressionExperiment();
+        hidden.setTaxon( taxon );
+        hidden.getCharacteristics().add( createCharacteristic( uri, "example" ) );
+        sessionFactory.getCurrentSession().persist( hidden );
+        sessionFactory.getCurrentSession().flush();
+
+        MutableAcl acl = ( MutableAcl ) aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, readable.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ, new PrincipalSid( "bob" ), true );
+        aclService.updateAcl( acl );
+        // hidden gets an ACL with no ACE for bob AND a different owner. An owner reads its own
+        // object unconditionally, so creating this ACL as bob would have left it readable and the
+        // test would have passed for the wrong reason. createAcl takes the owner from the security
+        // context, so alice has to be the one holding it -- and going through the context is also
+        // what mints alice's principal sid, which setOwner alone cannot do.
+        SecurityContext bobContext = SecurityContextHolder.getContext();
+        try {
+            SecurityContext aliceContext = SecurityContextHolder.createEmptyContext();
+            aliceContext.setAuthentication( new UsernamePasswordAuthenticationToken( "alice", "password",
+                    Collections.singletonList( new SimpleGrantedAuthority( "GROUP_USER" ) ) ) );
+            SecurityContextHolder.setContext( aliceContext );
+            aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, hidden.getId() ) );
+        } finally {
+            SecurityContextHolder.setContext( bobContext );
+        }
+        assertThat( SecurityUtil.isUserAdmin() ).isFalse();
+
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Collections.singleton( uri );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() ) )
+                .containsEntry( uri, 1L );
+        assertThat( characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() ) )
+                .isEqualTo( distinctEeCountsTheOldWay( uris, Collections.emptySet() ) );
+    }
+
+    /**
+     * Count an experiment once even when its EE2C row carries the URI in more than one column. The
+     * union has one arm per column, so a statement whose subject and object are the same term
+     * produces the experiment twice; the {@code count(distinct ...)} outside the union is what
+     * collapses it, exactly as the caller's {@code Set<Long>} used to.
+     */
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testCountExperimentsByUrisCountsAnExperimentOnceAcrossColumns() {
+        String uri = "http://example.com/same-on-both-sides";
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        sessionFactory.getCurrentSession().persist( ed );
+        ExperimentalFactor ef = new ExperimentalFactor();
+        ef.setExperimentalDesign( ed );
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setCategory( createCharacteristic( null, "treatment" ) );
+        sessionFactory.getCurrentSession().persist( ef );
+
+        FactorValue fv = FactorValue.Factory.newInstance( ef );
+        Statement s = createStatement( Categories.UNCATEGORIZED, uri, "example" );
+        s.setObject( "example" );
+        s.setObjectUri( uri );
+        fv.getCharacteristics().add( s );
+        sessionFactory.getCurrentSession().persist( fv );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setTaxon( taxon );
+        ee.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( ee );
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        sessionFactory.getCurrentSession().flush();
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Collection<String> uris = Collections.singleton( uri );
+        Map<String, Long> counts = characteristicDao.countExperimentsByUris( uris, true, true, true, null, Collections.emptySet() );
+        assertThat( counts ).containsEntry( uri, 1L );
+        assertThat( counts ).isEqualTo( distinctEeCountsTheOldWay( uris, Collections.emptySet() ) );
+    }
+
+    /**
+     * The tally as {@code AnnotationsWebService.getDistinctEeCountsByUri} computed it before the
+     * aggregate existed: load every matching experiment and size a set of their ids.
+     */
+    private Map<String, Long> distinctEeCountsTheOldWay( Collection<String> uris, Set<Long> excludedExperimentIds ) {
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> hits =
+                characteristicDao.findExperimentReferencesByUris( uris, true, true, true, null, -1, false );
+        Map<String, Set<Long>> distinctIdsByUri = new HashMap<>();
+        for ( Map<String, Set<ExpressionExperiment>> perClass : hits.values() ) {
+            for ( Map.Entry<String, Set<ExpressionExperiment>> entry : perClass.entrySet() ) {
+                Set<Long> bucket = distinctIdsByUri.computeIfAbsent( entry.getKey(), k -> new HashSet<>() );
+                for ( ExpressionExperiment ee : entry.getValue() ) {
+                    if ( !excludedExperimentIds.contains( ee.getId() ) ) {
+                        bucket.add( ee.getId() );
+                    }
+                }
+            }
+        }
+        Map<String, Long> counts = new HashMap<>();
+        distinctIdsByUri.forEach( ( k, v ) -> {
+            if ( !v.isEmpty() ) {
+                counts.put( k, ( long ) v.size() );
+            }
+        } );
+        return counts;
+    }
+
+    @Test
+    @WithMockUser(username = "bob")
+    public void testFindRepresentativeUsageByValueUris() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        Characteristic c = createCharacteristic( "http://example.com", "example" );
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+
+        MutableAcl acl = ( MutableAcl ) aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ, new PrincipalSid( "bob" ), true );
+        aclService.updateAcl( acl );
+
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Map<String, CharacteristicDao.UsageExample> byUri =
+                characteristicDao.findRepresentativeUsageByValueUris( Collections.singleton( "http://example.com" ) );
+        assertThat( byUri ).containsKey( "http://example.com" );
+        CharacteristicDao.UsageExample ex = byUri.get( "http://example.com" );
+        assertThat( ex.value ).isEqualTo( "example" );
+        assertThat( ex.valueUri ).isEqualTo( "http://example.com" );
+        assertThat( ex.level ).isEqualTo( ExpressionExperiment.class );
+        assertThat( ex.sourceExperimentId ).isEqualTo( ee.getId() );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindEeCountsByUriForOriginalValue() {
+        String compound = "http://purl.obolibrary.org/obo/CHEBI_28262";
+        String role = "http://purl.obolibrary.org/obo/OBI_0000025";
+
+        // Two experiments whose submitters wrote "DMSO" meaning the compound — one bare, one
+        // carrying GEO's field prefix — and one that wrote it meaning the role.
+        createExperimentWithOriginalValue( compound, "dimethyl sulfoxide", "DMSO" );
+        createExperimentWithOriginalValue( compound, "dimethyl sulfoxide", "treatment: DMSO" );
+        createExperimentWithOriginalValue( role, "reference substance role", "dmso" );
+        // Not the same string: whoever wrote this wrote a concentration, not a name.
+        createExperimentWithOriginalValue( compound, "dimethyl sulfoxide", "0.3% DMSO" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Set<String> candidates = new HashSet<>( Arrays.asList( compound, role ) );
+        Map<String, Long> counts = characteristicDao.findEeCountsByUriForOriginalValue( candidates, "DMSO" );
+
+        assertThat( counts )
+                .as( "the GEO field prefix must not hide the string, and the trailing-content row must not count" )
+                .containsEntry( compound, 2L )
+                .containsEntry( role, 1L );
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindEeCountsByUriForOriginalValueRefusesQuantities() {
+        String uri = "http://example.com/dose";
+        createExperimentWithOriginalValue( uri, "some term", "24" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        // A value with no letters is a dose, a timepoint or a replicate number pooled across
+        // unrelated experiments, so it must not be counted as evidence for any term.
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( Collections.singleton( uri ), "24" ) )
+                .isEmpty();
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( Collections.singleton( uri ), "0.3" ) )
+                .isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindEeCountsByUriForOriginalValueTreatsWildcardsLiterally() {
+        String uri = "http://example.com/tnf";
+        createExperimentWithOriginalValue( uri, "TNF alpha", "TNF_alpha" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        Set<String> candidates = Collections.singleton( uri );
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( candidates, "TNF_alpha" ) )
+                .containsEntry( uri, 1L );
+        // The underscore is a LIKE wildcard; unescaped it would match any character in its place.
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( candidates, "TNFXalpha" ) )
+                .isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindPriorCurationByOriginalValue() {
+        String role = "http://purl.obolibrary.org/obo/OBI_0000220";
+        String substanceRole = "http://purl.obolibrary.org/obo/OBI_0000025";
+
+        // `sham` is the contested case: curators sent it to two different terms. Neither shares a
+        // word with the string, so no lexical search would ever return either one.
+        createExperimentWithOriginalValue( role, "reference subject role", "sham" );
+        createExperimentWithOriginalValue( role, "reference subject role", "treatment: Sham" );
+        createExperimentWithOriginalValue( role, "reference subject role", "sham" );
+        createExperimentWithOriginalValue( substanceRole, "reference substance role", "sham" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        List<CharacteristicDao.PriorCurationUsage> usages =
+                characteristicDao.findPriorCurationByOriginalValue( "sham", -1 );
+
+        assertThat( usages ).as( "most used first" ).hasSize( 2 );
+        assertThat( usages.get( 0 ).valueUri ).isEqualTo( role );
+        assertThat( usages.get( 0 ).experimentCount ).isEqualTo( 3L );
+        assertThat( usages.get( 0 ).value ).isEqualTo( "reference subject role" );
+        assertThat( usages.get( 0 ).agreement )
+                .as( "3 of 4 — visibly contested, which is the point of the field" )
+                .isEqualTo( 0.75, org.assertj.core.data.Offset.offset( 0.001 ) );
+        assertThat( usages.get( 1 ).valueUri ).isEqualTo( substanceRole );
+        assertThat( usages.get( 1 ).experimentCount ).isEqualTo( 1L );
+
+        // A quantity is refused here for the same reason as in the tally.
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "24", -1 ) ).isEmpty();
+    }
+
+    @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testPriorCurationHonoursLeaveOneOut() {
+        String uri = "http://purl.obolibrary.org/obo/OBI_0000220";
+        createExperimentWithOriginalValue( uri, "reference subject role", "sham" );
+        createExperimentWithOriginalValue( uri, "reference subject role", "sham" );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        sessionFactory.getCurrentSession().flush();
+
+        List<Long> allIds = ( List<Long> ) sessionFactory.getCurrentSession()
+                .createQuery( "select e.id from ExpressionExperiment e" ).list();
+        assertThat( allIds ).hasSizeGreaterThanOrEqualTo( 2 );
+
+        // Excluding one of the two experiments must reduce the count. Without this a gold set drawn
+        // from the corpus is partly tallying its own answer key.
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "sham", -1, Collections.emptySet() ) )
+                .singleElement()
+                .satisfies( u -> assertThat( u.experimentCount ).isEqualTo( 2L ) );
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "sham", -1,
+                Collections.singleton( allIds.get( 0 ) ) ) )
+                .singleElement()
+                .satisfies( u -> assertThat( u.experimentCount ).isEqualTo( 1L ) );
+        // Excluding every experiment leaves no evidence at all, rather than a stale full-corpus count.
+        assertThat( characteristicDao.findPriorCurationByOriginalValue( "sham", -1, new HashSet<>( allIds ) ) )
+                .isEmpty();
+        assertThat( characteristicDao.findEeCountsByUriForOriginalValue( Collections.singleton( uri ), "sham",
+                new HashSet<>( allIds ) ) )
+                .isEmpty();
+    }
+
+    /**
+     * Persist one experiment carrying a single characteristic whose ORIGINAL_VALUE is what the
+     * submitter wrote, so the EE2C tally has something to count.
+     */
+    private void createExperimentWithOriginalValue( @Nullable String valueUri, String value, String originalValue ) {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        Characteristic c = createCharacteristic( valueUri, value );
+        c.setOriginalValue( originalValue );
+        ee.setTaxon( taxon );
+        ee.getCharacteristics().add( c );
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        aclService.createAcl( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
     }
 
     @Test

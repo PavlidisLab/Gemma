@@ -55,7 +55,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link PlatformsWebService#getPlatformsByIds(PlatformArrayArg, FilterArg, OffsetArg, LimitArg, SortArg, CursorArg)}
+ * {@code PlatformsWebService#getPlatformsByIds(PlatformArrayArg, FilterArg, OffsetArg, LimitArg, SortArg, CursorArg)}
  * — the {@code GET /platforms/{platform}} variant (step 1x). Pure Mockito — the goal is to verify
  * the WebService routes cursor vs offset modes to the right helper and emits the right response
  * wrapper, and that the path-derived id-set predicate is preserved in cursor mode (not silently
@@ -138,7 +138,7 @@ public class PlatformsWebServiceByIdsCursorTest {
         when( arrayDesignService.loadValueObjects( any(), any(), anyInt(), anyInt() ) ).thenReturn( slice );
 
         Object response = webService.getPlatformsByIds(
-                platformsArg(), filter( "" ), offset( "0" ), limit( "20" ), sort( "+id" ), null );
+                platformsArg(), filter( "" ), offset( "0" ), limit( "20" ), sort( "+id" ), null, false );
 
         assertThat( response ).isInstanceOf( FilteredAndPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -166,7 +166,7 @@ public class PlatformsWebServiceByIdsCursorTest {
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
         Object response = webService.getPlatformsByIds(
-                platformsArg(), filter( "" ), offset( "0" ), limit( "20" ), sort( "+id" ), arg );
+                platformsArg(), filter( "" ), offset( "0" ), limit( "20" ), sort( "+id" ), arg, false );
 
         assertThat( response ).isInstanceOf( FilteredAndCursorPaginatedResponseDataObject.class );
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
@@ -192,7 +192,7 @@ public class PlatformsWebServiceByIdsCursorTest {
         when( arrayDesignArgService.getPlatformsByCursor( any( Filters.class ), eq( c ), eq( 5 ) ) ).thenReturn( cp );
 
         Object response = webService.getPlatformsByIds(
-                platformsArg(), filter( "" ), offset( "0" ), limit( "5" ), sort( "+id" ), CursorArg.valueOf( c.encode() ) );
+                platformsArg(), filter( "" ), offset( "0" ), limit( "5" ), sort( "+id" ), CursorArg.valueOf( c.encode() ), false );
 
         assertThat( response ).isInstanceOf( FilteredAndCursorPaginatedResponseDataObject.class );
         verify( arrayDesignArgService ).getPlatformsByCursor( any( Filters.class ), eq( c ), eq( 5 ) );
@@ -208,7 +208,7 @@ public class PlatformsWebServiceByIdsCursorTest {
         when( arrayDesignArgService.getPlatformsByCursor( any( Filters.class ), eq( c ), eq( 10 ) ) ).thenReturn( cp );
 
         webService.getPlatformsByIds( platformsArg(), filter( "" ), offset( "0" ), limit( "10" ),
-                sort( "+name" ) /* would-be problematic sort */, CursorArg.valueOf( c.encode() ) );
+                sort( "+name" ) /* would-be problematic sort */, CursorArg.valueOf( c.encode() ), false );
 
         verify( arrayDesignArgService, never() ).getSort( any( SortArg.class ) );
         verify( arrayDesignService, never() ).loadValueObjects( any(), any(), anyInt(), anyInt() );
@@ -229,7 +229,7 @@ public class PlatformsWebServiceByIdsCursorTest {
         when( arrayDesignArgService.getPlatformsByCursor( any( Filters.class ), eq( c ), eq( 10 ) ) ).thenReturn( cp );
 
         webService.getPlatformsByIds( platformsArg(), filter( "" ), offset( "0" ), limit( "10" ),
-                sort( "+id" ), CursorArg.valueOf( c.encode() ) );
+                sort( "+id" ), CursorArg.valueOf( c.encode() ), false );
 
         // Verify the id-set predicate Filters actually reached the cursor helper (i.e. wasn't dropped).
         org.mockito.ArgumentCaptor<Filters> captor = org.mockito.ArgumentCaptor.forClass( Filters.class );

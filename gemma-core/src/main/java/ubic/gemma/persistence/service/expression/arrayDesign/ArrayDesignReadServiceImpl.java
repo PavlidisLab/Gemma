@@ -337,6 +337,12 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId ) {
+        return arrayDesignDao.loadOriginalPlatformValueObjectsForEE( eeId );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long countCompositeSequencesWithBioSequences() {
         return arrayDesignDao.countCompositeSequencesWithBioSequences();
     }
@@ -369,6 +375,12 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
     @Transactional(readOnly = true)
     public long countBlatResults( ArrayDesign arrayDesign ) {
         return arrayDesignDao.countBlatResults( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign ) {
+        return arrayDesignDao.countBlatResultsBySearchedDatabase( arrayDesign );
     }
 
     @Override

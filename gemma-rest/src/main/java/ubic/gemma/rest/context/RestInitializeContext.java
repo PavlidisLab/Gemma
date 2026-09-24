@@ -7,7 +7,7 @@ import org.springframework.web.context.ConfigurableWebApplicationContext;
 import static ubic.gemma.core.context.SpringContextUtils.prepareContext;
 
 /**
- * Standalone gemma-rest counterpart to {@link ubic.gemma.web.context.InitializeContext} (which lives in
+ * Standalone gemma-rest counterpart to {@code ubic.gemma.web.context.InitializeContext} (which lives in
  * gemma-web and pulls in JSP / theme / servlet-context configuration that the REST WAR has no use for).
  * <p>
  * Responsibilities reduced to what the standalone {@code gemma-rest.war} actually needs:
@@ -30,8 +30,9 @@ import static ubic.gemma.core.context.SpringContextUtils.prepareContext;
  * </context-param>
  * }</pre>
  *
- * @see ubic.gemma.web.context.InitializeContext gemma-web's full-fat equivalent (kept in place for the
- * legacy UI's lifecycle; both classes co-exist during the gemma-web → gemma-rest cutover)
+ * <p>
+ * Compare {@code ubic.gemma.web.context.InitializeContext}, gemma-web's full-fat equivalent (kept in place for the
+ * legacy UI's lifecycle; both classes co-exist during the gemma-web &rarr; gemma-rest cutover).
  */
 @Slf4j
 public class RestInitializeContext implements ApplicationContextInitializer<ConfigurableWebApplicationContext> {

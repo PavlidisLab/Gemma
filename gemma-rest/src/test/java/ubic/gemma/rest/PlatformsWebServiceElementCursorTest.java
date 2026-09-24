@@ -28,6 +28,7 @@ import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Slice;
+import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
@@ -54,7 +55,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link PlatformsWebService#getPlatformElement(PlatformArg, CompositeSequenceArrayArg, OffsetArg, LimitArg, CursorArg)}
+ * {@link PlatformsWebService#getPlatformElement(PlatformArg, CompositeSequenceArrayArg, OffsetArg, LimitArg, CursorArg, boolean, boolean)}
  * as step 1j of {@code CURSOR_PAGINATION_STEP1_PLAN.md}. Pure Mockito — the goal is to verify
  * the WebService routes cursor vs offset modes to the right helper and emits the right
  * response wrapper, not to retest the DAO (covered by {@code ExpressionExperimentDaoCursorTest}
@@ -126,6 +127,10 @@ public class PlatformsWebServiceElementCursorTest {
         // lenient: cursor-mode tests don't reach getEntity / getSort; strict-stubbing would
         // flag these shared setUp stubs as unnecessary for those tests otherwise.
         lenient().when( arrayDesignArgService.getEntity( any( PlatformArg.class ) ) ).thenReturn( platform );
+        // The endpoint now sources the echoed filters from the arg-service, which composes BOTH
+        // the platform scope and the {probes} id/name restriction (the latter used to be dropped).
+        lenient().when( arrayDesignArgService.getElementFilters( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ) ) )
+                .thenReturn( Filters.empty() );
         // Stub the legacy filter-aware loadValueObjects path so offset-mode tests can fire.
         lenient().when( compositeSequenceService.getSort( eq( "id" ), eq( Sort.Direction.ASC ), eq( Sort.NullMode.LAST ) ) )
                 .thenReturn( Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ) );
@@ -145,9 +150,9 @@ public class PlatformsWebServiceElementCursorTest {
                 Arrays.asList( cs1, cs2 ),
                 Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
                 0, 20, 2L );
-        when( arrayDesignArgService.getElements( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), anyInt(), anyInt(), anyBoolean() ) ).thenReturn( slice );
+        when( arrayDesignArgService.getElements( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), anyInt(), anyInt(), anyBoolean(), anyBoolean() ) ).thenReturn( slice );
 
-        Object response = webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "20" ), null, false );
+        Object response = webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "20" ), null, false, false );
 
         assertThat( response ).isInstanceOf( FilteredAndPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -158,7 +163,7 @@ public class PlatformsWebServiceElementCursorTest {
         assertThat( page.getLimit() ).isEqualTo( 20 );
         assertThat( page.getTotalElements() ).isEqualTo( 2L );
 
-        verify( arrayDesignArgService, never() ).getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), any(), anyInt(), anyBoolean() );
+        verify( arrayDesignArgService, never() ).getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), any(), anyInt(), anyBoolean(), anyBoolean() );
     }
 
     @Test
@@ -171,10 +176,10 @@ public class PlatformsWebServiceElementCursorTest {
                 /* nextCursor */ "next-cursor-token",
                 /* prevCursor */ "prev-cursor-token",
                 /* totalElements */ null );
-        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), eq( c ), eq( 20 ), eq( false ) ) ).thenReturn( cp );
+        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), eq( c ), eq( 20 ), eq( false ), eq( false ) ) ).thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "20" ), arg, false );
+        Object response = webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "20" ), arg, false, false );
 
         assertThat( response ).isInstanceOf( FilteredAndCursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -188,7 +193,7 @@ public class PlatformsWebServiceElementCursorTest {
         assertThat( page.getLimit() ).isEqualTo( 20 );
 
         // legacy filter-aware loadValueObjects must not be touched in cursor mode
-        verify( arrayDesignArgService, never() ).getElements( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), anyInt(), anyInt(), anyBoolean() );
+        verify( arrayDesignArgService, never() ).getElements( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), anyInt(), anyInt(), anyBoolean(), anyBoolean() );
     }
 
     @Test
@@ -199,12 +204,12 @@ public class PlatformsWebServiceElementCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<CompositeSequenceValueObject> cp = new CursorPage<>(
                 List.of( cs2 ), null, 5, null, "prev", null );
-        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), eq( c ), eq( 5 ), eq( false ) ) ).thenReturn( cp );
+        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), eq( c ), eq( 5 ), eq( false ), eq( false ) ) ).thenReturn( cp );
 
-        Object response = webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "5" ), CursorArg.valueOf( c.encode() ), false );
+        Object response = webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "5" ), CursorArg.valueOf( c.encode() ), false, false );
 
         assertThat( response ).isInstanceOf( FilteredAndCursorPaginatedResponseDataObject.class );
-        verify( arrayDesignArgService ).getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), eq( c ), eq( 5 ), eq( false ) );
+        verify( arrayDesignArgService ).getElementsByCursor( any( PlatformArg.class ), any( CompositeSequenceArrayArg.class ), eq( c ), eq( 5 ), eq( false ), eq( false ) );
     }
 
     @Test
@@ -216,10 +221,10 @@ public class PlatformsWebServiceElementCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<CompositeSequenceValueObject> cp = new CursorPage<>(
                 List.of( cs1 ), null, 10, null, null, null );
-        when( arrayDesignArgService.getElementsByCursor( eq( platformArg ), eq( probesArg ), eq( c ), eq( 10 ), eq( false ) ) ).thenReturn( cp );
+        when( arrayDesignArgService.getElementsByCursor( eq( platformArg ), eq( probesArg ), eq( c ), eq( 10 ), eq( false ), eq( false ) ) ).thenReturn( cp );
 
-        webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ), false );
+        webService.getPlatformElement( platformArg, probesArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ), false, false );
 
-        verify( arrayDesignArgService ).getElementsByCursor( eq( platformArg ), eq( probesArg ), eq( c ), eq( 10 ), eq( false ) );
+        verify( arrayDesignArgService ).getElementsByCursor( eq( platformArg ), eq( probesArg ), eq( c ), eq( 10 ), eq( false ), eq( false ) );
     }
 }

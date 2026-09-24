@@ -4,12 +4,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.MediaType;
 import ubic.gemma.rest.annotations.GZIP;
+import ubic.gemma.rest.annotations.GZIPs;
 
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.ext.WriterInterceptor;
 import jakarta.ws.rs.ext.WriterInterceptorContext;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 /**
  * Base class for decorators that handle the {@link GZIP} annotation.
@@ -24,14 +26,32 @@ public abstract class AbstractGzipHeaderDecorator implements WriterInterceptor {
 
     @Override
     public void aroundWriteTo( WriterInterceptorContext context ) throws IOException, WebApplicationException {
-        boolean hasGzipAnnotation = Arrays.stream( context.getAnnotations() )
-                .filter( a -> a instanceof GZIP )
-                .map( a -> ( GZIP ) a )
+        boolean hasGzipAnnotation = gzipAnnotations( context )
                 .anyMatch( a -> isApplicable( context, a ) );
         if ( hasGzipAnnotation ) {
             context.getHeaders().putSingle( "Content-Encoding", "gzip" );
         }
         context.proceed();
+    }
+
+    /**
+     * Every {@link GZIP} declared on the resource method, flattening the {@link GZIPs} container.
+     * <p>
+     * A method carrying two {@code @GZIP} annotations reaches us as a single {@code @GZIPs} — the compiler wraps
+     * repeated annotations, and {@code getAnnotations()} reports the container rather than its contents. Without
+     * the flatten step a per-media-type split is silently ignored and the method gets no compression at all.
+     */
+    private static Stream<GZIP> gzipAnnotations( WriterInterceptorContext context ) {
+        return Arrays.stream( context.getAnnotations() )
+                .flatMap( a -> {
+                    if ( a instanceof GZIP ) {
+                        return Stream.of( ( GZIP ) a );
+                    } else if ( a instanceof GZIPs ) {
+                        return Arrays.stream( ( ( GZIPs ) a ).value() );
+                    } else {
+                        return Stream.empty();
+                    }
+                } );
     }
 
     /**

@@ -16,6 +16,8 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
@@ -23,6 +25,7 @@ import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -45,10 +48,48 @@ public interface TicketDao extends BaseDao<Ticket> {
     List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId );
 
     /**
+     * Bulk counterpart to {@link #findOpenForTarget}: the same open-ticket question asked about a
+     * whole page of targets in one query, keyed by target id.
+     * <p>
+     * Only target ids that are on at least one open ticket get a key. An absent id is on none — the
+     * same "key off presence" contract {@code findCurrentLocks} uses, so a page of fifty quiet
+     * datasets is not fifty empty lists.
+     * <p>
+     * The rows are {@link TicketSearchHitValueObject}s rather than {@link Ticket} entities because
+     * the caller wants "is it on one, and which", not the other members: a scratchpad holding five
+     * hundred datasets would otherwise ship five hundred target rows per experiment on the page.
+     * {@code targetCount} is counted by the database.
+     *
+     * @param targetType the target type all ids are interpreted as
+     * @param targetIds  the ids to ask about; an empty collection yields an empty map without a query
+     * @return target id → its open tickets, most recently updated first; ids with none are absent
+     */
+    Map<Long, List<TicketSummaryForTargetValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+            Collection<Long> targetIds );
+
+    /**
      * Find all tickets currently assigned to the given contact, regardless
      * of state. Used by curator dashboards.
      */
     List<Ticket> findAssignedTo( Contact assignee );
+
+    /**
+     * Find the curator's scratchpad: the {@link TicketType#SCRATCHPAD} ticket they reported.
+     * <p>
+     * State is deliberately NOT part of the predicate — a curator has one scratchpad, and a cancelled
+     * one is still theirs (reopen it with {@code PUT /tickets/{id}} rather than getting a second).
+     * <p>
+     * 🛑 Ordered by {@code id} ascending and capped at one row rather than using a unique-result query.
+     * Nothing in the schema forbids two rows (see
+     * {@link TicketService#getOrCreateScratchpad(Contact)} for the race that could mint one), so a
+     * {@code uniqueResult} here would turn a stray duplicate into a hard failure on every subsequent
+     * read. Oldest-wins instead: the answer to "which one is the curator's scratchpad" stays the same
+     * row forever.
+     *
+     * @return the curator's scratchpad, or {@code null} if they have none yet
+     */
+    @Nullable
+    Ticket findScratchpad( Contact curator );
 
     /**
      * Paged, filtered list query for the REST surface (Phase B-2). All filter
@@ -109,7 +150,7 @@ public interface TicketDao extends BaseDao<Ticket> {
      * {@code CURSOR_PAGINATION_STEP1_PLAN.md}).
      * <p>
      * Same scope as {@link #findOpenForTarget}: tickets in a non-terminal state
-     * ({@code OPEN}/{@code IN_PROGRESS}) whose {@link TicketTarget} matches
+     * ({@code OPEN}/{@code IN_PROGRESS}) whose {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget} matches
      * {@code (targetType, targetId)}. Cursor mode forces a single-component
      * ascending {@code t.id} sort; the {@code targetType}/{@code targetId}
      * scope is preserved across pages. Fetches {@code limit+1} rows internally
@@ -198,20 +239,71 @@ public interface TicketDao extends BaseDao<Ticket> {
     /**
      * Count open ({@code OPEN} + {@code IN_PROGRESS}) tickets grouped by
      * {@link TicketType}. Used by the admin curation-status surface.
+     * <p>
+     * Includes {@link TicketType#SCRATCHPAD}. This is the breakdown, not a workload figure, and it is
+     * what makes the scratchpad exclusion in {@link #countOpen()} visible rather than invisible: the
+     * difference between the two is exactly the SCRATCHPAD entry.
      */
     Map<TicketType, Long> countOpenByType();
 
     /**
-     * Count tickets in a non-terminal state ({@code OPEN} + {@code IN_PROGRESS}).
+     * Count tickets in a non-terminal state ({@code OPEN} + {@code IN_PROGRESS}), EXCLUDING
+     * {@link TicketType#SCRATCHPAD}.
+     * <p>
+     * 🛑 The scratchpad exclusion is the point of the method, not a detail. A scratchpad is never
+     * resolved — finishing with a dataset means removing it from the scratchpad, not closing the
+     * ticket (Paul, 2026-08-31) — so counting one as open curation work would add a permanent +1 per
+     * curator to every workload number. {@link #countOpenByType()} still reports it.
      */
     long countOpen();
 
     /**
      * @return the earliest {@code createdAt} across every ticket in a
-     *         non-terminal state, or {@code null} if no open tickets exist.
-     *         Used to surface "oldest open ticket age" on the admin
+     *         non-terminal state, EXCLUDING {@link TicketType#SCRATCHPAD}, or {@code null} if no
+     *         open tickets exist. Used to surface "oldest open ticket age" on the admin
      *         curation-status surface.
+     *         <p>
+     *         Same exclusion and same reason as {@link #countOpen()}, and it bites harder here: a
+     *         scratchpad outlives every real ticket, so including it would pin this number to the age
+     *         of the first scratchpad ever provisioned and it would never move again.
      */
     @Nullable
     Date findOldestOpenCreatedAt();
+
+    /**
+     * Look one ticket up by id and project it to a {@link TicketSearchHitValueObject}, honouring the
+     * same visibility rules as {@link #findSearchHitsByTitle}. Backs the "typed a ticket number"
+     * half of {@code GET /tickets/search}.
+     * <p>
+     * Separate from the title query rather than folded into its {@code ORDER BY}: the ticket a
+     * curator names by number can be older than the {@code limit} most recently touched title
+     * matches, and a hit pushed off the end of that window is indistinguishable from one that does
+     * not exist.
+     *
+     * @param openOnly            if true, only OPEN/IN_PROGRESS tickets are hits
+     * @param scratchpadOwnerId   contact id of the caller, whose own {@link TicketType#SCRATCHPAD}
+     *                            tickets are hits; null admits nobody's
+     * @return the hit, or {@code null} when no ticket has that id or it is filtered out. An id that
+     *         names no ticket is a non-hit, never an error.
+     */
+    @Nullable
+    TicketSearchHitValueObject findSearchHitById( Long id, boolean openOnly, @Nullable Long scratchpadOwnerId );
+
+    /**
+     * Find tickets whose title contains {@code titleFragment}, case-insensitively, projected to
+     * {@link TicketSearchHitValueObject} and ordered by {@code updatedAt} descending. Backs the
+     * "typed some of the title" half of {@code GET /tickets/search}.
+     * <p>
+     * {@code targetCount} on each hit is counted by the database; no {@code TicketTarget} row is
+     * fetched, which is the point of the endpoint.
+     *
+     * @param titleFragment     matched as a substring; its {@code LIKE} wildcards are escaped, so a
+     *                          title fragment containing {@code %} or {@code _} matches literally
+     * @param openOnly          if true, only OPEN/IN_PROGRESS tickets are hits
+     * @param scratchpadOwnerId contact id of the caller, whose own {@link TicketType#SCRATCHPAD}
+     *                          tickets are hits; null admits nobody's
+     * @param limit             max rows to return; values &lt;= 0 are treated as "no limit"
+     */
+    List<TicketSearchHitValueObject> findSearchHitsByTitle( String titleFragment, boolean openOnly,
+            @Nullable Long scratchpadOwnerId, int limit );
 }

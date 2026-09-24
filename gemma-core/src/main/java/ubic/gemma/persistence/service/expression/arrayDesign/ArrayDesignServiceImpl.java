@@ -267,6 +267,11 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    public List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId ) {
+        return readService.loadOriginalPlatformValueObjectsForEE( eeId );
+    }
+
+    @Override
     public long countCompositeSequencesWithBioSequences() {
         return readService.countCompositeSequencesWithBioSequences();
     }
@@ -297,6 +302,11 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    public Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign ) {
+        return readService.countBlatResultsBySearchedDatabase( arrayDesign );
+    }
+
+    @Override
     public long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign ) {
         return readService.countCompositeSequencesWithBioSequences( arrayDesign );
     }
@@ -315,6 +325,7 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     public long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs ) {
         return readService.countGenes( arrayDesign, useGene2Cs );
     }
+
 
     @Override
     public ArrayDesign thaw( ArrayDesign arrayDesign ) {

@@ -83,10 +83,10 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
     private Characteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
         Characteristic vc = Characteristic.Factory.newInstance();
         vc.setId( avo.getId() );
-        vc.setCategory( avo.getClassName() );
-        vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
-        vc.setValue( avo.getTermName() );
-        vc.setValueUri( StringUtils.stripToNull( avo.getTermUri() ) );
+        vc.setCategory( avo.getCategory() );
+        vc.setCategoryUri( StringUtils.stripToNull( avo.getCategoryUri() ) );
+        vc.setValue( avo.getValue() );
+        vc.setValueUri( StringUtils.stripToNull( avo.getValueUri() ) );
         if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
             vc.setEvidenceCode( GOEvidenceCode.valueOf( avo.getEvidenceCode() ) );
         return vc;
@@ -95,10 +95,10 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<CharacteristicUpd
     private Statement convertAvo2Statement( AnnotationValueObject avo ) {
         Statement vc = Statement.Factory.newInstance();
         vc.setId( avo.getId() );
-        vc.setCategory( avo.getClassName() );
-        vc.setCategoryUri( StringUtils.stripToNull( avo.getClassUri() ) );
-        vc.setSubject( avo.getTermName() );
-        vc.setSubjectUri( StringUtils.stripToNull( avo.getTermUri() ) );
+        vc.setCategory( avo.getCategory() );
+        vc.setCategoryUri( StringUtils.stripToNull( avo.getCategoryUri() ) );
+        vc.setSubject( avo.getValue() );
+        vc.setSubjectUri( StringUtils.stripToNull( avo.getValueUri() ) );
         if ( StringUtils.isNotBlank( avo.getEvidenceCode() ) )
             vc.setEvidenceCode( GOEvidenceCode.valueOf( avo.getEvidenceCode() ) );
         return vc;

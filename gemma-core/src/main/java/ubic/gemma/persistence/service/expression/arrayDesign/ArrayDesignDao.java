@@ -98,6 +98,7 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     long countGenes( ArrayDesign arrayDesign, boolean useGene2Cs );
 
+
     /**
      * Obtain all the genes associated to the platform organized by corresponding design elements.
      */
@@ -152,6 +153,18 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     List<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
+    /**
+     * Load the platforms a dataset was ORIGINALLY submitted on, before any platform switch.
+     * <p>
+     * A dataset can have more than one — its assays need not have come from a single submitted platform. A
+     * platform recorded as an original that is ALSO the one in use is a no-op switch and is left out, so an
+     * unswitched dataset answers with an empty list rather than echoing its current platform. That is the same
+     * rule the details VO applies, kept identical so the two cannot drift into disagreeing.
+     *
+     * @see #loadValueObjectsForEE(Long)
+     */
+    List<ArrayDesignValueObject> loadOriginalPlatformValueObjectsForEE( Long eeId );
+
     long countCompositeSequencesWithBioSequences();
 
     long countCompositeSequencesWithBlatResults();
@@ -159,6 +172,16 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
     long countCompositeSequencesWithGenes( boolean useGene2Cs );
 
     long countBlatResults( ArrayDesign arrayDesign );
+
+    /**
+     * Count the alignments held for this platform's sequences by the genome assembly they were searched against.
+     * <p>
+     * Results aligned before 2026-09-19 name the taxon ("rat") rather than the assembly, so they answer under that
+     * name and say nothing about which assembly they belong to.
+     *
+     * @see ubic.gemma.core.analysis.sequence.ShellDelegatingBlat#getSearchedGenome(ubic.gemma.model.genome.Taxon)
+     */
+    Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign );
 
     long countCompositeSequences( ArrayDesign id );
 

@@ -1,6 +1,7 @@
 package ubic.gemma.core.ontology.jena;
 
 import org.apache.jena.ontology.*;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
@@ -14,6 +15,7 @@ import org.apache.jena.reasoner.rulesys.OWLMicroReasonerFactory;
 import org.apache.jena.reasoner.rulesys.OWLMiniReasonerFactory;
 import org.apache.jena.reasoner.transitiveReasoner.TransitiveReasonerFactory;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.DC_11;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
@@ -99,6 +101,13 @@ public abstract class AbstractOntologyService implements OntologyService {
         this.ontologyUrl = ontologyUrl;
         this.ontologyEnabled = ontologyEnabled;
         this.cacheName = cacheName;
+    }
+
+    @Override
+    public String getIdentifier() {
+        // the cache name is already a stable, space-free per-ontology token (e.g. "cellLineOntology");
+        // only the ad-hoc GenericOntologyService constructor leaves it null, hence the fallback.
+        return cacheName != null ? cacheName : org.apache.commons.lang3.StringUtils.deleteWhitespace( ontologyName );
     }
 
     protected String getOntologyName() {
@@ -196,18 +205,35 @@ public abstract class AbstractOntologyService implements OntologyService {
 
     @Override
     public String getName() {
-        return getState().map( state -> {
-            NodeIterator it = state.model.listObjectsOfProperty( DC_11.title );
-            return it.hasNext() ? it.next().asLiteral().getString() : null;
-        } ).orElse( null );
+        return getState().map( state -> firstLiteral( state.model, DC_11.title, DCTerms.title ) ).orElse( null );
     }
 
     @Override
     public String getDescription() {
-        return getState().map( state -> {
-            NodeIterator it = state.model.listObjectsOfProperty( DC_11.description );
-            return it.hasNext() ? it.next().asLiteral().getString() : null;
-        } ).orElse( null );
+        return getState().map( state -> firstLiteral( state.model, DC_11.description, DCTerms.description ) ).orElse( null );
+    }
+
+    /**
+     * First literal found under any of {@code properties}, in order, or {@code null}.
+     *
+     * <p>Dublin Core has two namespaces and ontologies do not agree on which to use: the older
+     * {@code purl.org/dc/elements/1.1/} (GO, OBI) and DCTerms at {@code purl.org/dc/terms/}
+     * (CHEBI, and increasingly the OBO reissues). Reading only the 1.1 spelling reported a null
+     * name and description for every ontology on the modern namespace even though both were
+     * sitting in the model.
+     */
+    @Nullable
+    private static String firstLiteral( Model model, Property... properties ) {
+        for ( Property p : properties ) {
+            NodeIterator it = model.listObjectsOfProperty( p );
+            while ( it.hasNext() ) {
+                RDFNode n = it.next();
+                if ( n.isLiteral() ) {
+                    return n.asLiteral().getString();
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -304,6 +330,18 @@ public abstract class AbstractOntologyService implements OntologyService {
         this.additionalPropertyUris = additionalPropertyUris;
     }
 
+    /** Whether the load currently running was asked for explicitly (admin refresh) rather than by startup. */
+    private volatile boolean forceLoadInProgress = false;
+
+    /**
+     * True when the in-flight load came from an explicit {@code forceLoad} request — the admin
+     * refresh endpoint — as opposed to startup. A subclass that fetches remotely consults this to
+     * decide whether a pinned cache may be bypassed; see {@link OntologyLoader#isCachePinned()}.
+     */
+    protected boolean isForceLoadInProgress() {
+        return forceLoadInProgress;
+    }
+
     public void initialize( boolean forceLoad, boolean forceIndexing ) {
         initialize( null, forceLoad, forceIndexing );
     }
@@ -313,6 +351,11 @@ public abstract class AbstractOntologyService implements OntologyService {
     }
 
     private synchronized void initialize( @Nullable InputStream stream, boolean forceLoad, boolean forceIndexing ) {
+        // Visible to loadModel() on this same thread, which is how a subclass learns whether the
+        // caller asked for a real re-fetch. Safe as a plain field because initialize() is
+        // synchronized, so exactly one load runs per service at a time; threading the flag through
+        // loadModel() instead would change an abstract signature and all five of its overriders.
+        this.forceLoadInProgress = forceLoad;
         if ( !forceLoad && state != null ) {
             log.warn( "{} is already loaded, and force=false, not restarting", this );
             return;
@@ -391,11 +434,17 @@ public abstract class AbstractOntologyService implements OntologyService {
         if ( searchEnabled && cacheName != null ) {
             //Checks if the current ontology has changed since it was last loaded.
             boolean changed = OntologyLoader.hasChanged( cacheName );
+            // ...and whether it is now being loaded from a DIFFERENT source than the index was
+            // built from. hasChanged only compares the cached download against the previous copy
+            // of itself, so re-pointing the URL leaves a stale index looking perfectly valid --
+            // the index is keyed by cacheName, not by source. See OntologyLoader#hasSourceChanged
+            // for the outage that motivated this.
+            boolean sourceChanged = OntologyLoader.hasSourceChanged( cacheName, ontologyUrl );
             boolean indexExists = OntologyIndexer.getSubjectIndex( cacheName, excludedWordsFromStemming ) != null;
             boolean forceReindexing = forceLoad && forceIndexing;
             // indexing is slow, don't do it if we don't have to.
             try {
-                index = OntologyIndexer.indexOntology( cacheName, model, excludedWordsFromStemming, forceReindexing || changed || !indexExists );
+                index = OntologyIndexer.indexOntology( cacheName, model, excludedWordsFromStemming, forceReindexing || changed || sourceChanged || !indexExists );
             } catch ( Exception e ) {
                 if ( isCausedByInterrupt( e ) ) {
                     return;
@@ -403,6 +452,9 @@ public abstract class AbstractOntologyService implements OntologyService {
                     throw new RuntimeException( String.format( "Failed to generate index for %s.", this ), e );
                 }
             }
+            // Only after the index is in hand, so a failed or interrupted indexing run does not
+            // leave a marker claiming this source has been indexed when it has not.
+            OntologyLoader.recordSource( cacheName, ontologyUrl );
         } else {
             index = null;
         }
@@ -540,7 +592,10 @@ public abstract class AbstractOntologyService implements OntologyService {
         }
         if ( state.alternativeIDs == null ) {
             log.info( "init search by alternativeID" );
-            this.state = initSearchByAlternativeId( state );
+            // Re-read into the local: initSearchByAlternativeId returns a NEW State and the old one still has a
+            // null map, so dereferencing the stale local NPEs on the first call for each ontology. The assert
+            // below said so, but assertions are off in a deployed JVM, so it failed as an NPE instead.
+            state = this.state = initSearchByAlternativeId( state );
         }
         assert state.alternativeIDs != null;
         String termUri = state.alternativeIDs.get( alternativeId );
@@ -557,6 +612,51 @@ public abstract class AbstractOntologyService implements OntologyService {
         } ).orElseGet( () -> {
             log.warn( "Ontology {} is not ready, no term  URIs will be returned.", this );
             return Collections.emptySet();
+        } );
+    }
+
+    /**
+     * Read cross-references from the cached SOURCE artifact instead of the loaded model.
+     *
+     * <p>A PLAIN model, deliberately: no {@code OntModel}, no inference, no imports — just the
+     * triples {@link CrossReferences} needs. That is strictly lighter than the model this service
+     * already builds at boot, so it cannot be the thing that runs the host out of memory, and it
+     * reuses the existing qualifier logic rather than growing a second parser that could disagree
+     * with it about exact-versus-narrow.</p>
+     *
+     * <p>Falls back to the loaded model when there is no cached source — better a smaller index than
+     * none.</p>
+     */
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferencesFromSource() {
+        String cacheName = getCacheName();
+        if ( cacheName == null ) {
+            return getCrossReferences();
+        }
+        java.io.File cached = OntologyLoader.getDiskCachePath( cacheName );
+        if ( !cached.isFile() || cached.length() == 0 ) {
+            log.warn( "No cached source for {} at {}; falling back to the loaded model's cross-references, "
+                    + "which under-cover if that model is a slim.", cacheName, cached );
+            return getCrossReferences();
+        }
+        org.apache.jena.rdf.model.Model model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel();
+        try ( java.io.InputStream in = java.nio.file.Files.newInputStream( cached.toPath() ) ) {
+            model.read( in, getOntologyUrl() );
+            return CrossReferences.list( model );
+        } catch ( Exception e ) {
+            log.warn( "Could not read cross-references from the cached source " + cached
+                    + "; falling back to the loaded model.", e );
+            return getCrossReferences();
+        } finally {
+            model.close();
+        }
+    }
+
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferences() {
+        return getState().map( state -> CrossReferences.list( state.model ) ).orElseGet( () -> {
+            log.warn( "Ontology {} is not ready, no cross-references will be returned.", this );
+            return Collections.emptyList();
         } );
     }
 
@@ -616,10 +716,17 @@ public abstract class AbstractOntologyService implements OntologyService {
     @Override
     public Set<OntologyTerm> getParents( Collection<OntologyTerm> terms, boolean direct,
             boolean includeAdditionalProperties, boolean keepObsoletes ) {
+        // 🛑 No isUriAllowed filter on these results. The prefix set says which terms this ontology SERVES
+        // -- the right question for getTerm and for search hits, the wrong one for the object of an axiom it
+        // asserts. Filtering here made a subClassOf leaving the namespace unreportable BY THE ONLY ONTOLOGY
+        // THAT HAS IT: EFO_0001643 subClassOf CL_0000010 is asserted in EFO, EFO's prefix is
+        // http://www.ebi.ac.uk/efo/EFO_, and no other ontology holds the child -- so /annotations/parents
+        // answered zero ancestors for 14 of 38 EFO terms in a reference corpus, every one of them a term whose
+        // parent is outside EFO. OntologyServiceImpl.getParentsOrChildren re-queries a foreign result against
+        // the ontology that does own it, and re-fetches its label; both were unreachable behind this filter.
         return getState().map( state ->
                         JenaUtils.getParents( state.model, getOntClassesFromTerms( state.model, terms ), direct, includeAdditionalProperties ? state.additionalRestrictions : null )
                                 .stream()
-                            .filter( o -> state.isUriAllowed( o.getURI() ) )
                                 .map( o -> ( OntologyTerm ) new OntologyTermImpl( o, state.additionalRestrictions ) )
                                 .filter( o -> keepObsoletes || !o.isObsolete() )
                                 .collect( Collectors.toSet() ) )
@@ -629,10 +736,10 @@ public abstract class AbstractOntologyService implements OntologyService {
     @Override
     public Set<OntologyTerm> getChildren( Collection<OntologyTerm> terms, boolean direct,
             boolean includeAdditionalProperties, boolean keepObsoletes ) {
+        // No isUriAllowed filter on these results, for the same reason as getParents above.
         return getState().map( state ->
                 JenaUtils.getChildren( state.model, getOntClassesFromTerms( state.model, terms ), direct, includeAdditionalProperties ? state.additionalRestrictions : null )
                         .stream()
-                    .filter( o -> state.isUriAllowed( o.getURI() ) )
                         .map( o -> ( OntologyTerm ) new OntologyTermImpl( o, state.additionalRestrictions ) )
                         .filter( o -> keepObsoletes || !o.isObsolete() )
                         .collect( Collectors.toSet() )

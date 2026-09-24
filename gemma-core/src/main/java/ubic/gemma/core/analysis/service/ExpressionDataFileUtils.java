@@ -1,6 +1,7 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -113,6 +114,10 @@ public class ExpressionDataFileUtils {
     }
 
     private static String formatExperimentAnalyzedFilename( BioAssaySet experimentAnalyzed ) {
+        // The analysis' experimentAnalyzed is frequently an uninitialized proxy, and a
+        // BioAssaySet$HibernateProxy is an instance of neither branch below -- it fell through to
+        // the throw and killed every makeProcessedData run over a dataset with existing DEAs.
+        experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( experimentAnalyzed );
         ExpressionExperiment ee;
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             ee = ( ExpressionExperiment ) experimentAnalyzed;

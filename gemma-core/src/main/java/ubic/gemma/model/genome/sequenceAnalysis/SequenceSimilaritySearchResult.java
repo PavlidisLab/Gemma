@@ -43,7 +43,7 @@ import ubic.gemma.persistence.util.IdentifiableUtils;
 @Entity
 @Table(name = "SEQUENCE_SIMILARITY_SEARCH_RESULT")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING, length = 255)
 @Immutable
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public abstract class SequenceSimilaritySearchResult extends AbstractIdentifiable {

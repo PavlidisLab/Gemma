@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 import ubic.gemma.persistence.util.Cursor;
@@ -31,7 +32,9 @@ import ubic.gemma.persistence.util.Slice;
 
 import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @see CompositeSequence
@@ -184,4 +187,26 @@ public interface CompositeSequenceDao extends FilteringVoEnabledDao<CompositeSeq
      * omitted from the returned map. Returns an empty map on an empty input.
      */
     Map<Long, BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * Batch-fetch the compact gene identities mapped to each of the supplied composite-sequence
+     * ids, keyed by composite-sequence id. Probes that map to no gene are omitted from the map
+     * (the caller treats absent-from-map as "no gene mapping recorded"), so the returned map may
+     * be smaller than the input. Returns an empty map on an empty input.
+     * <p>
+     * Reads the denormalized {@code GENE2CS} table rather than walking
+     * {@code CompositeSequence -> BioSequence -> BioSequence2GeneProduct -> GeneProduct -> Gene},
+     * and projects only the three columns a listing row renders — no {@link ubic.gemma.model.genome.Gene}
+     * entities are hydrated.
+     */
+    Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * Composite-sequence ids on {@code arrayDesignId} that map to any of {@code geneIds}.
+     * <p>
+     * Straight lookup against the denormalized {@code GENE2CS} table, whose
+     * {@code gene2csgeneadindex (AD, GENE)} composite index covers exactly this predicate — no
+     * joins, no entity hydration. Returns an empty set on empty input.
+     */
+    Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId );
 }

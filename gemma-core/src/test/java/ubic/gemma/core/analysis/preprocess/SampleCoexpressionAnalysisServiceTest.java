@@ -22,9 +22,17 @@ import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionExc
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.core.security.audit.AuditEventPayload;
+import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,10 +45,14 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
     @Autowired
     private SampleCoexpressionAnalysisService sampleCoexpressionAnalysisService;
+    @Autowired
+    private AuditEventService auditEventService;
+    @Autowired
+    private BioAssayService bioAssayService;
 
     @Test
     @Tag("slow")
-    public void test() throws QuantitationTypeConversionException, FilteringException {
+    public void test() throws Exception {
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
         assertFalse( sampleCoexpressionAnalysisService.hasAnalysis( ee ) );
         assertNull( sampleCoexpressionAnalysisService.loadFullMatrix( ee ) );
@@ -63,14 +75,59 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
 
         this.check( matrix );
 
-        matrix = sampleCoexpressionAnalysisService.loadRegressedMatrix( ee );
+        // No SVD has been run on this fixture, so no factor passes the importance threshold and nothing is
+        // regressed out. Since 44ab56f214 that stores no regressed matrix rather than a copy of the full one, and
+        // the best matrix falls back to the full.
+        assertNull( sampleCoexpressionAnalysisService.loadRegressedMatrix( ee ) );
+
+        DoubleMatrix<BioAssay, BioAssay> best = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
+        assertNotNull( best );
+        this.check( best );
+        assertEquals( matrix.getRowNames(), best.getRowNames() );
+
+        this.checkFilterAttritionWasRecorded( ee );
+    }
+
+    /**
+     * A flagged outlier sends {@code prepare} down the unmasked rebuild, whose dimension is loaded in a different
+     * session from the stored vectors'. {@code compute} then sorts that dimension by experimental design, reading
+     * each factor value's experimental factor.
+     * <p>
+     * Not slow-tagged: it takes seconds, and while {@link #test} was the only test here the default run missed a
+     * {@code LazyInitializationException} on this path that failed {@code corrMat} on GSE260875.
+     */
+    @Test
+    public void testWithAFlaggedOutlier() throws Exception {
+        ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
+        BioAssay outlier = ee.getBioAssays().iterator().next();
+        outlier.setIsOutlier( true );
+        bioAssayService.update( outlier );
+
+        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
         assertNotNull( matrix );
         this.check( matrix );
+    }
 
-        matrix = sampleCoexpressionAnalysisService.loadBestMatrix( ee );
-        assertNotNull( matrix );
+    /**
+     * The run records how many design elements each filter removed. This is the only place the real filter, the
+     * real aspect and a real database meet -- the mapping and the read-back are pinned by faster tests, but that
+     * the event is actually written with a payload can only be seen here.
+     */
+    private void checkFilterAttritionWasRecorded( ExpressionExperiment ee ) throws Exception {
+        AuditEvent event = auditEventService.getLastEvent( ee, SampleCorrelationAnalysisEvent.class );
+        assertNotNull( event, "the sample-correlation run should have written an audit event" );
+        assertNotNull( event.getPayload(), "the audit event should carry the filter attrition" );
 
-        this.check( matrix );
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerSubtypes( SampleCorrelationAnalysisPayload.class );
+        AuditEventPayload payload = mapper.readValue( event.getPayload(), AuditEventPayload.class );
+        assertTrue( payload instanceof SampleCorrelationAnalysisPayload );
+        SampleCorrelationAnalysisPayload attrition = ( SampleCorrelationAnalysisPayload ) payload;
+        assertNotNull( attrition.config() );
+        assertEquals( 8, attrition.stages().size() ); // maxDesignElements is the eighth, since 5babee9fa6
+        assertTrue( attrition.startingRows() > 0, "the funnel should start above zero" );
+        assertTrue( attrition.finalRows() <= attrition.startingRows(), "a filter cannot add rows" );
     }
 
     /**

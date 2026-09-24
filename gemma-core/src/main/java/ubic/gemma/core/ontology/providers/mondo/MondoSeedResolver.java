@@ -30,23 +30,51 @@ public class MondoSeedResolver {
         this.sessionFactory = sessionFactory;
     }
 
+    /**
+     * Read the set of distinct MONDO URIs the corpus uses, across every slot a term can occupy.
+     * <p>
+     * The MONDO slim is disabled by default (see {@code OntologyConfig#mondoOntologyServiceOntologyService}),
+     * so nothing calls this on a normal boot. It is kept correct rather than left blind, because the failure it
+     * used to cause was silent: a seed set built from {@code valueUri} alone omits terms used as the object of a
+     * statement, and the slim then cannot resolve a disease the corpus demonstrably annotates.
+     * <p>
+     * 🛑 Widening the seeds does not widen the ontology — every URI here is one the corpus already uses, so the
+     * count stays bounded by our curation. What this cannot fix is the reason the slim was turned off: the
+     * successor of an obsolete term is by definition a term we do NOT use yet, so no corpus-derived seed set can
+     * contain it.
+     */
     @Transactional(readOnly = true)
     public Set<String> resolveCorpusSeeds() {
         long start = System.currentTimeMillis();
+        Set<String> seeds = new HashSet<>();
+        int fromValue = collect( seeds, "select distinct c.valueUri from Characteristic c "
+                + "where c.valueUri like :prefix" );
+        int fromObject = collect( seeds, "select distinct s.objectUri from Statement s "
+                + "where s.objectUri like :prefix" );
+        int fromSecondObject = collect( seeds, "select distinct s.secondObjectUri from Statement s "
+                + "where s.secondObjectUri like :prefix" );
+        log.info( "Resolved {} corpus MONDO seeds in {} ms (value={}, object={}, secondObject={}; "
+                        + "slots overlap, so the total is smaller than the sum).",
+                seeds.size(), System.currentTimeMillis() - start, fromValue, fromObject, fromSecondObject );
+        return seeds;
+    }
+
+    /**
+     * @return how many distinct MONDO URIs this slot contributed, before de-duplication against the other slots
+     */
+    private int collect( Set<String> seeds, String hql ) {
         @SuppressWarnings("unchecked")
         List<String> rows = sessionFactory.getCurrentSession()
-                .createQuery( "select distinct c.valueUri from Characteristic c "
-                        + "where c.valueUri like :prefix" )
+                .createQuery( hql )
                 .setParameter( "prefix", MONDO_PREFIX + "%" )
                 .list();
-        Set<String> seeds = new HashSet<>( rows.size() );
+        int n = 0;
         for ( String uri : rows ) {
             if ( uri != null && uri.startsWith( MONDO_PREFIX ) ) {
                 seeds.add( uri );
+                n++;
             }
         }
-        log.info( "Resolved {} corpus MONDO seeds in {} ms.",
-                seeds.size(), System.currentTimeMillis() - start );
-        return seeds;
+        return n;
     }
 }

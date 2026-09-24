@@ -48,7 +48,7 @@ import java.util.UUID;
  * <p>Thread-safe by virtue of Caffeine's underlying {@code ConcurrentMap}.
  *
  * @see BearerTokenAuthenticationFilter
- * @see AuthWebService
+ * @see ubic.gemma.rest.AuthWebService
  */
 @Component
 public class TokenStore {

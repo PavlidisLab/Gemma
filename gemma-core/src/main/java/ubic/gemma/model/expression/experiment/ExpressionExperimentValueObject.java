@@ -8,10 +8,13 @@ import ubic.gemma.core.security.acl.domain.AclPrincipalSid;
 import ubic.gemma.core.security.acl.domain.AclSid;
 import ubic.gemma.core.security.util.SecurityUtil;
 import io.swagger.v3.oas.annotations.media.Schema;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
+import ubic.gemma.model.expression.bioAssay.BioAssayFieldCountValueObject;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.core.loader.util.ExternalDatabaseUtils;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -28,6 +31,9 @@ import org.springframework.lang.Nullable;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings({ "unused", "WeakerAccess" }) // used in front end
 @Getter
@@ -85,6 +91,79 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     @JsonProperty("numberOfArrayDesigns")
     private Long arrayDesignCount;
+
+    /**
+     * The platforms this dataset's assays were run on, as accession + full name.
+     * <p>
+     * A list because a dataset may use more than one; {@link #arrayDesignCount} is the size of this
+     * list and is kept because clients read it. Populated on every filtered read out of the same
+     * query that produces the count — the join to the platform was already being paid for.
+     */
+    @Schema(description = "Platforms the dataset's assays were run on, as id + shortName + name. Empty when the dataset has no assays.")
+    private List<ArrayDesignReferenceValueObject> platforms;
+
+    /**
+     * The platforms this dataset's assays were run on BEFORE a platform switch, when one happened.
+     * <p>
+     * Empty for the great majority of datasets. A no-op switch — an original platform that is also
+     * a platform in use — is left out, so a non-empty list here means the dataset really was moved.
+     */
+    @Schema(description = "Platforms the assays were originally run on, when the dataset was switched to another platform. Empty when there was no switch; a switch to the same platform is not reported.")
+    private List<ArrayDesignReferenceValueObject> originalPlatforms;
+
+    /**
+     * What kind of libraries the dataset's samples were made from, as the distinct
+     * {@code libraryStrategy} values with a count of the samples carrying each.
+     * <p>
+     * Here because it is the dataset's answer to "what kind of experiment is this", and
+     * {@link #technologyType} is not: Gemma maps sequencing data onto generic gene-list platforms, so
+     * GSE270825 reads {@code GENELIST} with 24 {@code SSRNA_SEQ} samples. The curated {@code assay} tag
+     * that clients used instead is being retired.
+     * <p>
+     * A list rather than a single value because a dataset is not obliged to be uniform, and 18 of the
+     * 23,544 on prod are not (measured, uib, 2026-09-16) — but it is a one-element list for the other
+     * 99.92%, which is why it belongs on the dataset instead of being re-derived from the sample list by
+     * every client. Reading it off {@code /datasets/&#123;id&#125;/samples} cost the whole assay list:
+     * 652 KiB gzipped and 2.3 s for GSE2109's 2,158 samples, for one line of text on a page.
+     *
+     * @see BioAssayFieldCountValueObject for how a null value and the counts are to be read
+     */
+    @Schema(description = "Distinct libraryStrategy values across the dataset's samples, with the number of samples carrying each. One entry for all but ~0.08% of datasets. Empty when the dataset has no samples.")
+    private List<BioAssayFieldCountValueObject> libraryStrategies;
+
+    /**
+     * How the dataset's libraries were selected, as the distinct {@code librarySelection} values with a
+     * count of the samples carrying each.
+     * <p>
+     * 🛑 Read beside {@link #extractedMolecules}, not instead of it — see
+     * {@link ubic.gemma.model.expression.bioAssay.BioAssay#getLibrarySelection()}: total RNA with a polyA
+     * selection step is common, and the molecule alone does not say so. On a microarray dataset every
+     * sample is null here, because the technology has no selection step.
+     */
+    @Schema(description = "Distinct librarySelection values across the dataset's samples, with the number of samples carrying each. Null-valued on microarray datasets, where the field does not apply.")
+    private List<BioAssayFieldCountValueObject> librarySelections;
+
+    /**
+     * What was extracted from the dataset's samples and assayed, as the distinct
+     * {@code extractedMolecule} values with a count of the samples carrying each.
+     */
+    @Schema(description = "Distinct extractedMolecule values across the dataset's samples, with the number of samples carrying each.")
+    private List<BioAssayFieldCountValueObject> extractedMolecules;
+
+    /**
+     * When the dataset was created in Gemma — loaded, not published.
+     * <p>
+     * Read from the {@code C} audit event, which is the only record of it: there is no creation
+     * column on the dataset (a {@code CURATION_DETAILS.CREATED} backfill was proposed and deferred,
+     * 2026-08-21). Measured universal — 200 of 200 sampled datasets carry the event — but null is
+     * still possible and means the event is missing, never "created just now".
+     * <p>
+     * 🛑 <b>Not filterable or sortable.</b> {@code AbstractCuratableDao} unregisters
+     * {@code auditTrail.*} from the dataset filter surface, so this is a projection for display.
+     * Filtering on it is what the deferred migration was for.
+     */
+    @Schema(description = "When the dataset was loaded into Gemma, from its creation audit event. Null when that event is missing. Display only — not filterable or sortable.")
+    private Date dateCreated;
     private String batchConfound;
     /**
      * Batch effect type. See {@link BatchEffectType} enum for possible values.
@@ -127,12 +206,60 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     private String technologyType;
 
+    /**
+     * Whether this is a single-cell experiment, i.e. it has a preferred single-cell quantitation type.
+     * <p>
+     * That is the same condition every single-cell route resolves against
+     * ({@code getPreferredSingleCellQuantitationType}), so a dataset this reports true for is one
+     * {@code /cellTypeAssignment} and {@code /singleCellDimension} can actually serve. 546 datasets on prod —
+     * 29 more than {@code SINGLE_CELL_DIMENSION_EXPERIMENT} indexes, which is why the flag and not that table
+     * decides this.
+     * <p>
+     * It is here rather than on the details VO because {@code technologyType} does not answer the question —
+     * eid 79038 is single-cell and reads {@code GENELIST}, the generic-platform placeholder — which left
+     * clients inferring modality from a regex over platform and assay strings, blind to a dataset annotated
+     * with none of the expected words and fooled by a title that merely mentions single cell (uib, 2026-09-03).
+     */
+    private boolean isSingleCell;
+
+    /**
+     * Total number of cells, or {@code null} when this is not a single-cell experiment or the count has not
+     * been computed. Denormalized on the experiment itself, so it costs nothing to serve.
+     * <p>
+     * 🛑 Not a substitute for {@link #isSingleCell}: 63 of the 546 single-cell datasets on prod have no count.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCells;
+
+    /**
+     * Number of cell IDs in the preferred single-cell dimension, or {@code null} when there is none.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCellIds;
+
+    /**
+     * The other parts of the study this dataset was split off from, empty when it was not split.
+     * <p>
+     * Gemma splits an experiment by a factor — usually organism part for single-cell data — and names each
+     * part {@code Split part N of: … [organism part = …]}. That title tells a reader siblings exist and gives
+     * them no way to reach one: 52 of 100 sampled single-cell datasets are split parts over 32 parent studies,
+     * and neither the curation UI nor the browser could follow the link, because the field lived on a VO only
+     * {@code /experiment-sets/{id}/datasets} serves (uib, 2026-09-03).
+     * <p>
+     * References rather than whole VOs: a sibling is rendered as a name and a link, and the previous full-VO
+     * form cost a {@code loadValueObjectsByIds} per split experiment.
+     */
+    private List<ExpressionExperimentReferenceValueObject> otherParts = new ArrayList<>();
+
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<CharacteristicValueObject> characteristics;
 
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "nothing originates it: the copy constructor propagates it but no constructor, setter call site, HQL projection or alias transformer ever sets a value, and there is no MIN_PVALUE column — so it would serialize a permanent null")
     private Double minPvalue;
 
     /**
@@ -207,6 +334,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         if ( ee.getTaxon() != null ) {
             this.taxonObject = new TaxonValueObject( ee.getTaxon() );
         }
+
+        // Denormalized on the experiment; isSingleCell and numberOfCellIds need a query and are filled in by
+        // ExpressionExperimentDaoImpl#populateSingleCellInfo, one batched query per page.
+        this.numberOfCells = ee.getNumberOfCells();
 
         // Counts
         if ( ModelUtils.isInitialized( ee.getBioAssays() ) ) {
@@ -303,6 +434,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.experimentalDesign = vo.getExperimentalDesign();
         this.processedExpressionVectorCount = vo.getProcessedExpressionVectorCount();
         this.arrayDesignCount = vo.getArrayDesignCount();
+        this.platforms = vo.getPlatforms();
+        this.originalPlatforms = vo.getOriginalPlatforms();
+        this.libraryStrategies = vo.getLibraryStrategies();
+        this.librarySelections = vo.getLibrarySelections();
+        this.extractedMolecules = vo.getExtractedMolecules();
+        this.dateCreated = vo.getDateCreated();
         this.bioMaterialCount = vo.getBioMaterialCount();
         this.userCanWrite = vo.getUserCanWrite();
         this.userOwned = vo.getUserOwned();
@@ -324,6 +461,18 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         return numberOfBioAssays;
     }
 
+    /**
+     * Lombok would name these {@code isSingleCell} / {@code setSingleCell}; the wire name and the convention
+     * these flags follow in this class is {@code getIsX} / {@code setIsX} (see {@link #getIsPublic()}).
+     */
+    public boolean getIsSingleCell() {
+        return this.isSingleCell;
+    }
+
+    public void setIsSingleCell( boolean isSingleCell ) {
+        this.isSingleCell = isSingleCell;
+    }
+
     @Override
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public boolean getIsPublic() {
@@ -336,7 +485,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         return this.isShared;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "flattened common name; taxonObject already serializes")
     public String getTaxon() {
         return taxonObject == null ? null : taxonObject.getCommonName();
     }
@@ -387,12 +537,14 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.userOwned = isUserOwned;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.CALLER_IDENTITY,
+            comment = "per-principal permission on a response cached by URL")
     public boolean getCurrentUserHasWritePermission() {
         return userCanWrite;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.CALLER_IDENTITY,
+            comment = "per-principal ownership on a response cached by URL")
     public boolean getCurrentUserIsOwner() {
         return userOwned;
     }

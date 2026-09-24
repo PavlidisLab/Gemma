@@ -18,12 +18,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.security.authentication.UserReadService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService;
@@ -79,6 +81,13 @@ public class TicketsWebServiceEventsCursorTest {
     @SuppressWarnings("unused")
     private UserReadService userReadService;
 
+    /** Constructor dependency of TicketsWebService; it resolves ticket-target display labels. */
+
+    @Mock
+
+    private ExpressionExperimentService expressionExperimentService;
+
+
     @InjectMocks
     private TicketsWebService webService;
 
@@ -122,6 +131,11 @@ public class TicketsWebServiceEventsCursorTest {
         // into a ResponseDataObject<List<TicketEventValueObject>>. The cursor helper must NOT be touched.
         ticket.getEvents().add( event1 );
         ticket.getEvents().add( event2 );
+
+        // legacy mode reads the log off the VO the SERVICE projects, inside its transaction -- see
+        // TicketsWebService#getTicketEvents. Building it here from the entity is what 500d on gemma2.
+        when( ticketService.loadValueObject( 100L, true ) )
+                .thenReturn( TicketValueObject.from( ticket, true ) );
 
         Object response = webService.getTicketEvents( 100L, null, limit( "20" ) );
 

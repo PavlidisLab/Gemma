@@ -53,6 +53,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -68,6 +69,7 @@ import ubic.gemma.persistence.util.Thaws;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -89,7 +91,6 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.common.description.CharacteristicUtils.hasCategory;
-import static ubic.gemma.model.expression.experiment.StatementUtils.formatStatement;
 import static ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao.FREE_TEXT;
 import static ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao.UNCATEGORIZED;
 
@@ -172,6 +173,12 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Transactional(readOnly = true)
     public List<Long> loadTroubledIds() {
         return expressionExperimentDao.loadTroubledIds();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids ) {
+        return expressionExperimentDao.loadIdentifiers( ids );
     }
 
     @Override
@@ -291,6 +298,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
             expressionExperimentDao.evictBioAssaysCache( ee );
             expressionExperimentDao.evictQuantitationTypesCache( ee );
             expressionExperimentDao.evictOtherPartsCache( ee );
+            expressionExperimentDao.refreshCurationDetails( ee );
             expressionExperimentDao.thawLite( ee );
         }
         return ee;
@@ -401,6 +409,7 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Collection<BioMaterial>> findByBioMaterials( Collection<BioMaterial> biomaterials ) {
         return expressionExperimentDao.findByBioMaterials( biomaterials );
     }
@@ -712,31 +721,35 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment ) {
+        return getAnnotations( expressionExperiment, true );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment, boolean includeFreeText ) {
         Set<AnnotationValueObject> annotations = new LinkedHashSet<>();
-        Set<String> seenTerms = new HashSet<>();
+        Set<List<String>> seenTerms = new HashSet<>();
 
         expressionExperimentDao.getExperimentAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterExperimentAnnotations )
+                .filter( c -> filterExperimentAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         expressionExperimentDao.getExperimentSubSetAnnotations( expressionExperiment ).stream()
-                .filter( this::filterSubSetAnnotations )
+                .filter( c -> filterSubSetAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
-        String[] ignoredPredicates = new String[] {
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
-        };
-        expressionExperimentDao.getFactorValueAnnotations( expressionExperiment ).stream()
-                .filter( this::filterFactorValueAnnotation )
-                .map( c -> factorValueAnnotationVo( c, ignoredPredicates ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+        for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( expressionExperiment ) ) {
+            Statement c = ( Statement ) row[0];
+            if ( !filterFactorValueAnnotation( c, includeFreeText ) ) {
+                continue;
+            }
+            addIfNovel( annotations, factorValueAnnotationVo( c, ( FactorValue ) row[1], ( ExperimentalFactor ) row[2] ), seenTerms );
+        }
 
         expressionExperimentDao.getBioMaterialAnnotations( expressionExperiment, false ).stream()
-                .filter( this::filterBioMaterialAnnotation )
+                .filter( c -> filterBioMaterialAnnotation( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
@@ -746,33 +759,37 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
     @Override
     @Transactional(readOnly = true)
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
+        return getAnnotations( ee, true );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText ) {
         Set<AnnotationValueObject> annotations = new HashSet<>();
-        Set<String> seenTerms = new HashSet<>();
+        Set<List<String>> seenTerms = new HashSet<>();
 
         // inherited from the EE
         expressionExperimentDao.getExperimentAnnotations( ee.getSourceExperiment(), false ).stream()
-                .filter( this::filterExperimentAnnotations )
+                .filter( c -> filterExperimentAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperiment.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
         // specifically for the subset
         ee.getCharacteristics().stream()
-                .filter( this::filterSubSetAnnotations )
+                .filter( c -> filterSubSetAnnotations( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, ExpressionExperimentSubSet.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
-        String[] ignoredPredicates = new String[] {
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00166", // duration
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00167", // dose
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00168"  // development stage
-        };
-        expressionExperimentDao.getFactorValueAnnotations( ee ).stream()
-                .filter( this::filterFactorValueAnnotation )
-                .map( c -> factorValueAnnotationVo( c, ignoredPredicates ) )
-                .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
+        for ( Object[] row : expressionExperimentDao.getFactorValueAnnotationsWithParents( ee ) ) {
+            Statement c = ( Statement ) row[0];
+            if ( !filterFactorValueAnnotation( c, includeFreeText ) ) {
+                continue;
+            }
+            addIfNovel( annotations, factorValueAnnotationVo( c, ( FactorValue ) row[1], ( ExperimentalFactor ) row[2] ), seenTerms );
+        }
 
         expressionExperimentDao.getBioMaterialAnnotations( ee ).stream()
-                .filter( this::filterBioMaterialAnnotation )
+                .filter( c -> filterBioMaterialAnnotation( c, includeFreeText ) )
                 .map( c -> new AnnotationValueObject( c, BioMaterial.class ) )
                 .forEach( c -> addIfNovel( annotations, c, seenTerms ) );
 
@@ -785,32 +802,80 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      * Uses the {@link Characteristic}-based constructor so the VO carries the structured
      * predicate/object pairs, {@code evidenceCode}, and {@code supportingEvidence} off the persisted
      * {@link Statement} — the FV branch previously used the bare string constructor and dropped all of
-     * those. {@code termName} is then overridden with the synthesized FV display label (subject plus the
-     * non-ignored predicate/object pairs); {@code termUri} already resolves to the subject URI because a
-     * {@link Statement} aliases subject &harr; value, so the constructor's {@code getValueUri()} yields it.
-     * The {@code seenTerms} dedup key is the (unchanged) {@code termName}.
+     * those. Nothing here rewrites {@code value} or {@code valueUri}: a {@link Statement} aliases
+     * subject &harr; value, so the constructor's {@code getValue()} / {@code getValueUri()} already yield
+     * the subject's label and URI, and the predicate / object labels stay in their own fields. This route
+     * returns the annotation; composing a sentence out of it is a separate job, and
+     * {@link FactorValueUtils#getSummaryString} is where that lives.
+     * <p>
+     * {@code parentName} is set to the owning factor value's summary and {@code parentOfParentName} to the experimental
+     * factor's name, so a client can show the term in the context of its factor value and factor (e.g. "wild type" under
+     * the "genotype" factor). Both come from the same widened query that produced the statement — no extra fetch. The
+     * parent links are left for the client to build; only the display labels are populated here. Because the results are
+     * de-duplicated by category, term and statement shape (see {@link #dedupKey}), a term appearing under more than one
+     * factor value of the same category with the same statement keeps the first parent seen.
      */
-    private static AnnotationValueObject factorValueAnnotationVo( Statement c, String[] ignoredPredicates ) {
+    private static AnnotationValueObject factorValueAnnotationVo( Statement c, FactorValue fv, @Nullable ExperimentalFactor ef ) {
         AnnotationValueObject vo = new AnnotationValueObject( c, FactorValue.class );
-        vo.setTermName( formatStatement( c, ignoredPredicates ) );
+        vo.setParentName( FactorValueUtils.getSummaryString( fv ) );
+        if ( ef != null ) {
+            vo.setParentOfParentName( ef.getName() );
+        }
         return vo;
     }
 
     /**
-     * Check if a term is novel and add it to the set of seen terms.
+     * Check if a term is novel and add it to the set of seen keys (see {@link #dedupKey}).
      */
-    private void addIfNovel( Collection<AnnotationValueObject> annotations, AnnotationValueObject term, Set<String> seenTerms ) {
-        if ( seenTerms.add( StringUtils.lowerCase( StringUtils.normalizeSpace( term.getTermName() ) ) ) ) {
+    private void addIfNovel( Collection<AnnotationValueObject> annotations, AnnotationValueObject term, Set<List<String>> seenTerms ) {
+        if ( seenTerms.add( dedupKey( term ) ) ) {
             annotations.add( term );
         }
     }
 
-    private boolean filterExperimentAnnotations( Characteristic c ) {
-        return filterAnnotation( c );
+    /**
+     * De-duplication key for {@link #addIfNovel}: the category, the term's value, and the statement
+     * shape hanging off it, each compared case- and whitespace-insensitively.
+     * <p>
+     * The category is part of the key because the same term under two categories is two distinct
+     * curation claims. {@code cell type = bone marrow hematopoietic cell} and
+     * {@code organism part = bone marrow hematopoietic cell} (both {@code CL_1001610}) are both stored
+     * on prod experiments, and a value-only key returned whichever row was read first — the second
+     * claim was invisible at the API boundary, which is also what {@code currentTagIds} in the REST
+     * curation-commit path reads to build its live-tag set.
+     * <p>
+     * The predicate / object labels (both pairs) are part of the key because two factor-value statements
+     * can share a subject and a category and still be two claims: experiment 27103 stores
+     * {@code wild type genotype} bare alongside {@code wild type genotype has background APP/PS1}. They used
+     * to be separated for free, because the factor-value branch overwrote the term's value with a composed
+     * sentence and the two sentences differed; now that the value is the term, the statement fields carry
+     * that distinction themselves.
+     * <p>
+     * {@code objectClass} is deliberately NOT part of the key: the same tag carried at the experiment,
+     * factor-value and sample levels still collapses to one entry, which is the point of aggregating
+     * the three sources.
+     */
+    private static List<String> dedupKey( AnnotationValueObject term ) {
+        return Arrays.asList(
+                normalizeForDedup( term.getCategory() ),
+                normalizeForDedup( term.getValue() ),
+                normalizeForDedup( term.getPredicate() ),
+                normalizeForDedup( term.getObject() ),
+                normalizeForDedup( term.getSecondPredicate() ),
+                normalizeForDedup( term.getSecondObject() ) );
     }
 
-    private boolean filterSubSetAnnotations( Characteristic c ) {
-        return filterAnnotation( c );
+    @Nullable
+    private static String normalizeForDedup( @Nullable String s ) {
+        return StringUtils.lowerCase( StringUtils.normalizeSpace( s ) );
+    }
+
+    private boolean filterExperimentAnnotations( Characteristic c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText );
+    }
+
+    private boolean filterSubSetAnnotations( Characteristic c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText );
     }
 
     /**
@@ -822,8 +887,8 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      * mixed M/F EE look identical at the API boundary. Consumers that want the
      * non-baseline subset can filter client-side.
      */
-    private boolean filterFactorValueAnnotation( Statement c ) {
-        return filterAnnotation( c )
+    private boolean filterFactorValueAnnotation( Statement c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText )
                 && !hasCategory( c, Categories.BLOCK )
                 // ignore timepoints
                 && !"http://www.ebi.ac.uk/efo/EFO_0000724".equals( c.getCategoryUri() )
@@ -838,21 +903,34 @@ public class ExpressionExperimentReadServiceImpl implements ExpressionExperiment
      * Baseline BM characteristics are intentionally NOT excluded — see the note on
      * {@link #filterFactorValueAnnotation}. Same uniformity-visibility argument.
      */
-    private boolean filterBioMaterialAnnotation( Characteristic c ) {
-        return filterAnnotation( c )
+    private boolean filterBioMaterialAnnotation( Characteristic c, boolean includeFreeText ) {
+        return filterAnnotation( c, includeFreeText )
                 && !"MaterialType".equalsIgnoreCase( c.getCategory() )
                 && !"molecular entity".equalsIgnoreCase( c.getCategory() )
                 && !"LabelCompound".equalsIgnoreCase( c.getCategory() );
     }
 
-    private boolean filterAnnotation( Characteristic characteristic ) {
-        return filterAnnotation( characteristic.getCategoryUri(), characteristic.getCategory(), characteristic.getValueUri(), characteristic.getValue() );
+    private boolean filterAnnotation( Characteristic characteristic, boolean includeFreeText ) {
+        return filterAnnotation( characteristic.getCategoryUri(), characteristic.getCategory(), characteristic.getValueUri(), characteristic.getValue(), includeFreeText );
     }
 
     /**
      * Minimal requirements for an annotation to be included as an experiment tag.
+     *
+     * @param includeFreeText keep annotations that carry no ontology mapping. The default
+     *                        ({@code false}) is right for the public tag cloud, where an unmapped
+     *                        string is noise that cannot be searched or reasoned over. It is wrong
+     *                        for curation read-back: a curator or agent that has just written a
+     *                        free-text tag gets an empty result and cannot tell a dropped write
+     *                        from a filtered read. See the note on
+     *                        {@link ExpressionExperimentReadService#getAnnotations(ExpressionExperiment, boolean)}.
      */
-    private boolean filterAnnotation( @Nullable String categoryUri, @Nullable String category, @Nullable String valueUri, String value ) {
+    private boolean filterAnnotation( @Nullable String categoryUri, @Nullable String category, @Nullable String valueUri, String value, boolean includeFreeText ) {
+        if ( includeFreeText ) {
+            // Everything a curator actually wrote, mapped or not. A tag with no value at all is
+            // still nothing to report.
+            return StringUtils.isNotBlank( value );
+        }
         // ignore uncategorized terms
         return category != null
                 // ignore free-text categories

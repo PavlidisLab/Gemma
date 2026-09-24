@@ -112,6 +112,7 @@ public class BioSequence extends AbstractDescribable {
     // assumed readily available in BioSequenceValueObject
     // this should be accessed via a select because taxa are shared for many, many probes
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "TAXON_FK", nullable = false, columnDefinition = "BIGINT")
     private Taxon taxon;
 

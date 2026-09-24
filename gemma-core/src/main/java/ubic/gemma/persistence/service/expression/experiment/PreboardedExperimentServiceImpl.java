@@ -85,7 +85,7 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
         if ( source != null && !source.isEmpty() ) {
             skel.setSource( source );
         }
-        skel.setIdentifyingMetadata( identifyingMetadata );
+        skel.setSourceMetadata( identifyingMetadata );
         skel.setName( "Preboarded:" + accession );
         skel.setWorkflowState( WorkflowState.Preboarded );
         skel.setWorkflowStateEnteredAt( new Date() );
@@ -106,6 +106,24 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
         if ( id == null ) return null;
         return ( PreboardedExperiment ) sessionFactory.getCurrentSession()
                 .get( PreboardedExperiment.class, id );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @SuppressWarnings("unchecked")
+    public java.util.Map<Long, String> loadAccessions( java.util.Collection<Long> ids ) {
+        if ( ids == null || ids.isEmpty() ) {
+            return java.util.Collections.emptyMap();
+        }
+        java.util.List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createQuery( "select p.id, p.accession from PreboardedExperiment p where p.id in :ids" )
+                .setParameterList( "ids", ids )
+                .list();
+        java.util.Map<Long, String> byId = new java.util.HashMap<>( rows.size() );
+        for ( Object[] r : rows ) {
+            byId.put( ( Long ) r[0], ( String ) r[1] );
+        }
+        return byId;
     }
 
     @Nullable
@@ -174,12 +192,31 @@ public class PreboardedExperimentServiceImpl implements PreboardedExperimentServ
         preboarded.setWorkflowStateEnteredAt( now );
         sessionFactory.getCurrentSession().update( preboarded );
 
+        boolean eeDirty = false;
         if ( ee.getWorkflowState() == null
                 || ee.getWorkflowState() == WorkflowState.Discovery
                 || ee.getWorkflowState() == WorkflowState.Candidate
                 || ee.getWorkflowState() == WorkflowState.Preboarded ) {
             ee.setWorkflowState( WorkflowState.Loaded );
             ee.setWorkflowStateEnteredAt( now );
+            eeDirty = true;
+        }
+
+        // Carry the preboarded's upstream-metadata payload forward; promotion used to drop it, so
+        // whatever the scrape harvested was lost the moment the data landed.
+        //
+        // Never over the top of one the experiment already has. The import writes the schema-v1
+        // document built from the parsed series — per-sample titles, the submitter's own
+        // characteristic columns — whereas a preboarded carries only the smaller scrape-path payload
+        // (schema version null). Overwriting would trade the richer document for the poorer one, and
+        // silently, since both land in the same column.
+        if ( ee.getSourceMetadata() == null && preboarded.getSourceMetadata() != null ) {
+            ee.setSourceMetadata( preboarded.getSourceMetadata() );
+            ee.setSourceMetadataSchemaVersion( preboarded.getSourceMetadataSchemaVersion() );
+            eeDirty = true;
+        }
+
+        if ( eeDirty ) {
             sessionFactory.getCurrentSession().update( ee );
         }
 

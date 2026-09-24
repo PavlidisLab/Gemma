@@ -15,8 +15,10 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ubic.gemma.core.util.RoundingUtils;
 import ubic.gemma.model.analysis.AnalysisResultValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -42,9 +44,21 @@ public class DifferentialExpressionAnalysisResultValueObject extends AnalysisRes
     private String probeName;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<GeneValueObject> genes;
+    /**
+     * Rounded to {@link RoundingUtils#JSON_SIGNIFICANT_DIGITS} significant digits on the way out. Significant
+     * digits rather than decimal places because a p-value of 1e-300 has to survive.
+     * <p>
+     * Rounding happens at serialization, not in the constructor: {@code getDatasetsDifferentialExpression}
+     * ranks rows by corrected p-value, and rounding before that sort can reorder near-ties.
+     */
     @Nullable
+    @JsonSerialize(using = RoundingUtils.SignificantDigitsSerializer.class)
     private Double pValue;
+    /**
+     * Rounded on the way out, as {@code pValue} is.
+     */
     @Nullable
+    @JsonSerialize(using = RoundingUtils.SignificantDigitsSerializer.class)
     private Double correctedPvalue;
     @Nullable
     private Double rank;

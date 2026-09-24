@@ -40,4 +40,66 @@ public class OntologyUtilsTest {
         assertEquals( "NCBITaxon:9606", uriToTermId( "http://purl.obolibrary.org/obo/NCBITaxon_9606" ) );
         assertEquals( "tgemo:000001", uriToTermId( "http://gemma.msl.ubc.ca/ont/tgemo_000001" ) );
     }
+
+    /**
+     * Cellosaurus is off the PURL and on https, so it needs its own base in both directions.
+     * {@code http://purl.obolibrary.org/obo/CVCL_1870} 404s — see {@code CellosaurusOntologyService}.
+     */
+    @Test
+    public void testCellosaurusIsNotOnThePurl() {
+        assertEquals( "https://www.cellosaurus.org/CVCL_1870", termIdToUri( "CVCL:1870" ) );
+        assertEquals( "https://www.cellosaurus.org/CVCL_1870", termIdToUri( "cvcl:1870" ) );
+        assertEquals( "CVCL:1870", uriToTermId( "https://www.cellosaurus.org/CVCL_1870" ) );
+    }
+
+    /**
+     * 🛑 The ingestion-boundary normalizer: whatever spelling a source file uses, what gets STORED is a URI.
+     *
+     * <p>CELLxGENE writes CL CURIEs natively, and a parser that trusted its {@code value_uri} column verbatim
+     * put 64,728 of them into {@code VALUE_URI} on production while {@code CATEGORY_URI} on the same row held a
+     * resolved PURL. A CURIE matches no URI predicate and joins against nothing.</p>
+     */
+    @Test
+    public void testTermIdOrUriToUri() {
+        // the three spellings of one identifier all land on the URI
+        assertEquals( "http://purl.obolibrary.org/obo/CL_0000129", OntologyUtils.termIdOrUriToUri( "CL:0000129" ) );
+        assertEquals( "http://purl.obolibrary.org/obo/CL_0000129", OntologyUtils.termIdOrUriToUri( "CL_0000129" ) );
+        assertEquals( "http://purl.obolibrary.org/obo/CL_0000129",
+                OntologyUtils.termIdOrUriToUri( "http://purl.obolibrary.org/obo/CL_0000129" ) );
+        assertEquals( "http://www.ebi.ac.uk/efo/EFO_0000324", OntologyUtils.termIdOrUriToUri( "EFO:0000324" ) );
+        assertEquals( "http://purl.obolibrary.org/obo/CL_0000129", OntologyUtils.termIdOrUriToUri( "  CL:0000129  " ) );
+
+        // a URI on a base isTermUri does not know is still a URI and is left alone
+        assertEquals( "https://www.cellosaurus.org/CVCL_1870",
+                OntologyUtils.termIdOrUriToUri( "https://www.cellosaurus.org/CVCL_1870" ) );
+        assertEquals( "http://example.org/ont/whatever",
+                OntologyUtils.termIdOrUriToUri( "http://example.org/ont/whatever" ) );
+
+        // not an identifier at all -- these are the shapes that reached VALUE_URI on production
+        assertNull( OntologyUtils.termIdOrUriToUri( "MacroEC" ) );
+        assertNull( OntologyUtils.termIdOrUriToUri( "NA" ) );
+        assertNull( OntologyUtils.termIdOrUriToUri( "granulocyte, monocyte" ) );
+        assertNull( OntologyUtils.termIdOrUriToUri( "HLA_DRB1" ), "an unknown ID space is not an identifier" );
+        assertNull( OntologyUtils.termIdOrUriToUri( "" ) );
+        assertNull( OntologyUtils.termIdOrUriToUri( "   " ) );
+        assertNull( OntologyUtils.termIdOrUriToUri( null ) );
+    }
+
+    /**
+     * The underscore spelling of an identifier, which is what a URI's tail and a term card both show.
+     * A known ID space is the whole guard: without it this would swallow gene symbols.
+     */
+    @Test
+    public void testLocalNameToTermId() {
+        assertEquals( "CLO:0007606", OntologyUtils.localNameToTermId( "CLO_0007606" ) );
+        assertEquals( "CVCL:1870", OntologyUtils.localNameToTermId( "CVCL_1870" ) );
+        assertEquals( "EFO:0600015", OntologyUtils.localNameToTermId( "EFO_0600015" ) );
+        assertEquals( "GO:0008150", OntologyUtils.localNameToTermId( "  GO_0008150  " ) );
+
+        assertNull( OntologyUtils.localNameToTermId( "HLA_DRB1" ) );
+        assertNull( OntologyUtils.localNameToTermId( "cell_type" ) );
+        assertNull( OntologyUtils.localNameToTermId( "APP_PS1" ) );
+        // the colon form is a different question and this one does not answer it
+        assertNull( OntologyUtils.localNameToTermId( "GO:0008150" ) );
+    }
 }

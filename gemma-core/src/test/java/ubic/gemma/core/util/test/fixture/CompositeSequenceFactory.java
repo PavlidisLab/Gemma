@@ -65,7 +65,7 @@ import javax.annotation.Nullable;
  * <ul>
  *   <li>The CS mapping does NOT cascade from {@code CompositeSequence} to
  *       {@code biologicalCharacteristic}. The BS is therefore persisted
- *       through {@link BioSequenceService#findOrCreate(BioSequence)} BEFORE
+ *       through {@code BioSequenceService#findOrCreate(BioSequence)} BEFORE
  *       {@link CompositeSequenceService#create(CompositeSequence)} runs.
  *       Skipping this caused HB5&rarr;HB6 breakage; doing it explicitly is
  *       the safe pattern.</li>

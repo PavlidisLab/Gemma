@@ -64,7 +64,7 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 @Entity
 @Table(name = "CHARACTERISTIC")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "class", discriminatorType = DiscriminatorType.STRING, length = 255)
 // Hbm had `<class discriminator-value="null"><discriminator not-null="false"/>` — i.e., the
 // root Characteristic rows persist with SQL NULL in the `class` column, and Statement rows
 // persist with "Statement". JPA's @DiscriminatorValue("null") is the special token Hibernate
@@ -132,6 +132,13 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     @Nullable
     @Column(name = "ORIGINAL_VALUE", columnDefinition = "VARCHAR(255)")
     private String originalValue = null;
+    /**
+     * 🛑 Nullable, and it is genuinely null on production: a NULL here means the characteristic has a category
+     * but no value — a submitter who wrote {@code "Strain:"} with nothing after the colon. The corpus recorded
+     * that state as an empty string on 8,141 rows and as NULL on 24 until they were normalized to NULL on
+     * 2026-09-10, so {@code WHERE VALUE IS NULL} had been missing almost all of them.
+     */
+    @Nullable
     @Column(name = "`VALUE`", columnDefinition = "VARCHAR(255)")
     private String value;
     @Nullable
@@ -149,8 +156,9 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     /**
      * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
      * backing a curated tag — the verbatim provenance the curation agents emit (the agents-side
-     * {@code FindingEvidence} shape). Stored as-is; Gemma does not parse or query it, so the agents repo
-     * owns the evidence schema. Null on tags with no recorded evidence.
+     * {@code FindingEvidence} shape). Gemma parses it only to serve it and to compare a proposal with it by
+     * content ({@code CharacteristicUtils.sameSupportingEvidence}); it is never queried, and the agents repo owns
+     * the evidence schema. Null on tags with no recorded evidence.
      */
     @Nullable
     @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
@@ -179,7 +187,41 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     public void setCategory( @Nullable String category ) {
-        this.category = category;
+        this.category = normalizeTermText( category );
+    }
+
+    /**
+     * Collapse whitespace on a free-text term field: strip the ends, and reduce internal runs to a
+     * single space. Null survives as null.
+     * <p>
+     * These fields carry third-party text — GEO submitters write {@code "cancer cell line "} and
+     * {@code "high  fat  diet"}, and 12,861 of the 13,179 double-spaced values in production had the
+     * run in the submitter's own {@code originalValue}, so the input reproduces them on every
+     * import. The cost is not cosmetic: MySQL's PAD SPACE collation hides a TRAILING space from
+     * {@code =} but gives internal runs no such cover, so two spellings of one value split under
+     * {@code GROUP BY}, joins, and every exact-label comparison. Normalizing at the setter is the
+     * one point every writer passes through — the GEO converter's seventeen call sites, the
+     * curation API, agent writes and the CLI — and {@link #getOriginalValue()} still holds the
+     * submitter's string verbatim, so nothing is lost.
+     * <p>
+     * Safe against Hibernate: the mapping annotates the FIELDS, so hydration assigns them directly
+     * and never calls a setter. A loaded entity is therefore not silently rewritten (and not marked
+     * dirty) by this.
+     */
+    @Nullable
+    protected static String normalizeTermText( @Nullable String s ) {
+        if ( s == null ) {
+            return null;
+        }
+        // The no-break spaces have to go first, for two separate reasons. Java does not classify
+        // U+202F or U+2007 as whitespace at all, so normalizeSpace leaves them untouched; and
+        // while it does map U+00A0 to a plain space, it does so WITHOUT re-collapsing, so
+        // "x  y" comes back as "x  y" -- a normalizer emitting the very double space it
+        // exists to remove. Mapping them to a plain space up front lets the single collapse below
+        // see them as the whitespace they are. Production carries 2,392 values with U+00A0 and 5
+        // with U+202F.
+        String t = s.replace( '\u00A0', ' ' ).replace( '\u202F', ' ' ).replace( '\u2007', ' ' );
+        return StringUtils.normalizeSpace( t );
     }
 
     /**
@@ -202,7 +244,7 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     }
 
     public void setCategoryUri( @Nullable String categoryUri ) {
-        this.categoryUri = categoryUri;
+        this.categoryUri = stripToNull( categoryUri );
     }
 
     public GOEvidenceCode getEvidenceCode() {
@@ -228,13 +270,14 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
     /**
      * @return The human-readable term (e.g., "OrganismPart"; "kinase")
      */
+    @Nullable
     @FullTextField
     public String getValue() {
         return this.value;
     }
 
-    public void setValue( String value ) {
-        this.value = value;
+    public void setValue( @Nullable String value ) {
+        this.value = normalizeTermText( value );
     }
 
     /**
@@ -250,8 +293,26 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
         return this.valueUri;
     }
 
+    /**
+     * 🛑 Blank is stored as null, the way {@link #setValue(String)} normalises its free text.
+     * <p>
+     * An empty string is a SECOND DIALECT for ungrounded, and every layer reads the two differently:
+     * {@link ubic.gemma.model.common.description.CharacteristicUtils#equals} treats a non-null URI as
+     * grounded, so {@code ''} beside a NULL reads as "ontology term vs free text" and the duplicate
+     * guard in {@code doAddAnnotation} lets the pair through; a census grouping on the raw column puts
+     * them in two groups. Production carried 80 such rows, all on curation surfaces (52 factor-value
+     * statements, 31 experiment tags, 0 biomaterial characteristics); normalising them to NULL on
+     * 2026-09-10 collapsed two pairs onto one coordinate and manufactured duplicate tags
+     * (frinkbro, 2026-09-11). Ten statement-URI rows were still {@code ''} when this landed.
+     * <p>
+     * Only some {@code Factory.newInstance} overloads stripped; 72 callsites set a URI directly. The
+     * normalisation belongs at the one chokepoint rather than at each of them.
+     * <p>
+     * Entities use {@code @Access(AccessType.FIELD)}, so Hibernate does not call this on load: an
+     * existing {@code ''} row reads back unchanged and is not silently rewritten.
+     */
     public void setValueUri( @Nullable String uri ) {
-        this.valueUri = uri;
+        this.valueUri = stripToNull( uri );
     }
 
     @Deprecated
@@ -273,10 +334,48 @@ public class Characteristic extends AbstractDescribable implements Comparable<Ch
         this.supportingEvidence = supportingEvidence;
     }
 
+    /**
+     * Constant, deliberately.
+     *
+     * <p>🛑 This used to hash {@code category}/{@code categoryUri} and
+     * {@code value}/{@code valueUri} — exactly the fields curation MUTATES. A
+     * Characteristic lives in {@link ubic.gemma.model.analysis.Investigation}'s
+     * {@code HashSet}, so re-terming one in place moved it to a bucket computed
+     * from its old value while {@link #equals} still matched it by id:
+     * {@code contains()} and {@code remove()} then answered false for an element
+     * that was demonstrably in the set. The same hash also broke the
+     * equals/hashCode contract outright, because two instances sharing an id but
+     * differing in content are equal by the id branch below and hashed
+     * differently.</p>
+     *
+     * <p>The cost is that a hash collection of Characteristics degrades to a
+     * linear scan of one bucket. That is invisible for the per-entity sets this
+     * class actually lives in (tens of elements), and it is NOT invisible for
+     * bulk keying: building a 5000-entry {@code HashMap} keyed by transient
+     * Characteristics measured 1141 ms this way versus 42 ms before.
+     * ⇒ <b>Do not key a large map by Characteristic.</b> Use a
+     * {@link java.util.TreeMap}, or key by id. The annotation usage-frequency
+     * aggregations in {@code ExpressionExperimentDaoImpl} are the precedent.</p>
+     *
+     * <p>🛑 Pick the comparator by what the keys are. {@link #getComparator()}
+     * breaks the tie on id, so a map built from TRANSIENT keys (a GROUP BY
+     * projection, say) and probed with a persisted characteristic misses:
+     * id-vs-null is never zero, even though {@link #equals} calls the two equal.
+     * For those maps use {@link #getByCategoryAndValueComparator()} (or
+     * {@link #getByCategoryComparator()} when the value is not part of the key),
+     * which collapses exactly the pairs {@link #equals} considers equal. Reserve
+     * {@link #getComparator()} for maps whose keys are all persisted and where
+     * two distinct rows sharing a term must stay distinct.</p>
+     */
     @Override
     public int hashCode() {
-        return Objects.hash( StringUtils.lowerCase( categoryUri != null ? categoryUri : category ),
-                StringUtils.lowerCase( valueUri != null ? valueUri : value ) );
+        // Characteristic.class, not getClass(): equals() matches on `instanceof Characteristic`, so a
+        // Statement can be equal to a Characteristic and the two MUST hash alike. getClass() gave them
+        // different constants, and a Set<Characteristic> holding both -- which is what an
+        // ExpressionExperiment's characteristics are once GEO import adds statement-shaped tags --
+        // then answered contains()/remove() from the wrong bucket. It also split a Hibernate proxy
+        // from the instance it stands for, since a proxy's getClass() is the generated subclass.
+        return Characteristic.class.hashCode();
     }
 
     @Override

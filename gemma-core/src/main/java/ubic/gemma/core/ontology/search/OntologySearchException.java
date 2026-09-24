@@ -3,7 +3,7 @@ package ubic.gemma.core.ontology.search;
 import ubic.gemma.core.ontology.providers.OntologyService;
 
 /**
- * Base class for exceptions raised by {@link OntologyService#findTerm(String)} and others.
+ * Base class for exceptions raised by {@link OntologyService#findTerm(String, int)} and others.
  * @author poirigui
  */
 public class OntologySearchException extends Exception {

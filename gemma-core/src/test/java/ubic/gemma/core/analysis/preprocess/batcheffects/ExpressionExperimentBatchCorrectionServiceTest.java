@@ -46,6 +46,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author paul
@@ -120,6 +121,9 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
         assertNotNull( comBat );
 
         assertEquals( newee.getBioAssays().size(), comBat.columns() );
+
+        // the outlier flagged above is restored into the matrix, which still has to report itself as batch-corrected
+        assertTrue( comBat.getQuantitationType().getIsBatchCorrected() );
 
     }
 

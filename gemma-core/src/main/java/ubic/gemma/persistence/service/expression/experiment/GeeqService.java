@@ -35,8 +35,7 @@ public interface GeeqService extends BaseVoEnabledService<Geeq, GeeqValueObject>
     enum ScoreMode {
         all,
         batch,
-        reps,
-        pub
+        reps
     }
 
     /**

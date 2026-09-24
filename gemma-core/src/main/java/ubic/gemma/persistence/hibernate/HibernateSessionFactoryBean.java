@@ -43,6 +43,7 @@ public class HibernateSessionFactoryBean
     private Resource configLocation;
     private Properties hibernateProperties = new Properties();
     private Class<?>[] annotatedClasses;
+    private org.hibernate.boot.model.relational.AuxiliaryDatabaseObject[] auxiliaryDatabaseObjects;
     private SessionFactory sessionFactory;
 
     public void setDataSource( DataSource dataSource ) {
@@ -70,6 +71,20 @@ public class HibernateSessionFactoryBean
         this.annotatedClasses = annotatedClasses;
     }
 
+    /**
+     * DDL that the mapping cannot express, replayed against an hbm2ddl-built schema.
+     *
+     * <p>The one thing HBM XML could still do that JPA cannot is {@code <database-object>}. Keeping a
+     * whole {@code hibernate-mapping} file alive for it costs a deprecation warning on every boot
+     * ({@code HHH90000028}) and leaves the mapping story looking unfinished when it is not — so the
+     * hook moves here, where {@link Configuration#addAuxiliaryDatabaseObject} does the same job from
+     * code.</p>
+     */
+    public void setAuxiliaryDatabaseObjects(
+            org.hibernate.boot.model.relational.AuxiliaryDatabaseObject... auxiliaryDatabaseObjects ) {
+        this.auxiliaryDatabaseObjects = auxiliaryDatabaseObjects;
+    }
+
     @Override
     public void afterPropertiesSet() throws IOException {
         Configuration cfg = new Configuration();
@@ -82,6 +97,11 @@ public class HibernateSessionFactoryBean
         if ( this.annotatedClasses != null ) {
             for ( Class<?> c : this.annotatedClasses ) {
                 cfg.addAnnotatedClass( c );
+            }
+        }
+        if ( this.auxiliaryDatabaseObjects != null ) {
+            for ( org.hibernate.boot.model.relational.AuxiliaryDatabaseObject o : this.auxiliaryDatabaseObjects ) {
+                cfg.addAuxiliaryDatabaseObject( o );
             }
         }
         cfg.addProperties( this.hibernateProperties );

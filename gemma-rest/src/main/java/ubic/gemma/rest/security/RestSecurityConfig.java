@@ -66,7 +66,7 @@ import java.util.List;
  *
  * Mapping to Spring Security 6 idioms:
  * <ul>
- *   <li>{@code pattern="/rest/v2/**"} &rarr; {@link HttpSecurity#securityMatcher(String)}.</li>
+ *   <li>{@code pattern="/rest/v2/**"} &rarr; {@link HttpSecurity#securityMatcher(String...)}.</li>
  *   <li>{@code <s:intercept-url pattern="/rest/v2/users/**" access="GROUP_USER"/>} &rarr;
  *       {@code .authorizeHttpRequests(auth -> auth.requestMatchers("/rest/v2/users/**").hasAuthority("GROUP_USER").anyRequest().permitAll())}.
  *       The default rule ({@code anyRequest().permitAll()}) corresponds to the legacy
@@ -153,7 +153,7 @@ public class RestSecurityConfig {
      */
     /**
      * Registered with @Order(1) so this chain is consulted BEFORE the gemma-web XML
-     * `<s:http pattern="/**">` chain. Without an explicit order, FilterChainProxy uses
+     * {@code <s:http pattern="/**">} chain. Without an explicit order, FilterChainProxy uses
      * bean-registration order — which is not source-file order — and the XML `/**`
      * chain was winning for /rest/v2/login. The XML chain has CSRF enabled, so the
      * SPA's POST /rest/v2/login was getting 403s before this @Order(1) was set.

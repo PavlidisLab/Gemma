@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.service;
 
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterResult;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -58,6 +59,18 @@ public interface ExpressionDataMatrixService {
      * @return data matrix
      */
     ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException;
+
+    /**
+     * Provide a filtered expression data matrix, reporting the per-stage attrition into a caller-supplied result.
+     * <p>
+     * The other overloads discard that result. Use this one when the attrition is wanted as well as the matrix --
+     * the sample-correlation run records it on the audit event so a curator can see how many design elements each
+     * filter removed.
+     *
+     * @param result populated in place as each filter runs; untouched if filtering throws
+     * @see ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload
+     */
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform, ExpressionExperimentFilterResult result ) throws FilteringException;
 
     ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException;
 

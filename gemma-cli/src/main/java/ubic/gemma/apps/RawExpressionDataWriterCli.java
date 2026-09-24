@@ -86,7 +86,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
                 throw new UnsupportedOperationException( "Writing raw data for specific samples to the standard location is not supported." );
             } else if ( destination.isStandardOutput() ) {
                 fileName = null;
-                try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
+                try ( Writer writer = new OutputStreamWriter( openStandardOutput(), StandardCharsets.UTF_8 ) ) {
                     written = expressionDataFileService.writeRawExpressionData( ee, assays, qt, destination.getScaleType(), destination.isExcludeSampleIdentifiers(), destination.isUseBioAssayIds(), destination.isUseRawColumnNames(), writer, true );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
@@ -109,7 +109,7 @@ public class RawExpressionDataWriterCli extends ExpressionExperimentVectorsManip
                 }
             } else if ( destination.isStandardOutput() ) {
                 fileName = null;
-                try ( Writer writer = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
+                try ( Writer writer = new OutputStreamWriter( openStandardOutput(), StandardCharsets.UTF_8 ) ) {
                     written = expressionDataFileService.writeRawExpressionData( ee, qt, destination.getScaleType(), destination.isExcludeSampleIdentifiers(), destination.isUseBioAssayIds(), destination.isUseRawColumnNames(), writer, true );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );

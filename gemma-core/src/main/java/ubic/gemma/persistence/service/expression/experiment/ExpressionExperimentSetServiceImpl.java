@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -194,10 +195,13 @@ public class ExpressionExperimentSetServiceImpl
             throw new IllegalArgumentException( "You must provide a name" );
         }
 
-        // make sure potentially new experiment members are of the right taxon
+        // A taxon on the set is a CONSTRAINT the set opted into, not a requirement: when it has
+        // one, every member must match it, and when it has none the set may span taxa. Enforcing it
+        // unconditionally is what made a mixed curation cohort impossible to express.
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
         Taxon eeTaxon;
-        for ( ExpressionExperiment ee : expressionExperimentSet.getExperiments() ) {
+        for ( ExpressionExperiment ee : groupTaxon == null ? Collections.<ExpressionExperiment>emptySet()
+                : expressionExperimentSet.getExperiments() ) {
             eeTaxon = expressionExperimentReadService.getTaxon( ee );
 
             if ( eeTaxon == null ) {

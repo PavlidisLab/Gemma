@@ -44,7 +44,7 @@ import ubic.gemma.model.common.AbstractDescribable;
         @Index(name = "CHROMOSOME_FEATURE_ENSEMBL_ID", columnList = "ENSEMBL_ID")
 })
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class")
+@DiscriminatorColumn(name = "class", length = 255)
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public abstract class ChromosomeFeature extends AbstractDescribable {
 

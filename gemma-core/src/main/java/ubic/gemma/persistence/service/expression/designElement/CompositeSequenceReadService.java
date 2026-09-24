@@ -15,6 +15,7 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -23,7 +24,9 @@ import ubic.gemma.persistence.util.Slice;
 import javax.annotation.CheckReturnValue;
 import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Read-only retrieval service for {@link CompositeSequence}.
@@ -154,4 +157,14 @@ public interface CompositeSequenceReadService {
      * @see CompositeSequenceDao#getSequenceData(Collection)
      */
     Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * @see CompositeSequenceDao#getGeneData(Collection)
+     */
+    Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds );
+
+    /**
+     * @see CompositeSequenceDao#findIdsByGeneIds(Collection, Long)
+     */
+    Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId );
 }

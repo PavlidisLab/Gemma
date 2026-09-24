@@ -24,8 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
-import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.security.audit.payload.SampleRemovalPayload;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -59,8 +57,6 @@ public class OutlierFlaggingServiceImpl
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @Autowired
-    private PreprocessorService preprocessorService;
 
     @Override
     @Transactional(propagation = Propagation.NEVER)
@@ -104,13 +100,14 @@ public class OutlierFlaggingServiceImpl
                 bioAssays.size() + " flagged as outliers",
                 new SampleRemovalPayload( baLabels ) );
 
-        try {
-            expExp = expressionExperimentService.thaw( expExp );
-            preprocessorService.process( expExp );
-        } catch ( PreprocessingException e ) {
-            OutlierFlaggingServiceImpl.log
-                    .error( "Error during postprocessing, make sure additional steps are completed", e );
-        }
+        // Deliberately does NOT reprocess here. Flagging an outlier changes the analyzed sample set, so
+        // every computed result except batchInfo is owed a re-run -- but doing it inline meant one flag
+        // rebuilt the processed vectors, re-corrected for batch and redid the DEAs, roughly eight minutes
+        // of work inside the caller's request. Through the proxy that reads as a 502 on a call that in
+        // fact succeeded and then replaced the dataset's analyses.
+        //
+        // The SampleRemovalEvent recorded above is what carries it now: pipelineStatus reports the affected
+        // steps as `stale`, and reprocessing happens when someone chooses to run it.
     }
 
     @Override
@@ -151,13 +148,14 @@ public class OutlierFlaggingServiceImpl
                 new SampleRemovalPayload( baLabels ) );
 
         // several transactions
-        try {
-            expExp = expressionExperimentService.thaw( expExp );
-            preprocessorService.process( expExp );
-        } catch ( PreprocessingException e ) {
-            OutlierFlaggingServiceImpl.log
-                    .error( "Error during postprocessing, make sure additional steps are completed", e );
-        }
+        // Deliberately does NOT reprocess here. Flagging an outlier changes the analyzed sample set, so
+        // every computed result except batchInfo is owed a re-run -- but doing it inline meant one flag
+        // rebuilt the processed vectors, re-corrected for batch and redid the DEAs, roughly eight minutes
+        // of work inside the caller's request. Through the proxy that reads as a 502 on a call that in
+        // fact succeeded and then replaced the dataset's analyses.
+        //
+        // The SampleRemovalEvent recorded above is what carries it now: pipelineStatus reports the affected
+        // steps as `stale`, and reprocessing happens when someone chooses to run it.
     }
 
 }

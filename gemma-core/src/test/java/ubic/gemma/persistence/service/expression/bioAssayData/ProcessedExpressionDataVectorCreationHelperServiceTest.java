@@ -54,6 +54,22 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
     @Autowired
     private SessionFactory sessionFactory;
 
+    /**
+     * Read, normalize, write — the three steps that used to be one {@code createProcessedDataVectors} call.
+     * <p>
+     * 🛑 Calling them from here is the point of this test, not a convenience. {@link BaseIntegrationTest5} is
+     * deliberately NOT {@code @Transactional}, so each step really does open and commit its own transaction and
+     * the carrier really is detached in between. Wrapping this in one transaction would hide every
+     * detached-entity failure the split can cause, which is the only kind it can cause.
+     */
+    private QuantitationType createProcessedDataVectors( ExpressionExperiment ee, boolean ignoreQuantitationMismatch,
+            ProcessedExpressionDataVectorCreationSummary summary ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        ComputedProcessedData computed = processedExpressionDataVectorCreationHelperService
+                .readProcessedDataInputs( ee, ignoreQuantitationMismatch, summary, true );
+        processedExpressionDataVectorCreationHelperService.normalizeProcessedData( computed, summary );
+        return processedExpressionDataVectorCreationHelperService.replaceProcessedDataVectors( ee, computed, summary );
+    }
+
     @Test
     public void testCreateProcessedDataVectors() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         setSeed( 123L );
@@ -62,7 +78,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
-        QuantitationType processedQt = processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( ee, false, summary );
+        QuantitationType processedQt = createProcessedDataVectors( ee, false, summary );
         assertEquals( 100, summary.getNumberOfDataVectors() );
         assertEquals( "log2cpm - Processed version", processedQt.getName() );
         assertEquals( GeneralType.QUANTITATIVE, processedQt.getGeneralType() );
@@ -88,7 +104,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
-        processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( ee, false, summary );
+        createProcessedDataVectors( ee, false, summary );
         assertEquals( NUM_PROBES, summary.getNumberOfDataVectors() );
     }
 
@@ -99,8 +115,36 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         assertThat( ee.getProcessedExpressionDataVectors() ).isEmpty();
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
-        processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( ee, false, summary );
+        createProcessedDataVectors( ee, false, summary );
         assertEquals( NUM_PROBES, summary.getNumberOfDataVectors() );
+    }
+
+    /**
+     * A row with no value in any sample survives quantile normalization untouched. The normalizer drops such rows
+     * before it ranks, so its output has fewer rows than its input; writing the result back by the input's row count
+     * ran off the end. frinkbro hit it on GSE21509 (eid 30208, 2026-09-14) through {@code corrMat -force}:
+     * {@code Index 45708 out of bounds for length 45708} against 46,628 design elements.
+     * <p>
+     * 4,000 rows is the smallest size that is normalized at all.
+     */
+    @Test
+    public void testCreateProcessedDataVectorsWithARowMissingInEverySample() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        setSeed( 123L );
+        int numProbes = 4000;
+        double[][] matrix = randomExpressionMatrix( numProbes, 4, new NormalDistribution( 10, 1 ) );
+        Arrays.fill( matrix[0], Double.NaN );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, false );
+        ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
+
+        createProcessedDataVectors( ee, false, summary );
+
+        assertTrue( summary.isQuantileNormalized() );
+        assertEquals( numProbes, summary.getNumberOfDataVectors() );
+        ee = expressionExperimentService.thaw( expressionExperimentService.load( ee.getId() ) );
+        assertThat( ee.getProcessedExpressionDataVectors() )
+                .filteredOn( v -> v.getDesignElement().getName().equals( "cs0" ) )
+                .singleElement()
+                .satisfies( v -> assertThat( v.getDataAsDoubles() ).containsOnly( Double.NaN ) );
     }
 
     @Test
@@ -110,7 +154,7 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
         ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LOG2, true );
         assertThat( ee.getRawExpressionDataVectors() ).hasSize( NUM_PROBES );
         ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
-        processedExpressionDataVectorCreationHelperService.createProcessedDataVectors( ee, false, summary );
+        createProcessedDataVectors( ee, false, summary );
         assertEquals( NUM_PROBES, summary.getNumberOfDataVectors() );
 
         Long eeId = ee.getId();

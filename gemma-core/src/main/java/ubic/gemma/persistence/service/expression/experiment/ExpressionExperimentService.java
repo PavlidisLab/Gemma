@@ -43,6 +43,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableFilteringVoEnabledService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.util.Cursor;
 import ubic.gemma.persistence.util.CursorPage;
@@ -103,6 +104,9 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * @return a mapping of candidate identifier to experiment name
      */
     SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames );
+
+    /** @see ExpressionExperimentReadService#loadIdentifiers(Collection) */
+    List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids );
 
     /**
      * @see ExpressionExperimentDao#reload(Identifiable)
@@ -544,6 +548,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee );
 
     /**
+     * Retrieve annotations for a given experiment, optionally including unmapped ones.
+     *
+     * @see ExpressionExperimentReadService#getAnnotations(ExpressionExperiment, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperiment ee, boolean includeFreeText );
+
+    /**
      * Retrieve annotations for a given experiment subset.
      * <p>
      * The following are included:
@@ -556,6 +568,14 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee );
+
+    /**
+     * Retrieve annotations for a given experiment subset, optionally including unmapped ones.
+     *
+     * @see ExpressionExperimentReadService#getAnnotations(ExpressionExperiment, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText );
 
     /**
      * Build a full structured representation of an experiment's {@link ExperimentalDesign}: factors,
@@ -577,6 +597,27 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed );
+
+    /**
+     * Predict what would happen if {@code proposed} were applied, including the bindings a
+     * {@link DesignCommitPlan} defers to a second apply pass.
+     *
+     * <h4>Why the plan is needed to get the count right</h4>
+     *
+     * <p>A {@link ExperimentalDesignValueObject.BioMaterialFactorValueAssignment} carries factor value IDs, so a
+     * biomaterial being bound to a factor value the commit CREATES cannot be expressed in {@code proposed} at all
+     * — the factor value has no ID until the first apply pass makes it. Those bindings live in
+     * {@link DesignCommitPlan#getPendingAssignments()}. Preflighting without them reports
+     * {@code biomaterialsWithChangedAssignments = 0} for a pure create whose bindings do land.</p>
+     *
+     * @param plan the commit plan whose deferred assignments should be counted, or {@code null} when the caller
+     *             has none — a plain {@code PUT /datasets/{id}/design} payload, which can only name factor values
+     *             that already exist
+     * @see #previewDesignChange(ExpressionExperiment, ExperimentalDesignValueObject)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed,
+            @Nullable DesignCommitPlan plan );
 
     /**
      * Apply {@code proposed} as the experiment's new {@link ExperimentalDesign}.
@@ -913,6 +954,18 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
     /**
+     * @see ExpressionExperimentDao#hasSourceMetadata(ExpressionExperiment)
+     */
+    boolean hasSourceMetadata( ExpressionExperiment ee );
+
+    /**
+     * @see ExpressionExperimentDao#getSourceMetadata(ExpressionExperiment)
+     */
+    @Nullable
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    String getSourceMetadata( ExpressionExperiment ee );
+
+    /**
      * @return counts design element data vectors grouped by quantitation type
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -1078,7 +1131,10 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
 
     /**
      * Test if this experiment was run on a two-color microarray platform.
+     *
+     * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
      */
+    @Deprecated
     boolean isTwoChannel( ExpressionExperiment expressionExperiment );
 
     /**
@@ -1187,6 +1243,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * to persistent references first (see
      * {@link ubic.gemma.persistence.service.common.description.BibliographicReferenceService#findOrCreateByPubMedId(String)}).
      *
+     * Evidence-free form of {@link #updatePublications(ExpressionExperiment, PublicationAssertion,
+     * Collection, Collection)}: every publication is recorded as asserted by
+     * {@link ubic.gemma.model.common.description.PublicationAssociationSource#CURATOR} with no stated
+     * basis, which is what reaching this method through an {@code ACL_SECURABLE_EDIT} write amounts
+     * to. Prefer the four-argument form wherever the caller knows why.
+     *
      * @param ee                          the experiment whose publications are being replaced.
      * @param primaryPublication          the desired primary publication, or {@code null} to clear it.
      * @param otherRelevantPublications   the desired other-relevant-publication set (may be empty). Any
@@ -1196,6 +1258,47 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void updatePublications( ExpressionExperiment ee, @Nullable BibliographicReference primaryPublication,
             Collection<BibliographicReference> otherRelevantPublications );
+
+    /**
+     * Replace {@code ee}'s publications and the evidence behind them in one transaction, including the
+     * record of which publications have been ruled out.
+     * <p>
+     * The links and the assertions describing them are two halves of one record — Gemma 1.32.x shares
+     * this database and reads only the links, so the assertions live in their own table — and this is
+     * the method that keeps them in step. It writes the links
+     * ({@link ExpressionExperiment#getPrimaryPublication()} /
+     * {@link ExpressionExperiment#getOtherRelevantPublications()}) and delegates the assertions to
+     * {@link ubic.gemma.persistence.service.common.description.PublicationAssociationService#reconcile},
+     * so neither can be updated without the other.
+     * <p>
+     * {@code rejectedPublications} is the addition that lets a "not this one, because…" be recorded at
+     * all. A rejected publication is not linked, and a lower authority — a nightly GEO refresh, a
+     * publication finder — cannot subsequently link it: precedence is enforced by rank at write time,
+     * so the ruling holds without anyone maintaining a list of exceptions. Dropping a publication from
+     * the accepted sets without naming it here retracts its assertion instead, which records that the
+     * link is gone but not why.
+     *
+     * @param ee                        the experiment whose publications are being replaced.
+     * @param primaryPublication        the desired primary publication and its evidence, or
+     *                                  {@code null} to clear it.
+     * @param otherRelevantPublications the desired other-relevant set with evidence (may be empty).
+     *                                  Any entry naming the primary's reference is ignored.
+     * @param rejectedPublications      publications to record as ruled out for this experiment,
+     *                                  replacing the standing set — an empty collection clears every
+     *                                  rejection. Pass {@code null} to leave the standing rejections
+     *                                  alone, which is what a caller that does not manage them wants:
+     *                                  a rejection is not returned by the plain publications read, so
+     *                                  a client that writes back what it read has not seen them and
+     *                                  its silence must not delete them. A reference given both here
+     *                                  and as accepted is an {@link IllegalArgumentException}.
+     * @throws ubic.gemma.persistence.service.common.description.PublicationAssociationConflictException
+     *         if an accepted publication stands rejected by an authority the asserting source does not
+     *         outrank.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
+            Collection<PublicationAssertion> otherRelevantPublications,
+            @Nullable Collection<PublicationAssertion> rejectedPublications );
 
     /**
      * Update the curator-editable "basics" of {@code ee}: its {@code name} (title) and/or
@@ -1224,10 +1327,25 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
      * {@link org.springframework.dao.OptimisticLockingFailureException} (the web layer maps it to 409).
      * A short-name change without {@link CurationCommitRequest#isShortNameChangeAllowed()} throws
      * {@link org.springframework.security.access.AccessDeniedException}, rolling the whole commit back.
+     * <p>
+     * {@code RUN_AS_AGENT} is what lets an applied commit refresh this experiment's
+     * {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} rows before returning:
+     * {@link ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil} is
+     * {@code @Secured("GROUP_AGENT")} and a curator holds {@code GROUP_USER}, so without the elevation the
+     * call fails on authorization, not on timing. {@code RunAsManagerImpl} swaps in a token carrying the
+     * caller's own authorities plus {@code GROUP_RUN_AS_AGENT} for the duration of this invocation, and the
+     * role hierarchy escalates that to {@code GROUP_AGENT} — the same mechanism
+     * {@link ubic.gemma.core.security.authentication.UserManager} and
+     * {@code ExpressionExperimentReportService} already use.
+     * <p>
+     * What that opens up, stated plainly: for the length of this call every {@code @Secured("GROUP_AGENT")}
+     * method reachable from the commit becomes callable. It grants no ACL permission (the ACL authorization
+     * strategy keys on {@code GROUP_ADMIN}, and the hierarchy runs {@code GROUP_ADMIN > GROUP_AGENT}, not the
+     * reverse), does not change the principal, and ends when the method returns.
      *
      * @return per-section change counts (identical whether applied or dry-run).
      */
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT", "RUN_AS_AGENT" })
     CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun );
 
     /**
@@ -1251,6 +1369,12 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc );
 
     /**
+     * As {@link #addAnnotation(ExpressionExperiment, Characteristic)}, with a caller-supplied reason
+     * appended to the audit note after the server's own description.
+     */
+    Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc, @Nullable String reason );
+
+    /**
      * Remove a single experiment-level tag from {@code ee} by characteristic id. Counterpart to
      * {@link #addAnnotation(ExpressionExperiment, Characteristic)}.
      * <p>
@@ -1266,6 +1390,13 @@ public interface ExpressionExperimentService extends SecurableBaseService<Expres
     @Nullable
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId );
+
+    /**
+     * As {@link #removeAnnotation(ExpressionExperiment, Long)}, with a caller-supplied reason appended to
+     * the audit note. A deletion has no surviving annotation to carry evidence, so this is the only place
+     * its reason can be recorded.
+     */
+    Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId, @Nullable String reason );
 
     /**
      * @see ExpressionExperimentDao#thaw(ExpressionExperiment)

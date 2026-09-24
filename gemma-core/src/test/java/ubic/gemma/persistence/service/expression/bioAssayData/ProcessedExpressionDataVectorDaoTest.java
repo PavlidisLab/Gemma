@@ -18,6 +18,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDaoImpl;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
@@ -97,6 +98,16 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest5 {
         }
         BioAssayDimension bad = new BioAssayDimension();
         session.persist( bad );
+        // A quantitation type is required: the vectors used to be persisted without one, which the
+        // loader's inner join fetch then filtered out entirely, and the test only passed because the
+        // query had been loosened to a left join fetch. Production has never held such a row.
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "test" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setScale( ScaleType.LINEAR );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        session.persist( qt );
         // create 10000 vectors
         Set<ProcessedExpressionDataVector> vectors = new HashSet<>();
         for ( int i = 0; i < NUM_PROBES; i++ ) {
@@ -104,6 +115,7 @@ public class ProcessedExpressionDataVectorDaoTest extends BaseDatabaseTest5 {
             vector.setExpressionExperiment( ee );
             vector.setBioAssayDimension( bad );
             vector.setDesignElement( probes.get( i ) );
+            vector.setQuantitationType( qt );
             vector.setData( new byte[8 * 8] );
             vectors.add( vector );
         }

@@ -50,6 +50,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractCriteriaFilteringVoEnabledDao;
+import org.springframework.security.acls.domain.BasePermission;
 import ubic.gemma.persistence.util.*;
 
 import org.springframework.lang.Nullable;
@@ -347,8 +348,39 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
             @Nullable Collection<DatabaseEntry> databaseEntries,
             @Nullable Filters filters ) {
         List<Predicate> preds = new ArrayList<>();
-        // Filters predicate (returns cb.conjunction() if filters null/empty).
-        preds.add( FilterJpaUtils.formRestrictionClause( cb, query, root, filters ) );
+        // Filters predicate (returns cb.conjunction() if filters null/empty). The alias map has to be
+        // passed explicitly: alias-registered properties (e.g. baselineGroup.characteristics.* under
+        // "bc") reach us as Filter(objectAlias="bc", propertyName="value"), and without the map the
+        // prefix is dropped and the path resolves as root.get("value").
+        preds.add( FilterJpaUtils.formRestrictionClause( cb, query, root, filters, getFilterablePropertyObjectAliases() ) );
+        // 🔒 ACL. Without this /resultSets served the analysis, subset factor, factor values and
+        // ontology terms of PRIVATE experiments to anonymous callers: the id-taking loaders on
+        // ExpressionAnalysisResultSetService were guarded on 2026-08-24, the two listing methods that
+        // share this method were not, and `?filter=id = <id>` reaches a single result set through the
+        // listing just as directly.
+        //
+        // 🛑 Restricted on the EXPERIMENT, not the result set. A result set is a SecuredChild: its ACL
+        // row inherits and carries no entries of its own, and the EXISTS body does not walk parentAcl,
+        // so restricting on the result set's own identity would match nothing and hide everything.
+        // Applied inside buildPredicates so the data query, the count query and the cursor query cannot
+        // drift apart — a count computed without the filter would leak the private total even when the
+        // page itself is clean.
+        // 🛑 A SUBSET analysis's experimentAnalyzed is an ExpressionExperimentSubSet, not an ExpressionExperiment,
+        // so its id is a SUBSET id and matches no ExpressionExperiment ACL row. Restricting on it directly hid
+        // every subset analysis's result sets from everyone but admins -- who bypass this predicate entirely and
+        // therefore could not see it. GSE191016 (eid 39118) is public with 24 subset result sets: admin saw 24,
+        // anonymous saw 0, and the ACL chain was correct the whole time (RS -> DEA -> EE, all inheriting, the
+        // experiment granting IS_AUTHENTICATED_ANONYMOUSLY).
+        //
+        // Roll up through sourceExperiment, the same way any count over subset analyses has to -- treat() yields
+        // null for a non-subset, so coalesce falls back to the plain experiment id and both shapes are covered by
+        // one expression.
+        Path<BioAssaySet> experimentAnalyzedForAcl = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
+        Expression<Long> aclExperimentId = cb.coalesce(
+                cb.treat( experimentAnalyzedForAcl, ExpressionExperimentSubSet.class ).get( "sourceExperiment" ).get( "id" ),
+                experimentAnalyzedForAcl.get( "id" ) );
+        preds.add( AclQueryUtils.formAclRestrictionPredicate( getSessionFactory().getCurrentSession(), cb, query,
+                aclExperimentId, ExpressionExperiment.class, BasePermission.READ ) );
         if ( bioAssaySets != null ) {
             // analysis.experimentAnalyzed in (:bioAssaySets)
             Path<BioAssaySet> experimentAnalyzed = root.<DifferentialExpressionAnalysis>get( "analysis" ).get( "experimentAnalyzed" );
@@ -606,50 +638,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     }
 
     @Override
-    public long[] binPvalues( Long resultSetId, String column, int numberOfBins ) {
-        Assert.notNull( resultSetId, "resultSetId must not be null." );
-        Assert.isTrue( numberOfBins >= 1, "numberOfBins must be >= 1." );
-        final String physicalColumn;
-        switch ( column ) {
-            case "raw":
-                physicalColumn = "PVALUE";
-                break;
-            case "corrected":
-                physicalColumn = "CORRECTED_PVALUE";
-                break;
-            default:
-                throw new IllegalArgumentException( "column must be 'raw' or 'corrected', got: " + column );
-        }
-        // Clamp pvalue == 1.0 into the last bin so FLOOR(1.0 * bins) == bins doesn't overflow.
-        // LEAST(FLOOR(p * :bins), :bins - 1) keeps every non-null row inside [0, bins-1].
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = getSessionFactory().getCurrentSession()
-                .createNativeQuery( "select LEAST(FLOOR(dear." + physicalColumn + " * :bins), :bins - 1) as BIN, COUNT(*) as N " +
-                        "from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear " +
-                        "where dear.RESULT_SET_FK = :rs and dear." + physicalColumn + " is not null " +
-                        "group by BIN" )
-                .addScalar( "BIN", StandardBasicTypes.LONG )
-                .addScalar( "N", StandardBasicTypes.LONG )
-                .setParameter( "rs", resultSetId )
-                .setParameter( "bins", numberOfBins )
-                .list();
-        long[] counts = new long[numberOfBins];
-        for ( Object[] row : rows ) {
-            int bin = ( ( Long ) row[0] ).intValue();
-            long n = ( Long ) row[1];
-            // Defensive bounds check — clamp anything outside [0, numberOfBins-1] (covers negative
-            // p-values from corrupted upstream data, which the LEAST() above doesn't catch).
-            if ( bin < 0 ) {
-                bin = 0;
-            } else if ( bin >= numberOfBins ) {
-                bin = numberOfBins - 1;
-            }
-            counts[bin] += n;
-        }
-        return counts;
-    }
-
-    @Override
     public Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet ) {
         PvalueDistribution pvd = ( PvalueDistribution ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs=:rs " )
@@ -795,14 +783,16 @@ public class ExpressionAnalysisResultSetDaoImpl extends AbstractCriteriaFilterin
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private List<Order> buildOrders( CriteriaBuilder cb, Root<ExpressionAnalysisResultSet> root, Sort sort ) {
         List<Order> orders = new ArrayList<>();
+        Map<String, String> aliasPrefixes = getFilterablePropertyObjectAliases();
         for ( ; sort != null; sort = sort.getAndThen() ) {
             String propertyName = sort.getPropertyName();
+            String objectAlias = sort.getObjectAlias();
             Expression<?> expr;
             if ( propertyName.endsWith( ".size" ) ) {
                 String collectionPath = propertyName.substring( 0, propertyName.length() - ".size".length() );
-                expr = cb.size( ( Expression ) FilterJpaUtils.resolvePath( root, collectionPath ) );
+                expr = cb.size( ( Expression ) FilterJpaUtils.resolvePathWithAlias( root, objectAlias, collectionPath, aliasPrefixes ) );
             } else {
-                expr = FilterJpaUtils.resolvePath( root, propertyName );
+                expr = FilterJpaUtils.resolvePathWithAlias( root, objectAlias, propertyName, aliasPrefixes );
             }
             Order order = sort.getDirection() == Sort.Direction.DESC ? cb.desc( expr ) : cb.asc( expr );
             if ( sort.getNullMode() != null && sort.getNullMode() != Sort.NullMode.DEFAULT && order instanceof JpaOrder ) {

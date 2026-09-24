@@ -1,0 +1,34 @@
+-- BIB_REF_ANNOTATION.TERM VARCHAR(255) -> TEXT.
+--
+-- The column holds two different kinds of string. MeSH descriptors and qualifiers are NLM
+-- controlled vocabulary and are comfortably bounded. Keywords are not: the PubMed DTD lets a
+-- publisher put whatever it likes in <KeywordList Owner="NOTNLM">, and some journals use it to
+-- file the article's abbreviations glossary as a single "keyword". PMID 37094356 spends 1417
+-- characters that way, beginning "BACH1 Abbreviations: AIFM2, apoptosis-inducing factor
+-- mitochondria-associated 2; ANOVA, analysis of variance; ...".
+--
+-- Because connections run under STRICT_TRANS_TABLES (gemma.db.hikari.sessionVariables), MySQL
+-- rejected the insert with error 1406 rather than truncating, so the whole BibliographicReference
+-- failed to load and PUT /datasets/{id}/publications answered 500. Nothing was partially stored;
+-- the reference simply never arrived.
+--
+-- Measured before choosing this over truncating: of 200 sampled J Biochem 2023-24 records, 26
+-- (13%) carry a keyword over 255 characters, so this recurs for any dataset whose primary
+-- publication is in a journal whose style guide mandates an abbreviations list. Across a broad
+-- 400-article sample it was 0%, so the cost of the wider column falls on very few rows.
+--
+-- TEXT rather than a bigger VARCHAR because there is no honest bound to pick -- the field is
+-- whatever the publisher typed -- and no index depends on the width: the table's only keys are
+-- on ID and the three FK columns, so this is a plain type change with nothing to re-prefix.
+-- Nothing queries, sorts or groups by TERM, so the lost sortability costs us nothing today.
+--
+-- Truncating in the parser was the alternative. It was rejected because the value is Lucene
+-- indexed (BibRefAnnotation.term is @FullTextField); a 255-character fragment of a glossary is
+-- searchable noise, and cutting it discards data the wider column can simply hold.
+--
+-- NOTE: varchar->text cannot be done INPLACE, so this rebuilds the table and holds a metadata
+-- lock for the duration. Size it first:
+--     SELECT COUNT(*) FROM BIB_REF_ANNOTATION;
+
+ALTER TABLE BIB_REF_ANNOTATION
+    MODIFY COLUMN TERM TEXT NOT NULL;

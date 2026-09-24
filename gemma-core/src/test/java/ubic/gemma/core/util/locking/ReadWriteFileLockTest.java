@@ -11,7 +11,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -140,6 +146,57 @@ public class ReadWriteFileLockTest {
         assertThat( result ).isTrue();
         assertThat( result2 ).isFalse();
         assertThat( result3 ).isFalse();
+    }
+
+    /**
+     * Concurrent readers must not race the OS-level lock acquisition.
+     * <p>
+     * The {@link java.util.concurrent.locks.ReentrantReadWriteLock} admits any number of concurrent
+     * readers, so the transitions of the underlying {@link java.nio.channels.FileLock} have to be
+     * serialized separately. Before that serialization existed, two readers hitting an unheld lock
+     * both called {@code channel.lock()} and the second threw {@link OverlappingFileLockException}
+     * (seen in production on {@code GET /datasets/26/data/raw}, 2026-08-19); a reader acquiring while
+     * the last holder released could also observe {@code fileLock == null} before the OS lock was
+     * actually free, with the same result, or find a stale non-null lock and fail on
+     * {@code isValid()}.
+     * <p>
+     * Every round re-crosses the zero-holder boundary, which is where all three interleavings live:
+     * the barrier lines the readers up, each round's unlocks race the next round's locks, and any of
+     * the historical failures surfaces as an exception out of {@code Future#get}.
+     */
+    @Test
+    public void testConcurrentReadersDoNotRaceTheOsLock() throws Exception {
+        Path tempDir = Files.createTempDirectory( "test" );
+        ReadWriteFileLock lock = ReadWriteFileLock.open( tempDir.resolve( "test.txt" ), false );
+        int nThreads = 8;
+        ExecutorService pool = Executors.newFixedThreadPool( nThreads );
+        try {
+            for ( int round = 0; round < 200; round++ ) {
+                CyclicBarrier barrier = new CyclicBarrier( nThreads );
+                List<Future<?>> futures = new ArrayList<>( nThreads );
+                for ( int i = 0; i < nThreads; i++ ) {
+                    futures.add( pool.submit( () -> {
+                        barrier.await();
+                        lock.readLock().lock();
+                        try {
+                            assertThat( lock.getReadLockCount() ).isGreaterThan( 0 );
+                        } finally {
+                            lock.readLock().unlock();
+                        }
+                        return null;
+                    } ) );
+                }
+                for ( Future<?> f : futures ) {
+                    f.get( 30, java.util.concurrent.TimeUnit.SECONDS );
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        // everything was released, so an outside process can take the lock exclusively
+        lock.readLock().lock();
+        lock.readLock().unlock();
+        assertThat( lock.getChannelHoldCount() ).isEqualTo( 0 );
     }
 
     @Test

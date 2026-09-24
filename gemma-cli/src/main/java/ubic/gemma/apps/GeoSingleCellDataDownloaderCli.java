@@ -425,7 +425,11 @@ public class GeoSingleCellDataDownloaderCli extends AbstractCLI {
                 detector.setProgressReporterFactory( prc );
                 cellXGeneFetcher.setProgressReporterFactory( prc );
             }
-            log.info( "Downloading single-cell data to " + singleCellDataBasePath + "..." );
+            // All three destinations, not just the single-cell one: a run can write SOFT/supplementary
+            // files and CELLxGENE assets to two other trees, and naming only one of them is how a
+            // wrong-tree write stays invisible.
+            log.info( String.format( "Output will be written to: single-cell=%s, GEO series=%s, CELLxGENE=%s",
+                    singleCellDataBasePath, geoSeriesDownloadPath, cellXGeneDownloadPath ) );
             for ( String geoAccession : accessions ) {
                 getBatchTaskExecutor().submit( () -> {
                     String detectedDataType = UNKNOWN_INDICATOR;

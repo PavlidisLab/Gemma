@@ -24,7 +24,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 import org.springframework.lang.Nullable;
@@ -54,13 +55,18 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
 
     /**
      * Curator/agent hint about baseline relevance. Mirrors the curation-ui {@code Factor.baseline_relevance}
-     * field. Allowed values: {@code "required"}, {@code "not_applicable"}, {@code "uncertain"}.
+     * field. {@code "required"}, {@code "not_applicable"} and {@code "uncertain"} are the values in use;
      * {@code null} when the curation pipeline has not set it.
+     * <p>
+     * The list is documented and not enforced. It used to be a closed {@code allowableValues} set, which a
+     * generated client turns into an enum that fails to deserialize the first response carrying a word the
+     * vocabulary has since gained — and this one has moved once already. The write side
+     * ({@code DatasetsWebService.FactorCommit.baselineRelevance}) accepts an unfamiliar value rather than
+     * 400ing it, so advertising a closed set here would promise a constraint the server does not keep.
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\"; null when unset.",
-            allowableValues = { "required", "not_applicable", "uncertain" })
+    @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\" are the values in use, not the values permitted; null when unset.")
     private String baselineRelevance;
 
     /**
@@ -162,7 +168,8 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     /**
      * Number of factor values.
      */
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "derivable from values, which already serializes")
     public int getNumValues() {
         return this.values == null ? 0 : this.values.size();
     }

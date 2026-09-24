@@ -25,9 +25,44 @@ import java.util.Map;
  * Blends Lucene rank with the per-URI usage count.
  *
  * <p>Usage is a <strong>confidence signal</strong>, not a popularity contest: that Gemma
- * uses a term at all (usage &gt; 0) is the load-bearing bit. Magnitude provides a small
- * additional boost but saturates quickly so a high-usage but loosely-related hit can't
- * stomp a strong lexical match with usage 0 or 1.</p>
+ * uses a term at all (usage &gt; 0) is the bit that decides. Magnitude provides a small
+ * additional boost but saturates quickly.</p>
+ *
+ * <p><strong>The one invariant that must hold: {@code usageWeight &lt; rankWeight}.</strong> The
+ * rank component is at most {@code rankWeight} (for the top hit) and decays as {@code 1/(1+i)};
+ * the usage component tops out at {@code usageWeight}. Keep the latter smaller and the best
+ * conceivable usage-0 hit — an exact label match at rank 0 — cannot be displaced by popularity
+ * alone, while usage still decides among everything below it. Let the two meet and the ranker
+ * silently becomes a <em>partition</em>: every used term above every unused one, at any depth,
+ * regardless of match quality.
+ *
+ * <p>That is what the original 0.5 / 0.5 / floor 0.7 / saturation 10 settings did, and it was
+ * measured rather than reasoned about: on gemma2 2026-08-13 {@code query=malignant melanoma}
+ * returned {@code gastric cancer} (u=37), {@code urinary bladder cancer} (u=22) and
+ * {@code brain cancer} (u=57) ahead of every melanoma term — genuine lexical hits on
+ * "malignant" from deep in the candidate pool, floated by the partition because every
+ * melanoma-specific MONDO term has usage 0. Presence saturating at 10 also made the score
+ * near-binary, so inside the used block the order was the original Lucene rank (URI string
+ * order for same-scoring MONDO hits) rather than usage magnitude.
+ *
+ * <p>The current defaults (0.5 / 0.3 / 0.2 / 100) were fit on a 400-pair non-escrow TUNE fold
+ * and lift multi-word recall@5 from 0.720 to 0.776 while holding multi-word recall@20 at 0.792
+ * — usage's real contribution is <em>membership</em> (surfacing a well-used term the lexical
+ * order buried), and a retune must not buy ordering by giving that up. The saturation of 100
+ * and the usage weight of 0.3 land on the same calibration
+ * {@link CompositeRankingStrategy} arrived at independently. The cost is real and was accepted
+ * on the numbers: {@code FTC} no longer resolves to emtricitabine (u=6), because that win
+ * depended on the very mechanism above — a usage-6 term at rank 10 outscoring a rank-0 exact
+ * label match. The melanoma failure and the FTC win were one behaviour, and the fold says the
+ * first class is 250 of 400 picker-shaped queries while the second is invisible in aggregate
+ * (single-token recall@5 rose 0.987 → 0.993). {@code FTC} wants a category exclusion for the
+ * MGI lexical namespace under {@code treatment}, not a ranker that ignores lexical rank.
+ *
+ * <p>For lexical relevance first with usage as a secondary signal, prefer
+ * {@link CompositeRankingStrategy} ({@code rank=composite}) — it carries a token-coverage term
+ * this ranker has no equivalent of. See
+ * {@code handoffs/UIB_TO_GEB_2026_08_13_WHAT_IS_RANK_USAGE_SUPPOSED_TO_DO.md} and
+ * {@code handoffs/UIB_TO_GEB_2026_08_13_TUNE_FOLD_IS_READY_TEST_IS_HELD.md}.</p>
  *
  * <p>Score: {@code rankWeight * (1 / (1 + originalRank)) + usageWeight * usagePresenceScore(usage)},
  * where {@code usagePresenceScore} returns {@code 0} when usage is 0 and a value in
@@ -57,9 +92,9 @@ public class UsageWeightedRankingStrategy implements AnnotationSearchRankingStra
     @Autowired
     public UsageWeightedRankingStrategy(
             @Value("${gemma.rest.annotationSearch.usage.rankWeight:0.5}") double rankWeight,
-            @Value("${gemma.rest.annotationSearch.usage.usageWeight:0.5}") double usageWeight,
-            @Value("${gemma.rest.annotationSearch.usage.presenceFloor:0.7}") double presenceFloor,
-            @Value("${gemma.rest.annotationSearch.usage.saturation:10}") int usageSaturation ) {
+            @Value("${gemma.rest.annotationSearch.usage.usageWeight:0.3}") double usageWeight,
+            @Value("${gemma.rest.annotationSearch.usage.presenceFloor:0.2}") double presenceFloor,
+            @Value("${gemma.rest.annotationSearch.usage.saturation:100}") int usageSaturation ) {
         this.rankWeight = rankWeight;
         this.usageWeight = usageWeight;
         this.presenceFloor = presenceFloor;
@@ -68,11 +103,11 @@ public class UsageWeightedRankingStrategy implements AnnotationSearchRankingStra
 
     /**
      * Convenience constructor that defaults presence-floor and usage-saturation to the
-     * production values (0.7 / 10). For tests and any callers that don't want to pin all
+     * production values (0.2 / 100). For tests and any callers that don't want to pin all
      * four knobs.
      */
     public UsageWeightedRankingStrategy( double rankWeight, double usageWeight ) {
-        this( rankWeight, usageWeight, 0.7, 10 );
+        this( rankWeight, usageWeight, 0.2, 100 );
     }
 
     @Override

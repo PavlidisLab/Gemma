@@ -47,7 +47,7 @@ public class CorrelationEffectMetaAnalysis extends MetaAnalysis {
      * </p>
      * 
      * @param r
-     * @param n
+     * @param numsamples
      * @return
      */
     protected static double samplingVariance( double r, double numsamples ) {
@@ -131,7 +131,7 @@ public class CorrelationEffectMetaAnalysis extends MetaAnalysis {
      * </ol>
      * The default is untransformed, fixed effects.
      * 
-     * @param correlations - NOT fisher transformed. This routine takes care of that.
+     * @param effects - NOT fisher transformed. This routine takes care of that.
      * @param sampleSizes
      * @return p-value. The p-value is also stored in the field p.
      */
@@ -204,7 +204,7 @@ public class CorrelationEffectMetaAnalysis extends MetaAnalysis {
      * v_i = 1 / ( n_i - 3 )
      * </pre>
      * 
-     * @param n
+     * @param sampleSize
      * @return
      */
     protected double fisherTransformedSamplingVariance( double sampleSize ) {

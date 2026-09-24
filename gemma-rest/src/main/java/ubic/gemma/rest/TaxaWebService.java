@@ -216,7 +216,7 @@ public class TaxaWebService {
     }
 
     /**
-     * @see GeneWebService#getGeneProbes(GeneArg, OffsetArg, LimitArg, CursorArg)
+     * @see GeneWebService#getGeneProbes
      */
     @GET
     @Path("/{taxon}/genes/{gene}/probes")

@@ -2,6 +2,7 @@ package ubic.gemma.core.analysis.preprocess.batcheffects;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -158,13 +159,25 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public boolean hasSignificantBatchConfound( BioAssaySet bas ) {
+        // ExpressionDataFileHelperService.getAnalysis passes analysis.getExperimentAnalyzed() straight in
+        // here, and that association is mapped against the abstract BioAssaySet, so it arrives as a proxy
+        // matching neither branch -- "Unsupported BioAssaySet type: ...$HibernateProxy" while writing the
+        // diffex result files.
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperiment ) {
             return hasSignificantBatchConfound( ( ExpressionExperiment ) bas );
         }
         if ( !( bas instanceof ExpressionExperimentSubSet ) ) {
             throw new IllegalArgumentException( "Unsupported BioAssaySet type: " + bas.getClass().getName() );
         }
-        ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) bas;
+        // Re-read in this session, as the experiment branch does with thawLite: the subset usually arrives
+        // detached, and the confound test walks its bioAssays -- "failed to lazily initialize a collection of
+        // role: ExpressionExperimentSubSet.bioAssays" for every subset analysis's DEA archive.
+        Long subsetId = ( ( ExpressionExperimentSubSet ) bas ).getId();
+        ExpressionExperimentSubSet subset = sessionFactory.getCurrentSession().get( ExpressionExperimentSubSet.class, subsetId );
+        if ( subset == null ) {
+            throw new IllegalArgumentException( "No ExpressionExperimentSubSet with ID " + subsetId + "." );
+        }
         ExpressionExperiment parent = subset.getSourceExperiment();
         if ( parent == null || !this.checkHasUsableBatchInfo( parent ) ) {
             return false;

@@ -43,6 +43,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -55,28 +56,37 @@ import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
 import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayFieldCountValueObject;
+import ubic.gemma.model.expression.bioAssay.ExtractedMolecule;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
+import ubic.gemma.persistence.hibernate.HibernateUtils;
 import ubic.gemma.persistence.hibernate.TypedResultTransformer;
 import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
+import ubic.gemma.persistence.util.AclQueryUtils;
 import ubic.gemma.persistence.util.*;
 import ubic.gemma.persistence.util.Filter;
 
@@ -102,6 +112,7 @@ import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.*;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 import static ubic.gemma.persistence.util.Thaws.thawBibliographicReference;
+import static ubic.gemma.persistence.util.Thaws.thawCurationDetails;
 import static ubic.gemma.persistence.util.Thaws.thawDatabaseEntry;
 
 /**
@@ -130,7 +141,7 @@ public class ExpressionExperimentDaoImpl
      *
      *   FILTERED_VO_CACHE_REGION  - EE details VO filter path (the hot one).
      *                               loadDetailsValueObjects*, loadWithRelationsAndCache,
-     *                               populateAnalysisInformation, populateArrayDesignCount,
+     *                               populateAnalysisInformation, populatePlatforms,
      *                               countBioMaterials.
      *   ANNOTATIONS_CACHE_REGION  - getExperiment/BioMaterial/FactorValue annotations
      *                               and the categories/terms usage-frequency rollups.
@@ -240,34 +251,71 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public void evictBioAssaysCache( ExpressionExperiment ee ) {
-        getSessionFactory().getCache().evictCollectionData( getEntityName() + ".bioAssays", ee.getId() );
+        getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".bioAssays", ee.getId() );
+    }
+
+    @Override
+    public void refreshCurationDetails( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails() != null && ee.getCurationDetails().getId() != null ) {
+            getSessionFactory().getCurrentSession().refresh( ee.getCurationDetails() );
+        }
     }
 
     @Override
     public void evictOtherPartsCache( ExpressionExperiment ee ) {
-        getSessionFactory().getCache().evictCollectionData( getEntityName() + ".otherParts", ee.getId() );
+        getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".otherParts", ee.getId() );
     }
 
     @Override
     public void evictQuantitationTypesCache( ExpressionExperiment ee ) {
-        getSessionFactory().getCache().evictCollectionData( getEntityName() + ".quantitationTypes", ee.getId() );
+        getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".quantitationTypes", ee.getId() );
     }
+
+    //language=HQL
+    private static final String IDENTIFIERS_PROJECTION =
+            "select ee.id as id, ee.shortName as shortName, ee.name as name, accession.accession as accession "
+                    + "from ExpressionExperiment ee left join ee.accession accession ";
 
     @Override
     public List<Identifiers> loadAllIdentifiers() {
-        Query<Object[]> query = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id as id, ee.shortName as shortName, ee.name as name, accession.accession as accession from ExpressionExperiment ee "
-                        + "left join ee.accession accession "
-                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ), Object[].class );
+        return loadIdentifiers( null, false );
+    }
+
+    @Override
+    public List<Identifiers> loadIdentifiers( Collection<Long> ids ) {
+        Assert.notNull( ids, "Ids cannot be null; use loadAllIdentifiers() for the unscoped load." );
+        return loadIdentifiers( ids, true );
+    }
+
+    /**
+     * @param ids     the ids to restrict to, or {@code null} for every experiment
+     * @param scoped  whether {@code ids} is a real restriction (an empty scoped list means "none")
+     */
+    private List<Identifiers> loadIdentifiers( @Nullable Collection<Long> ids, boolean scoped ) {
+        if ( scoped && ( ids == null || ids.isEmpty() ) ) {
+            // An empty `in` list is not valid HQL, and the answer is knowable without asking.
+            return Collections.emptyList();
+        }
+        // 🛑 formAclRestrictionClause OWNS the `where` — it returns " where (1=1)" on the admin path — so
+        // the id restriction is appended to it with `and`, never emitted as a second `where`. Getting
+        // that backwards produced `where ee.id in :ids where (1=1)`, which parses fine in Java and 500s
+        // in Hibernate on every call.
+        String hql = IDENTIFIERS_PROJECTION
+                + AclQueryUtils.formAclRestrictionClause( "ee.id" )
+                + ( scoped ? " and ee.id in :ids" : "" );
+        Query<Object[]> query = getSessionFactory().getCurrentSession().createQuery( hql, Object[].class );
+        if ( scoped ) {
+            query.setParameterList( "ids", optimizeParameterList( ids ) );
+        }
         AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         List<Identifiers> result = new ArrayList<>();
         for ( Object[] row : query.list() ) {
-            Identifiers ids = new Identifiers();
-            ids.setId( ( Long ) row[0] );
-            ids.setShortName( ( String ) row[1] );
-            ids.setName( ( String ) row[2] );
-            ids.setAccession( ( String ) row[3] );
-            result.add( ids );
+            Identifiers idf = new Identifiers();
+            idf.setId( ( Long ) row[0] );
+            idf.setShortName( ( String ) row[1] );
+            idf.setName( ( String ) row[2] );
+            idf.setAccession( ( String ) row[3] );
+            result.add( idf );
         }
         return result;
     }
@@ -444,7 +492,9 @@ public class ExpressionExperimentDaoImpl
                         + "group by ee" )
                 .setParameter( "bm", bm )
                 .list();
-        if ( results == null && includeSubSets ) {
+        // See findIdsByBioMaterial below: Query.list() never returns null, so the null check this
+        // replaces made the subset fallback dead code.
+        if ( results.isEmpty() && includeSubSets ) {
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession()
                     .createQuery( "select eess.sourceExperiment from ExpressionExperimentSubSet as eess "
@@ -466,7 +516,15 @@ public class ExpressionExperimentDaoImpl
                         + "group by ee" )
                 .setParameter( "bm", bm )
                 .list();
-        if ( results == null && includeSubSets ) {
+        // Query.list() returns an empty list, never null, so the null check this replaces meant the
+        // subset fallback never ran once. Every BioMaterial whose only route to an experiment is
+        // subset -> sourceExperiment — which is every aggregated single-cell sample — resolved to
+        // nothing: 665,120 of the 669,233 samples an ACL repair had to parent on 2026-08-30, each
+        // logging "Could not find an ExpressionExperiment associated to BioMaterial".
+        // findIdByBioAssay above tests null correctly because uniqueResult() really can return it;
+        // the same shape copied onto a list-returning query is what broke here and in
+        // findByBioMaterial.
+        if ( results.isEmpty() && includeSubSets ) {
             //noinspection unchecked
             results = this.getSessionFactory().getCurrentSession()
                     .createQuery( "select eess.sourceExperiment.id from ExpressionExperimentSubSet as eess "
@@ -886,6 +944,41 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
+    @Override
+    public List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperiment ee ) {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                // same ef -> fv -> c chain as getFactorValueAnnotations, just keeping fv and ef in the projection
+                .createQuery( "select c, fv, ef from ExpressionExperiment e "
+                        + "join e.experimentalDesign ed join ed.experimentalFactors ef join ef.factorValues fv "
+                        + "join fv.characteristics c where e = :ee " )
+                .setParameter( "ee", ee )
+                .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
+                .list();
+    }
+
+    @Override
+    public List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperimentSubSet subset ) {
+        // Mirror of the ExpressionExperiment variant for the subset annotation path. Not covered by a dedicated
+        // fixture test (no subset+factor-value+statement fixture exists); it is the same projection widening over the
+        // already-working getFactorValueAnnotations(subset) joins, so the ExpressionExperiment variant's green test
+        // stands in for the query shape.
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select c, fv, ef from ExpressionExperimentSubSet subset "
+                        + "join subset.bioAssays ba join ba.sampleUsed bm "
+                        + "join bm.factorValues fv "
+                        + "join fv.experimentalFactor ef "
+                        + "join fv.characteristics c "
+                        + "where subset = :subset "
+                        + "group by c, fv, ef" )
+                .setParameter( "subset", subset )
+                .setCacheable( true )
+                .setCacheRegion( ANNOTATIONS_CACHE_REGION )
+                .list();
+    }
+
     private List<Characteristic> getAnnotationsByLevel( ExpressionExperiment expressionExperiment, Class<? extends Identifiable> level ) {
         //noinspection unchecked
         List<Object[]> result = getSessionFactory().getCurrentSession()
@@ -988,7 +1081,7 @@ public class ExpressionExperimentDaoImpl
                     return aggregateByCategory( result ).entrySet().stream()
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults )
-                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> a, () -> new TreeMap<>( Characteristic.getByCategoryComparator() ) ) );
                 }
             } else {
                 //noinspection unchecked
@@ -1004,8 +1097,25 @@ public class ExpressionExperimentDaoImpl
         return aggregateByCategory( result );
     }
 
+    /**
+     * 🛑 TreeMap, not the HashMap {@code groupingBy} would default to. The keys are transient
+     * Characteristics built from a GROUP BY projection, so they carry no id and
+     * {@link Characteristic#equals} falls through to four string comparisons; with
+     * {@link Characteristic#hashCode()} constant, a HashMap here puts every key in one bucket and
+     * building 5000 entries measured 1141 ms against 42 ms for the old content hash.
+     * <p>
+     * The comparator must be {@link Characteristic#getByCategoryComparator()} and NOT
+     * {@link Characteristic#getComparator()}: the latter breaks the tie on id, so a caller probing
+     * this map with a PERSISTED characteristic misses the transient key that {@code equals}
+     * considers equal to it -- id-vs-null is never zero. {@code compareTerm} alone returns 0 on
+     * exactly the condition {@code CharacteristicUtils.equals} returns true, so the grouping, every
+     * count this feeds, and lookups by an equal characteristic are all unchanged.
+     */
     private Map<Characteristic, Long> aggregateByCategory( List<Object[]> result ) {
-        return result.stream().collect( Collectors.groupingBy( row -> Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null ), Collectors.summingLong( row -> ( Long ) row[2] ) ) );
+        return result.stream().collect( Collectors.groupingBy(
+                row -> Characteristic.Factory.newInstance( null, null, null, null, ( String ) row[0], ( String ) row[1], null ),
+                () -> new TreeMap<>( Characteristic.getByCategoryComparator() ),
+                Collectors.summingLong( row -> ( Long ) row[2] ) ) );
     }
 
     /**
@@ -1039,7 +1149,7 @@ public class ExpressionExperimentDaoImpl
                 result = result.entrySet().stream()
                         .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                         .limit( maxResults )
-                        .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                        .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> a, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
             }
         }
         return result;
@@ -1195,7 +1305,7 @@ public class ExpressionExperimentDaoImpl
                             .filter( e -> e.getValue() >= minFrequency || ( retainedTermUris != null && retainedTermUris.contains( e.getKey().getValueUri() ) ) )
                             .sorted( Map.Entry.comparingByValue( Comparator.reverseOrder() ) )
                             .limit( maxResults > 0 ? maxResults : Long.MAX_VALUE )
-                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                            .collect( Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue, ( a, b ) -> a, () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ) ) );
                 }
             } else {
                 //noinspection unchecked
@@ -1210,8 +1320,14 @@ public class ExpressionExperimentDaoImpl
         return aggregateByCategoryAndValue( result );
     }
 
+    /**
+     * TreeMap, and an id-free comparator, for the reason {@link #aggregateByCategory(List)} gives.
+     */
     private Map<Characteristic, Long> aggregateByCategoryAndValue( List<Object[]> result ) {
-        return result.stream().collect( Collectors.groupingBy( this::convertRowToCharacteristic, Collectors.summingLong( row -> ( Long ) row[5] ) ) );
+        return result.stream().collect( Collectors.groupingBy(
+                this::convertRowToCharacteristic,
+                () -> new TreeMap<>( Characteristic.getByCategoryAndValueComparator() ),
+                Collectors.summingLong( row -> ( Long ) row[5] ) ) );
     }
 
     private Characteristic convertRowToCharacteristic( Object[] row ) {
@@ -1282,6 +1398,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public MeanVarianceRelation updateMeanVarianceRelation( ExpressionExperiment ee, MeanVarianceRelation mvr ) {
+        MeanVarianceRelation previous = ee.getMeanVarianceRelation();
         if ( mvr.getId() == null ) {
             Assert.isTrue( mvr.getMeans().length == mvr.getVariances().length,
                     "The number of means and variances must correspond." );
@@ -1289,6 +1406,18 @@ public class ExpressionExperimentDaoImpl
         }
         ee.setMeanVarianceRelation( mvr );
         update( ee );
+        // Delete the relation being replaced. ExpressionExperiment.meanVarianceRelation is a
+        // @ManyToOne, which has no orphanRemoval in JPA, so moving the reference leaves the old row
+        // behind with nothing pointing at it and nothing sweeping it. On production 2026-08-30 that
+        // was 33,535 of 57,311 rows -- roughly 15 GB of the table's 25.4 GB, since each row carries
+        // four mediumblobs.
+        // The flush moves MEAN_VARIANCE_RELATION_FK before the delete; without it the FK still
+        // points at the row being removed. The delete also fires PostDelete, so AclEventListener
+        // takes the ACL identity with it.
+        if ( previous != null && !previous.equals( mvr ) ) {
+            getSessionFactory().getCurrentSession().flush();
+            getSessionFactory().getCurrentSession().remove( previous );
+        }
         return mvr;
     }
 
@@ -1904,6 +2033,22 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public boolean hasSourceMetadata( ExpressionExperiment ee ) {
+        return ( Boolean ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.sourceMetadata is not null from ExpressionExperiment ee where ee = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
+    public String getSourceMetadata( ExpressionExperiment ee ) {
+        return ( String ) getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.sourceMetadata from ExpressionExperiment ee where ee = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult();
+    }
+
+    @Override
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> expressionExperiments ) {
         if ( expressionExperiments.isEmpty() ) {
             return Collections.emptyMap();
@@ -1972,16 +2117,41 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment, BioAssayDimension bad ) {
+        // 🛑 Match on the dimension's ASSAYS, not on the dimension entity.
+        //
+        // This used to bind `bad` itself (`... and bad = :bad ...`). A BioAssayDimension reaching here is
+        // routinely TRANSIENT: DiffExAnalyzerUtils.dropSamplesNotAnalyzed re-slices the data matrix whenever a
+        // sample is DE_Exclude or an outlier, and the replacement dimension comes from
+        // DiffExAnalyzerUtils.createBADMap -> BioAssayDimension.Factory.newInstance, which is never persisted.
+        // Binding an unsaved entity as a query parameter throws
+        // `TransientObjectException: object references an unsaved transient instance ... BioAssayDimension`,
+        // which is what frinkbro hit on GSE62625 (eid 9439) on 2026-09-10 running a subset DEA. It fails on the
+        // REUSE LOOKUP, before any write, which is why the transaction rolled back with nothing lost.
+        //
+        // It only bit some experiments because dropSamplesNotAnalyzed returns the ORIGINAL matrix -- and so the
+        // persisted dimension -- when nothing is dropped. The exposed population is large: 345 experiments carry
+        // a DE_Include/DE_Exclude marker, 326 of them under `collection of material` (frinkbro, 2026-09-10).
+        //
+        // The assays are persisted even when the dimension is not, and the query's meaning is unchanged --
+        // "subsets all of whose assays appear in this dimension" -- so reuse keeps working for experiments with
+        // dropped samples instead of silently building duplicate subsets beside the ones they already have.
+        // Bound by ID rather than by entity, so nothing unsaved can reach the parameter in the first place.
+        Set<Long> bioAssayIds = bad.getBioAssays().stream()
+                .map( BioAssay::getId )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toSet() );
+        if ( bioAssayIds.isEmpty() ) {
+            return Collections.emptyList();
+        }
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select eess from ExpressionExperimentSubSet eess join eess.bioAssays ba, "
-                        + "BioAssayDimension bad join bad.bioAssays ba2 "
-                        + "where eess.sourceExperiment = :ee and bad = :bad and ba = ba2 "
-                        + "group by eess, bad "
+                .createQuery( "select eess from ExpressionExperimentSubSet eess join eess.bioAssays ba "
+                        + "where eess.sourceExperiment = :ee and ba.id in :bioAssayIds "
+                        + "group by eess "
                         // require all the subset's assays to be matched
                         + "having size(eess.bioAssays) = count(ba)" )
                 .setParameter( "ee", expressionExperiment )
-                .setParameter( "bad", bad )
+                .setParameterList( "bioAssayIds", optimizeParameterList( bioAssayIds ) )
                 .list();
     }
 
@@ -2305,18 +2475,34 @@ public class ExpressionExperimentDaoImpl
                             .map( ArrayDesignValueObject::new )
                             .collect( Collectors.toSet() );
                     vo.setArrayDesigns( adVos ); // also sets taxon name, technology type, and number of ADs.
+                    // The same platforms in the reference form the base VO carries, so a caller reading
+                    // either shape sees the same answer whichever load path produced the VO.
+                    vo.setPlatforms( arrayDesignsUsedIds.stream()
+                            .map( platformsById::get )
+                            .filter( Objects::nonNull )
+                            .map( ad -> new ArrayDesignReferenceValueObject( ad.getId(), ad.getShortName(), ad.getName(),
+                                    nameOf( ad.getTechnologyType() ) ) )
+                            .collect( Collectors.toList() ) );
+                    // setArrayDesigns above took the technology of whichever platform the iterator
+                    // reached first. One field cannot mean "the technology" on one load path and
+                    // "some platform's technology" on the other, so both now answer only when the
+                    // platforms agree.
+                    Set<String> technologies = adVos.stream()
+                            .map( ArrayDesignValueObject::getTechnologyType )
+                            .filter( Objects::nonNull )
+                            .collect( Collectors.toSet() );
+                    vo.setTechnologyType( technologies.size() == 1 ? technologies.iterator().next() : null );
 
                     // original platforms
-                    Collection<ArrayDesignValueObject> originalPlatformsVos = details.stream()
+                    vo.setOriginalPlatforms( details.stream()
                             .map( ExpressionExperimentDetail::getOriginalPlatformId )
-                            .filter( Objects::nonNull ) // on original platform for the bioAssay
+                            .filter( Objects::nonNull ) // no original platform for the bioAssay
                             .distinct()
                             .filter( op -> !arrayDesignsUsedIds.contains( op ) ) // omit noop switches
                             .map( platformsById::get )
                             .filter( Objects::nonNull )
-                            .map( ArrayDesignValueObject::new )
-                            .collect( Collectors.toSet() );
-                    vo.setOriginalPlatforms( originalPlatformsVos );
+                            .map( ad -> new ArrayDesignReferenceValueObject( ad.getId(), ad.getShortName(), ad.getName() ) )
+                            .collect( Collectors.toList() ) );
 
                     Integer bioAssayCount = details.stream()
                             .map( ExpressionExperimentDetail::getBioAssaysCount )
@@ -2324,17 +2510,10 @@ public class ExpressionExperimentDaoImpl
                             .orElse( 0 );
                     vo.setNumberOfBioAssays( bioAssayCount );
 
-                    Set<Long> otherPartsIds = details.stream()
-                            .map( ExpressionExperimentDetail::getOtherPartId )
-                            .filter( Objects::nonNull )
-                            .collect( Collectors.toSet() );
-
-                    List<ExpressionExperimentValueObject> otherPartsVos = loadValueObjectsByIds( otherPartsIds ).stream()
-                            .sorted( Comparator.comparing( ExpressionExperimentValueObject::getShortName ) ).collect( Collectors.toList() );
-
-                    // other parts (maybe fetch in details query?)
-                    vo.setOtherParts( otherPartsVos );
                 }
+
+                // One batched query for the whole page, replacing a loadValueObjectsByIds per split experiment.
+                populateOtherParts( vos );
 
                 try ( StopWatchUtils.StopWatchRegion ignored = StopWatchUtils.measuredRegion( analysisInformationTimer ) ) {
                     populateAnalysisInformation( vos, cacheable );
@@ -2425,7 +2604,163 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     protected void postProcessValueObjects( List<ExpressionExperimentValueObject> results ) {
-        populateArrayDesignCount( results );
+        populatePlatforms( results );
+        populateDateCreated( results );
+        populateSingleCellInfo( results );
+        populateOtherParts( results );
+        populateLibraryFields( results );
+    }
+
+    /**
+     * Fill in {@code libraryStrategies}, {@code librarySelections} and {@code extractedMolecules} — the
+     * distinct values of each across a dataset's assays, with counts — for a page of VOs in one query.
+     * <p>
+     * One {@code group by} over the three columns together, not three queries: the combinations partition the
+     * dataset's assays, so a per-field count is a sum over the combination rows, and a dataset that is uniform
+     * in all three (better than 99.9% of them, measured by uib 2026-09-16) yields a single row.
+     * <p>
+     * A null value is carried through as a null-valued entry rather than dropped, so the counts sum to the
+     * dataset's assay count and an all-null field — {@code librarySelection} on every microarray dataset —
+     * is distinguishable from a dataset with no assays. Each field's entries are ordered by descending count so
+     * the majority value is first, which is the one a caller reading a single value wants.
+     * <p>
+     * Batched here rather than read off the entity because {@code ee.bioAssays} is lazy; touching it per VO is
+     * an N+1 on every dataset listing, and the whole point of putting these on the dataset is that a client
+     * should not have to fetch 2,158 assay rows to learn one constant.
+     */
+    private void populateLibraryFields( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, ba.libraryStrategy, ba.librarySelection, ba.extractedMolecule, count(ba.id) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ee.id in (:ids) "
+                        + "group by ee.id, ba.libraryStrategy, ba.librarySelection, ba.extractedMolecule" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Map<String, Integer>> strategiesByEe = new HashMap<>();
+        Map<Long, Map<String, Integer>> selectionsByEe = new HashMap<>();
+        Map<Long, Map<String, Integer>> moleculesByEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    int n = ( ( Number ) row[4] ).intValue();
+                    // HashMap tolerates the null key, which is the point: a null is a value here.
+                    tally( strategiesByEe, eeId, ( String ) row[1], n );
+                    tally( selectionsByEe, eeId, ( String ) row[2], n );
+                    tally( moleculesByEe, eeId, nameOf( ( ExtractedMolecule ) row[3] ), n );
+                } );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setLibraryStrategies( toFieldCounts( strategiesByEe.get( eevo.getId() ) ) );
+            eevo.setLibrarySelections( toFieldCounts( selectionsByEe.get( eevo.getId() ) ) );
+            eevo.setExtractedMolecules( toFieldCounts( moleculesByEe.get( eevo.getId() ) ) );
+        }
+    }
+
+    /**
+     * Add {@code n} to the count for {@code value} under {@code eeId}. {@code value} may be null.
+     */
+    private static void tally( Map<Long, Map<String, Integer>> byEe, Long eeId, @Nullable String value, int n ) {
+        byEe.computeIfAbsent( eeId, k -> new HashMap<>() ).merge( value, n, Integer::sum );
+    }
+
+    /**
+     * Project one field's tallies into the wire shape, most-carried value first.
+     */
+    private static List<BioAssayFieldCountValueObject> toFieldCounts( @Nullable Map<String, Integer> counts ) {
+        if ( counts == null ) {
+            return new ArrayList<>();
+        }
+        return counts.entrySet().stream()
+                .map( e -> new BioAssayFieldCountValueObject( e.getKey(), e.getValue() ) )
+                .sorted( Comparator.comparingInt( BioAssayFieldCountValueObject::getNumberOfBioAssays ).reversed()
+                        // Ties would otherwise order by hash, so a page could report the same dataset two
+                        // different ways on two requests.
+                        .thenComparing( BioAssayFieldCountValueObject::getValue,
+                                Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
+    }
+
+    /**
+     * Fill in {@code otherParts} — the sibling datasets of a study Gemma split — for a page of VOs in one query.
+     * <p>
+     * Compact references, not whole VOs: the details path used to run a {@code loadValueObjectsByIds} per split
+     * experiment to render what a client shows as a name and a link.
+     * <p>
+     * The relation is bidirectional and not reliably written from both ends (see {@code remove}), so this reads
+     * it in the stored direction only, which is the direction {@code SplitExperimentService} writes.
+     */
+    private void populateOtherParts( Collection<? extends ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, op.id, op.shortName, op.name "
+                        + "from ExpressionExperiment ee join ee.otherParts op "
+                        + "where ee.id in (:ids)" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, List<ExpressionExperimentReferenceValueObject>> byEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> byEe.computeIfAbsent( ( Long ) row[0], k -> new ArrayList<>() )
+                        .add( new ExpressionExperimentReferenceValueObject( ( Long ) row[1], ( String ) row[2],
+                                ( String ) row[3] ) ) );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            List<ExpressionExperimentReferenceValueObject> parts = byEe.getOrDefault( eevo.getId(), new ArrayList<>() );
+            parts.sort( Comparator.comparing( ExpressionExperimentReferenceValueObject::getShortName,
+                    Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+            eevo.setOtherParts( parts );
+        }
+    }
+
+    /**
+     * Fill in {@code isSingleCell} and {@code numberOfCellIds} for a page of VOs in one query.
+     * <p>
+     * The single-cell test is "has a quantitation type flagged single-cell-preferred" — the same condition
+     * {@code SingleCellExpressionExperimentService#getPreferredSingleCellQuantitationType} resolves against, so
+     * this cannot report true for a dataset the single-cell routes would then 404 on. Batched rather than read
+     * off the entity because {@code ee.quantitationTypes} is lazy and touching it per VO is an N+1 on every
+     * dataset listing.
+     * <p>
+     * 🛑 The cell-id count comes from {@code SingleCellDimensionExperiment}, and that table is NOT a complete
+     * index of single-cell experiments: 29 of the 546 on prod carry the preferred quantitation type and have no
+     * row in it (measured 2026-09-03). Driving the query off the row instead of the flag would silently call
+     * those 29 bulk. They get {@code isSingleCell} true and a null count, which is the honest answer.
+     */
+    private void populateSingleCellInfo( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                // 🛑 scd is joined explicitly. Writing scde.singleCellDimension.numberOfCellIds in the select
+                // instead makes an IMPLICIT join, which Hibernate resolves as an INNER join even off a
+                // left-joined alias — so every experiment without a SingleCellDimensionExperiment row drops out
+                // of the result and reads as bulk, which is the 29 this method exists to keep.
+                .createQuery( "select ee.id, scd.numberOfCellIds "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.quantitationTypes qt "
+                        + "left join SingleCellDimensionExperiment scde "
+                        + "on scde.expressionExperiment = ee and scde.quantitationType = qt "
+                        + "left join scde.singleCellDimension scd "
+                        + "where qt.isSingleCellPreferred = true and ee.id in (:ids)" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Integer> numberOfCellIdsByEe = new HashMap<>();
+        Set<Long> singleCellEeIds = new HashSet<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    singleCellEeIds.add( eeId );
+                    if ( row[1] != null ) {
+                        numberOfCellIdsByEe.put( eeId, ( Integer ) row[1] );
+                    }
+                } );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setIsSingleCell( singleCellEeIds.contains( eevo.getId() ) );
+            eevo.setNumberOfCellIds( numberOfCellIdsByEe.get( eevo.getId() ) );
+        }
     }
 
     @Override
@@ -2785,7 +3120,12 @@ public class ExpressionExperimentDaoImpl
         }
 
         Hibernate.initialize( expressionExperiment.getGeeq() );
-        Hibernate.initialize( expressionExperiment.getCurationDetails() );
+        // owner is a lazy @ManyToOne. Left as an uninitialized proxy it is dead once the thawing
+        // session closes, and SplitExperimentServiceImpl copies it onto each new experiment, where
+        // EeWriteServiceImpl.persistExpressionExperiment reads getName() off it to look the contact
+        // up — inside its own session, but the proxy belongs to the closed one, so it throws there.
+        Hibernate.initialize( expressionExperiment.getOwner() );
+        thawCurationDetails( expressionExperiment );
 
         Hibernate.initialize( expressionExperiment.getOtherParts() );
 
@@ -2793,6 +3133,15 @@ public class ExpressionExperimentDaoImpl
             for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
                 Hibernate.initialize( ef );
                 ef.getFactorValues().forEach( Hibernate::initialize );
+                // Hibernate.initialize( ef ) loads the entity, not its lazy collections, so without
+                // this the deprecated annotations collection stays a proxy and any read of it on the
+                // detached experiment throws. SplitExperimentServiceImpl.cloneExperimentalFactors
+                // reads it with no session (split is Propagation.NEVER), which broke splitExperiment
+                // outright. Per-factor this is an "EXPERIMENTAL_FACTOR_FK = ?" lookup that the index
+                // answers with zero rows; the eager mapping the field comment warns about is the
+                // IN-subquery form, which is not what this is.
+                //noinspection deprecation
+                Hibernate.initialize( ef.getAnnotations() );
             }
             Hibernate.initialize( expressionExperiment.getExperimentalDesign().getTypes() );
         }
@@ -3191,15 +3540,70 @@ public class ExpressionExperimentDaoImpl
     }
 
     @Override
+    public void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors ) {
+        Session session = getSessionFactory().getCurrentSession();
+        int batchSize = 500;
+        int count = 0;
+        List<SingleCellExpressionDataVector> batch = new ArrayList<>();
+        for ( SingleCellExpressionDataVector vector : vectors ) {
+            session.persist( vector );
+            batch.add( vector );
+            if ( ++count % batchSize == 0 ) {
+                session.flush();
+                for ( SingleCellExpressionDataVector v : batch ) {
+                    session.evict( v );
+                }
+                batch.clear();
+            }
+        }
+        if ( !batch.isEmpty() ) {
+            session.flush();
+            for ( SingleCellExpressionDataVector v : batch ) {
+                session.evict( v );
+            }
+        }
+        // CacheMode.IGNORE to prevent hibernate from calling update() on read-only cache entries
+        CacheMode previousCacheMode = session.getCacheMode();
+        session.setCacheMode( CacheMode.IGNORE );
+        try {
+            session.refresh( ee );
+        } finally {
+            session.setCacheMode( previousCacheMode );
+        }
+        log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
+    }
+
+    @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().persist( singleCellDimension );
     }
 
     @Override
     public void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().update( singleCellDimension );
+    }
+
+    /**
+     * Record on each of the dimension's cell type assignments the experiment it belongs to
+     * ({@link CellTypeAssignment#getExperimentAnalyzed()}). The single-cell service adds, relabels and replaces
+     * assignments through {@link #createSingleCellDimension} and {@link #updateSingleCellDimension}, so both call this.
+     */
+    private static void recordExperimentOnCellTypeAssignments( ExpressionExperiment ee, SingleCellDimension dimension ) {
+        if ( !ModelUtils.isInitialized( dimension.getCellTypeAssignments() ) ) {
+            return;
+        }
+        for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
+            if ( cta.getExperimentAnalyzed() == null ) {
+                cta.setExperimentAnalyzed( ee );
+            } else {
+                Assert.isTrue( ee.getId() == null || ee.getId().equals( cta.getExperimentAnalyzed().getId() ),
+                        cta + " is recorded against a different experiment than " + ee + "." );
+            }
+        }
     }
 
     /**
@@ -3300,7 +3704,60 @@ public class ExpressionExperimentDaoImpl
         // BEFORE deleting the dimension itself, otherwise the FK constraint on
         // SINGLE_CELL_DIMENSION_EXPERIMENT.SINGLE_CELL_DIMENSION_FK rejects the delete.
         singleCellDimensionExperimentDao.removeBySingleCellDimension( singleCellDimension );
+        if ( !Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            // leaves the cascade below nothing to load
+            removeCellLevelCharacteristicsInBulk( singleCellDimension );
+        }
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public int removeAllCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        if ( Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            int removed = singleCellDimension.getCellLevelCharacteristics().size();
+            singleCellDimension.getCellLevelCharacteristics().clear();
+            updateSingleCellDimension( ee, singleCellDimension );
+            return removed;
+        }
+        return removeCellLevelCharacteristicsInBulk( singleCellDimension );
+    }
+
+    /**
+     * Delete the cell-level characteristics of a dimension, and their characteristics, without loading them.
+     * <p>
+     * Loading them join-fetches {@code CELL_LEVEL_CHARACTERISTICS} with {@code CHARACTERISTIC}, which repeats the
+     * per-cell {@code INDICES} blob on every characteristic row, and the cascade then deletes the characteristics one
+     * statement at a time. A CLC made from a continuous column has one characteristic per cell: GSE244451's 104 CLCs
+     * held 3,369,548 characteristics, and deleting them ran a 200 GB heap out of memory.
+     * <p>
+     * Only valid while {@link SingleCellDimension#getCellLevelCharacteristics()} is uninitialized; otherwise the
+     * session holds entities whose rows this removes.
+     *
+     * @return the number of cell-level characteristics removed
+     */
+    private int removeCellLevelCharacteristicsInBulk( SingleCellDimension singleCellDimension ) {
+        //noinspection unchecked
+        List<Long> clcIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select clc.id from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
+                .setParameter( "scd", singleCellDimension )
+                .list();
+        if ( clcIds.isEmpty() ) {
+            return 0;
+        }
+        // neither FK column is mapped as a property, hence native queries
+        int removedCharacteristics = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK in (:clcIds)" )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        int removedClcs = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CELL_LEVEL_CHARACTERISTICS where ID in (:clcIds)" )
+                .addSynchronizedEntityClass( GenericCellLevelCharacteristics.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        log.info( String.format( "Removed %d cell-level characteristics with %d characteristics from %s.",
+                removedClcs, removedCharacteristics, singleCellDimension ) );
+        return removedClcs;
     }
 
     @Override
@@ -4045,13 +4502,17 @@ public class ExpressionExperimentDaoImpl
             throw new IllegalStateException( qt + " from " + ee + " does not have an associated single-cell dimension." );
         }
         long numVecs = getNumberOfSingleCellDataVectors( ee, qt );
-        try ( Stream<Object[]> stream = QueryUtils.stream( getSessionFactory().getCurrentSession()
-                // FIXME: there's a bug in Hibernate scroll() ScrollableResults implementation that causes the native
-                //        int[] array to be cast to Object[], so we need to add a dummy column to avoid this.
-                .createQuery( "select scedv.dataIndices, 1 from SingleCellExpressionDataVector scedv "
-                        + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
-                .setParameter( "ee", ee )
-                .setParameter( "qt", qt ), Object[].class, fetchSize, useCursorFetchIfSupported, true ) ) {
+        // this walks every vector's dataIndices for the experiment and is the pass that runs before
+        // MEX generation streams the vectors themselves, so it opts out of the statement timeout the
+        // same way streamQuery does — it does not go through streamQuery because it is consumed here
+        try ( Stream<Object[]> stream = HibernateUtils.streamWithoutStatementTimeout( getSessionFactory().getCurrentSession(),
+                () -> QueryUtils.stream( getSessionFactory().getCurrentSession()
+                        // FIXME: there's a bug in Hibernate scroll() ScrollableResults implementation that causes the native
+                        //        int[] array to be cast to Object[], so we need to add a dummy column to avoid this.
+                        .createQuery( "select scedv.dataIndices, 1 from SingleCellExpressionDataVector scedv "
+                                + "where scedv.expressionExperiment = :ee and scedv.quantitationType = :qt" )
+                        .setParameter( "ee", ee )
+                        .setParameter( "qt", qt ), Object[].class, fetchSize, useCursorFetchIfSupported, true ) ) ) {
             long[] nnzs = new long[dimension.getBioAssays().size()];
             Iterator<Object[]> it = stream.iterator();
             StopWatch timer = StopWatch.createStarted();
@@ -4142,9 +4603,28 @@ public class ExpressionExperimentDaoImpl
     }
 
     private int removeAllSingleCellDataVectors( ExpressionExperiment ee, boolean keepDimensions ) {
-        Set<QuantitationType> qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
-                .map( SingleCellExpressionDataVector::getQuantitationType )
-                .collect( Collectors.toSet() );
+        // Only walk the vector collection when it is ALREADY loaded, otherwise resolve the distinct QTs
+        // with a projection query. Streaming ee.getSingleCellExpressionDataVectors() unconditionally
+        // forced the lazy collection to initialize, which selects every vector's DATA + DATA_INDICES
+        // blob together with its eager join graph: 25,050 rows spanning 333,570 cells each for
+        // GSE277430, which exhausted a 30 GB heap. The OutOfMemoryError then aborted mid-resultset and
+        // left the connection's protocol stream desynced, so the failure surfaced as an unrelated
+        // ArrayIndexOutOfBoundsException raised while rolling back — with the real cause replaced by
+        // "Application exception overridden by rollback exception". Forcing initialization here also
+        // made the Hibernate.isInitialized() check below unconditionally true, defeating it. This is
+        // the same two-branch shape removeAllRawDataVectors already uses.
+        Collection<QuantitationType> qtsToRemove;
+        if ( Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() ) ) {
+            qtsToRemove = ee.getSingleCellExpressionDataVectors().stream()
+                    .map( SingleCellExpressionDataVector::getQuantitationType )
+                    .collect( Collectors.toSet() );
+        } else {
+            //noinspection unchecked
+            qtsToRemove = getSessionFactory().getCurrentSession()
+                    .createQuery( "select v.quantitationType from SingleCellExpressionDataVector v where v.expressionExperiment = :ee group by v.quantitationType" )
+                    .setParameter( "ee", ee )
+                    .list();
+        }
         // PERF_PROBE_REPORT_ROUND4 B1: capture the dimensions BEFORE we wipe the link table —
         // removeUnusedSingleCellDimensions below needs to know which SCDs were attached, and once
         // the link rows are gone getSingleCellDimensions(ee) returns empty.
@@ -4365,6 +4845,33 @@ public class ExpressionExperimentDaoImpl
         return query;
     }
 
+    /**
+     * HQL boolean expression backing the {@code inCuration} filter: the dataset is flagged as needing
+     * attention, or a ticket that is still open targets it.
+     * <p>
+     * 🛑 The open-state set here must stay the set {@code TicketDao#findOpenForTarget} uses, or the
+     * experiment list and the dataset's own ticket drawer disagree about the same dataset.
+     * {@code ExpressionExperimentTicketFilterIT} asserts the two agree rather than trusting this
+     * comment.
+     * <p>
+     * The subquery is correlated on {@code (targetType, targetId)}, which is the
+     * {@code TICKET_TARGET_LOOKUP} index — the same access path the per-dataset lookup uses. Note the
+     * index is created by the Flyway migration and is NOT declared on the {@link TicketTarget} entity,
+     * so an entity-built schema (gemdtest) does not have it and this predicate scans there; that is a
+     * pre-existing drift, not something this filter introduced.
+     * <p>
+     * {@code s} is the curationDetails alias joined by every filtering query in this DAO; {@code ee}
+     * is the object alias.
+     */
+    //language=HQL
+    private static final String IN_CURATION_EXPRESSION = "(case when s.needsAttention = true or exists ("
+            + "select 1 from Ticket ict join ict.targets ictt "
+            + "where ictt.targetType = " + TicketTargetType.class.getName() + ".EXPRESSION_EXPERIMENT "
+            + "and ictt.targetId = " + ExpressionExperimentDao.OBJECT_ALIAS + ".id "
+            + "and ict.state in (" + TicketState.class.getName() + ".OPEN, "
+            + TicketState.class.getName() + ".IN_PROGRESS)"
+            + ") then true else false end)";
+
     @Override
     protected void configureFilterableProperties( FilterablePropertiesConfigurer configurer ) {
         super.configureFilterableProperties( configurer );
@@ -4386,7 +4893,24 @@ public class ExpressionExperimentDaoImpl
         // only expose selected fields for GEEQ
         configurer.unregisterEntity( "geeq.", Geeq.class );
         configurer.registerProperty( "geeq.publicQualityScore" );
-        configurer.registerProperty( "geeq.publicSuitabilityScore" );
+
+        // Visibility. isPublic is on the value object but is not a mapped attribute -- it is read
+        // off the ACL entries when the VO is built -- so the metamodel walk that enumerates
+        // filterable properties cannot find it, and `filter=isPublic = false` was a 400 saying the
+        // property is unknown. It is registered by hand, like geeq.publicQualityScore, and resolved
+        // to the ACL predicate in resolveFilterablePropertyMeta.
+        configurer.registerProperty( "isPublic" );
+
+        // "In curation": needsAttention, OR on a ticket that is still open. Neither half is a
+        // stored flag, and the union is not derivable from any single column, so the metamodel
+        // walk cannot find it — registered by hand like isPublic beside it and resolved to an
+        // expression in resolveFilterablePropertyMeta.
+        //
+        // 🛑 NOT the same thing as curationDetails.curationPending on the VO. That one is read off
+        // the curation LOCK — true only while an unexpired lease is held, admin-only, and it
+        // lapses on its own — so it answers "is someone editing this right now", which is a
+        // handful of datasets at any instant. This answers "is this dataset work in progress".
+        configurer.registerProperty( "inCuration" );
 
         // the primary publication is not very useful, but its attached database entry is
         configurer.unregisterEntity( "primaryPublication.", BibliographicReference.class );
@@ -4481,10 +5005,24 @@ public class ExpressionExperimentDaoImpl
                 return FilterablePropertyMeta.builder()
                         .propertyName( "(case when geeq.manualQualityOverride = true then geeq.manualQualityScore else geeq.detectedQualityScore end)" )
                         .propertyType( Double.class );
-            case "geeq.publicSuitabilityScore":
+            case "inCuration":
                 return FilterablePropertyMeta.builder()
-                        .propertyName( "(case when geeq.manualSuitabilityOverride = true then geeq.manualSuitabilityScore else geeq.detectedSuitabilityScore end)" )
-                        .propertyType( Double.class );
+                        .propertyName( IN_CURATION_EXPRESSION )
+                        .propertyType( Boolean.class )
+                        .description( "whether the dataset is work in progress: flagged as needing attention, "
+                                + "or targeted by a ticket that is still open. Derived, not stored. Distinct "
+                                + "from curationDetails.curationPending, which reports a live curation lock." );
+            case "isPublic":
+                // "Public" means exactly what the anonymous branch of formAclRestrictionClause
+                // means: an ACE granting READ to the anonymous SID. Written as a case-expression so
+                // the filter framework can compare it like any other boolean property.
+                //
+                // The expression lives in AclQueryUtils beside the clause it mirrors, so the one
+                // definition of "public" does not drift into this file.
+                return FilterablePropertyMeta.builder()
+                        .propertyName( AclQueryUtils.formIsPubliclyReadableExpression( OBJECT_ALIAS + ".id" ) )
+                        .propertyType( Boolean.class )
+                        .description( "whether an anonymous caller can read this dataset; derived from the ACL entries, not stored" );
             default:
                 return super.resolveFilterablePropertyMeta( propertyName );
         }
@@ -4520,21 +5058,112 @@ public class ExpressionExperimentDaoImpl
                 .list();
     }
 
-    private void populateArrayDesignCount( Collection<ExpressionExperimentValueObject> eevos ) {
+    /**
+     * Name each VO's platforms, and its original platforms when it was switched, from the join that
+     * was already being made to count them.
+     * <p>
+     * This replaced a {@code count(distinct ba.arrayDesignUsed)} query. The count is now taken from
+     * the distinct platforms the same rows carry, so naming them costs no extra round trip — the
+     * expensive part, the bioAssay-to-platform join, was already in the page's post-processing.
+     * <p>
+     * 🛑 <b>It has to stay a separate, id-keyed query.</b> Reaching the platform from inside the
+     * paged, ACL-restricted dataset query is what is slow: uib measured
+     * {@code filter=bioAssays.arrayDesignUsed.shortName=GPL571} at 505 ms against 245 ms for the
+     * same page unfiltered. Here the ids are already known, so the join is an indexed lookup over
+     * one page.
+     * <p>
+     * A no-op switch — an original platform that is also one of the platforms in use — is left out,
+     * matching {@code loadDetailsValueObjects}. Reporting it would tell a curator a dataset was
+     * moved when it was not.
+     */
+    private void populatePlatforms( Collection<ExpressionExperimentValueObject> eevos ) {
         if ( eevos.isEmpty() ) {
             return;
         }
         Query q = getSessionFactory().getCurrentSession()
-                .createQuery( "select ee.id, count(distinct ba.arrayDesignUsed) from ExpressionExperiment ee "
+                .createQuery( "select distinct ee.id, ad.id, ad.shortName, ad.name, ad.technologyType, "
+                        + "op.id, op.shortName, op.name, op.technologyType "
+                        + "from ExpressionExperiment ee "
                         + "join ee.bioAssays as ba "
-                        + "where ee.id in (:ids) "
-                        + "group by ee" )
+                        + "join ba.arrayDesignUsed as ad "
+                        + "left join ba.originalPlatform as op "
+                        + "where ee.id in (:ids)" )
                 .setCacheable( true )
                 .setCacheRegion( FILTERED_VO_CACHE_REGION );
-        Map<Long, Long> adCountById = QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
-                .collect( Collectors.toMap( row -> ( Long ) row[0], row -> ( Long ) row[1] ) );
+        Map<Long, Map<Long, ArrayDesignReferenceValueObject>> usedByEe = new HashMap<>();
+        Map<Long, Map<Long, ArrayDesignReferenceValueObject>> originalByEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    usedByEe.computeIfAbsent( eeId, k -> new LinkedHashMap<>() )
+                            .putIfAbsent( ( Long ) row[1], new ArrayDesignReferenceValueObject( ( Long ) row[1],
+                                    ( String ) row[2], ( String ) row[3], nameOf( ( TechnologyType ) row[4] ) ) );
+                    if ( row[5] != null ) {
+                        originalByEe.computeIfAbsent( eeId, k -> new LinkedHashMap<>() )
+                                .putIfAbsent( ( Long ) row[5], new ArrayDesignReferenceValueObject( ( Long ) row[5],
+                                        ( String ) row[6], ( String ) row[7], nameOf( ( TechnologyType ) row[8] ) ) );
+                    }
+                } );
         for ( ExpressionExperimentValueObject eevo : eevos ) {
-            eevo.setArrayDesignCount( adCountById.getOrDefault( eevo.getId(), 0L ) );
+            Map<Long, ArrayDesignReferenceValueObject> used = usedByEe.getOrDefault( eevo.getId(), Collections.emptyMap() );
+            eevo.setPlatforms( new ArrayList<>( used.values() ) );
+            eevo.setArrayDesignCount( ( long ) used.size() );
+            Map<Long, ArrayDesignReferenceValueObject> original = new LinkedHashMap<>( originalByEe.getOrDefault( eevo.getId(), Collections.emptyMap() ) );
+            original.keySet().removeAll( used.keySet() );
+            eevo.setOriginalPlatforms( new ArrayList<>( original.values() ) );
+            // The dataset's technology is its platforms' technology, and only when they agree. A
+            // dataset on a microarray and a sequencing platform IS both, and answering with either
+            // one is how a client ends up labelling half of it wrong. Null there says "ask the
+            // platforms", which the VO now carries.
+            Set<String> technologies = used.values().stream()
+                    .map( ArrayDesignReferenceValueObject::getTechnologyType )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            eevo.setTechnologyType( technologies.size() == 1 ? technologies.iterator().next() : null );
+        }
+    }
+
+    private static String nameOf( @Nullable TechnologyType tt ) {
+        return tt != null ? tt.name() : null;
+    }
+
+    /**
+     * The enum's name, matching how {@code BioAssayValueObject#getExtractedMolecule()} serializes it, so a
+     * per-dataset tally and a per-sample read spell the same molecule the same way.
+     */
+    @Nullable
+    private static String nameOf( @Nullable ExtractedMolecule em ) {
+        return em != null ? em.name() : null;
+    }
+
+    /**
+     * When each dataset was created in Gemma, from its {@code C} audit event.
+     * <p>
+     * A second batched query rather than a join onto the platform one: the two go through different
+     * collections and joining both in one statement multiplies the rows before either can be
+     * grouped. It is one indexed round trip per page, on ids already in hand.
+     * <p>
+     * {@code min} because nothing forbids two creation events; the earliest is the creation. A
+     * dataset with none is left null rather than defaulted — an absent record must not be rendered
+     * as a date.
+     */
+    private void populateDateCreated( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, min(ae.date) from ExpressionExperiment ee "
+                        + "join ee.auditTrail as atr "
+                        + "join atr.events as ae "
+                        + "where ee.id in (:ids) and ae.action = 'C' "
+                        + "group by ee.id" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Date> createdById = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> createdById.put( ( Long ) row[0], ( Date ) row[1] ) );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setDateCreated( createdById.get( eevo.getId() ) );
         }
     }
 
@@ -4636,12 +5265,18 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
         // each set of raw vectors must have a *distinct* QT
-        Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
+        // Read the names off the MANAGED copy. The caller's instance can be detached with its
+        // quantitationTypes collection never initialized -- affyFromCel reads the experiment, computes for
+        // minutes with no session open, then writes (DataUpdaterImpl.reprocessAffyDataFromCel) -- and
+        // navigating it there throws LazyInitializationException. checkVectors below keeps the CALLER's
+        // instance on purpose: it asserts by reference that the vectors point at that very object.
+        ExpressionExperiment managedEe = ensureEeInSession( ee );
+        Set<String> existingNames = DescribableUtils.getNames( managedEe.getQuantitationTypes() );
         Assert.notNull( newQt.getName(), "The quantitation type must have a name." );
         Assert.isTrue( !existingNames.contains( newQt.getName() ),
                 "There is already a quantitation type named " + newQt.getName() + " in " + ee + "." );
         checkVectors( ee, newQt, newVectors );
-        ee = ensureEeInSession( ee );
+        ee = managedEe;
         if ( newQt.getIsPreferred() ) {
             for ( QuantitationType qt : ee.getQuantitationTypes() ) {
                 if ( qt.getIsPreferred() && !qt.equals( newQt ) ) {

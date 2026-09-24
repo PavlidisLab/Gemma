@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.quartz.CronTriggerFactoryBean;
 import org.springframework.scheduling.quartz.JobDetailFactoryBean;
 import org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean;
@@ -34,7 +33,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
@@ -58,21 +56,23 @@ import java.util.Map;
  * {@code applicationContext-dataSource.xml} and are injected by qualifier here.
  * <p>
  * Note: {@code SecureMethodInvokingJobDetailFactoryBean} requires its {@code targetObject}
- * to be a real bean — services like {@code indexerService} that don't currently exist in this
- * codebase will fail context startup under the {@code scheduler} profile. That is identical
- * to the legacy XML behavior; this migration is intentionally a like-for-like port and does
- * not attempt to repair dead wiring.
+ * to be a real bean, so every {@code @Qualifier} below names a bean that must exist for this
+ * context to start. Those names come from {@code ubic.gemma.core.context.BeanNameGenerator},
+ * which the root {@code @ComponentScan} installs as its {@code nameGenerator} and which strips
+ * a trailing {@code Impl} — {@code IndexerServiceImpl} registers as {@code indexerService},
+ * not {@code indexerServiceImpl}. Dropping that generator would break these qualifiers at
+ * runtime rather than at compile time.
  * <p>
- * {@link EnableScheduling} is enabled to preserve {@code <task:annotation-driven/>}
- * semantics, even though the comment in the legacy XML noted Gemma deliberately avoids
- * {@code @Scheduled} / {@code @Async} for security-context reasons. Keeping the annotation
- * on means any future {@code @Scheduled} methods (e.g., in CLI tools) still wire up.
+ * Annotation-driven scheduling ({@code @Scheduled}) is NOT enabled here — it moved to
+ * {@link AnnotationDrivenSchedulingConfig}, which also covers the {@code production} profile.
+ * Gating it on {@code scheduler} meant every {@code @Scheduled} method was dormant on
+ * production nodes, which run {@code production} without {@code scheduler}. This class is now
+ * only about the Quartz triggers.
  *
  * @author keshav (original XML)
  */
 @Configuration
 @Profile(EnvironmentProfiles.SCHEDULER)
-@EnableScheduling
 public class SchedulerConfig {
 
     /**
@@ -84,7 +84,6 @@ public class SchedulerConfig {
     public SchedulerFactoryBean schedulerFactoryBean(
             @Qualifier("arrayDesignReportTrigger") Trigger arrayDesignReportTrigger,
             @Qualifier("expressionExperimentReportTrigger") Trigger expressionExperimentReportTrigger,
-            @Qualifier("whatsNewTrigger") Trigger whatsNewTrigger,
             @Qualifier("gene2CsUpdateTrigger") Trigger gene2CsUpdateTrigger,
             @Qualifier("batchInfoTrigger") Trigger batchInfoTrigger,
             @Qualifier("ee2cExperimentUpdateTrigger") Trigger ee2cExperimentUpdateTrigger,
@@ -96,7 +95,6 @@ public class SchedulerConfig {
         factory.setTriggers(
                 arrayDesignReportTrigger,
                 expressionExperimentReportTrigger,
-                whatsNewTrigger,
                 gene2CsUpdateTrigger,
                 batchInfoTrigger,
                 ee2cExperimentUpdateTrigger,
@@ -153,15 +151,6 @@ public class SchedulerConfig {
             @Qualifier("groupAgentSecurityContext") SecurityContext securityContext ) {
         return secureMethodCronTrigger( arrayDesignReportService, "generateArrayDesignReport",
                 "0 30 1 1 * ?", securityContext );
-    }
-
-    /** Every day at 00:15. */
-    @Bean(name = "whatsNewTrigger")
-    public CronTriggerFactoryBean whatsNewTrigger(
-            WhatsNewService whatsNewService,
-            @Qualifier("groupAgentSecurityContext") SecurityContext securityContext ) {
-        return secureMethodCronTrigger( whatsNewService, "generateWeeklyReport",
-                "0 15 0 * * ?", securityContext );
     }
 
     /** Every day at 00:40. */
@@ -248,10 +237,10 @@ public class SchedulerConfig {
     }
 
     /**
-     * Every working day at 23:00. NOTE: depends on an {@code indexerService} bean that is not
-     * currently defined anywhere in the codebase — context startup under the {@code scheduler}
-     * profile will fail at this bean unless that service is restored. Preserved verbatim from
-     * the legacy XML to avoid masking the broken wiring during migration.
+     * Every working day at 23:00. The {@code indexerService} bean is
+     * {@link ubic.gemma.core.search.indexer.IndexerServiceImpl}, named by the scan's
+     * {@code BeanNameGenerator} (see the class comment). The legacy XML referenced it by the
+     * same id, so this is a verbatim port.
      */
     @Bean(name = "indexExperimentsTrigger")
     public CronTriggerFactoryBean indexExperimentsTrigger(

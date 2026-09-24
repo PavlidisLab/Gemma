@@ -111,6 +111,16 @@ public class GemmaAclConfiguration {
                         + "GROUP_RUN_AS_ADMIN > GROUP_ADMIN\n"
                         + "GROUP_USER > IS_AUTHENTICATED_ANONYMOUSLY\n"
                         + "GROUP_RUN_AS_USER > GROUP_USER\n"
+                        // A curator is a user with more, and an administrator is a curator with more.
+                        // Ordering them this way is what lets a route say hasAuthority('GROUP_CURATOR')
+                        // and still admit administrators -- the method-security expression handler is
+                        // wired with this hierarchy (applicationContext-gsec.xml), so widening a route
+                        // from GROUP_ADMIN to GROUP_CURATOR takes nothing away from an administrator.
+                        // It does NOT run the other way: a curator never satisfies GROUP_ADMIN, which
+                        // is what keeps the user-account and server-operation routes closed to them.
+                        + "GROUP_ADMIN > GROUP_CURATOR\n"
+                        + "GROUP_CURATOR > GROUP_USER\n"
+                        + "GROUP_RUN_AS_CURATOR > GROUP_CURATOR\n"
                         + "GROUP_ADMIN > GROUP_AGENT\n"
                         + "GROUP_AGENT > IS_AUTHENTICATED_ANONYMOUSLY\n"
                         + "GROUP_RUN_AS_AGENT > GROUP_AGENT" );

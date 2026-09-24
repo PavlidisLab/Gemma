@@ -13,6 +13,7 @@ package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
@@ -129,6 +131,63 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
         @Nullable
         private CharacteristicValueObject category;
 
+        /**
+         * Curator/agent hint about whether this factor warrants picking a baseline factor value.
+         * {@code "required"} | {@code "not_applicable"} | {@code "uncertain"} are the values in use;
+         * the field is an open string and an unfamiliar value round-trips rather than being rejected.
+         * <p>
+         * On the way IN this follows the same {@code null = "no change"} convention the rest of the
+         * factor does, with an empty string as the explicit clear.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "Curator/agent baseline-relevance hint: \"required\" | \"not_applicable\" | \"uncertain\" are the values in use, not the values permitted. Null when unset.")
+        private String baselineRelevance;
+
+        /** Free-text rationale paired with {@link #baselineRelevance}. Null when unset. */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private String baselineRelevanceReason;
+
+        /**
+         * Curator/agent hint about whether a differential expression analysis should SUBSET by this
+         * factor. {@code "recommended"} | {@code "not_applicable"} | {@code "uncertain"} are the values
+         * in use; the field is an open string and an unfamiliar value round-trips rather than being
+         * rejected.
+         * <p>
+         * 🛑 Advice, not history. What an analysis actually subsetted by is the analysis's own
+         * {@code subsetFactorValue}; the two are allowed to disagree, and a recommendation that has not
+         * been acted on yet is the normal state.
+         * <p>
+         * On the way IN this follows the same {@code null = "no change"} convention the rest of the
+         * factor does, with an empty string as the explicit clear.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "Curator/agent hint about whether a differential expression analysis should subset by this factor: \"recommended\" | \"not_applicable\" | \"uncertain\" are the values in use, not the values permitted. Advice only — what an analysis actually subsetted by is its own subsetFactorValue. Null when unset.")
+        private String subsetRelevance;
+
+        /** Free-text rationale paired with {@link #subsetRelevance}. Null when unset. */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private String subsetRelevanceReason;
+
+        /**
+         * Verbatim provenance backing this FACTOR — a JSON array of {@code {quote, source, location, …}} items
+         * the curation agents emitted, stored and served opaquely.
+         * <p>
+         * Backs the factor as a curated claim: that this axis exists, is named this, and is categorised this
+         * way. Its factor values and their statements carry their own, at their own levels.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        // Provenance rather than identity, excluded from equals/hashCode for the reason
+        // StatementValueObject#supportingEvidence spells out: the same factor with and without recorded
+        // evidence is the same factor.
+        @EqualsAndHashCode.Exclude
+        @Schema(description = "Verbatim provenance backing this factor — a JSON array of {quote, source, location} items the curation agents emitted. Null when none is recorded.")
+        private JsonNode supportingEvidence;
+
         private List<FactorValueBasicValueObject> values = new ArrayList<>();
 
         public ExperimentalFactorEntry() {
@@ -142,6 +201,11 @@ public class ExperimentalDesignValueObject extends IdentifiableValueObject<Exper
             if ( ef.getCategory() != null ) {
                 this.category = new CharacteristicValueObject( ef.getCategory() );
             }
+            this.baselineRelevance = ef.getBaselineRelevance();
+            this.baselineRelevanceReason = ef.getBaselineRelevanceReason();
+            this.subsetRelevance = ef.getSubsetRelevance();
+            this.subsetRelevanceReason = ef.getSubsetRelevanceReason();
+            this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( ef.getSupportingEvidence() );
             this.values = ef.getFactorValues().stream()
                     .sorted( java.util.Comparator.comparing( FactorValue::getId,
                             java.util.Comparator.nullsLast( java.util.Comparator.naturalOrder() ) ) )

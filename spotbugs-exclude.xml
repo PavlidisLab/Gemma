@@ -142,17 +142,12 @@
         readObject() — see the GEO_DESERIALIZATION_FILTER / REPORT_DESERIALIZATION_FILTER /
         GENE2CS_DESERIALIZATION_FILTER constants in each class. SpotBugs flags
         any readObject() regardless of filter; this is a true false positive
-        once the filter is in place. The 4 sites:
+        once the filter is in place. The 3 sites:
           - ArrayDesignReportServiceImpl x2
-          - WhatsNewServiceImpl
           - TableMaintenanceUtilImpl
     -->
     <Match>
         <Class name="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
-        <Bug pattern="OBJECT_DESERIALIZATION"/>
-    </Match>
-    <Match>
-        <Class name="ubic.gemma.core.analysis.report.WhatsNewServiceImpl"/>
         <Bug pattern="OBJECT_DESERIALIZATION"/>
     </Match>
     <Match>

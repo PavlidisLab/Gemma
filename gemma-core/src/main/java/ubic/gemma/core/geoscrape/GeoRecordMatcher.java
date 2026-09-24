@@ -15,7 +15,7 @@ import org.springframework.lang.Nullable;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 
 /**
- * Pluggable predicate over a {@link GeoRecord} for the GEO scrape & preboard
+ * Pluggable predicate over a {@link GeoRecord} for the GEO scrape &amp; preboard
  * pipeline. Each matcher decides whether the scrape should flag the record
  * for preboarding under its criterion.
  *

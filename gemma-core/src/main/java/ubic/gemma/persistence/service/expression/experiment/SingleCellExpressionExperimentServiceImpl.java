@@ -2,6 +2,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -67,6 +68,14 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
      * {@link #streamSingleCellDataVectors} or a per-vector fetch path. See PERF_PROBE_REPORT_ROUND4 C1.</p>
      */
     public static final int MAX_SAFE_INMEMORY_SC_MATRIX_SAMPLES = 5000;
+
+    /**
+     * This bean, through its proxy, so that calls from one of its methods to an audited one record the event.
+     * {@code @Lazy} breaks the self-reference cycle at construction.
+     */
+    @Lazy
+    @Autowired
+    private SingleCellExpressionExperimentService self;
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
@@ -465,6 +474,105 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
 
     @Override
     @Transactional
+    @Audited(value = DataAddedEvent.class,
+            messageSpel = "'Added ' + #result + ' vectors for ' + #quantitationType + ' with dimension ' + #scd + '.'")
+    public int addSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType,
+            SingleCellDimension scd, Stream<SingleCellExpressionDataVector> vectors,
+            @Nullable String details, boolean recrateCellTypeFactorIfNecessary, boolean ignoreCompatibleFactor ) {
+        Assert.notNull( ee.getId(), "The dataset must be persistent." );
+        Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
+        Assert.notNull( quantitationType.getName(), "The quantitation type must have a name." );
+        Assert.isTrue( !existingNames.contains( quantitationType.getName() ),
+                "There is already a quantitation type named " + quantitationType.getName() + " in " + ee + "." );
+        if ( quantitationType.getId() == null ) {
+            log.info( "Creating " + quantitationType + "..." );
+            quantitationType = quantitationTypeService.create( quantitationType, SingleCellExpressionDataVector.class );
+        }
+        boolean scdCreated = false;
+        if ( scd.getId() == null ) {
+            log.info( "Creating a new single-cell dimension for " + ee + ": " + scd );
+            expressionExperimentDao.createSingleCellDimension( ee, scd );
+            scdCreated = true;
+        }
+        int numberOfSamples = scd.getBioAssays().size();
+        boolean[] isExpressed = new boolean[scd.getNumberOfCellIds()];
+        int[] numberOfDesignElements = new int[numberOfSamples];
+        int[] numberOfCellByDesignElements = new int[numberOfSamples];
+        boolean[] isSupportedHolder = { false };
+        boolean[] supportCheckedHolder = { false };
+        // these are arrays because plain integers are not mutable within lambdas
+        int[] vectorCount = { 0 };
+        final QuantitationType finalQt = quantitationType;
+        // streaming variant of validateSingleCellDataVectors; the DAO evicts every 500 vectors so
+        // the whole set is never resident at once
+        Stream<SingleCellExpressionDataVector> validated = validateSingleCellDataVectors( ee, finalQt, scd, vectors, scdCreated );
+        Iterable<SingleCellExpressionDataVector> enriched = () -> validated.peek( v -> {
+            vectorCount[0]++;
+            if ( !supportCheckedHolder[0] ) {
+                isSupportedHolder[0] = SingleCellSparsityMetrics.isSupported( v );
+                supportCheckedHolder[0] = true;
+            }
+            if ( isSupportedHolder[0] && finalQt.getIsSingleCellPreferred() ) {
+                for ( int sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++ ) {
+                    SingleCellSparsityMetrics.addExpressedCells( v, sampleIndex, null, -1, null, isExpressed );
+                    numberOfDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfDesignElements( v, sampleIndex, null, -1, null );
+                    numberOfCellByDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( v, sampleIndex, null, -1, null );
+                }
+            }
+        } ).iterator();
+        log.info( String.format( "Streaming single-cell vectors to %s for %s", ee, finalQt ) );
+        expressionExperimentDao.createSingleCellDataVectors( ee, enriched );
+        int numVectorsAdded = vectorCount[0];
+        Assert.isTrue( numVectorsAdded > 0, "At least one single-cell vector has to be supplied; use removeSingleCellDataVectors() to remove vectors instead." );
+        log.info( String.format( "Added %d single-cell vectors to %s for %s", numVectorsAdded, ee, finalQt ) );
+        ee.getQuantitationTypes().add( finalQt );
+        applyPreferredSingleCellVectors( ee, finalQt );
+        if ( finalQt.getIsSingleCellPreferred() ) {
+            log.info( "Applying single-cell sparsity metrics for " + finalQt + "..." );
+            if ( isSupportedHolder[0] ) {
+                int totalCells = 0;
+                List<BioAssay> bioAssays = scd.getBioAssays();
+                for ( int si = 0; si < bioAssays.size(); si++ ) {
+                    int start = scd.getBioAssaysOffset()[si];
+                    int end = start + scd.getNumberOfCellIdsBySample( si );
+                    int numCells = 0;
+                    for ( int ci = start; ci < end; ci++ ) {
+                        if ( isExpressed[ci] ) numCells++;
+                    }
+                    totalCells += numCells;
+                    bioAssays.get( si ).setNumberOfCells( numCells );
+                    bioAssays.get( si ).setNumberOfDesignElements( numberOfDesignElements[si] );
+                    bioAssays.get( si ).setNumberOfCellsByDesignElements( numberOfCellByDesignElements[si] );
+                }
+                ee.setNumberOfCells( totalCells );
+            } else {
+                log.warn( "Sparsity metrics cannot be computed for " + ee + ", they will be set to null." );
+                for ( BioAssay ba : ee.getBioAssays() ) {
+                    ba.setNumberOfCells( null );
+                    ba.setNumberOfDesignElements( null );
+                    ba.setNumberOfCellsByDesignElements( null );
+                }
+                ee.setNumberOfCells( null );
+            }
+        }
+        expressionExperimentDao.update( ee );
+        if ( finalQt.getIsSingleCellPreferred() && scdCreated ) {
+            CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
+            if ( preferredLabelling != null ) {
+                log.info( "New single-cell preferred vectors were added, recreating the cell type factor." );
+                createCellTypeFactor( ee, preferredLabelling, recrateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
+            } else if ( recrateCellTypeFactorIfNecessary ) {
+                log.info( "New single-cell preferred vectors do not have cell type labelling, removing any existing cell type factor..." );
+                removeCellTypeFactorIfExists( ee );
+            } else {
+                log.warn( "New single-cell preferred vectors do not have cell type labelling, but the configuration indicates not to recreate the cell type factor." );
+            }
+        }
+        return numVectorsAdded;
+    }
+
+    @Override
+    @Transactional
     @Audited(value = DataReplacedEvent.class,
             messageSpel = "'Replaced ' + #result + ' vectors with ' + #vectors.size() + ' vectors for ' + #quantitationType + ' with dimension ' + #vectors.iterator().next().singleCellDimension + '.'")
     public int replaceSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors, @Nullable String details, boolean removeOrRecreateCellTypeFactor, boolean ignoreCompatibleFactor ) {
@@ -692,6 +800,63 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             ba.setNumberOfCellsByDesignElements( null );
         }
         ee.setNumberOfCells( null );
+    }
+
+    /**
+     * Streaming counterpart of {@link #validateSingleCellDataVectors(ExpressionExperiment, QuantitationType, Collection)}.
+     * <p>
+     * Checks that can be made without consuming the stream are done upfront; the rest are attached
+     * as a {@code peek} so each vector is validated as it passes through, and the enrichment that
+     * sets the experiment happens in the same pass.
+     */
+    private Stream<SingleCellExpressionDataVector> validateSingleCellDataVectors( ExpressionExperiment ee,
+            QuantitationType quantitationType, SingleCellDimension scd,
+            Stream<SingleCellExpressionDataVector> vectors, boolean scdJustCreated ) {
+        // scdJustCreated: skip the "belongs to existing vectors" check when the SCD was just persisted
+        // in this same call -- it cannot appear in ee's vectors yet since none have been written.
+        Assert.isTrue( scd.getId() == null || scdJustCreated
+                        || ee.getSingleCellExpressionDataVectors().stream()
+                        .map( SingleCellExpressionDataVector::getSingleCellDimension ).anyMatch( scd::equals ),
+                scd + " is persistent, but does not belong to any single-cell vector of this dataset: " + ee );
+        int numCells = scd.getNumberOfCellIds();
+        int sizeInBytes = quantitationType.getRepresentation().getSizeInBytes();
+        // Platform is derived from the first vector; subsequent vectors are checked against it.
+        ArrayDesign[] platformHolder = { null };
+        return vectors.peek( v -> {
+            Assert.isTrue( v.getExpressionExperiment() == null || v.getExpressionExperiment().equals( ee ),
+                    "Some of the vectors belong to other expression experiments." );
+            Assert.isTrue( v.getQuantitationType() == quantitationType,
+                    "All vectors must have the same quantitation type: " + quantitationType );
+            Assert.isTrue( v.getDesignElement() != null && v.getDesignElement().getId() != null,
+                    "All vectors must have a persistent design element." );
+            Assert.isTrue( v.getSingleCellDimension() == scd,
+                    "All vectors must share the same dimension: " + scd );
+            // TODO: allow vectors from multiple platforms
+            ArrayDesign platform = v.getDesignElement().getArrayDesign();
+            if ( platformHolder[0] == null ) {
+                platformHolder[0] = platform;
+                Assert.isTrue( scd.getBioAssays().stream().allMatch( ba -> ba.getArrayDesignUsed().equals( platform ) ),
+                        "All the BioAssays must use a platform that match that of the vectors: " + platform );
+            } else {
+                Assert.isTrue( platform.equals( platformHolder[0] ),
+                        "All vectors must have a persistent design element from the same platform." );
+            }
+            if ( sizeInBytes != -1 ) {
+                Assert.isTrue( v.getData().length == sizeInBytes * v.getDataIndices().length,
+                        "The data length must equal the number of indices times the size of the representation." );
+            } else {
+                Assert.isTrue( v.getData().length >= v.getDataIndices().length,
+                        "The data length must be at least the number of indices." );
+            }
+            // 1. monotonous, 2. distinct, 3. within the range of the cell IDs
+            int lastI = -1;
+            for ( int i : v.getDataIndices() ) {
+                Assert.isTrue( i > lastI, "Data indices must be strictly increasing." );
+                Assert.isTrue( i < numCells, "Data indices must fall within the range of cell IDs." );
+                lastI = i;
+            }
+            v.setExpressionExperiment( ee );
+        } );
     }
 
     private void validateSingleCellDataVectors( ExpressionExperiment ee, QuantitationType quantitationType, Collection<SingleCellExpressionDataVector> vectors ) {
@@ -1053,7 +1218,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( dimension == null ) {
             throw new IllegalArgumentException( "No single-cell dimension found for " + quantitationType + " in " + ee + "." );
         }
-        return changePreferredCellTypeAssignment( ee, dimension, newPreferredCta, recreateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
+        return self.changePreferredCellTypeAssignment( ee, dimension, newPreferredCta, recreateCellTypeFactorIfNecessary, ignoreCompatibleFactor );
     }
 
     @Override
@@ -1199,7 +1364,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        removeCellTypeAssignment( ee, dim, cellTypeAssignment );
+        self.removeCellTypeAssignment( ee, dim, cellTypeAssignment );
     }
 
     @Override
@@ -1219,7 +1384,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .filter( cta2 -> cta2.getId().equals( ctaId ) )
                 .findFirst()
                 .orElseThrow( () -> new IllegalArgumentException( "No cell type assignment with ID " + ctaId + " found." ) );
-        removeCellTypeAssignment( ee, dimension, cta );
+        self.removeCellTypeAssignment( ee, dimension, cta );
     }
 
     @Override
@@ -1230,7 +1395,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .collect( Collectors.toList() );
         boolean anyRemoved = false;
         for ( CellTypeAssignment cta : toRemove ) {
-            removeCellTypeAssignment( ee, dimension, cta );
+            self.removeCellTypeAssignment( ee, dimension, cta );
             anyRemoved = true;
         }
         return anyRemoved;
@@ -1246,7 +1411,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         long removed = 0;
         List<CellTypeAssignment> ctasToRemove = new ArrayList<>( dim.getCellTypeAssignments() );
         for ( CellTypeAssignment cta : ctasToRemove ) {
-            removeCellTypeAssignment( ee, dim, cta );
+            self.removeCellTypeAssignment( ee, dim, cta );
             removed++;
         }
         return removed;
@@ -1378,7 +1543,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        removeCellLevelCharacteristics( ee, dim, clc );
+        self.removeCellLevelCharacteristics( ee, dim, clc );
     }
 
     @Override
@@ -1398,7 +1563,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .filter( clc2 -> clc2.getId().equals( clcId ) )
                 .findFirst()
                 .orElseThrow( () -> new IllegalArgumentException( "No cell-level characteristics with ID " + clcId + " found." ) );
-        removeCellLevelCharacteristics( ee, dimension, clc );
+        self.removeCellLevelCharacteristics( ee, dimension, clc );
     }
 
     @Override
@@ -1409,7 +1574,7 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 .collect( Collectors.toList() );
         boolean anyRemoved = false;
         for ( CellLevelCharacteristics clc : toRemove ) {
-            removeCellLevelCharacteristics( ee, dimension, clc );
+            self.removeCellLevelCharacteristics( ee, dimension, clc );
             anyRemoved = true;
         }
         return anyRemoved;
@@ -1418,17 +1583,12 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
     @Override
     @Transactional
     public long removeAllCellLevelCharacteristics( ExpressionExperiment ee, QuantitationType qt ) {
+        Assert.notNull( ee.getId(), "Dataset must be persistent." );
         SingleCellDimension dim = getSingleCellDimension( ee, qt );
         if ( dim == null ) {
             throw new IllegalStateException( "There is no single-cell dimension for " + qt + " in " + ee + "." );
         }
-        long removed = 0;
-        List<CellLevelCharacteristics> clcsToRemove = new ArrayList<>( dim.getCellLevelCharacteristics() );
-        for ( CellLevelCharacteristics clc : clcsToRemove ) {
-            removeCellLevelCharacteristics( ee, dim, clc );
-            removed++;
-        }
-        return removed;
+        return expressionExperimentDao.removeAllCellLevelCharacteristics( ee, dim );
     }
 
     @Override
@@ -1505,18 +1665,34 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             log.warn( ee + " does not have an experimental design, returning null for the cell type factor." );
             return Optional.empty();
         }
-        Set<ExperimentalFactor> candidates = ee.getExperimentalDesign().getExperimentalFactors().stream()
-                .filter( ef -> ef.getCategory() != null )
-                .filter( ef -> CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
-                .collect( Collectors.toSet() );
+        List<ExperimentalFactor> candidates = getCellTypeFactors( ee );
         if ( candidates.isEmpty() ) {
             return Optional.empty();
         } else if ( candidates.size() > 1 ) {
             log.warn( "There is more than one cell type factor in " + ee + "." );
             return Optional.empty();
         } else {
-            return Optional.of( candidates.iterator().next() );
+            return Optional.of( candidates.get( 0 ) );
         }
+    }
+
+    /**
+     * Collect every factor in {@code ee}'s design categorized as {@link Categories#CELL_TYPE}.
+     * <p>
+     * Unlike {@link #getCellTypeFactor(ExpressionExperiment)}, this does not collapse to empty when
+     * more than one is present — it is the enumeration used to converge a design that has
+     * accidentally accumulated several cell type factors (see {@link #createCellTypeFactor}). Ordered
+     * by id (nulls last) so retention / removal decisions are deterministic.
+     */
+    private List<ExperimentalFactor> getCellTypeFactors( ExpressionExperiment ee ) {
+        if ( ee.getExperimentalDesign() == null ) {
+            return Collections.emptyList();
+        }
+        return ee.getExperimentalDesign().getExperimentalFactors().stream()
+                .filter( ef -> ef.getCategory() != null )
+                .filter( ef -> CharacteristicUtils.hasCategory( ef.getCategory(), Categories.CELL_TYPE ) )
+                .sorted( Comparator.comparing( ExperimentalFactor::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
     }
 
     @Override
@@ -1536,17 +1712,59 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         Assert.notNull( ee.getExperimentalDesign(), ee + " does not have an experimental design, cannot re-create the cell type factor." );
         // FIXME: this does not include a preferred CTA from non-preferred single-cell vectors
         Assert.isTrue( ctl.isPreferred(), "Can only create a cell type factor from a preferred CTA." );
-        ExperimentalFactor currentCellTypeFactor = getCellTypeFactor( ee ).orElse( null );
-        if ( currentCellTypeFactor != null && !ignoreCompatibleFactor && isCellTypeAssignmentCompatibleWithCellTypeFactor( ctl, currentCellTypeFactor ) ) {
-            log.info( "The current cell type factor " + currentCellTypeFactor + " is compatible with " + ctl + ", no need to recreate it." );
-            return currentCellTypeFactor;
+        // Enumerate ALL cell type factors, not just the single one getCellTypeFactor() would surface
+        // (it returns empty when more than one exists). A design that has accumulated several is
+        // converged back to one here rather than having yet another appended.
+        List<ExperimentalFactor> existingCellTypeFactors = getCellTypeFactors( ee );
+
+        // A factor already compatible with the assignment can be reused as-is — it keeps its
+        // sample-factorvalue associations and any dependent analyses. Only consider reuse when we
+        // haven't been told to ignore compatibility.
+        ExperimentalFactor compatibleFactor = null;
+        if ( !ignoreCompatibleFactor ) {
+            for ( ExperimentalFactor ef : existingCellTypeFactors ) {
+                if ( isCellTypeAssignmentCompatibleWithCellTypeFactor( ctl, ef ) ) {
+                    compatibleFactor = ef;
+                    break;
+                }
+            }
         }
-        if ( currentCellTypeFactor != null && removeExistingIfNecessary ) {
-            log.info( "There is already a cell type factor for " + ee + ", but it is not compatible with " + ctl + ", it will be re-created." );
-            removeCellTypeFactor( ee, currentCellTypeFactor );
-        } else if ( currentCellTypeFactor != null ) {
-            log.warn( "There is already a cell type factor for " + ee + ", but it is not compatible with " + ctl + ", and deleteExistingIfNecessary is false, so not recreating it." );
-            return null;
+
+        // Fast path unchanged from the single-factor era: a lone, compatible factor — nothing to do.
+        if ( compatibleFactor != null && existingCellTypeFactors.size() == 1 ) {
+            log.info( "The current cell type factor " + compatibleFactor + " is compatible with " + ctl + ", no need to recreate it." );
+            return compatibleFactor;
+        }
+
+        // Anything destructive is gated on removeExistingIfNecessary, matching the flag's contract
+        // (callers pass false when they must not clobber the existing design).
+        if ( !existingCellTypeFactors.isEmpty() ) {
+            if ( !removeExistingIfNecessary ) {
+                log.warn( "There " + ( existingCellTypeFactors.size() == 1 ? "is already a cell type factor" : "are already " + existingCellTypeFactors.size() + " cell type factors" )
+                        + " for " + ee + " incompatible with " + ctl + ", and removeExistingIfNecessary is false, so not recreating it." );
+                return null;
+            }
+            if ( compatibleFactor != null ) {
+                // Retain the compatible factor, drop the others so the design converges to one.
+                for ( ExperimentalFactor ef : existingCellTypeFactors ) {
+                    if ( !ef.equals( compatibleFactor ) ) {
+                        removeCellTypeFactor( ee, ef );
+                    }
+                }
+                log.info( "Kept compatible cell type factor " + compatibleFactor + " for " + ee + " and removed "
+                        + ( existingCellTypeFactors.size() - 1 ) + " other cell type factor(s)." );
+                return compatibleFactor;
+            }
+            // No compatible factor: remove every existing one, then create a fresh single one below.
+            if ( existingCellTypeFactors.size() > 1 ) {
+                log.warn( "There are " + existingCellTypeFactors.size() + " cell type factors for " + ee
+                        + "; all will be removed and replaced with a single one derived from " + ctl + "." );
+            } else {
+                log.info( "There is already a cell type factor for " + ee + ", but it is not compatible with " + ctl + ", it will be re-created." );
+            }
+            for ( ExperimentalFactor ef : existingCellTypeFactors ) {
+                removeCellTypeFactor( ee, ef );
+            }
         }
         // create a new cell type factor
         ExperimentalFactor cellTypeFactor = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL, Categories.CELL_TYPE );

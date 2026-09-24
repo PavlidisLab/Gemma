@@ -20,7 +20,9 @@ package ubic.gemma.model.expression.bioAssay;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -72,6 +74,15 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     public static final int MAX_NAME_LENGTH = 255;
 
     /**
+     * {@link #getLibraryStrategy() libraryStrategy} of a microarray sample hybridized in one channel. Gemma's own
+     * value: GEO's {@code library_strategy} vocabulary covers sequencing only.
+     */
+    public static final String LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR = "MICROARRAY_ONE_COLOR";
+
+    /** {@link #getLibraryStrategy() libraryStrategy} of a microarray sample hybridized in two channels. */
+    public static final String LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR = "MICROARRAY_TWO_COLOR";
+
+    /**
      * A unique and recognizable identifier for this assay.
      * <p>
      * This is generally the same as the accession.
@@ -86,6 +97,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Platform used in this assay.
      */
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ARRAY_DESIGN_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private ArrayDesign arrayDesignUsed;
 
@@ -94,6 +106,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      */
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ORIGINAL_PLATFORM_FK", columnDefinition = "BIGINT")
     private ArrayDesign originalPlatform;
 
@@ -101,6 +114,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Sample used in this assay.
      */
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "SAMPLE_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private BioMaterial sampleUsed;
 
@@ -142,6 +156,44 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * For sequence-read based data, the total number of reads in the assay, computed from the data as the total of the
      * values for the elements assayed.
      */
+    /**
+     * What was extracted from the sample and assayed, from GEO's {@code !Sample_molecule_chN}.
+     * {@code null} when the source did not say, or for data that did not come from GEO.
+     *
+     * @see ExtractedMolecule for why this is on the assay rather than the biomaterial
+     */
+    @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "EXTRACTED_MOLECULE", columnDefinition = "VARCHAR(32)")
+    private ExtractedMolecule extractedMolecule;
+
+    /**
+     * How the library was selected — GEO's {@code library_selection}: {@code polyA}, {@code cDNA},
+     * {@code RANDOM}, {@code size fractionation} and so on.
+     * <p>
+     * The submitter's raw string, not an enum, matching how the GEO parser already keeps it: the
+     * vocabulary is open and a value nobody anticipated is worth more verbatim than coerced to
+     * {@code other}.
+     * <p>
+     * 🛑 Read it beside {@link #extractedMolecule} rather than instead of it. They routinely disagree,
+     * and the disagreement is the point — Paul, 2026-08-31: "total RNA … is potentially misleading
+     * because there's often still a poly-A selection step". The molecule says what went in, this says
+     * what was kept.
+     */
+    @Nullable
+    @Column(name = "LIBRARY_SELECTION", columnDefinition = "VARCHAR(255)")
+    private String librarySelection;
+
+    /**
+     * What kind of library it was — GEO's {@code library_strategy}, stored as the {@code GeoLibraryStrategy}
+     * constant name: {@code RNA_SEQ}, {@code SCRNA_SEQ}, {@code ATAC_SEQ} and so on, not GEO's {@code RNA-Seq}.
+     * A microarray sample carries {@link #LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR} or
+     * {@link #LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR} by its channel count. Null when unstated or non-GEO.
+     */
+    @Nullable
+    @Column(name = "LIBRARY_STRATEGY", columnDefinition = "VARCHAR(255)")
+    private String libraryStrategy;
+
     @Nullable
     @Column(name = "SEQUENCE_READ_COUNT", columnDefinition = "BIGINT")
     private Long sequenceReadCount;
@@ -323,6 +375,32 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     }
 
     @Nullable
+    public ExtractedMolecule getExtractedMolecule() {
+        return this.extractedMolecule;
+    }
+
+    public void setExtractedMolecule( @Nullable ExtractedMolecule extractedMolecule ) {
+        this.extractedMolecule = extractedMolecule;
+    }
+
+    @Nullable
+    public String getLibrarySelection() {
+        return this.librarySelection;
+    }
+
+    public void setLibrarySelection( @Nullable String librarySelection ) {
+        this.librarySelection = librarySelection;
+    }
+
+    @Nullable
+    public String getLibraryStrategy() {
+        return this.libraryStrategy;
+    }
+
+    public void setLibraryStrategy( @Nullable String libraryStrategy ) {
+        this.libraryStrategy = libraryStrategy;
+    }
+
     public Long getSequenceReadCount() {
         return this.sequenceReadCount;
     }

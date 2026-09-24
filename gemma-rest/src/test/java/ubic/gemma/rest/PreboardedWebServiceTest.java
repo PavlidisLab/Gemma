@@ -72,6 +72,33 @@ public class PreboardedWebServiceTest {
         lenient().when( preboardedService.load( 9876L ) ).thenReturn( preboarded );
     }
 
+    /**
+     * The payload is opaque to Gemma, so the only way a consumer can tell which document shape it holds is the
+     * schema version. It was on the entity and not on the wire, which left "read the version before assuming
+     * keys" as advice a client could not act on (uib, 2026-09-03).
+     */
+    @Test
+    public void getPreboarded_carriesTheSchemaVersionAlongsideThePayload() {
+        preboarded.setSourceMetadata( "{\"geoAccession\":\"GSE12345\"}" );
+        preboarded.setSourceMetadataSchemaVersion( 1 );
+
+        PreboardedWebService.PreboardedResponse body = webService.getPreboarded( 9876L );
+
+        assertThat( body.identifyingMetadata ).isEqualTo( "{\"geoAccession\":\"GSE12345\"}" );
+        assertThat( body.sourceMetadataSchemaVersion ).isEqualTo( 1 );
+    }
+
+    /** Null is a real answer — the scrape path leaves it unset, and "unset" is what distinguishes those rows. */
+    @Test
+    public void getPreboarded_schemaVersionIsNullWhenTheWriterSetNone() {
+        preboarded.setSourceMetadata( "{\"geoAccession\":\"GSE12345\"}" );
+
+        PreboardedWebService.PreboardedResponse body = webService.getPreboarded( 9876L );
+
+        assertThat( body.identifyingMetadata ).isNotNull();
+        assertThat( body.sourceMetadataSchemaVersion ).isNull();
+    }
+
     @Test
     public void createPreboarded_freshAccessionReturns201() throws Exception {
         when( preboardedService.createPreboarded( eq( "GSE99" ), anyString(), any() ) )
@@ -108,8 +135,8 @@ public class PreboardedWebServiceTest {
         assertThat( resp.getStatus() ).isEqualTo( 409 );
         @SuppressWarnings("unchecked")
         Map<String, Object> body = ( Map<String, Object> ) resp.getEntity();
-        assertThat( body ).containsEntry( "existing_id", 9876L )
-                .containsEntry( "existing_type", "preboarded" )
+        assertThat( body ).containsEntry( "existingId", 9876L )
+                .containsEntry( "existingType", "preboarded" )
                 .containsEntry( "accession", "GSE12345" );
     }
 
@@ -124,7 +151,7 @@ public class PreboardedWebServiceTest {
         assertThat( resp.getStatus() ).isEqualTo( 409 );
         @SuppressWarnings("unchecked")
         Map<String, Object> body = ( Map<String, Object> ) resp.getEntity();
-        assertThat( body ).containsEntry( "existing_type", "expression_experiment" );
+        assertThat( body ).containsEntry( "existingType", "expression_experiment" );
     }
 
     @Test
@@ -180,7 +207,7 @@ public class PreboardedWebServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = ( Map<String, Object> ) resp.getEntity();
         assertThat( body ).containsEntry( "state", "Preboarded" );
-        assertThat( ( String ) body.get( "redirect_to" ) ).contains( "/workflow/queue" );
+        assertThat( ( String ) body.get( "redirectTo" ) ).contains( "/workflow/queue" );
     }
 
     @Test

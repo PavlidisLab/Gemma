@@ -194,3 +194,6 @@ figures/__pycache__/
 /gemma-core/Keyword/
 /gemma-core/MedicalSubjectHeading/
 /gemma-core/Statement/
+
+# Obsidian workspace (this repo is code; notes/vaults do not belong here)
+.obsidian/

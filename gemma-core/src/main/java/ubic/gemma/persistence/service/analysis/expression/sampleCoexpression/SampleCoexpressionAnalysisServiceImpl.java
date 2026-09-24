@@ -21,18 +21,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.ObjectMatrix;
+import cern.colt.matrix.DoubleMatrix2D;
 import ubic.gemma.core.util.math.MatrixRowStats;
 import ubic.gemma.core.util.math.MatrixStats;
 import ubic.gemma.core.util.math.linearmodels.DesignMatrix;
 import ubic.gemma.core.util.math.linearmodels.LeastSquaresFit;
-import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterResult;
+import ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
@@ -40,7 +46,6 @@ import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleCorrelationAnalysisEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -53,6 +58,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -86,6 +92,15 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     private static final String A_STATUS_AVAILABLE = "Available";
     private static final String A_STATUS_NOT_AVAILABLE = "Not available";
     private static final double IMPORTANCE_THRESHOLD = 0.01;
+    /**
+     * Ceiling on the design elements used to build a correlation matrix.
+     * <p>
+     * A sample-sample correlation over the most variable 15,000 probes is not distinguishable in practice from
+     * the same correlation over 34,000 -- the estimate is over a thousand samples and converges long before
+     * that -- and most experiments never reach the cap, since the low-expression and low-variance filters
+     * above already cut harder than this. It is a ceiling for the ones that do not.
+     */
+    private static final int MAX_DESIGN_ELEMENTS_FOR_CORMAT = 15000;
     private static final String A_STATUS_COMPUTED = "Just computed";
     private static final String A_STATUS_LOADED = "Loaded from db";
 
@@ -104,6 +119,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Autowired
     private ExpressionExperimentReadService expressionExperimentReadService;
+    @Autowired
+    private SampleCoexpressionAuditService sampleCoexpressionAuditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -142,15 +159,37 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     }
 
 
+    /**
+     * 🛑 {@link Propagation#NEVER}, and it has to be: this is where the time goes.
+     * <p>
+     * The two {@code getMatrix} legs run quantile normalization, an all-pairs correlation and a least-squares
+     * fit. On GSE260875 (34,330 x 1,090) that was 44 minutes, and with
+     * {@code hibernate.connection.handling_mode = DELAYED_ACQUISITION_AND_HOLD} a transaction around it pinned
+     * a pooled connection for the whole stretch without issuing a statement — against a pool that recycles at
+     * 30 minutes ({@code gemma.db.hikari.maxLifetime}). Every read below already goes through a service method
+     * with its own transaction, and {@link #compute} is the write with its own.
+     * <p>
+     * ⚠️ NEVER is viral upward: a caller that is itself transactional will now fail at entry with
+     * {@code IllegalTransactionStateException}. That is the rule doing its job, not a regression to route
+     * around — the caller needs splitting too.
+     */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(propagation = Propagation.NEVER)
     public PreparedCoexMatrices prepare( ExpressionExperiment ee ) throws FilteringException {
         // Create new analysis
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
-        SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors );
-        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors );
-        return new PreparedCoexMatrices( matrix, regressedMatrix );
+        // Only the unregressed leg's attrition is recorded: it is the one whose filter describes the dataset as
+        // stored. The regressed leg runs with requireSequences=false and its rows are residuals, so its counts
+        // would answer a different question.
+        ExpressionExperimentFilterResult filterResult = new ExpressionExperimentFilterResult();
+        // Both legs rebuild the same unmasked matrix off the raw vectors and differ only in how they
+        // filter it, so the expensive half is computed once and shared.
+        UnmaskedMatrix unmasked = new UnmaskedMatrix();
+        SampleCoexpressionMatrix matrix = this.getMatrix( ee, false, vectors, filterResult, unmasked );
+        SampleCoexpressionMatrix regressedMatrix = this.getMatrix( ee, true, vectors, null, unmasked );
+        return new PreparedCoexMatrices( matrix, regressedMatrix,
+                matrix != null ? toAttritionPayload( cormatFilterConfig( true ), filterResult, unmasked.dataSource() ) : null );
     }
 
 
@@ -164,7 +203,6 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    @Audited(value = SampleCorrelationAnalysisEvent.class, message = "Sample correlation has been computed.")
     public DoubleMatrix<BioAssay, BioAssay> compute( ExpressionExperiment ee, PreparedCoexMatrices matrices ) {
         SampleCoexpressionMatrix matrix = matrices.matrix;
 
@@ -181,7 +219,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // this one is optional
         if ( regressedMatrix == null ) {
-            log.warn( "Regressed coexpression matrix could not be computed, review experimental design? Experiment " + thawedee );
+            // Absent for two different reasons, and only one is a problem: no factor passed the SVD importance
+            // threshold (normal, logged above as such), or the regression was attempted and failed.
+            log.info( "No regressed coexpression matrix for " + thawedee + "; the full matrix is what will be served." );
         }
 
         SampleCoexpressionAnalysis analysis = SampleCoexpressionAnalysis.Factory.newInstance( thawedee, // Analyzed experiment
@@ -192,10 +232,10 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         this.logCormatStatus( analysis, true );
         analysis = sampleCoexpressionAnalysisDao.create( analysis );
 
-        // Phase A spot-migration: the @Audited annotation on this method (see
-        // signature above) now writes the SampleCorrelationAnalysisEvent
-        // automatically on successful return. AuditedAspect locates the
-        // first Auditable arg (ee) and delegates to AuditTrailService.
+        // The SampleCorrelationAnalysisEvent used to come from an @Audited annotation on this method. The
+        // attrition payload is produced in prepare(), not passed in, so the aspect could not reach it from
+        // these arguments; the co-bean call below is a proxied @Audited method that can take it.
+        sampleCoexpressionAuditService.recordSampleCorrelationAnalysis( thawedee, matrices.getFilterAttrition() );
 
         return toDoubleMatrix( analysis.getBestCoexpressionMatrix() );
     }
@@ -264,13 +304,21 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Nullable
     private SampleCoexpressionMatrix getMatrix( ExpressionExperiment ee, boolean regress,
-            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult,
+            UnmaskedMatrix unmaskedMatrix ) throws FilteringException {
         SampleCoexpressionAnalysisServiceImpl.log.info( String
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_COMPUTING_SCM, ee.getId(), regress ) );
 
-        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors );
+        ExpressionDataDoubleMatrix mat = this.loadDataMatrix( ee, regress, vectors, filterResult, unmaskedMatrix );
         if ( mat == null ) {
-            log.warn( "Could not get data matrix for " + ee );
+            // The regressed leg returns null on a NORMAL outcome -- no factor passed the SVD importance
+            // threshold -- and regressMajorFactors has already said so. Reporting that as a failure to obtain
+            // data put a WARN beside the genuine ones for every experiment without an important factor.
+            if ( regress ) {
+                log.debug( "No regressed data matrix for " + ee + "; see the reason logged above." );
+            } else {
+                log.warn( "Could not get data matrix for " + ee );
+            }
             return null;
         }
 
@@ -301,7 +349,8 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
     @Nullable
     private ExpressionDataDoubleMatrix loadDataMatrix( ExpressionExperiment ee, boolean useRegression,
-            Collection<ProcessedExpressionDataVector> vectors ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, @Nullable ExpressionExperimentFilterResult filterResult,
+            UnmaskedMatrix unmaskedMatrix ) throws FilteringException {
         if ( vectors.isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_VECTORS );
             return null;
@@ -314,23 +363,228 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                         .warn( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_DESIGN );
                 return null;
             }
-            mat = this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false ) );
+            ExpressionDataDoubleMatrix unmasked = this.loadUnmaskedDataMatrix( ee, false, new ExpressionExperimentFilterResult(), unmaskedMatrix );
+            mat = unmasked != null
+                    ? this.regressMajorFactors( ee, maskOutlierColumns( unmasked ), unmasked )
+                    : this.regressMajorFactors( ee, this.loadFilteredDataMatrix( ee, vectors, false, filterResult ), null );
 
         } else {
-            mat = this.loadFilteredDataMatrix( ee, vectors, true );
+            // Not gated on filterResult: whether this run records attrition and whether the correlation
+            // matrix is built on unmasked data are unrelated questions, and tying them meant a caller that
+            // passed no payload silently got the masked matrix back -- the defect loadUnmaskedDataMatrix
+            // exists to fix. The rebuild is gated inside, on the experiment actually having a flagged outlier.
+            ExpressionDataDoubleMatrix unmasked = this.loadUnmaskedDataMatrix( ee, true,
+                    filterResult != null ? filterResult : new ExpressionExperimentFilterResult(), unmaskedMatrix );
+            mat = unmasked != null ? unmasked : this.loadFilteredDataMatrix( ee, vectors, true, filterResult );
         }
 
         return mat;
     }
 
     private ExpressionDataDoubleMatrix loadFilteredDataMatrix( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences ) throws FilteringException {
+            Collection<ProcessedExpressionDataVector> vectors, boolean requireSequences,
+            @Nullable ExpressionExperimentFilterResult filterResult ) throws FilteringException {
+        ExpressionExperimentFilterConfig fConfig = cormatFilterConfig( requireSequences );
+        return filterResult != null
+                ? expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false, filterResult )
+                : expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
+    }
+
+    /**
+     * The unregressed matrix, built from data in which flagged outliers were never blanked.
+     * <p>
+     * This is the one place in Gemma that does not read the stored processed vectors, and it is deliberate: the
+     * correlation matrix is what a curator reviews an outlier call against, and the stored data has the flagged
+     * sample's values replaced by NaN, so every correlation involving it was absent -- the evidence for the call
+     * could not be recovered. Everything else (differential expression, SVD, visualization, export) still reads
+     * the masked vectors.
+     * <p>
+     * The mask is applied before quantile normalization, so nothing can undo it after the fact; the values only
+     * exist by rebuilding from raw. That rebuild is skipped entirely when the dataset has no flagged assay, since
+     * the stored vectors are then already unmasked and identical.
+     *
+     * @return the unmasked matrix, or null to fall back to the stored vectors
+     */
+    @Nullable
+    private ExpressionDataDoubleMatrix loadUnmaskedDataMatrix( ExpressionExperiment ee,
+            boolean requireSequences, ExpressionExperimentFilterResult filterResult,
+            UnmaskedMatrix unmaskedMatrix ) throws FilteringException {
+        ExpressionDataDoubleMatrix unmasked = unmaskedMatrix.get( ee );
+        if ( unmasked == null ) {
+            return null;
+        }
+        // the filter derives the platforms from the matrix itself. It reassigns rather than mutating, so the
+        // two legs can filter the same source matrix under different settings.
+        return new ExpressionExperimentFilter( cormatFilterConfig( requireSequences ) ).filter( unmasked, filterResult );
+    }
+
+    /**
+     * The unmasked processed-data matrix for one {@link #prepare} run, computed at most once.
+     * <p>
+     * {@code computeUnmaskedProcessedDataMatrix} is the whole processing pipeline off the raw vectors --
+     * missing-value masking, log transform, a whole-matrix quantile normalization. Both legs of a prepare()
+     * need it and they differ only in how they FILTER the result, so computing it per leg made every
+     * preprocessing run of an outlier-flagged dataset pay that pipeline twice.
+     * <p>
+     * A null result is cached too: it means either that the experiment has no flagged outlier, or that its
+     * raw data could not be reprocessed. Both are settled facts for the run, and re-asking would repeat the
+     * failure and its warning.
+     */
+    private class UnmaskedMatrix {
+
+        private boolean computed;
+        @Nullable
+        private ExpressionDataDoubleMatrix value;
+
+        /**
+         * Which of the two sources the matrix came from, for the audit payload.
+         * <p>
+         * 🛑 Known only here and only at write time. A null value from {@link #get} means the rebuild was not
+         * attempted (no flagged outlier) or could not be done, and the caller fell back to the stored
+         * processed vectors — which were normalized earlier, against a different set of rows. Nothing on the
+         * stored matrix records the difference and nothing can recover it afterwards.
+         */
+        @Nullable
+        String dataSource() {
+            if ( !computed ) {
+                return null;
+            }
+            return value != null ? "unmasked-rebuild" : "stored-vectors";
+        }
+
+        @Nullable
+        ExpressionDataDoubleMatrix get( ExpressionExperiment ee ) {
+            if ( !computed ) {
+                computed = true;
+                value = compute( ee );
+            }
+            return value;
+        }
+
+        @Nullable
+        private ExpressionDataDoubleMatrix compute( ExpressionExperiment ee ) {
+            if ( !hasFlaggedOutlier( ee ) ) {
+                return null;
+            }
+            try {
+                return processedExpressionDataVectorService.computeUnmaskedProcessedDataMatrix( ee, true );
+            } catch ( QuantitationTypeDetectionException | QuantitationTypeConversionException e ) {
+                // A dataset whose raw data cannot be reprocessed still gets a correlation matrix -- the masked
+                // one, which is what it had before. Failing the whole run to preserve outlier evidence would be
+                // a poor trade.
+                log.warn( "Could not rebuild unmasked data for " + ee + "; the correlation matrix will keep the "
+                        + "flagged samples masked.", e );
+                return null;
+            }
+        }
+    }
+
+    /**
+     * A copy of {@code matrix} with the flagged assays' values blanked -- i.e. what the stored processed data
+     * looks like. Fitting on this keeps the model identical to what it has always been.
+     */
+    private static ExpressionDataDoubleMatrix maskOutlierColumns( ExpressionDataDoubleMatrix matrix ) {
+        DoubleMatrix<CompositeSequence, BioMaterial> copy = matrix.getMatrix().copy();
+        for ( int j = 0; j < matrix.columns(); j++ ) {
+            boolean outlier = false;
+            for ( BioAssay ba : matrix.getBioAssaysForColumn( j ) ) {
+                outlier |= ba.getIsOutlier();
+            }
+            if ( outlier ) {
+                for ( int i = 0; i < copy.rows(); i++ ) {
+                    copy.set( i, j, Double.NaN );
+                }
+            }
+        }
+        return matrix.withMatrix( copy );
+    }
+
+    /**
+     * 🛑 Thaws before reading the assays. Callers reach {@link #prepare} with an experiment thawed to different
+     * depths -- the CLI hands over a {@code thawLiter} one, which does NOT initialize {@code bioAssays}
+     * ({@code thawLite} is {@code thawLiter} plus that collection). Walking it directly threw
+     * {@code LazyInitializationException} and failed the whole run.
+     */
+    private boolean hasFlaggedOutlier( ExpressionExperiment ee ) {
+        for ( BioAssay ba : expressionExperimentReadService.thawLite( ee ).getBioAssays() ) {
+            if ( ba.getIsOutlier() ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The filter settings the sample-correlation matrix is built under.
+     * <p>
+     * Extracted so {@link #prepare} can describe the run in the audit payload without restating them -- two copies
+     * would drift, and the recorded attrition is only interpretable against the settings that produced it.
+     *
+     * @param requireSequences false for the regressed leg: loads using new array designs will fail, so that leg
+     *                         allows the special case where there are no sequences.
+     */
+    static ExpressionExperimentFilterConfig cormatFilterConfig( boolean requireSequences ) {
         ExpressionExperimentFilterConfig fConfig = new ExpressionExperimentFilterConfig();
         fConfig.setIgnoreMinimumDesignElementsThreshold( true );
         fConfig.setIgnoreMinimumSamplesThreshold( true );
         fConfig.setRequireSequences( requireSequences );
-        // Loads using new array designs will fail. So we allow special case where there are no sequences.
-        return expressionDataMatrixService.getFilteredMatrix( ee, vectors, fConfig, false );
+        // Keep the outlier samples' values. The stored correlation matrix is what a curator reviews an
+        // outlier call against, and masking here wrote them out of it: every correlation involving a
+        // flagged sample was NaN in the raw matrix as well as the regressed one, so the evidence for the
+        // call could not be recovered afterwards. Consumers that want them excluded mask at the point of
+        // use -- see GeeqServiceImpl.getCormat. Precedent for turning it off: ExpressionDataFileHelperService.
+        fConfig.setMaskOutliers( false );
+        // 🛑 Hard cap, and deliberately NOT what the differential-expression path does. Filtering early is bad
+        // for DEA -- you lose the thing you were looking for -- so that config stays generous (Paul,
+        // 2026-09-17). This matrix answers a different question: how samples relate to one another, which a
+        // few thousand variable probes settle as well as thirty thousand do, while every stage that produces
+        // them is linear in the row count.
+        fConfig.setMaxDesignElements( MAX_DESIGN_ELEMENTS_FOR_CORMAT );
+        return fConfig;
+    }
+
+    /**
+     * Convert a completed filter run into the audit payload shape. Stages are emitted in the order
+     * {@link ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter} applies them, including the
+     * ones that were skipped -- a skipped stage still carries its row count, so the funnel reads continuously and
+     * a reader can tell "this filter removed nothing" from "this filter did not run".
+     */
+    static SampleCorrelationAnalysisPayload toAttritionPayload( ExpressionExperimentFilterConfig config,
+            ExpressionExperimentFilterResult result ) {
+        return toAttritionPayload( config, result, null );
+    }
+
+    /**
+     * @param dataSource {@code "unmasked-rebuild"} or {@code "stored-vectors"}, or null when it was not
+     *                   established. See the payload's own javadoc for why this cannot be recovered later.
+     */
+    static SampleCorrelationAnalysisPayload toAttritionPayload( ExpressionExperimentFilterConfig config,
+            ExpressionExperimentFilterResult result, @Nullable String dataSource ) {
+        List<SampleCorrelationAnalysisPayload.FilterStage> stages = Arrays.asList(
+                new SampleCorrelationAnalysisPayload.FilterStage( "noSequences", result.isNoSequencesFilterApplied(),
+                        result.getAfterNoSequencesFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "affyControls", result.isAffyControlsFilterApplied(),
+                        result.getAfterAffyControlsFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "outliers", result.isOutliersFilterApplied(),
+                        result.getAfterOutliersFilter(), result.getColumnsAfterOutliersFilter() ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "minPresent", result.isMinPresentFilterApplied(),
+                        result.getAfterMinPresentFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "zeroVariance", result.isZeroVarianceFilterApplied(),
+                        result.getAfterZeroVarianceFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "lowExpression", result.isLowExpressionFilterApplied(),
+                        result.getAfterLowExpressionFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "lowVariance", result.isLowVarianceFilterApplied(),
+                        result.getAfterLowVarianceFilter(), null ),
+                new SampleCorrelationAnalysisPayload.FilterStage( "maxDesignElements",
+                        result.isMaxDesignElementsFilterApplied(), result.getAfterMaxDesignElementsFilter(), null ) );
+        return new SampleCorrelationAnalysisPayload(
+                new SampleCorrelationAnalysisPayload.FilterConfig( config.isRequireSequences(), config.isMaskOutliers(),
+                        config.isIgnoreMinimumSamplesThreshold(), config.isIgnoreMinimumDesignElementsThreshold(),
+                        config.getLowExpressionCut(), config.getHighExpressionCut(), config.getLowVarianceCut(),
+                        config.getLowDistinctValueCut(), config.getMinPresentFraction(), config.getMinPresentCount(),
+                        config.getMaxDesignElements() ),
+                stages, result.getStartingRows(), result.getStartingColumns(), result.getFinalRows(),
+                result.getFinalColumns(), dataSource );
     }
 
     /**
@@ -340,15 +594,26 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      * @param mat the double matrix of processed vectors to regress
      * @return regressed double matrix
      */
-    private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
+    @Nullable
+    private ExpressionDataDoubleMatrix regressMajorFactors( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat,
+            @Nullable ExpressionDataDoubleMatrix unmasked ) {
         Set<ExperimentalFactor> importantFactors = this.getImportantFactors( ee );
-        if ( !importantFactors.isEmpty() ) {
-            SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
-            DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-            config.addFactorsToInclude( importantFactors );
-            mat = this.regressionResiduals( mat, config );
+        if ( importantFactors.isEmpty() ) {
+            // No regressed matrix, rather than an unregressed one stored under that name.
+            //
+            // Returning `mat` here stored a copy of the FULL matrix as the regressed one, so a client asking
+            // for `regressed` was handed something nothing had been regressed out of and could not tell.
+            // `GET /sample-correlation?matrix=regressed` already promises the opposite -- "it is only computed
+            // when the design has factors above the SVD importance threshold" -- and 404s when absent, while
+            // `matrix=best` falls back to `full` and says so in the response. Storing nothing makes that true.
+            log.info( "No factors passed the SVD importance threshold for " + ee
+                    + "; no regressed correlation matrix will be stored. This is not a failure." );
+            return null;
         }
-        return mat;
+        SampleCoexpressionAnalysisServiceImpl.log.info( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_REGRESSING );
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.addFactorsToInclude( importantFactors );
+        return this.regressionResiduals( mat, config, unmasked );
     }
 
     private Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee ) {
@@ -378,7 +643,7 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
      */
     @Nullable
     private ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, @Nullable ExpressionDataDoubleMatrix unmasked ) {
 
         if ( config.getFactorsToInclude().isEmpty() ) {
             SampleCoexpressionAnalysisServiceImpl.log.error( SampleCoexpressionAnalysisServiceImpl.MSG_ERR_NO_FACTORS );
@@ -410,6 +675,10 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
              */
             designMatrix = buildRDesignMatrix( factors, samplesUsed, getBaselineConditions( samplesUsed, factors ), false );
         } catch ( Exception e ) {
+            // Logged because this catches everything: a run that fails here looks exactly like one with nothing to
+            // regress unless it says so. The factor count, not the factors, since printing those can be what failed.
+            log.warn( "Could not build the design matrix to regress out " + factors.size()
+                    + " factor(s); no regressed correlation matrix will be stored.", e );
             return null;
         }
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
@@ -421,6 +690,34 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 
         DoubleMatrix2D residuals = fit.getResiduals();
+
+        // Place the samples that sat out the fit onto it.
+        //
+        // A flagged outlier is blank in `matrix`, so LeastSquaresFit drops it row by row and its residual comes
+        // back NaN -- which is why the regressed matrix never showed what an outlier correlated at, and outliers
+        // are found from this matrix. The model is unchanged by them, exactly as before; the only thing added is
+        // their distance from it, computed from the values they actually have.
+        if ( unmasked != null ) {
+            DoubleMatrix2D fittedIncludingMissing = fit.getFittedIncludingMissing();
+            DoubleMatrix<CompositeSequence, BioMaterial> unmaskedRaw = unmasked.getMatrix();
+            int filled = 0;
+            for ( int i = 0; i < residuals.rows(); i++ ) {
+                for ( int j = 0; j < residuals.columns(); j++ ) {
+                    if ( !Double.isNaN( residuals.get( i, j ) ) ) {
+                        continue;
+                    }
+                    double observed = unmaskedRaw.get( i, j );
+                    double predicted = fittedIncludingMissing.get( i, j );
+                    if ( !Double.isNaN( observed ) && !Double.isNaN( predicted ) ) {
+                        residuals.set( i, j, observed - predicted );
+                        filled++;
+                    }
+                }
+            }
+            if ( filled > 0 ) {
+                log.info( "Placed " + filled + " values onto the regression fit that did not contribute to it." );
+            }
+        }
 
         DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<>( residuals.toArray() );
         f.setRowNames( dmatrix.getMatrix().getRowNames() );

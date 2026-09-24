@@ -39,7 +39,6 @@ public class WhatsNew {
 
     private Collection<Auditable> newObjects;
     private Collection<Auditable> updatedObjects;
-    private Map<Taxon, Long> eeCountPerTaxon;
     private Map<Taxon, Collection<Long>> newEEIdsPerTaxon;
     private Map<Taxon, Collection<Long>> updatedEEIdsPerTaxon;
     private long newBioMaterialCount = 0L;

@@ -43,7 +43,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "CONTACT", indexes = @Index(name = "CONTACT_DELETED_AT_IDX", columnList = "DELETED_AT"))
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class")
+@DiscriminatorColumn(name = "class", length = 255)
 @DiscriminatorValue("Contact")
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Contact extends AbstractDescribable {

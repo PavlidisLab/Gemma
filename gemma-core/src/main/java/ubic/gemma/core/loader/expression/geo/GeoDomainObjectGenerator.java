@@ -24,7 +24,18 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.loader.expression.geo.fetcher.DatasetFetcher;
 import ubic.gemma.core.loader.expression.geo.fetcher.PlatformFetcher;
 import ubic.gemma.core.loader.expression.geo.fetcher.SeriesFetcher;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
+import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.expression.geo.service.GeoAmount;
+import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
+import ubic.gemma.core.loader.expression.geo.service.GeoScope;
+import ubic.gemma.core.loader.expression.geo.service.GeoSource;
+import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
+import ubic.gemma.core.config.Settings;
+import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
+import org.apache.commons.io.IOUtils;
 import ubic.gemma.core.loader.util.fetcher.Fetcher;
 import ubic.gemma.core.loader.util.sdo.SourceDomainObjectGenerator;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -32,8 +43,15 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 
 import org.springframework.lang.Nullable;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,9 +66,37 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
 
     protected static final Log log = LogFactory.getLog( GeoDomainObjectGenerator.class.getName() );
 
+    /**
+     * Same policy the MINiML reads use: three attempts, backing off from ~1 s.
+     */
+    private static final SimpleRetry<IOException> metadataRetry = new SimpleRetry<>(
+            new SimpleRetryPolicy( 3, 1001, 1.5 ), IOException.class,
+            GeoDomainObjectGenerator.class.getName() );
+
+    /**
+     * Where metadata-only records are cached; null means take it from the configuration.
+     */
+    @Nullable
+    private File metadataCacheDir;
+
+    /**
+     * So a corpus sweep does not print the same permissions problem thousands of times; see
+     * {@link #writeMetadataCacheFile(File, byte[])}.
+     */
+    private final AtomicBoolean cacheWriteFailureReported = new AtomicBoolean( false );
+
     private final Fetcher datasetFetcher;
     private final Fetcher seriesFetcher;
     private final Fetcher platformFetcher;
+
+    /**
+     * Resilient series-family SOFT downloader: tries FTP, falls back to HTTPS, then to GEO's
+     * on-demand generator. When set (production path, wired by {@code GeoServiceImpl}) it is used
+     * in preference to the legacy FTP-only {@link #seriesFetcher}; left null in bare test setups,
+     * which then fall back to {@link #seriesFetcher}.
+     */
+    @Nullable
+    private GeoFetcher seriesFamilySoftFetcher;
 
     private String ncbiApiKey;
     private boolean processPlatformsOnly;
@@ -187,6 +233,41 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         this.ncbiApiKey = ncbiApiKey;
     }
 
+    /**
+     * Wire the resilient (FTP → HTTPS → GEO-generate) series-family SOFT downloader. NCBI has been
+     * deprecating anonymous FTP, so relying on the legacy FTP-only fetcher alone fails on files that
+     * are still served fine over HTTPS.
+     */
+    public void setSeriesFamilySoftFetcher( GeoFetcher seriesFamilySoftFetcher ) {
+        this.seriesFamilySoftFetcher = seriesFamilySoftFetcher;
+    }
+
+    /**
+     * Download the series-family SOFT file, preferring the resilient fetcher when wired and falling
+     * back to the legacy FTP-only {@link #seriesFetcher} otherwise. Returns {@code null} only on the
+     * legacy path (e.g. a cancelled fetch); the resilient path throws once all fallbacks are exhausted.
+     */
+    @Nullable
+    private File fetchSeriesFamilySoftFile( String seriesAccession ) {
+        if ( seriesFamilySoftFetcher != null ) {
+            try {
+                return seriesFamilySoftFetcher.fetchSeriesFamilySoftFile( seriesAccession ).toFile();
+            } catch ( IOException e ) {
+                throw new RuntimeException( "Failed to fetch the SOFT file for " + seriesAccession, e );
+            }
+        }
+        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
+        return fullSeries != null ? fullSeries.iterator().next() : null;
+    }
+
+    /**
+     * Override where metadata-only records are cached; defaults to {@code geo.local.datafile.basepath},
+     * the directory the family SOFT files already live in.
+     */
+    public void setMetadataCacheDir( @Nullable File metadataCacheDir ) {
+        this.metadataCacheDir = metadataCacheDir;
+    }
+
     public void setDoSampleMatching( boolean doSampleMatching ) {
         this.doSampleMatching = doSampleMatching;
     }
@@ -305,12 +386,11 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
      */
     private GeoSeries processSeries( String seriesAccession, GeoFamilyParser parser ) {
 
-        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
-        if ( fullSeries == null ) {
+        File seriesFile = fetchSeriesFamilySoftFile( seriesAccession );
+        if ( seriesFile == null ) {
             GeoDomainObjectGenerator.log.warn( "No series file found for " + seriesAccession );
             return null;
         }
-        File seriesFile = ( fullSeries.iterator() ).next();
         String seriesPath = seriesFile.getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
@@ -346,6 +426,276 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     /**
+     * Fetch and parse only the METADATA of a series: its own record plus its sample records, with no
+     * data tables and no platform record.
+     * <p>
+     * The family SOFT file that {@link #processSeries} downloads embeds the platform table and every
+     * sample's data table, which is the whole of its size: GSE1024's is 36 MB on disk, against 60 KB
+     * for the two records read here (measured 2026-08-29). Nothing that reads a
+     * {@code sourceMetadata} document needs either table, so the backfill pays 36 MB per experiment
+     * for two fields it uses.
+     * <p>
+     * It is still SOFT, so {@link GeoFamilyParser} reads it unchanged; the two responses are parsed
+     * into one parser, series first, because the sample records attach to the series the
+     * {@code !Series_sample_id} lines named. What is NOT done here is everything conversion needs —
+     * no GDS lookup, no sample correspondence — because no {@code ExpressionExperiment} is built.
+     *
+     * @throws RuntimeException if GEO answers with no series, which includes the case of an
+     *                          accession that does not exist
+     */
+    public GeoSeries generateSeriesMetadataOnly( String seriesAccession ) {
+        log.info( "Fetching metadata-only records for " + seriesAccession + " (no data tables)." );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.setMetadataOnly( true );
+        // series first: the sample records that follow attach to what it declared
+        byte[] self = this.parseRecord( seriesAccession, GeoScope.SELF, parser, true );
+        // A series GEO has retired lists no samples, and its sample records are then legitimately
+        // empty -- GSE1829, titled "RETIRED", zero !Series_sample_id lines, and targ=gsm answers
+        // with nothing at all. That is GEO having no samples to give, not a failed fetch, so the
+        // series record is what says whether an empty answer is expected.
+        boolean declaresSamples = countLines( self, "!Series_sample_id" ) > 0;
+        this.parseRecord( seriesAccession, GeoScope.SAMPLES, parser, declaresSamples );
+        if ( !declaresSamples ) {
+            log.info( seriesAccession + " lists no samples at GEO; storing the series record alone." );
+        }
+        GeoSeries series = parser.getResults().iterator().next().getSeriesMap().get( seriesAccession );
+        if ( series == null ) {
+            throw new RuntimeException( "No series was parsed for " + seriesAccession );
+        }
+        return series;
+    }
+
+    /**
+     * Read one acc.cgi record into the parser, from the local cache when it is there.
+     * <p>
+     * The body is buffered before parsing rather than streamed: {@link GeoFamilyParser#parse(InputStream)}
+     * rejects a stream whose {@code available()} is zero, which is what a freshly opened URL stream
+     * reports. These records are tens of kilobytes.
+     */
+    private byte[] parseRecord( String seriesAccession, GeoScope scope, GeoFamilyParser parser,
+            boolean requireContent ) {
+        URL url = GeoUtils.getUrl( seriesAccession, GeoSource.DIRECT, GeoFormat.SOFT, scope, GeoAmount.BRIEF );
+        File cached = this.metadataCacheFile( seriesAccession, scope );
+        try {
+            byte[] body;
+            if ( cached != null && cached.canRead() && cached.length() > 0 ) {
+                log.debug( "Reading " + cached + " instead of " + url );
+                body = Files.readAllBytes( cached.toPath() );
+            } else {
+                body = metadataRetry.execute( EntrezUtils.retryNicely( ctx -> {
+                    byte[] fetched;
+                    try ( InputStream is = url.openStream() ) {
+                        fetched = IOUtils.toByteArray( is );
+                    }
+                    // 🛑 Validate BEFORE caching. An HTML body used to be written to the cache and
+                    // only then rejected, so a transient refusal became a permanent one: every later
+                    // run read the stored page, threw again, and never re-fetched. That is survivable
+                    // for a withdrawn accession, which is not coming back, and wrong for a CAPTCHA
+                    // challenge, which is a moment in time -- one challenged fetch pinned that
+                    // accession until somebody deleted the file by hand.
+                    //
+                    // Inside the retry on purpose. A page that says nothing about the accession is
+                    // raised as an IOException, which is what metadataRetry retries on, so a hiccup
+                    // costs three attempts instead of producing a verdict; a page carrying GEO's own
+                    // verdict is raised as a RuntimeException, which metadataRetry passes straight
+                    // through, because there is nothing to wait for.
+                    if ( looksLikeHtml( fetched ) ) {
+                        HtmlVerdict verdict = describeHtmlBody( fetched, url );
+                        if ( verdict.retryable() ) {
+                            throw new IOException( verdict.message() );
+                        }
+                        throw new RuntimeException( verdict.message() );
+                    }
+                    return fetched;
+                }, ncbiApiKey ), "fetch " + url );
+                if ( body.length == 0 && requireContent ) {
+                    throw new RuntimeException( "GEO returned an empty document for " + url );
+                }
+                this.writeMetadataCacheFile( cached, body );
+            }
+            // acc.cgi answers a withdrawn, private or unknown accession with an HTML page and a 200,
+            // not an error. Without this the SOFT parser reads the page, finds no series, and the run
+            // reports "No series was parsed" -- which reads as a parser bug rather than as GEO
+            // declining to serve the record. Measured on GSE6959, 2026-08-29. Still checked after the
+            // cache read, for entries stored before the fetch-side check above existed; nothing is
+            // retried here, because re-reading the same file cannot produce a different answer.
+            if ( looksLikeHtml( body ) ) {
+                throw new RuntimeException( describeHtmlBody( body, url ).message() );
+            }
+            if ( body.length > 0 ) {
+                parser.parse( new ByteArrayInputStream( body ) );
+            }
+            return body;
+        } catch ( IOException e ) {
+            throw new RuntimeException( "Failed to read " + url, e );
+        }
+    }
+
+    /**
+     * How many lines of a SOFT record start with the given tag.
+     */
+    private static int countLines( byte[] body, String tag ) {
+        int n = 0;
+        for ( String line : new String( body, StandardCharsets.UTF_8 ).split( "\n" ) ) {
+            if ( line.startsWith( tag ) ) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * What an HTML response body says, and whether asking GEO again can change it.
+     *
+     * @param retryable whether a second attempt is worth making
+     * @param message   what to report, in either case
+     */
+    private record HtmlVerdict(boolean retryable, String message) {
+    }
+
+    /**
+     * The accession viewer's own verdict lines, lowercased. Measured against acc.cgi 2026-09-17:
+     * GSE6959 (deleted), GSE312000 (embargoed), GSE999999999 (no such accession).
+     */
+    private static final String[] TERMINAL_VERDICTS = {
+            "was deleted by the geo staff",
+            "could not find a public or private accession",
+            "is currently private"
+    };
+
+    /**
+     * Say which kind of HTML page GEO served, because the kinds need opposite responses.
+     * <p>
+     * A withdrawn, private or unknown accession is a fact about the record, stated in the accession
+     * viewer's own words, and a retry returns the same page. A CAPTCHA challenge is a fact about
+     * this client at this moment and says nothing about the accession. Anything else is neither:
+     * acc.cgi answered {@code targ=self} for GSE42727 with 133 KB of NCBI error HTML on 2026-09-17
+     * and served the SOFT record on the very next attempt.
+     * <p>
+     * 🛑 Only a verdict line makes this terminal; every other HTML body is retryable. The opposite
+     * default is what put 17 experiments in the 2026-09-15 backfill summary under "the accession is
+     * withdrawn, private or unknown to GEO" without anything having asked twice. A wrong retryable
+     * costs three attempts; a wrong terminal writes a false fact about the record into a summary
+     * that a reader has no way to second-guess.
+     */
+    private static HtmlVerdict describeHtmlBody( byte[] body, URL url ) {
+        String text = new String( body, StandardCharsets.UTF_8 );
+        String s = text.toLowerCase( Locale.ROOT );
+        if ( s.contains( "recaptcha" ) || s.contains( "challengepage" ) || s.contains( "challenge-page" ) ) {
+            return new HtmlVerdict( true, "GEO served a CAPTCHA challenge page rather than a SOFT record for " + url
+                    + "; NCBI is challenging this client, which is intermittent and host-specific and"
+                    + " says nothing about the accession. Retry later, or read the stored"
+                    + " sourceMetadata snapshot instead of re-fetching from GEO." );
+        }
+        for ( String verdict : TERMINAL_VERDICTS ) {
+            int at = s.indexOf( verdict );
+            if ( at >= 0 ) {
+                return new HtmlVerdict( false, "GEO served an HTML page rather than a SOFT record for " + url
+                        + "; the accession is withdrawn, private or unknown to GEO: " + quoteVerdict( text, at ) );
+            }
+        }
+        return new HtmlVerdict( true, "GEO served an HTML page rather than a SOFT record for " + url
+                + "; it carries none of the accession viewer's verdict lines, so it is an error page"
+                + " rather than a statement about the accession." );
+    }
+
+    /**
+     * Lift the sentence GEO wrote out of the page, so a summary row says which of withdrawn,
+     * private and unknown it was.
+     * <p>
+     * The viewer puts it in a {@code <font color="red">} of its own on one very long line, so the
+     * enclosing tags bound it and the line does not.
+     */
+    private static String quoteVerdict( String text, int at ) {
+        int from = text.lastIndexOf( '>', at );
+        int to = text.indexOf( '<', at );
+        String sentence = text.substring( from >= 0 ? from + 1 : at, to > at ? to : text.length() )
+                .replace( "&nbsp;", " " )
+                .replace( "&quot;", "\"" )
+                .replaceAll( "\\s+", " " )
+                .trim();
+        return sentence.length() > 200 ? sentence.substring( 0, 200 ) + "..." : sentence;
+    }
+
+    /**
+     * Whether a response body is an HTML document rather than SOFT.
+     * <p>
+     * Checked on the first bytes only, and tolerant of a leading byte-order mark or blank line: the
+     * point is to tell a served record from a served error page, not to parse HTML.
+     */
+    private static boolean looksLikeHtml( byte[] body ) {
+        String head = new String( body, 0, Math.min( body.length, 64 ), StandardCharsets.UTF_8 )
+                .replace( "\uFEFF", "" ).trim().toLowerCase( Locale.ROOT );
+        return head.startsWith( "<!doctype html" ) || head.startsWith( "<html" );
+    }
+
+    /**
+     * Where a metadata-only record is cached: beside the family SOFT file for the same accession,
+     * under a name that cannot collide with it.
+     * <p>
+     * 🛑 These records are NOT the family file and must never be mistaken for it. The full download
+     * is {@code <ACC>/<ACC>.soft.gz} (and {@code <ACC>_family.soft.gz} is what
+     * {@code LocalSeriesFetcher} seeks); a metadata-only record holds no platform table and no
+     * sample data, so anything reading one as the family file would see an experiment with no data
+     * and no probes. Hence {@code <ACC>.<targ>.brief.soft}: a different extension, an uncompressed
+     * file, and the GEO target it came from in the name. The directory is shared on purpose — it is
+     * where everything fetched for an accession already lives, and 57,212 accessions' worth of full
+     * files sit there that this must not touch.
+     *
+     * @return the cache file, or {@code null} when no cache directory is configured, in which case
+     *         the record is fetched and used without being stored
+     */
+    @Nullable
+    private File metadataCacheFile( String seriesAccession, GeoScope scope ) {
+        String basePath = metadataCacheDir != null ? metadataCacheDir.getPath()
+                : Settings.getString( "geo.local.datafile.basepath" );
+        if ( StringUtils.isBlank( basePath ) ) {
+            return null;
+        }
+        String targ = scope == GeoScope.SELF ? "self" : "gsm";
+        return new File( new File( basePath, seriesAccession ), seriesAccession + "." + targ + ".brief.soft" );
+    }
+
+    /**
+     * Store a fetched record. A cache that cannot be written is not a failure: the record is already
+     * in hand, and the run continues without it.
+     */
+    private void writeMetadataCacheFile( @Nullable File cached, byte[] body ) {
+        if ( cached == null ) {
+            return;
+        }
+        if ( !cached.getName().endsWith( ".brief.soft" ) ) {
+            // belt and braces: this method only ever writes metadata-only records, and writing one
+            // over a family file would replace real data with a metadata stub
+            throw new IllegalStateException( "Refusing to write a metadata record to " + cached );
+        }
+        try {
+            File dir = cached.getParentFile();
+            if ( dir != null && !dir.isDirectory() && !dir.mkdirs() && !dir.isDirectory() ) {
+                log.warn( "Could not create " + dir + "; the record was fetched but not cached." );
+                return;
+            }
+            Files.write( cached.toPath(), body );
+        } catch ( IOException e ) {
+            // An IOException's message here is usually just the path again, so name the class: an
+            // AccessDeniedException on /cosmos means the accession's directory predates the
+            // group-writable convention -- GSE28548's is drwxr-xr-x tomcat:pavlab from 2018, and the
+            // CLI container runs as uid 999 in the caller's group, so it cannot create a file there.
+            // Nothing is lost when this happens: the record was fetched and is in hand, it simply
+            // will not be there for the next run.
+            String why = e.getClass().getSimpleName() + ": " + e.getMessage();
+            if ( cacheWriteFailureReported.compareAndSet( false, true ) ) {
+                log.warn( "Could not cache the GEO metadata record at " + cached + " (" + why
+                        + "). The record was still fetched and used. If this is a permissions error, the"
+                        + " directory is not writable by the user this process runs as; further"
+                        + " occurrences are logged at DEBUG." );
+            } else {
+                log.debug( "Could not cache the GEO metadata record at " + cached + " (" + why + ")." );
+            }
+        }
+    }
+
+    /**
      * Download and parse GEO platform(s) using series accession(s).
      */
     private Collection<GeoPlatform> processSeriesPlatforms( Collection<String> seriesAccessions, GeoFamilyParser parser ) {
@@ -357,14 +707,11 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
     }
 
     private Collection<GeoPlatform> processSeriesPlatforms( String seriesAccession, GeoFamilyParser parser ) {
-        Collection<File> fullSeries = seriesFetcher.fetch( seriesAccession );
-        if ( fullSeries == null ) {
+        File seriesFile = fetchSeriesFamilySoftFile( seriesAccession );
+        if ( seriesFile == null ) {
             throw new RuntimeException( "No series file found for " + seriesAccession );
         }
-        File seriesFile = ( fullSeries.iterator() ).next();
-        String seriesPath;
-
-        seriesPath = seriesFile.getPath();
+        String seriesPath = seriesFile.getPath();
 
         parser.setProcessPlatformsOnly( this.processPlatformsOnly );
         try {

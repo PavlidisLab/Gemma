@@ -49,15 +49,6 @@ public class PreboardedExperiment extends Investigation {
     @Column(name = "PREBOARDED_SOURCE", columnDefinition = "VARCHAR(32)")
     private String source = "GEO";
     /**
-     * Free-form JSON payload of identifying metadata the agent harvested before
-     * loading (title, summary, submitter, pubmed id, etc.). Stored as LONGTEXT
-     * — the structured proposal lives separately as an {@code AnnotationSet}
-     * row.
-     */
-    @Lob
-    @Column(name = "PREBOARDED_IDENTIFYING_METADATA", columnDefinition = "LONGTEXT")
-    private String identifyingMetadata;
-    /**
      * JSON-as-string listing the matcher names that flagged this preboarded
      * during a {@code GeoScrapeService} run (e.g. {@code ["brain","tfperturb"]}).
      * Null for preboardeds created outside the scrape pipeline (e.g. via the
@@ -95,19 +86,6 @@ public class PreboardedExperiment extends Investigation {
 
     public void setSource( String source ) {
         this.source = source;
-    }
-
-    /**
-     * @return the identifying metadata blob (title, summary, submitter,
-     *         pubmed id, etc.) as a JSON string, or {@code null} if the
-     *         agent did not harvest it.
-     */
-    public String getIdentifyingMetadata() {
-        return identifyingMetadata;
-    }
-
-    public void setIdentifyingMetadata( String identifyingMetadata ) {
-        this.identifyingMetadata = identifyingMetadata;
     }
 
     /**

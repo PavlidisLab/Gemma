@@ -19,7 +19,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDecisionManager;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ubic.gemma.model.analysis.sequence.GeneMappingSummaryValueObject;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import java.util.Collections;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
@@ -103,16 +108,66 @@ public class PlatformsWebServiceMappingSummaryTest {
         CompositeSequenceValueObject vo = new CompositeSequenceValueObject();
         vo.setId( 9L );
         vo.setName( "AFFX_a" );
-        GeneMappingSummary mapping = new GeneMappingSummary();
-        vo.setGeneMappingSummaries( Arrays.asList( mapping ) );
+        BlatResultValueObject blat = new BlatResultValueObject( 5L );
+        blat.setIdentity( 0.98 );
+        blat.setScore( 0.95 );
+        vo.setGeneMappingSummaries( Collections.singletonList( new GeneMappingSummaryValueObject(
+                blat, Collections.singletonList( new GeneReferenceValueObject( 7L, "DDR1", 780 ) ) ) ) );
         when( compositeSequenceService.loadValueObjectWithGeneMappingSummary( probe ) ).thenReturn( vo );
 
         ResponseDataObject<CompositeSequenceValueObject> response =
                 webService.getPlatformElementMappingSummary( platformArg, probeArg );
 
         assertThat( response.getData() ).isSameAs( vo );
-        Collection<GeneMappingSummary> summaries = response.getData().getGeneMappingSummaries();
+        assertThat( response.getData().getGeneMappingSummaries() ).hasSize( 1 );
+    }
+
+    /**
+     * The regression guard that matters: the field must survive SERIALIZATION.
+     * <p>
+     * The previous version of this test asserted on the in-JVM value object and passed for years
+     * while the endpoint shipped responses with no {@code geneMappingSummaries} key at all — the
+     * field carried {@code @JsonIgnore} (added 2022-09-26 in an OpenAPI cleanup, before this
+     * endpoint existed), so the service computed the summaries and Jackson discarded them. An
+     * object-level assertion cannot see that; only serializing can.
+     */
+    @Test
+    public void geneMappingSummariesSurviveSerialization() throws Exception {
+        CompositeSequenceValueObject vo = new CompositeSequenceValueObject();
+        vo.setId( 9L );
+        vo.setName( "AFFX_a" );
+        BlatResultValueObject blat = new BlatResultValueObject( 5L );
+        blat.setIdentity( 0.98 );
+        vo.setGeneMappingSummaries( Collections.singletonList( new GeneMappingSummaryValueObject(
+                blat, Collections.singletonList( new GeneReferenceValueObject( 7L, "DDR1", 780 ) ) ) ) );
+
+        JsonNode json = new ObjectMapper().valueToTree( vo );
+
+        assertThat( json.has( "geneMappingSummaries" ) )
+                .withFailMessage( "geneMappingSummaries was dropped during serialization" )
+                .isTrue();
+        JsonNode summaries = json.get( "geneMappingSummaries" );
+        assertThat( summaries.isArray() ).isTrue();
         assertThat( summaries ).hasSize( 1 );
+        assertThat( summaries.get( 0 ).get( "genes" ).get( 0 ).get( "officialSymbol" ).asText() ).isEqualTo( "DDR1" );
+        assertThat( summaries.get( 0 ).get( "blatResult" ).get( "identity" ).asDouble() ).isEqualTo( 0.98 );
+    }
+
+    /**
+     * A probe with no alignments must serialize as an EMPTY array, not an absent key — UIB cannot
+     * otherwise distinguish "this probe has no mappings" from "the feature is missing".
+     */
+    @Test
+    public void emptyGeneMappingSummariesSerializeAsEmptyArray() {
+        CompositeSequenceValueObject vo = new CompositeSequenceValueObject();
+        vo.setId( 9L );
+        vo.setGeneMappingSummaries( Collections.emptyList() );
+
+        JsonNode json = new ObjectMapper().valueToTree( vo );
+
+        assertThat( json.has( "geneMappingSummaries" ) ).isTrue();
+        assertThat( json.get( "geneMappingSummaries" ).isArray() ).isTrue();
+        assertThat( json.get( "geneMappingSummaries" ) ).isEmpty();
     }
 
     @Test

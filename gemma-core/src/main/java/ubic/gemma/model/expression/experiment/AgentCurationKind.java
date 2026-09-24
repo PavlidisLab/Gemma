@@ -12,9 +12,10 @@
 package ubic.gemma.model.expression.experiment;
 
 /**
- * Discriminator on {@code AgentProposal} rows: distinguishes a forward-looking
- * agent proposal (pre-curation suggestion) from an audit (a post-hoc agent
- * review of an existing dataset).
+ * Discriminator on {@code AgentProposal} rows: which kind of agent activity a
+ * row records — a forward-looking proposal (pre-curation suggestion), an audit
+ * (a post-hoc review of an existing dataset, reporting findings to act on), or
+ * an evaluation (a scored assessment of curation that already exists).
  *
  * <p>Forward-compat naming: the enum is {@code AgentCurationKind} even though
  * the entity remains {@code AgentProposal} for now — the step-5 rename to
@@ -29,7 +30,21 @@ package ubic.gemma.model.expression.experiment;
  */
 public enum AgentCurationKind {
     PROPOSAL,
-    AUDIT;
+    AUDIT,
+
+    /**
+     * A scored assessment of curation that already exists — an agent grading
+     * annotations against a reference, or comparing two runs, rather than
+     * suggesting a change ({@link #PROPOSAL}) or reporting defects to act on
+     * ({@link #AUDIT}).
+     *
+     * <p>Distinct from {@link #AUDIT} in what the payload is for: an audit
+     * names findings a curator dispositions one by one, and an evaluation
+     * reports a measurement over a run. An evaluation set carries no
+     * per-finding dispositions, which is why the two cannot share one value
+     * without the review panel having to guess which it is holding.</p>
+     */
+    EVALUATION;
 
     /**
      * @return the lowercase external form, for use in JSON DTOs / API surfaces.

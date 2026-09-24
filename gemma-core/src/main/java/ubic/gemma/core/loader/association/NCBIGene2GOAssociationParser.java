@@ -205,6 +205,11 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     @Override
     public Gene2GOAssociation parseOneLine( String line ) {
+        // the loader interrupts this thread to stop it; lines for other taxa are filtered out and never reach
+        // queue.put()
+        if ( Thread.currentThread().isInterrupted() ) {
+            throw new RuntimeException( new InterruptedException( "Parsing gene2go was interrupted." ) );
+        }
         return this.mapFromGene2GO( line );
     }
 

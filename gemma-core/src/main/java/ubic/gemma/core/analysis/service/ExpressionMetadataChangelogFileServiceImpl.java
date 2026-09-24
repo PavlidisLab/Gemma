@@ -73,6 +73,11 @@ public class ExpressionMetadataChangelogFileServiceImpl implements ExpressionMet
         }
     }
 
+    @Override
+    public Path getChangelogFilePath( ExpressionExperiment expressionExperiment ) {
+        return getChangelogFile( expressionExperiment );
+    }
+
     private Path getChangelogFile( ExpressionExperiment expressionExperiment ) {
         return metadataDir.resolve( getExpressionExperimentMetadataDirname( expressionExperiment ) ).resolve( "CHANGELOG.md" );
     }

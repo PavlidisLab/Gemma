@@ -10,13 +10,19 @@ import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
 import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
@@ -29,6 +35,9 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Nullable
     private String analysisIdentifier;
@@ -64,9 +73,14 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
             Path dest;
             DifferentialExpressionAnalysis analysis = entityLocator.locateDiffExAnalysis( expressionExperiment, analysisIdentifier );
             if ( result.isStandardLocation() ) {
-                try ( LockedPath ignored = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileById( analysis.getId(), isForce() ) ) {
-                    dest = ignored.getPath();
+                List<Path> written = new ArrayList<>(), found = new ArrayList<>();
+                writeOrLocateInStandardLocation( analysis, written, found );
+                if ( !found.isEmpty() ) {
+                    addSuccessObject( expressionExperiment, String.format( "Found an existing differential expression analysis file at %s; use -%s to regenerate it.",
+                            found.get( 0 ), FORCE_OPTION ) );
+                    return;
                 }
+                dest = written.get( 0 );
             } else if ( result.isStandardOutput() ) {
                 dest = null;
                 expressionDataFileService.writeDiffExAnalysisArchiveFileById( analysis.getId(), getCliContext().getOutputStream() );
@@ -81,7 +95,18 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
         } else {
             Collection<Path> dest;
             if ( result.isStandardLocation() ) {
-                dest = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFiles( expressionExperiment, isForce() );
+                List<Path> written = new ArrayList<>(), found = new ArrayList<>();
+                for ( DifferentialExpressionAnalysis analysis : differentialExpressionAnalysisService.findByExperiment( expressionExperiment, true ) ) {
+                    writeOrLocateInStandardLocation( analysis, written, found );
+                }
+                if ( !found.isEmpty() ) {
+                    addSuccessObject( String.format( "Found existing differential expression analysis files at %s; use -%s to regenerate them.",
+                            found.stream().map( Path::toString ).collect( Collectors.joining( ", " ) ), FORCE_OPTION ) );
+                    if ( written.isEmpty() ) {
+                        return;
+                    }
+                }
+                dest = written;
             } else if ( result.getOutputDir() != null ) {
                 dest = expressionDataFileService.writeDiffExAnalysisArchiveFiles( expressionExperiment, result.getOutputDir(), isForce() );
             } else {
@@ -89,6 +114,43 @@ public class DifferentialExpressionAnalysisWriterCli extends ExpressionExperimen
             }
             addSuccessObject( String.format( "Wrote differential expression analysis files to %s.",
                     dest.stream().map( Path::toString ).collect( Collectors.joining( ", " ) ) ) );
+        }
+    }
+
+    /**
+     * Write the archive of an analysis in the standard location, or locate an existing one there.
+     *
+     * @param written receives the path if the archive was written
+     * @param found   receives the path if an existing archive was returned as is
+     */
+    private void writeOrLocateInStandardLocation( DifferentialExpressionAnalysis analysis, List<Path> written, List<Path> found ) throws IOException {
+        Path standardPath;
+        try ( LockedPath lockedPath = expressionDataFileService.getDataFile( ExpressionDataFileUtils.getDiffExArchiveFileName( analysis ), false ) ) {
+            standardPath = lockedPath.getPath();
+        }
+        Object before = getFileVersion( standardPath );
+        Path dest;
+        try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileById( analysis.getId(), isForce() ) ) {
+            dest = lockedPath.getPath();
+        }
+        if ( before != null && before.equals( getFileVersion( dest ) ) ) {
+            found.add( dest );
+        } else {
+            written.add( dest );
+        }
+    }
+
+    /**
+     * The identity and modification time of the file at a path, or null if there is none. Writing a file in the
+     * standard location replaces it with a new one, which changes both.
+     */
+    @Nullable
+    private static Object getFileVersion( Path path ) throws IOException {
+        try {
+            BasicFileAttributes attributes = Files.readAttributes( path, BasicFileAttributes.class );
+            return Arrays.asList( attributes.fileKey(), attributes.lastModifiedTime() );
+        } catch ( NoSuchFileException e ) {
+            return null;
         }
     }
 

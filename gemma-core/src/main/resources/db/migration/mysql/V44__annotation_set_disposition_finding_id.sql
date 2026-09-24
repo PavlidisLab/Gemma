@@ -1,0 +1,42 @@
+-- ANNOTATION_SET_DISPOSITION.FINDING_ID -- which FINDING was ruled on, not just which target.
+--
+-- Applied to production by hand on 2026-09-03 and recorded here so the migration history
+-- carries it; the statement is identical to the one that ran.
+--
+-- THE MEASUREMENT. V42 keyed a ruling on TARGET_ID, on the assumption that a target names a
+-- finding. It does not. Measured by the producing side on annotation set 2564: 37 findings
+-- over 19 distinct target ids, 16 targets carrying more than one finding, and THREE carrying
+-- two ACTIONABLE findings from independent judges -- e.g. tag:strain/cba/j holds a
+-- 'redundant' from one judge and an 'ok' from another. A curator routinely accepts one and
+-- rejects the other, which is the exact case the per-finding route exists for, and keyed on
+-- the target alone it cannot be written down.
+--
+-- OPAQUE, like TARGET_ID. Gemma never parses the payload, so this is the producer's own id
+-- and an id naming no finding is accepted here; only the producer can tell. The alternative
+-- considered was keying on (target, judge, issueCode) -- rejected because it would put the
+-- producer's field names and vocabulary into this schema, so every change to their judge or
+-- code vocabulary would become a migration here. A hash computed where the tuple's meaning is
+-- known keeps the boundary where V42 put it.
+--
+-- The producing side derives it structurally -- target, judge, issue code, plus the
+-- discriminating match slots -- and never from prose, so rewording a rationale or retuning a
+-- severity does not move it. Measured over 1,992 findings across three runs: zero collisions
+-- among actionable findings. 🛑 A STORED ID IS NEVER RECOMPUTED on either side; that is what
+-- lets the derivation improve later without silently re-pointing rulings already made.
+--
+-- NULLABLE, and NULL is not a defect. Rows written before this column, and any producer not
+-- emitting ids, stay target-keyed forever -- disposition id 1 on set 2564 is one of them. The
+-- latest-wins fold keys on FINDING_ID when the row has one and on TARGET_ID when it does not,
+-- and the two are SEPARATE buckets rather than coalesced: a ruling on a finding and a ruling
+-- on a target are not rulings on the same thing, and merging them would invent a supersession
+-- nobody performed.
+--
+-- TARGET_ID STAYS REQUIRED. The apply and focus paths address by target, and a target still
+-- groups the rulings under it.
+--
+-- NO NEW INDEX. The fold is per-set -- every ruling on one annotation set is loaded and folded
+-- in memory -- so it enters through IDX_ANNOTATION_SET_DISPOSITION_SET_TARGET's leading
+-- ANNOTATION_SET_FK column and never seeks on FINDING_ID. Add one if a corpus-wide "every
+-- ruling on this finding" query ever appears.
+ALTER TABLE ANNOTATION_SET_DISPOSITION
+    ADD COLUMN FINDING_ID VARCHAR(255) NULL;

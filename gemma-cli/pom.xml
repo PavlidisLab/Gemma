@@ -29,7 +29,30 @@
                         </program>
                     </programs>
                     <!-- this allows Log4j 2 to lookup for Log4j 1.2 configuration -->
-                    <extraJvmArguments>${jvmOptions}</extraJvmArguments>
+                    <!--
+                      ExitOnOutOfMemoryError: without it the CLI SURVIVES an OutOfMemoryError and
+                      goes on to exit 0. Measured on temurin-25: a caught OOM ran to completion and
+                      returned rc=0; with the flag the JVM prints "Terminating due to
+                      java.lang.OutOfMemoryError: Java heap space" and exits 3. That is why corrMat
+                      on GSE260875 spun at 97% of a core for ~50 minutes after its OOM and would
+                      have held its `timeout 14400` wrapper for four hours (frb, 2026-09-17), and
+                      why a wrapper's exit code was not evidence the run had finished. In a
+                      corpus-wide sweep every OOM casualty does that silently.
+                      Nothing is lost by exiting: BatchTaskProgressReporter flushes each summary row
+                      as it is produced, so the rows already written survive and the operator resumes
+                      from them, and the REST container has carried this flag since it was written,
+                      for the same reason (Dockerfile: "instead of leaving a poisoned heap").
+                      🛑 It goes HERE, not in the Dockerfile, because both routes to the CLI end at
+                      this launcher: the container ENTRYPOINT and frink's /space/opt/bin/gemma-cli,
+                      which runs the appassembler distribution directly and reads no image ENV.
+                      ⚠️ appassembler emits `exec "$JAVACMD" $JAVA_OPTS <extraJvmArguments> ...`, so
+                      these come last and JAVA_OPTS cannot turn them off. Deliberate for a safety
+                      default; a diagnostic run that genuinely needs to survive an OOM has to invoke
+                      java directly.
+                      HeapDumpOnOutOfMemoryError is deliberately NOT here: the dump is tens of GB on
+                      a production heap and belongs in the invocation that wants it.
+                    -->
+                    <extraJvmArguments>${jvmOptions} -XX:+ExitOnOutOfMemoryError</extraJvmArguments>
                     <!-- Gemma CLI extensions can be dropped in that folder -->
                     <endorsedDir>contrib</endorsedDir>
                 </configuration>
@@ -79,6 +102,21 @@
         </plugins>
     </build>
     <dependencies>
+        <!--
+          MUST stay first. prettytime-nlp bundles a shaded SLF4J 1.x org.slf4j.LoggerFactory
+          (see the appassembler note above). Maven orders the classpath as direct dependencies
+          in declaration order, then transitives, so without this entry prettytime-nlp precedes
+          slf4j-api (a transitive of gemma-core) and the 1.x LoggerFactory wins: it looks for
+          org.slf4j.impl.StaticLoggerBinder, doesn't find it (the binding is log4j-slf4j2-impl),
+          and installs a NOP logger. Every log.info/log.error in Gemma is then discarded —
+          including the CLI's own failure stack traces. The contrib/ seeding below only fixes
+          the packaged launcher; declaring slf4j-api first fixes IDE runs and exec:java too.
+        -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
         <dependency>
             <groupId>gemma</groupId>
             <artifactId>gemma-core</artifactId>

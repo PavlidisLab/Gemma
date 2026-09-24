@@ -121,6 +121,72 @@ public interface TableMaintenanceUtil {
     int updateExpressionExperiment2ArrayDesignEntries( ExpressionExperiment ee );
 
     /**
+     * Rebuild the {@code ANNOTATION_RELATION} rows a curator already wrote.
+     *
+     * <p>This is a harvest, not an inference. A curator writing
+     * {@code disease model: autism spectrum disorder - has_genotype -> Mef2c} put a subject, a
+     * predicate and an object into {@code CHARACTERISTIC}, and 10,040 datasets carry such a statement.
+     * The knowledge has always been there; what has never existed is an index that can be read from
+     * the object end, so "which genotypes are asserted against this disease?" has no query. Copying
+     * those triples into a table keyed both ways is the whole operation.</p>
+     *
+     * <p>Read from {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} rather than {@code CHARACTERISTIC}
+     * because EE2C has already done the work of resolving every annotation to its experiment, at every
+     * level, with the anonymous ACL mask alongside. Harvesting from the normalized table would mean
+     * re-deriving all of that and getting a second, divergent copy of it.</p>
+     *
+     * <p>Deletes the basis before inserting rather than upserting - see {@code AnnotationRelation}.</p>
+     *
+     * @param ee restrict to one experiment, or null for the whole corpus
+     * @return how many relation rows were written
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateAnnotationRelationEntries( @Nullable ExpressionExperiment ee );
+
+    /**
+     * Rebuild the {@code ANNOTATION_RELATION} rows a loaded ontology asserts.
+     *
+     * <p>Sibling of {@link #updateAnnotationRelationEntries(ExpressionExperiment)} and deliberately a
+     * separate entry point, because the two read from different places and cannot be ordered against
+     * each other. The curated harvest reads {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} and belongs
+     * beside the EE2C rebuild; this one reads the Jena models and needs CLO, CHEBI and MONDO loaded,
+     * which is minutes of warm-up an experiment-driven job has no business waiting on.</p>
+     *
+     * <p>🛑 <b>An ontology that is not loaded leaves its rows alone rather than deleting them.</b>
+     * Rebuilding from an empty model would be indistinguishable from the ontology having retracted every
+     * axiom it ever stated.</p>
+     *
+     * @param sources source names to rebuild ({@code CLO}, {@code CHEBI}), or null/empty for all of
+     *                them; the delete is narrowed the same way, so a partial run does not drop the rest
+     * @return how many relation rows were written
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateOntologyRelationEntries( @Nullable java.util.Collection<String> sources );
+
+    /**
+     * Rebuild the {@link ubic.gemma.model.common.description.AnnotationRelationBasis#EXTERNAL} rows
+     * that MGI's genotype-to-disease reports assert — and the ones they deny.
+     *
+     * <p>A third entry point rather than a flag on the other two, for the reason they are separate from
+     * each other: this reads two files off MGI's download server and needs MONDO loaded to translate
+     * their DOIDs, which is a different set of prerequisites again from the curated harvest (EE2C) and
+     * the ontology pass (Jena models).</p>
+     *
+     * <p>🛑 <b>The delete is scoped to {@code SOURCE = 'MGI'}.</b> Other EXTERNAL sources are somebody
+     * else's rows and a run here must not touch them.</p>
+     *
+     * @return how many relation rows were written
+     */
+    @Secured({ "GROUP_AGENT" })
+    int updateExternalRelationEntries();
+
+    /**
+     * Evict the query cache for the {@code ANNOTATION_RELATION} table.
+     */
+    @Secured({ "GROUP_ADMIN" })
+    void evictAnnotationRelationQueryCache();
+
+    /**
      * Evict the query cache for the {@code GENE2CS} table.
      */
     @Secured({ "GROUP_ADMIN" })

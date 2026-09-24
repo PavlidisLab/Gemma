@@ -171,8 +171,25 @@ public abstract class BaseAclAdvice {
      * <li>If the current user is an adminisrator, and keepPrivateEvenWhenAdmin is false, the object gets READ
      * permissions for ANONYMOUS.
      * <li>If the current user is a "regular user" (non-admin) give them read/write permissions.
+     * </ul>
      */
     protected void setupBaseAces( MutableAcl acl, ObjectIdentity oi, Sid sid, boolean keepPrivateEvenWhenAdmin ) {
+        setupBaseAces( acl, oi, sid, keepPrivateEvenWhenAdmin, false );
+    }
+
+    /**
+     * @param objectIsUserOrGroup suppresses the GROUP_CURATOR grant. A curator's authority is over DATA,
+     *                            and {@code User} / {@code UserGroup} are securable objects like any other,
+     *                            so an unconditional grant would hand them
+     *                            {@code BaseUserService.removeUserFromGroup} — whose gate is
+     *                            {@code hasPermission(#group, 'administration')} — and with it the ability
+     *                            to put themselves in Administrators. That is the one thing the group is
+     *                            defined not to have (Paul, 2026-09-05: everything "other than user admin").
+     *                            GROUP_ADMIN and GROUP_AGENT are unaffected: an administrator is supposed to
+     *                            administer users, and the agent grant is READ.
+     */
+    protected void setupBaseAces( MutableAcl acl, ObjectIdentity oi, Sid sid, boolean keepPrivateEvenWhenAdmin,
+            boolean objectIsUserOrGroup ) {
 
         /*
          * All objects must have administration permissions on them.
@@ -180,6 +197,21 @@ public abstract class BaseAclAdvice {
         if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_ADMIN: " + oi );
         grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new SimpleGrantedAuthority(
             AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ) );
+
+        /*
+         * Curators administer data. The same permission GROUP_ADMIN gets, deliberately: ADMINISTRATION
+         * is what AclAuthorizationStrategyImpl falls back to when the caller lacks the configured
+         * authority, so it is the one grant that covers reading, editing AND changing a dataset's
+         * visibility. A WRITE ace would satisfy ACL_SECURABLE_EDIT and then fail on makePublic.
+         *
+         * What separates a curator from an administrator is not this ace -- it is the REST layer, where
+         * user-account and server-operation routes still require GROUP_ADMIN.
+         */
+        if ( !objectIsUserOrGroup ) {
+            if ( log.isDebugEnabled() ) log.debug( "Making administratable by GROUP_CURATOR: " + oi );
+            grant( acl, BasePermission.ADMINISTRATION, new GrantedAuthoritySid( new SimpleGrantedAuthority(
+                AuthorityConstants.CURATOR_GROUP_AUTHORITY ) ) );
+        }
 
         /*
          * Let agent read anything
@@ -250,8 +282,14 @@ public abstract class BaseAclAdvice {
      * Renovations Phase 3: visibility relaxed so {@link AclEventListener} (in the same package)
      * can drive ACL maintenance directly off Hibernate insert events without going through the
      * AOP advice's entity-graph walk.
+     * <p>
+     * Public since 2026-08-29 so the ACL linter (a different package) can repair a Securable that
+     * lost its object identity. {@code aclService.createAcl(oi)} alone yields {@code parent=NULL,
+     * entries_inheriting=1} with no ACEs — "inherit from a parent that does not exist" — so
+     * nothing grants edit and the entity stays un-writable even for an administrator. Going
+     * through here runs {@link #setupBaseAces}, which is what makes the repaired row usable.
      */
-    void addOrUpdateAcl( @Nullable MutableAcl acl, Securable object, @Nullable Acl parentAcl ) {
+    public void addOrUpdateAcl( @Nullable MutableAcl acl, Securable object, @Nullable Acl parentAcl ) {
 
         if ( object.getId() == null ) {
             // Renovations Phase 2: defensive safety net. doAclAdvice now swaps the input arg for
@@ -348,7 +386,7 @@ public abstract class BaseAclAdvice {
          * own ACLs (SecurableChild)
          */
         if ( create && !inheritFromParent ) {
-            setupBaseAces( acl, oi, sid, keepPrivateEvenWhenAdmin );
+            setupBaseAces( acl, oi, sid, keepPrivateEvenWhenAdmin, objectIsAUser || objectIsAGroup );
 
             /*
              * Make sure user groups can be read by future members of the group

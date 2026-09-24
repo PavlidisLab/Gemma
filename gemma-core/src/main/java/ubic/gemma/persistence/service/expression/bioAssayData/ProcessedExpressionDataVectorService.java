@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -74,6 +75,20 @@ public interface ProcessedExpressionDataVectorService
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
+
+    /**
+     * Rebuild the processed data matrix from raw WITHOUT masking assays flagged as outliers, persisting nothing.
+     * <p>
+     * 🛑 This is not the dataset's processed data. Everything in Gemma -- differential expression, SVD,
+     * visualization, export -- reads the stored vectors, in which outliers ARE masked, and that stays true. The one
+     * consumer of this is the sample-correlation matrix, which is the evidence a curator reviews an outlier call
+     * against; masking wrote the flagged sample's correlations out of it, so the call could not be reviewed after
+     * the fact.
+     * <p>
+     * The mask is applied before quantile normalization, so the values are not recoverable from what is stored --
+     * rebuilding from raw is the only route to them.
+     */
+    ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
 
     /**
      * Replace the processed vectors of a EE with the given vectors.

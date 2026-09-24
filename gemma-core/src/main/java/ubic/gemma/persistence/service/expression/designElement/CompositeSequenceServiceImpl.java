@@ -20,12 +20,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.sequence.BlatAssociationScorer;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.model.analysis.sequence.GeneMappingSummary;
+import ubic.gemma.model.analysis.sequence.GeneMappingSummaryValueObject;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -100,8 +103,8 @@ public class CompositeSequenceServiceImpl
         CompositeSequenceValueObject vo = loadValueObject( cs );
         if ( vo != null ) {
             // Not passing the vo since that would create data redundancy in the returned structure
-            vo.setGeneMappingSummaries(
-                    this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) );
+            vo.setGeneMappingSummaries( toWireSummaries(
+                    this.getGeneMappingSummary( this.bioSequenceService.findByCompositeSequence( cs ), null ) ) );
         }
         return vo;
     }
@@ -211,6 +214,38 @@ public class CompositeSequenceServiceImpl
         return compositeSequenceReadService.getRawSummary( arrayDesign, numResults );
     }
 
+    /**
+     * Convert the DWR-era {@link GeneMappingSummary} objects into their wire form.
+     * <p>
+     * Two things happen here beyond a field copy. The genes are deduplicated: the source keys them
+     * by gene PRODUCT, so a gene reached through several products would otherwise repeat. And the
+     * synthetic placeholder that {@link #getGeneMappingSummary} appends when a probe has no
+     * mappings at all — a summary whose blat result carries the sentinel id {@code -1}, described
+     * in that method as "a bit of a hack" — is dropped, so a probe with nothing to report comes
+     * back as an empty list instead of one entry describing a non-existent alignment. Real
+     * alignments that happen to support no gene are KEPT, since "aligned but unmapped" is a
+     * genuine result.
+     */
+    private static List<GeneMappingSummaryValueObject> toWireSummaries( Collection<GeneMappingSummary> summaries ) {
+        List<GeneMappingSummaryValueObject> out = new ArrayList<>();
+        for ( GeneMappingSummary summary : summaries ) {
+            BlatResultValueObject blatResult = summary.getBlatResult();
+            boolean placeholder = blatResult != null && blatResult.getId() != null && blatResult.getId() < 0L;
+            Map<Long, GeneReferenceValueObject> genesById = new LinkedHashMap<>();
+            for ( GeneValueObject gene : summary.getGeneProductIdGeneMap().values() ) {
+                if ( gene != null && gene.getId() != null ) {
+                    genesById.putIfAbsent( gene.getId(), new GeneReferenceValueObject(
+                            gene.getId(), gene.getOfficialSymbol(), gene.getNcbiId() ) );
+                }
+            }
+            if ( placeholder && genesById.isEmpty() ) {
+                continue;
+            }
+            out.add( new GeneMappingSummaryValueObject( blatResult, new ArrayList<>( genesById.values() ) ) );
+        }
+        return out;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneMappingSummary> getGeneMappingSummary( BioSequence biologicalCharacteristic,
@@ -288,6 +323,16 @@ public class CompositeSequenceServiceImpl
     @Override
     public Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds ) {
         return compositeSequenceReadService.getSequenceData( compositeSequenceIds );
+    }
+
+    @Override
+    public Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds ) {
+        return compositeSequenceReadService.getGeneData( compositeSequenceIds );
+    }
+
+    @Override
+    public Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId ) {
+        return compositeSequenceReadService.findIdsByGeneIds( geneIds, arrayDesignId );
     }
 
     @Override

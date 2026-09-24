@@ -21,13 +21,18 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
 import java.util.Objects;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.expression.experiment.AgentCurationKind;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * A "curation hypothesis" attached to an {@link Investigation}: a JSON
@@ -92,6 +97,8 @@ import ubic.gemma.model.expression.experiment.AgentCurationKind;
 public class AnnotationSet extends AbstractIdentifiable {
 
     @ManyToOne(fetch = FetchType.LAZY)
+    // V20 declares FK_ANNOTATION_SET_INVESTIGATION ON DELETE CASCADE; keep the mapping in step so a Hibernate-generated schema cascades too
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "INVESTIGATION_FK", nullable = false, columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "FK_ANNOTATION_SET_INVESTIGATION"))
     private Investigation investigation;
@@ -150,11 +157,42 @@ public class AnnotationSet extends AbstractIdentifiable {
     @Column(name = "FINALIZED_BY", columnDefinition = "VARCHAR(255)")
     private String finalizedBy;
 
+    /**
+     * The curator's closing note on this finalization — why the review ended
+     * the way it did.
+     * <p>
+     * Cleared on reopen: a note explains one closure, so carrying it across
+     * would attach one closure's words to the next. {@code null} means no note
+     * was written; a blank one is normalized to {@code null} on write so
+     * "did they say anything" has a single answer.
+     */
+    @Column(name = "FINALIZED_NOTES", columnDefinition = "VARCHAR(2048)")
+    private String finalizedNotes;
+
     @Column(name = "AGENT_VERSION", columnDefinition = "VARCHAR(255)")
     private String agentVersion;
 
     @Column(name = "MODEL", columnDefinition = "VARCHAR(255)")
     private String model;
+
+    /**
+     * The producing repository's git head sha for the run.
+     * <p>
+     * Not redundant with {@link #model}: the curation side has measured behaviour differences between shas at
+     * one model, so the model alone does not identify the build that wrote an annotation. Deliberately separate
+     * from {@link #agentVersion}, which names a release rather than a commit.
+     */
+    @Column(name = "RUN_SHA", columnDefinition = "VARCHAR(255)")
+    private String runSha;
+
+    /**
+     * Which specialist agent produced this — {@code cell_type}, {@code disease}, {@code strain}, and so on.
+     * <p>
+     * "The agent" is a fleet, and the useful answer to "which agent proposed this?" names the member rather than
+     * the fleet. Null for curator-authored rows and for producers that do not report one.
+     */
+    @Column(name = "AGENT_NAME", columnDefinition = "VARCHAR(255)")
+    private String agentName;
 
     @Column(name = "RAN_AT", columnDefinition = "DATETIME")
     private Date ranAt;
@@ -162,12 +200,31 @@ public class AnnotationSet extends AbstractIdentifiable {
     /**
      * The structured annotation payload as a JSON string. The shape is
      * owned by the producer (the curation-agents client for {@code AGENT}
-     * source; the curation-UI for {@code CURATOR}); Gemma persists it
-     * verbatim. MySQL stores this as a {@code JSON} column (queryable
-     * via {@code JSON_EXTRACT}); H2 stores it as {@code CLOB}.
+     * source; the curation-UI for {@code CURATOR}); Gemma does not interpret
+     * it. MySQL stores this as a native {@code JSON} column (V20), H2 as
+     * {@code CLOB} (H2 has no JSON type).
+     * <p>
+     * Not byte-preserved: MySQL normalises a {@code JSON} value on write,
+     * stripping insignificant whitespace and reordering object keys, so
+     * {@code {"v":2}} reads back as {@code {"v": 2}}. The document round-trips,
+     * the bytes do not. Compare payloads as parsed JSON, never as strings.
+     * <p>
+     * The JDBC type is pinned explicitly rather than left to {@code @Lob}.
+     * {@code @Lob} resolves to {@code Types#CLOB}, but Connector/J reports a
+     * MySQL {@code JSON} column as {@code Types#LONGVARCHAR}, so the two
+     * disagree and schema validation fails with "found [json
+     * (Types#LONGVARCHAR)], but expecting [longtext (Types#CLOB)]".
+     * {@code columnDefinition} does not help: it drives DDL generation, not
+     * the type validation compares.
+     * <p>
+     * Only gemma-staging sets {@code hbm2ddl.auto=validate} — production and
+     * developer instances leave it empty and take no schema action — so a
+     * divergence here is invisible everywhere else until it takes that one
+     * instance down at startup. It went unnoticed for three months that way.
+     * Keep the annotation, V20 and the H2 sibling (V21) in step.
      */
-    @Lob
-    @Column(name = "PAYLOAD_JSON", columnDefinition = "LONGTEXT")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "PAYLOAD_JSON", columnDefinition = "JSON")
     private String payloadJson;
 
     /**
@@ -182,7 +239,91 @@ public class AnnotationSet extends AbstractIdentifiable {
     @Column(name = "PARKED_ELEMENTS", columnDefinition = "LONGTEXT")
     private String parkedElements;
 
+    /**
+     * Where a proposal stands with its reviewer: {@code pending}, {@code needs_changes},
+     * {@code accepted}, {@code rejected} — the curation store's own four, adopted rather than
+     * re-spelled so rows from the two systems compare during the store's retirement.
+     * <p>
+     * 🛑 <b>A free string, and deliberately not an enum</b> — not a Java enum, not a DB enum, not a
+     * closed {@code allowableValues} list. Paul, 2026-09-04: <i>"one of the things that bugs me the
+     * most is the dispositions are hard to change — we have problems with a mismatch between the
+     * reason the curator would give, and the options. don't lock us into any kind of enums. if we
+     * settle down on this we might formalize it."</i> The four above are the values IN USE, not the
+     * values permitted: a fifth must round-trip rather than be rejected. cab reached the same place
+     * from experience — their {@code DismissReason} / {@code AcceptReason} / {@code NotSureReason}
+     * were closed enums until three separate handoffs amended the set three times, each revision
+     * costing a schema change and a deploy to add a word.
+     * <p>
+     * Stored in the lowercase wire spelling every other curation vocabulary uses, so no caller has
+     * to case-fold to compare a stored status with one it just sent.
+     * <p>
+     * 🛑 Not {@link #getFinalizedAt()}, which records that a review was CLOSED rather than which way
+     * it went; not the set's {@code AnnotationSetTriage} verdict, which is one judge's view of how
+     * much the set matters; and not a roll-up of its {@code AnnotationSetDisposition} rows, which
+     * are per FINDING and whose fold to a set-level answer needs an all/any/majority rule nobody
+     * has chosen.
+     * <p>
+     * {@code null} means the set is not a kind that gets reviewed — a draft, a snapshot, a commit.
+     * It does NOT mean "nobody has ruled yet"; that is {@code pending}, which is stored. This is the
+     * opposite of {@code TriageVerdict} and {@code FindingDisposition}, which have no pending value
+     * because absence of a ROW carries it there — a column on an always-present row cannot use
+     * absence for that and still have null mean anything else.
+     */
+    @Column(name = "STATUS", columnDefinition = "VARCHAR(32)")
+    @Nullable
+    private String status;
+
+    /**
+     * How many factors the payload proposes, or {@code null} when it is not known.
+     * <p>
+     * ⚠️ A derived HINT, not a contract. {@link #getPayloadJson()}'s shape belongs to its producer
+     * and Gemma persists it verbatim; this is read off it best-effort when the row is written and
+     * left null when the shape is not recognized. <b>Null means unknown, never zero.</b>
+     * <p>
+     * It exists because the cross-corpus list serves a thin projection with no payload, so an inbox
+     * card showing these numbers cost one full fetch per row — 94 KB on the set uib sampled, scaling
+     * with the corpus rather than with the screen.
+     */
+    @Column(name = "FACTOR_COUNT")
+    @Nullable
+    private Integer factorCount;
+
+    /**
+     * How many experiment-level tags the payload proposes, or {@code null} when it is not known.
+     * Same derived-hint status and same null-means-unknown reading as {@link #getFactorCount()}.
+     */
+    @Column(name = "TAG_COUNT")
+    @Nullable
+    private Integer tagCount;
+
     public AnnotationSet() {
+    }
+
+    @Nullable
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus( @Nullable String status ) {
+        this.status = status;
+    }
+
+    @Nullable
+    public Integer getFactorCount() {
+        return factorCount;
+    }
+
+    public void setFactorCount( @Nullable Integer factorCount ) {
+        this.factorCount = factorCount;
+    }
+
+    @Nullable
+    public Integer getTagCount() {
+        return tagCount;
+    }
+
+    public void setTagCount( @Nullable Integer tagCount ) {
+        this.tagCount = tagCount;
     }
 
     public Investigation getInvestigation() {
@@ -273,6 +414,14 @@ public class AnnotationSet extends AbstractIdentifiable {
         this.finalizedBy = finalizedBy;
     }
 
+    public String getFinalizedNotes() {
+        return finalizedNotes;
+    }
+
+    public void setFinalizedNotes( String finalizedNotes ) {
+        this.finalizedNotes = finalizedNotes;
+    }
+
     public String getAgentVersion() {
         return agentVersion;
     }
@@ -287,6 +436,22 @@ public class AnnotationSet extends AbstractIdentifiable {
 
     public void setModel( String model ) {
         this.model = model;
+    }
+
+    public String getRunSha() {
+        return runSha;
+    }
+
+    public void setRunSha( String runSha ) {
+        this.runSha = runSha;
+    }
+
+    public String getAgentName() {
+        return agentName;
+    }
+
+    public void setAgentName( String agentName ) {
+        this.agentName = agentName;
     }
 
     public Date getRanAt() {

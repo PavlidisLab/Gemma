@@ -77,7 +77,7 @@ import static ubic.gemma.rest.util.Responders.respond;
  * dispatch is by full path, so a single resource class can serve both.
  * Per the handoff the queue endpoint is also a forward-compat hook for
  * {@code PreboardedExperiment} -- {@link WorkflowService} is what gates
- * dataset_type today; the REST surface is type-agnostic.</p>
+ * datasetType today; the REST surface is type-agnostic.</p>
  *
  * @author paul
  */
@@ -143,7 +143,7 @@ public class WorkflowWebService {
 
     /**
      * Advance a dataset to a new workflow state. PUT body must include
-     * {@code target_state}; {@code reason} and {@code ticket_id} are
+     * {@code targetState}; {@code reason} and {@code ticketId} are
      * optional.
      *
      * <p>Per the handoff Open Question 1 ("per-transition role granularity")
@@ -158,14 +158,14 @@ public class WorkflowWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("hasAuthority('GROUP_CURATOR') or hasAuthority('GROUP_ADMIN')")
     @Operation(summary = "Advance a dataset to a new workflow state",
-            description = "Body: `{\"target_state\": \"Audit\", \"reason\": \"...\", \"ticket_id\": 9001?}`. "
-                    + "Idempotent: PUTting current_state is a 200 no-op with previous_state == current_state. "
+            description = "Body: `{\"targetState\": \"Audit\", \"reason\": \"...\", \"ticketId\": 9001?}`. "
+                    + "Idempotent: PUTting currentState is a 200 no-op with previousState == currentState. "
                     + "Disallowed transitions return 409 with the list of allowed next states. "
-                    + "Unknown target_state returns 400. Public -> Curate additionally requires admin role + non-empty reason.",
+                    + "Unknown targetState returns 400. Public -> Curate additionally requires admin role + non-empty reason.",
             responses = {
                     @ApiResponse(responseCode = "200", useReturnTypeSchema = true,
                             content = @Content()),
-                    @ApiResponse(responseCode = "400", description = "Missing or unknown target_state.",
+                    @ApiResponse(responseCode = "400", description = "Missing or unknown targetState.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "403", description = "Insufficient role for this transition.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -173,20 +173,20 @@ public class WorkflowWebService {
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
                     @ApiResponse(responseCode = "409", description = "Disallowed transition; body lists allowed next states.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(description = "{ error, current_state, target_state, allowed_next_states }")))
+                                    schema = @Schema(description = "{ error, currentState, targetState, allowedNextStates }")))
             })
     public Response advanceDatasetWorkflow(
             @PathParam("id") Long datasetId,
             @Nullable AdvanceWorkflowRequest req
     ) {
         if ( req == null || req.targetState == null || req.targetState.isEmpty() ) {
-            throw new BadRequestException( "Request body must include target_state." );
+            throw new BadRequestException( "Request body must include targetState." );
         }
         WorkflowState target;
         try {
             target = WorkflowState.valueOf( req.targetState );
         } catch ( IllegalArgumentException e ) {
-            throw new BadRequestException( "Unknown target_state: " + req.targetState );
+            throw new BadRequestException( "Unknown targetState: " + req.targetState );
         }
         ExpressionExperiment ee = loadDatasetOrThrow( datasetId );
 
@@ -214,13 +214,13 @@ public class WorkflowWebService {
         } catch ( DisallowedWorkflowTransitionException ex ) {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put( "error", "Disallowed transition" );
-            body.put( "current_state", ex.getCurrentState().name() );
-            body.put( "target_state", ex.getTargetState().name() );
+            body.put( "currentState", ex.getCurrentState().name() );
+            body.put( "targetState", ex.getTargetState().name() );
             List<String> allowed = new ArrayList<>();
             for ( WorkflowState s : ex.getAllowedNextStates() ) {
                 allowed.add( s.name() );
             }
-            body.put( "allowed_next_states", allowed );
+            body.put( "allowedNextStates", allowed );
             return Response.status( Response.Status.CONFLICT )
                     .entity( body )
                     .type( MediaType.APPLICATION_JSON )
@@ -244,7 +244,7 @@ public class WorkflowWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "List datasets currently in a given workflow state",
             description = "The curator triage view. Oldest entry first by workflowStateEnteredAt. "
-                    + "Optional filters: dataset_type (currently only `expression_experiment` is "
+                    + "Optional filters: datasetType (currently only `expression_experiment` is "
                     + "implemented; `preboarded_experiment` returns empty pending the subclass), "
                     + "assignee (returns empty pending the Ticket-layer join; see TODO(ticket-integration)), "
                     + "since (ISO-8601; restrict to rows that entered the state on or after this).",
@@ -257,8 +257,13 @@ public class WorkflowWebService {
     public PaginatedResponseDataObject<WorkflowQueueEntryResponse> getWorkflowQueue(
             @Parameter(description = "Required; one of the 8 WorkflowState constants.")
             @QueryParam("state") @Nullable String stateName,
-            @Parameter(description = "Optional; expression_experiment | preboarded_experiment.")
-            @QueryParam("dataset_type") @Nullable String datasetType,
+            @Parameter(description = "Optional; expression_experiment | preboarded_experiment. "
+                    + "The legacy snake_case spelling `dataset_type` is still accepted.")
+            @QueryParam("datasetType") @Nullable String datasetType,
+            // Legacy spelling, accepted so a stale caller gets the filter it asked for rather than
+            // an unfiltered queue. Remove once no client sends it.
+            @Parameter(hidden = true)
+            @QueryParam("dataset_type") @Nullable String datasetTypeLegacy,
             @Parameter(description = "Optional; restrict to datasets with an OPEN ticket assigned to this user.")
             @QueryParam("assignee") @Nullable String assignee,
             @Parameter(description = "Optional ISO-8601 timestamp; restrict to entries on or after.")
@@ -266,6 +271,9 @@ public class WorkflowWebService {
             @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
             @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
+        if ( datasetType == null ) {
+            datasetType = datasetTypeLegacy;
+        }
         if ( stateName == null || stateName.isEmpty() ) {
             throw new BadRequestException( "Query parameter `state` is required." );
         }
@@ -324,12 +332,12 @@ public class WorkflowWebService {
 
     /** Body of {@link #advanceDatasetWorkflow(Long, AdvanceWorkflowRequest)}. */
     public static class AdvanceWorkflowRequest {
-        @com.fasterxml.jackson.annotation.JsonProperty("target_state")
+        @com.fasterxml.jackson.annotation.JsonProperty("targetState")
         private String targetState;
         @com.fasterxml.jackson.annotation.JsonProperty("reason")
         @Nullable
         private String reason;
-        @com.fasterxml.jackson.annotation.JsonProperty("ticket_id")
+        @com.fasterxml.jackson.annotation.JsonProperty("ticketId")
         @Nullable
         private Long ticketId;
 
@@ -347,20 +355,20 @@ public class WorkflowWebService {
 
     /** Response of {@link #getDatasetWorkflow(Long)}. */
     public static class WorkflowStateResponse {
-        @com.fasterxml.jackson.annotation.JsonProperty("dataset_id")
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetId")
         public Long datasetId;
-        @com.fasterxml.jackson.annotation.JsonProperty("dataset_type")
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetType")
         public String datasetType;
-        @com.fasterxml.jackson.annotation.JsonProperty("current_state")
+        @com.fasterxml.jackson.annotation.JsonProperty("currentState")
         public String currentState;
-        @com.fasterxml.jackson.annotation.JsonProperty("entered_current_state_at")
+        @com.fasterxml.jackson.annotation.JsonProperty("enteredCurrentStateAt")
         @Nullable
         public Date enteredCurrentStateAt;
         public List<WorkflowHistoryEntry> history = Collections.emptyList();
     }
 
     public static class WorkflowHistoryEntry {
-        @com.fasterxml.jackson.annotation.JsonProperty("entered_at")
+        @com.fasterxml.jackson.annotation.JsonProperty("enteredAt")
         @Nullable
         public Date enteredAt;
         @com.fasterxml.jackson.annotation.JsonProperty("actor")
@@ -378,36 +386,36 @@ public class WorkflowWebService {
 
     /** Response of {@link #advanceDatasetWorkflow(Long, AdvanceWorkflowRequest)}. */
     public static class WorkflowTransitionResponse {
-        @com.fasterxml.jackson.annotation.JsonProperty("dataset_id")
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetId")
         public Long datasetId;
-        @com.fasterxml.jackson.annotation.JsonProperty("previous_state")
+        @com.fasterxml.jackson.annotation.JsonProperty("previousState")
         public String previousState;
-        @com.fasterxml.jackson.annotation.JsonProperty("current_state")
+        @com.fasterxml.jackson.annotation.JsonProperty("currentState")
         public String currentState;
-        @com.fasterxml.jackson.annotation.JsonProperty("entered_current_state_at")
+        @com.fasterxml.jackson.annotation.JsonProperty("enteredCurrentStateAt")
         @Nullable
         public Date enteredCurrentStateAt;
-        @com.fasterxml.jackson.annotation.JsonProperty("audit_event_id")
+        @com.fasterxml.jackson.annotation.JsonProperty("auditEventId")
         @Nullable
         public Long auditEventId;
     }
 
     /** Per-row response of {@link #getWorkflowQueue}. */
     public static class WorkflowQueueEntryResponse {
-        @com.fasterxml.jackson.annotation.JsonProperty("dataset_id")
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetId")
         public Long datasetId;
-        @com.fasterxml.jackson.annotation.JsonProperty("dataset_type")
+        @com.fasterxml.jackson.annotation.JsonProperty("datasetType")
         public String datasetType;
         @com.fasterxml.jackson.annotation.JsonProperty("accession")
         @Nullable
         public String accession;
-        @com.fasterxml.jackson.annotation.JsonProperty("entered_current_state_at")
+        @com.fasterxml.jackson.annotation.JsonProperty("enteredCurrentStateAt")
         @Nullable
         public Date enteredCurrentStateAt;
-        @com.fasterxml.jackson.annotation.JsonProperty("current_assignee")
+        @com.fasterxml.jackson.annotation.JsonProperty("currentAssignee")
         @Nullable
         public String currentAssignee;
-        @com.fasterxml.jackson.annotation.JsonProperty("ticket_count_open")
+        @com.fasterxml.jackson.annotation.JsonProperty("ticketCountOpen")
         public int ticketCountOpen;
     }
 

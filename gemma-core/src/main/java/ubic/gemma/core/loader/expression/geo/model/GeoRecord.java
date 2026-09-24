@@ -36,6 +36,17 @@ import java.util.*;
 @SuppressWarnings("unused") // Possible external use
 public class GeoRecord extends GeoData {
 
+    /**
+     * True when the detailed MINiML fetch for this record failed and was tolerated
+     * ({@link ubic.gemma.core.loader.expression.geo.service.GeoRetrieveConfig#isIgnoreErrors()}),
+     * so the record is returned with whatever the eutils summary gave and without sample details.
+     * <p>
+     * Exists so a caller can say WHICH records it is reporting on incomplete information. GEO
+     * serves invalid MINiML for withdrawn / restricted / transiently-broken series, and the
+     * condition is usually temporary — a later pass over the same accession often succeeds.
+     */
+    private boolean detailsIncomplete;
+
     private String summary = "";
     private String overallDesign = "";
     private String contactName = "";

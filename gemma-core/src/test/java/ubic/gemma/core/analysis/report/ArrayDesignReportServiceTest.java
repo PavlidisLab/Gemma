@@ -27,8 +27,12 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMapp
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -99,4 +103,43 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest5 {
         assertNotNull( report );
     }
 
+    /**
+     * A report is one file per database id, so an id that comes to mean a different platform hands that platform
+     * the previous occupant's counts — silently, because they are plausible numbers either way.
+     * <p>
+     * Not hypothetical. On 2026-08-26 {@code PlatformsWebServiceTest.testMicroarrayGeneCountsAreNullWithoutAReport}
+     * asserted null gene counts for a freshly seeded microarray and read 0, out of a two-day-old report written
+     * for a different test platform that had held the same id in a previous {@code gemdtest}. The report
+     * directory lives under {@code gemma.appdata.home} and outlives the database; the ids do not.
+     */
+    @Test
+    public void testAReportWrittenForADifferentPlatformIsNotApplied() {
+        assertNotNull( arrayDesignReportService.generateArrayDesignReport(
+                ArrayDesignReportServiceTest.ad.getId() ) );
+
+        // same id, different platform — which is exactly what a recycled id looks like from here
+        ArrayDesignValueObject impostor = new ArrayDesignValueObject( ArrayDesignReportServiceTest.ad.getId() );
+        impostor.setShortName( "GPL_NOT_THE_ONE_THE_REPORT_IS_ABOUT" );
+        arrayDesignReportService.fillInValueObjects( Collections.singleton( impostor ) );
+
+        assertThat( impostor.getNumGenes() )
+                .withFailMessage( "another platform's counts were applied to this one" )
+                .isNull();
+        assertThat( impostor.getDateCached() ).isNull();
+    }
+
+    /** The other half: the report still reaches the platform it was written for. */
+    @Test
+    public void testAReportIsAppliedToThePlatformItWasWrittenFor() {
+        ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport(
+                ArrayDesignReportServiceTest.ad.getId() );
+        assertNotNull( report );
+
+        ArrayDesignValueObject vo = new ArrayDesignValueObject( ArrayDesignReportServiceTest.ad.getId() );
+        vo.setShortName( ArrayDesignReportServiceTest.ad.getShortName() );
+        arrayDesignReportService.fillInValueObjects( Collections.singleton( vo ) );
+
+        assertThat( vo.getNumGenes() ).isEqualTo( report.getNumGenes() );
+        assertThat( vo.getDateCached() ).isEqualTo( report.getDateCached() );
+    }
 }

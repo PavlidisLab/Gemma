@@ -208,24 +208,17 @@ public interface ExpressionAnalysisResultSetDao extends AnalysisResultSetDao<Dif
     Map<Long, DiffExResultSetSummaryValueObject.Prefetch> getPrefetchForVo( Collection<Long> ids );
 
     /**
-     * Obtain a histogram of the P-value distribution for a given result set.
+     * Obtain the stored histogram of the P-value distribution for a given result set.
+     * <p>
+     * Read straight out of the {@code PVALUE_DISTRIBUTION} row hanging off the result set; nothing is
+     * aggregated. {@code DifferentialExpressionAnalyzerServiceImpl#addPvalueDistribution} writes it at
+     * analysis time with 100 fixed-width bins over {@code [0, 1]} of the RAW p-values, so bin
+     * {@code i} covers {@code (i/100, (i+1)/100]} and bin 0 also holds {@code 0.0}. There is no stored
+     * corrected-p-value histogram.
+     *
+     * @return the stored histogram, or {@code null} when {@code PVALUE_DISTRIBUTION_FK} is null
      */
     @Nullable
     Histogram loadPvalueDistribution( ExpressionAnalysisResultSet resultSet );
 
-    /**
-     * Bin the raw or corrected p-values for a result set into a uniform histogram over {@code [0, 1]}.
-     * <p>
-     * Computed on the fly via a single {@code GROUP BY FLOOR(pvalue * bins)} aggregation over
-     * {@code DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT} keyed on {@code RESULT_SET_FK}; rows with a
-     * {@code NULL} p-value are excluded. The value {@code 1.0} is clamped into the last bin so the
-     * returned array length always equals {@code numberOfBins}.
-     *
-     * @param resultSetId  the result set id
-     * @param column       {@code "raw"} (PVALUE) or {@code "corrected"} (CORRECTED_PVALUE)
-     * @param numberOfBins number of equal-width bins covering {@code [0, 1]}; bin {@code i} covers
-     *                     {@code [i/numberOfBins, (i+1)/numberOfBins)}, with the last bin closed on the right
-     * @return bin counts of length {@code numberOfBins} (zero-filled if the result set has no p-values)
-     */
-    long[] binPvalues( Long resultSetId, String column, int numberOfBins );
 }

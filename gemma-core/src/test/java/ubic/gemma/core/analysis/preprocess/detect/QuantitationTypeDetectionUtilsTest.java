@@ -24,9 +24,11 @@ import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.detectSuspiciousValues;
 import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.inferQuantitationType;
+import static ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionUtils.lintQuantitationType;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDataMatrixUtils.*;
 
 public class QuantitationTypeDetectionUtilsTest {
@@ -149,6 +151,70 @@ public class QuantitationTypeDetectionUtilsTest {
             assertThat( qt.getIsRatio() ).isTrue();
             detectSuspiciousValues( data, qt );
         } );
+    }
+
+    /**
+     * Negative values are read as evidence of a log transformation. Background-subtracted and normalized data
+     * cross zero on a linear scale by construction, so that reading is a false alarm -- GSE9594 and GSE28623
+     * are both normalized LINEAR records that trip it. These three pin the narrowing and its edge: the two
+     * flags that account for negatives, and the case where neither does and the check must still fire.
+     */
+    @Test
+    public void testNegativeValuesDoNotMeanLogTransformedWhenTheDataIsNormalized() {
+        QuantitationType recorded = linearMicroarrayQt();
+        recorded.setIsNormalized( true );
+        assertThatCode( () -> lintQuantitationType( recorded, matrixCrossingZero(), false ) )
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void testNegativeValuesDoNotMeanLogTransformedWhenTheDataIsBackgroundSubtracted() {
+        QuantitationType recorded = linearMicroarrayQt();
+        recorded.setIsBackgroundSubtracted( true );
+        assertThatCode( () -> lintQuantitationType( recorded, matrixCrossingZero(), false ) )
+                .doesNotThrowAnyException();
+    }
+
+    /**
+     * The narrowing must not swallow the case it was built for. With neither flag set nothing accounts for the
+     * negatives, so they still read as a log transformation and the scale mismatch is still raised.
+     */
+    @Test
+    public void testNegativeValuesStillMeanLogTransformedWhenNothingAccountsForThem() {
+        QuantitationType recorded = linearMicroarrayQt();
+        assertThatThrownBy( () -> lintQuantitationType( recorded, matrixCrossingZero(), false ) )
+                .isInstanceOf( InferredQuantitationMismatchException.class )
+                .hasMessageContaining( ScaleType.LOGBASEUNKNOWN.name() );
+    }
+
+    /**
+     * The flags live on the quantitation type being checked, so a type being built from scratch cannot consult
+     * them. inferQuantitationType passes none, and its answer is unchanged.
+     */
+    @Test
+    public void testInferringFromScratchStillReadsNegativeValuesAsLogTransformed() {
+        assertThat( inferQuantitationType( matrixCrossingZero() ).getScale() )
+                .isEqualTo( ScaleType.LOGBASEUNKNOWN );
+    }
+
+    private QuantitationType linearMicroarrayQt() {
+        QuantitationType recorded = new QuantitationType();
+        recorded.setGeneralType( GeneralType.QUANTITATIVE );
+        recorded.setType( StandardQuantitationType.AMOUNT );
+        recorded.setScale( ScaleType.LINEAR );
+        recorded.setRepresentation( PrimitiveType.DOUBLE );
+        recorded.setIsRatio( false );
+        return recorded;
+    }
+
+    /**
+     * A microarray matrix whose values straddle zero, with a mean far enough from it that the z-score and
+     * ratiometric branches do not claim the data first, and a maximum above the log-scale upper bounds.
+     */
+    private ExpressionDataDoubleMatrix matrixCrossingZero() {
+        ExpressionExperiment ee = getTestExpressionExperiment( TechnologyType.ONECOLOR );
+        QuantitationType qt = linearMicroarrayQt();
+        return randomExpressionMatrix( ee, qt, new NormalDistribution( 100, 40 ) );
     }
 
     @Test

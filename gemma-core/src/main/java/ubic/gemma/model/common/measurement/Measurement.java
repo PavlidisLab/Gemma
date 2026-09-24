@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.measurement;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
@@ -71,6 +73,7 @@ public class Measurement extends AbstractIdentifiable {
     private PrimitiveType representation;
     // absolutely necessary for this entity, so always fetched; there's only a handful of units, so select and cache
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "UNIT_FK", columnDefinition = "BIGINT")
     private Unit unit;
 

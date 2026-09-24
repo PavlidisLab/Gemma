@@ -14,6 +14,39 @@ import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 public class FactorValueUtils {
 
     /**
+     * URI of {@code TGEMO_00013 DE_Include}, which marks samples to keep in a differential expression analysis.
+     */
+    public static final String DE_INCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00013";
+
+    /**
+     * URI of {@code TGEMO_00014 DE_Exclude}, which marks samples to leave out of a differential expression analysis.
+     */
+    public static final String DE_EXCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00014";
+
+    /**
+     * Check if a factor value marks its samples for exclusion from differential expression analysis.
+     */
+    public static boolean isDeExcluded( FactorValue fv ) {
+        return hasCharacteristicWithUri( fv, DE_EXCLUDE_URI );
+    }
+
+    /**
+     * Check if a factor value is one of the two DE_Include/DE_Exclude markers.
+     */
+    public static boolean isDeIncludeExcludeMarker( FactorValue fv ) {
+        return hasCharacteristicWithUri( fv, DE_INCLUDE_URI ) || hasCharacteristicWithUri( fv, DE_EXCLUDE_URI );
+    }
+
+    private static boolean hasCharacteristicWithUri( FactorValue fv, String uri ) {
+        for ( Characteristic c : fv.getCharacteristics() ) {
+            if ( uri.equals( c.getValueUri() ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Produce a value for representing a factor value.
      * <p>
      * For continuous factors, this will return the value of the measurement. For categorical factors, this will be the

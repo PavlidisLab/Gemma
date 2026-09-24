@@ -48,7 +48,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 @Entity
 @Table(name = "BLACKLIST")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "class")
+@DiscriminatorColumn(name = "class", length = 255)
 @Immutable
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public abstract class BlacklistedEntity extends AbstractDescribable {

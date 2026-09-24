@@ -13,13 +13,17 @@ package ubic.gemma.core.analysis.report;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.context.EnvironmentProfiles;
+import ubic.gemma.core.ontology.providers.OntologyService;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -30,9 +34,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * server context — REST, dev, scheduler — regardless of whether
  * {@code @EnableScheduling} is active (it is skipped under the
  * {@link ubic.gemma.core.context.EnvironmentProfiles#CLI} profile, which has no
- * homepage to warm). {@code SchedulerConfig} is profile-gated to
- * {@link ubic.gemma.core.context.EnvironmentProfiles#SCHEDULER}, so a {@code @Scheduled}
- * method would never fire on a local-dev container. The lifecycle event always fires.
+ * homepage to warm). {@code @Scheduled} now fires on production nodes too (see
+ * {@code AnnotationDrivenSchedulingConfig}), but not under {@code dev} or {@code test}, so the
+ * lifecycle event remains the only trigger there.
  * It runs the refresh in a background thread so Spring startup isn't blocked by the
  * minute-or-two cold-cache aggregation pass.
  * <p>
@@ -56,6 +60,29 @@ public class HomeStatsRefresher {
 
     @Autowired
     private Environment environment;
+
+    /** Enabled ontology provider services, so the startup pass can wait for their background
+     *  init threads to finish before computing the first snapshot. Optional: some contexts wire
+     *  no ontologies at all, in which case the wait is skipped. */
+    @Autowired(required = false)
+    private List<OntologyService> ontologyServices;
+
+    /**
+     * Upper bound on how long the startup pass waits for background ontology initialization before
+     * computing the first snapshot. Bounded so a disabled or stuck ontology can't stall the snapshot
+     * indefinitely — on timeout we compute anyway (ontology-derived buckets degrade to the catch-alls
+     * exactly as before, and the daily cron re-corrects them). Default 15 minutes.
+     */
+    @Value("${gemma.homeStats.ontologyWarmup.timeout:900000}")
+    private long ontologyWarmupTimeoutMs;
+
+    /**
+     * How old the persisted snapshot may be before a restart recomputes it. Restarts within this
+     * window reuse what is on disk and cost nothing; the daily cron does the routine refreshing.
+     * Default 7 days.
+     */
+    @Value("${gemma.homeStats.startupRefresh.maxAgeDays:7}")
+    private int startupRefreshMaxAgeDays;
 
     /** Guard against re-entry — multiple {@code ContextRefreshedEvent}s fire over a
      *  context's lifetime (each child context, refresh-by-actuator, etc.). Only the
@@ -87,9 +114,25 @@ public class HomeStatsRefresher {
         if ( !startupRefreshArmed.compareAndSet( true, false ) ) {
             return;
         }
+        HomeStats cached = homeStatsService.getCached();
+        if ( cached != null && cached.getGeneratedAt() != null ) {
+            long ageMs = System.currentTimeMillis() - cached.getGeneratedAt().getTime();
+            long maxAgeMs = TimeUnit.DAYS.toMillis( startupRefreshMaxAgeDays );
+            if ( ageMs < maxAgeMs ) {
+                log.info( "HomeStats: snapshot from " + cached.getGeneratedAt() + " is "
+                        + TimeUnit.MILLISECONDS.toHours( ageMs ) + "h old (< " + startupRefreshMaxAgeDays
+                        + "d); skipping startup refresh, the daily cron will update it" );
+                return;
+            }
+            log.info( "HomeStats: snapshot from " + cached.getGeneratedAt() + " is older than "
+                    + startupRefreshMaxAgeDays + "d — recomputing at startup" );
+        } else {
+            log.info( "HomeStats: no usable snapshot on disk — recomputing at startup" );
+        }
         log.info( "HomeStats: startup refresh — recomputing in background" );
         Thread t = new Thread( () -> {
             try {
+                awaitOntologyWarmup();
                 homeStatsService.refresh();
             } catch ( Exception e ) {
                 log.error( "HomeStats: startup refresh failed", e );
@@ -97,6 +140,78 @@ public class HomeStatsRefresher {
         }, "HomeStats-startup-refresh" );
         t.setDaemon( true );
         t.start();
+    }
+
+    /**
+     * Block until every enabled ontology has finished its background initialization thread, or until
+     * {@code gemma.homeStats.ontologyWarmup.timeout} elapses. HomeStats' treatment / drug buckets
+     * expand CHEBI / OBI / PR subtrees via {@code OntologyService}; running the first snapshot before
+     * those are loaded leaves the buckets undercounted (the "parent ... not loaded in OntologyService"
+     * warnings) until the next daily refresh. Waiting here makes the startup snapshot correct. This
+     * runs on the daemon startup thread, so Spring startup itself is never blocked.
+     */
+    private void awaitOntologyWarmup() {
+        if ( ontologyServices == null || ontologyServices.isEmpty() ) {
+            return;
+        }
+        long unready = countUnreadyOntologies();
+        if ( unready == 0 ) {
+            return; // everything already warm — compute immediately
+        }
+        log.info( "HomeStats: waiting up to " + ( ontologyWarmupTimeoutMs / 1000 )
+                + "s for " + unready + " ontology service(s) to finish loading before the startup snapshot" );
+        long t0 = System.currentTimeMillis();
+        long deadline = t0 + ontologyWarmupTimeoutMs;
+        while ( System.currentTimeMillis() < deadline && countUnreadyOntologies() > 0 ) {
+            try {
+                Thread.sleep( 2000 );
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        long waited = ( System.currentTimeMillis() - t0 ) / 1000;
+        long stillUnready = countUnreadyOntologies();
+        if ( stillUnready > 0 ) {
+            log.warn( "HomeStats: proceeding with startup snapshot after " + waited + "s — " + stillUnready
+                    + " ontology service(s) still not loaded; ontology-derived buckets may be undercounted "
+                    + "until the daily refresh" );
+        } else {
+            log.info( "HomeStats: ontology services warmed in " + waited + "s; computing startup snapshot" );
+        }
+    }
+
+    /**
+     * Count enabled ontology services that are not yet usable.
+     * <p>
+     * Readiness is {@link OntologyService#isOntologyLoaded()}, NOT whether the initialization thread is
+     * alive. Those differ in exactly the case this wait exists for: on a cold container the init threads
+     * have not been spawned when this runs, so a liveness check counts zero, concludes "everything is
+     * already warm", and computes immediately against ontologies that are not loaded. That is what
+     * happened on frink on 2026-08-21 — the snapshot logged "parent ... not loaded in OntologyService"
+     * for most CHEBI buckets and no "waiting up to" line at all, leaving treatmentSubcategories
+     * undercounted with terms falling through to the catchalls. Liveness answers "is it working right
+     * now"; this wait needs "can I use it yet".
+     * <p>
+     * A cancelled initialization is treated as ready-as-it-will-ever-be, so an ontology that has given up
+     * cannot hold the snapshot hostage for the whole timeout.
+     * <p>
+     * Waiting costs nothing user-visible: {@code GET /stats/home} serves the previously persisted
+     * snapshot throughout, so the trade is a later-but-correct recompute against an immediate-but-wrong
+     * one.
+     */
+    private long countUnreadyOntologies() {
+        long n = 0;
+        for ( OntologyService o : ontologyServices ) {
+            try {
+                if ( o.isEnabled() && !o.isOntologyLoaded() && !o.isInitializationThreadCancelled() ) {
+                    n++;
+                }
+            } catch ( RuntimeException ignored ) {
+                // a bean that throws from these can't be waited on
+            }
+        }
+        return n;
     }
 
     /**

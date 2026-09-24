@@ -30,6 +30,11 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: pavlidislab/gemma-rest
   CLI_IMAGE_NAME: pavlidislab/gemma-cli
+  # The branch whose builds move the deployed tags (2.0.0-alpha, latest). frink's
+  # bin/update.sh defaults to 2.0.0-alpha, so this names the branch frink deploys.
+  # Change it here when the active line moves; every branch still gets its own
+  # <branch>-<sha> and <branch>-latest tags regardless.
+  RELEASE_BRANCH: hotfix-2.0
 
 jobs:
   build:
@@ -72,7 +77,7 @@ jobs:
           # CLI image mirrors the same tag scheme under a separate repo.
           cli_primary="${REGISTRY}/${CLI_IMAGE_NAME}:${slug}-${short_sha}"
           cli_tags="${cli_primary}"$'\n'"${REGISTRY}/${CLI_IMAGE_NAME}:${slug}-latest"
-          if [ "${branch}" = "phase2-acl-migrate" ]; then
+          if [ "${branch}" = "${RELEASE_BRANCH}" ]; then
             tags="${tags}"$'\n'"${REGISTRY}/${IMAGE_NAME}:2.0.0-alpha"
             tags="${tags}"$'\n'"${REGISTRY}/${IMAGE_NAME}:latest"
             cli_tags="${cli_tags}"$'\n'"${REGISTRY}/${CLI_IMAGE_NAME}:2.0.0-alpha"
@@ -100,6 +105,12 @@ jobs:
           target: runtime
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          # Stamps the commit into the WAR manifest, so /rest/v2/info reports
+          # buildInfo.gitHash instead of "". The image tags already carry the
+          # short SHA; this puts the same fact where a running instance can be
+          # asked for it directly.
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           # GHA registry layer cache: cheap incremental rebuilds, source of
           # truth lives in the registry rather than the runner's local disk.
           # mode=max caches the shared `build` stage too, so the CLI step below
@@ -117,6 +128,8 @@ jobs:
           target: cli
           push: true
           tags: ${{ steps.tags.outputs.cli_tags }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
           # Reuse the WAR job's buildcache: the `build` stage is shared, so this
           # only adds the tiny `cli` runtime layer on top.
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache

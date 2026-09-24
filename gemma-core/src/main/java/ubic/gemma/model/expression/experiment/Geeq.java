@@ -31,9 +31,13 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.
- * The score has two components: Quality and Suitability. See the variables getters javadoc for further description.
- * The scoring rules are implemented in the GeeqServiceImpl, which also exposes public methods for experiment
- * scoring.
+ * See the variables getters javadoc for further description. The scoring rules are implemented in the
+ * GeeqServiceImpl, which also exposes public methods for experiment scoring.
+ * <p>
+ * The score used to have a second component, Suitability, scored from platform and publication properties. Those
+ * features are microarray-era and degenerate for RNA-seq — processed RNA-seq data lands on a GENELIST platform, so
+ * platform amount, technology consistency, popularity and size were pinned — and the code was removed. The columns
+ * remain in the database because Gemma 1.0 still writes them.
  *
  * @author paul, tesarst
  */
@@ -41,10 +45,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Table(name = "GEEQ", indexes = {
         @Index(name = "GEEQ_DETECTED_QUALITY_SCORE", columnList = "DETECTED_QUALITY_SCORE"),
         @Index(name = "GEEQ_MANUAL_QUALITY_SCORE", columnList = "MANUAL_QUALITY_SCORE"),
-        @Index(name = "GEEQ_MANUAL_QUALITY_OVERRIDE", columnList = "MANUAL_QUALITY_OVERRIDE"),
-        @Index(name = "GEEQ_DETECTED_SUITABILITY_SCORE", columnList = "DETECTED_SUITABILITY_SCORE"),
-        @Index(name = "GEEQ_MANUAL_SUITABILITY_SCORE", columnList = "MANUAL_SUITABILITY_SCORE"),
-        @Index(name = "GEEQ_MANUAL_SUITABILITY_OVERRIDE", columnList = "MANUAL_SUITABILITY_OVERRIDE")
+        @Index(name = "GEEQ_MANUAL_QUALITY_OVERRIDE", columnList = "MANUAL_QUALITY_OVERRIDE")
 })
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Geeq extends AbstractIdentifiable {
@@ -56,40 +57,12 @@ public class Geeq extends AbstractIdentifiable {
     @Column(name = "MANUAL_QUALITY_OVERRIDE", nullable = false, columnDefinition = "BIT")
     private boolean manualQualityOverride;
 
-    @Column(name = "DETECTED_SUITABILITY_SCORE", nullable = false, columnDefinition = "DOUBLE")
-    private double detectedSuitabilityScore;
-    @Column(name = "MANUAL_SUITABILITY_SCORE", nullable = false, columnDefinition = "DOUBLE")
-    private double manualSuitabilityScore;
-    @Column(name = "MANUAL_SUITABILITY_OVERRIDE", nullable = false, columnDefinition = "BIT")
-    private boolean manualSuitabilityOverride;
-
-    /*
-     * Suitability score factors
-     */
-
-    @Column(name = "SCORE_PUBLICATION", nullable = false, columnDefinition = "DOUBLE")
-    private double sScorePublication;
-    @Column(name = "SCORE_PLATFORM_AMOUNT", nullable = false, columnDefinition = "DOUBLE")
-    private double sScorePlatformAmount;
-    @Column(name = "SCORE_PLATFORMS_TECH_MULTI", nullable = false, columnDefinition = "DOUBLE")
-    private double sScorePlatformsTechMulti;
-    @Column(name = "SCORE_AVG_PLATFORM_POPULARITY", nullable = false, columnDefinition = "DOUBLE")
-    private double sScoreAvgPlatformPopularity;
-    @Column(name = "SCORE_AVG_PLATFORM_SIZE", nullable = false, columnDefinition = "DOUBLE")
-    private double sScoreAvgPlatformSize;
-    @Column(name = "SCORE_SAMPLE_SIZE", nullable = false, columnDefinition = "DOUBLE")
-    private double sScoreSampleSize;
-    @Column(name = "SCORE_RAW_DATA", nullable = false, columnDefinition = "DOUBLE")
-    private double sScoreRawData;
-
-    @Column(name = "SCORE_MISSING_VALUES", nullable = false, columnDefinition = "DOUBLE")
-    private double sScoreMissingValues;
-    @Column(name = "NO_VECTORS", nullable = false, columnDefinition = "BIT")
-    private boolean noVectors;
-
     /*
      * Quality score factors
      */
+
+    @Column(name = "NO_VECTORS", nullable = false, columnDefinition = "BIT")
+    private boolean noVectors;
 
     @Column(name = "SCORE_OUTLIERS", nullable = false, columnDefinition = "DOUBLE")
     private double qScoreOutliers;
@@ -135,22 +108,10 @@ public class Geeq extends AbstractIdentifiable {
     private String otherIssues;
 
     @Transient
-    public double[] getSuitabilityScoreArray() {
-        return new double[] { this.sScorePublication, this.sScorePlatformAmount, this.sScorePlatformsTechMulti,
-                this.sScoreAvgPlatformPopularity, this.sScoreAvgPlatformSize, this.sScoreSampleSize, this.sScoreRawData,
-                this.sScoreMissingValues };
-    }
-
-    @Transient
     public double[] getQualityScoreArray() {
         return new double[] { this.qScoreOutliers, this.qScoreSampleMeanCorrelation, this.qScoreSampleMedianCorrelation,
                 this.qScoreSampleCorrelationVariance, this.qScorePlatformsTech, this.qScoreReplicates,
                 this.qScoreBatchInfo, this.qScoreBatchEffect, this.qScoreBatchConfound };
-    }
-
-    @Transient
-    public double[] getSuitabilityScoreWeightsArray() {
-        return new double[] { 1, 1, 1, 1, 1, 1, 1, 1 };
     }
 
     @Transient
@@ -186,150 +147,6 @@ public class Geeq extends AbstractIdentifiable {
 
     public void setManualQualityOverride( boolean manualQualityOverride ) {
         this.manualQualityOverride = manualQualityOverride;
-    }
-
-    /**
-     * @return Suitability mostly refers to technical aspects which, if we were doing the study ourselves, we would have
-     * altered to make it optimal for analyses of the sort used in Gemma.
-     * The suitability score can be overridden. The manual value is stored in manualSuitabilityScore, while
-     * manualSuitabilityOverride boolean value denotes whether the manual value should be used.
-     */
-    public double getDetectedSuitabilityScore() {
-        return detectedSuitabilityScore;
-    }
-
-    public void setDetectedSuitabilityScore( double detectedSuitabilityScore ) {
-        this.detectedSuitabilityScore = detectedSuitabilityScore;
-    }
-
-    public double getManualSuitabilityScore() {
-        return manualSuitabilityScore;
-    }
-
-    public void setManualSuitabilityScore( double manualSuitabilityScore ) {
-        this.manualSuitabilityScore = manualSuitabilityScore;
-    }
-
-    public boolean isManualSuitabilityOverride() {
-        return manualSuitabilityOverride;
-    }
-
-    public void setManualSuitabilityOverride( boolean manualSuitabilityOverride ) {
-        this.manualSuitabilityOverride = manualSuitabilityOverride;
-    }
-
-    /**
-     * @return -1.0 - if experiment has no publication
-     * +1.0 otherwise
-     */
-    public double getsScorePublication() {
-        return sScorePublication;
-    }
-
-    public void setsScorePublication( double sScorePublicationDate ) {
-        this.sScorePublication = sScorePublicationDate;
-    }
-
-    /**
-     * @return The amount of platforms the experiment uses:
-     * -1.0 if amount &gt; 2
-     * -0.5 if amount &gt; 1
-     * +1.0 otherwise
-     */
-    public double getsScorePlatformAmount() {
-        return sScorePlatformAmount;
-    }
-
-    public void setsScorePlatformAmount( double sScorePlatformAmount ) {
-        this.sScorePlatformAmount = sScorePlatformAmount;
-    }
-
-    /**
-     * @return Extra punishment for platform technology inconsistency
-     * -1.0 if platforms amount &gt; 1 and platforms do not have the same technology type
-     * +1.0 otherwise
-     */
-    public double getsScorePlatformsTechMulti() {
-        return sScorePlatformsTechMulti;
-    }
-
-    public void setsScorePlatformsTechMulti( double sScorePlatformsTechMulti ) {
-        this.sScorePlatformsTechMulti = sScorePlatformsTechMulti;
-    }
-
-    /**
-     * @return Score for each platforms popularity: (final score is average of scores for all used platforms)
-     * -1.0 if used in &lt; 10 EEs
-     * -0.5 if used in &lt; 20 EEs
-     * +0.0 if used in &lt; 50 EEs
-     * +0.5 if used in &lt; 100 EEs
-     * +1.0 otherwise
-     */
-    public double getsScoreAvgPlatformPopularity() {
-        return sScoreAvgPlatformPopularity;
-    }
-
-    public void setsScoreAvgPlatformPopularity( double sScoreAvgPlatformPopularity ) {
-        this.sScoreAvgPlatformPopularity = sScoreAvgPlatformPopularity;
-    }
-
-    /**
-     * @return Score for each platforms size: (final score is average of scores for all used platforms)
-     * -1.0 if gene count &lt; 5k
-     * -0.5 if gene count &lt; 10k
-     * +0.0 if gene count &lt; 15k
-     * +0.5 if gene count &lt; 18k
-     * +1.0 otherwise
-     */
-    public double getsScoreAvgPlatformSize() {
-        return sScoreAvgPlatformSize;
-    }
-
-    public void setsScoreAvgPlatformSize( double sScoreAvgPlatformSize ) {
-        this.sScoreAvgPlatformSize = sScoreAvgPlatformSize;
-    }
-
-    /**
-     * @return The amount of samples in the experiment
-     * -1.0 if sample size &lt; 10
-     * -0.3 if sample size &lt; 20
-     * +0.3 if sample size &lt; 50
-     * +1.0 otherwise
-     */
-    public double getsScoreSampleSize() {
-        return sScoreSampleSize;
-    }
-
-    public void setsScoreSampleSize( double sScoreSampleSize ) {
-        this.sScoreSampleSize = sScoreSampleSize;
-    }
-
-    /**
-     * @return Raw data availability (shows also as the 'external' badge in Gemma web UI)
-     * -1.0 if no raw data available
-     * +1.0 otherwise
-     */
-    public double getsScoreRawData() {
-        return sScoreRawData;
-    }
-
-    public void setsScoreRawData( double sScoreRawData ) {
-        this.sScoreRawData = sScoreRawData;
-    }
-
-    /**
-     * @return Missing values
-     * -1.0 if experiment has any missing values or there are no computed vectors
-     * +1.0 otherwise (assumed if experiment has raw data available)
-     * extra:
-     * noVectors = true, if experiment has no computed vectors
-     */
-    public double getsScoreMissingValues() {
-        return sScoreMissingValues;
-    }
-
-    public void setsScoreMissingValues( double sScoreMissingValues ) {
-        this.sScoreMissingValues = sScoreMissingValues;
     }
 
     /**

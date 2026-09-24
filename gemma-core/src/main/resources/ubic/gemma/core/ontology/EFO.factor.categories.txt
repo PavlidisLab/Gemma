@@ -3,6 +3,7 @@
 # Usable for all places we use categories:
 http://purl.obolibrary.org/obo/OBI_0000181	population
 http://purl.obolibrary.org/obo/CLO_0000031	cell line
+http://gemma.msl.ubc.ca/ont/TGEMO_00218	cell line background
 http://www.ebi.ac.uk/efo/EFO_0000324	cell type
 http://www.ebi.ac.uk/efo/EFO_0000352	clinical history
 http://www.ebi.ac.uk/efo/EFO_0000399	developmental stage
@@ -17,10 +18,12 @@ http://purl.obolibrary.org/obo/PATO_0000047	biological sex
 http://www.ebi.ac.uk/efo/EFO_0000727	treatment
 http://www.ebi.ac.uk/efo/EFO_0004444	environmental history
 http://www.ebi.ac.uk/efo/EFO_0005135	strain
+http://gemma.msl.ubc.ca/ont/TGEMO_00217	strain background
 http://www.ebi.ac.uk/efo/EFO_0002755	diet
 # OK for EFC and EFV but not EEtag
 http://www.ebi.ac.uk/efo/EFO_0005067	block
 http://www.ebi.ac.uk/efo/EFO_0000246	age
+http://www.ebi.ac.uk/efo/EFO_0004918	age at diagnosis
 http://www.ebi.ac.uk/efo/EFO_0000507	generation
 http://www.ebi.ac.uk/efo/EFO_0000542	individual
 http://www.ebi.ac.uk/efo/EFO_0000428	dose

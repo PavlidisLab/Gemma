@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.util.FileTools;
@@ -39,6 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -56,6 +58,7 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * This test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene data to the
@@ -126,6 +129,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     @BeforeEach
     public void setUp() throws Exception {
+        assumeTrue( goldenPathHasRefSeqTables(), "GoldenPath has no ncbiRefSeqCurated" );
         this.cleanup();
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "platform" ) ) );
@@ -180,6 +184,18 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         assertTrue( !alignments.isEmpty() );
         for ( CompositeSequence c : alignments.keySet() ) {
             assertTrue( !alignments.get( c ).isEmpty() );
+        }
+    }
+
+    /**
+     * Probe mapping refuses a GoldenPath database without ncbiRefSeqCurated, and a local copy can predate it.
+     */
+    private static boolean goldenPathHasRefSeqTables() {
+        try ( GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( Taxon.Factory.newInstance( "human" ) ) ) {
+            gp.findRefGenesByLocation( "1", 1L, 2L, null );
+            return true;
+        } catch ( BadSqlGrammarException e ) {
+            return false;
         }
     }
 

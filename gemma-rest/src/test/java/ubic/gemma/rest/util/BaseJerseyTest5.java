@@ -23,11 +23,12 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 import ubic.gemma.core.context.EnvironmentProfiles;
+import ubic.gemma.rest.providers.FastGZipEncoder;
 
 import jakarta.ws.rs.core.Application;
 
 /**
- * JUnit 5 (Jupiter) counterpart of {@link BaseJerseyTest}.
+ * JUnit 5 (Jupiter) counterpart of {@code BaseJerseyTest}.
  * <p>
  * Jersey 3.1's {@code jersey-test-framework-core} does not ship a Jupiter
  * extension (only the JUnit 4 base {@link JerseyTest} and a TestNG variant), so
@@ -40,9 +41,8 @@ import jakarta.ws.rs.core.Application;
  * <p>
  * Spring's {@link SpringExtension} replaces the JUnit 4
  * {@code SpringClassRule}/{@code SpringMethodRule} pair used in
- * {@link BaseJerseyTest}.
+ * {@code BaseJerseyTest}.
  *
- * @see BaseJerseyTest
  * @author poirigui
  */
 @ActiveProfiles({ "web", EnvironmentProfiles.TEST })
@@ -62,8 +62,11 @@ public abstract class BaseJerseyTest5 extends JerseyTest implements ApplicationC
     @Override
     protected final Application configure() {
         application = new ResourceConfig()
-                .packages( "io.swagger.v3.jaxrs2.integration.resources", "ubic.gemma.rest" )
-                .registerClasses( GZipEncoder.class )
+                // mirrors jersey.config.server.provider.packages in web.xml; Swagger's
+                // integration resources are deliberately absent — OpenApiWebService serves
+                // /openapi.{json,yaml} from the `openApi` bean instead
+                .packages( "ubic.gemma.rest" )
+                .registerClasses( FastGZipEncoder.class )
                 // use a generic context for now, it will be replaced when this bean is fully initialized in setApplicationContext()
                 .property( "contextConfig", new GenericWebApplicationContext() )
                 .property( "openApi.configuration.location", "/WEB-INF/classes/openapi-configuration.yaml" )

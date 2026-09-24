@@ -87,6 +87,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
         gene2GOAssLoader.setParser( new NCBIGene2GOAssociationParser( taxa ) );
 
         HttpFetcher fetcher = new HttpFetcher();
+        log.info( String.format( "Output will be written to: %s", downloadPath ) );
         fetcher.setLocalBasePath( downloadPath );
 
         Collection<File> files;
@@ -105,8 +106,16 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractAuthenticatedCLI {
         log.info( "Removing all old GO associations" );
         gene2GOAssociationService.removeAll();
 
+        // removeAll() has committed, so from here on a failure leaves the GO association table empty or partial
         log.info( "Done, loading new ones" );
-        gene2GOAssLoader.load( gene2Gofile );
+        try {
+            gene2GOAssLoader.load( gene2Gofile );
+        } catch ( RuntimeException | Error e ) {
+            throw new RuntimeException( "Every existing GO association was deleted before loading started, and loading "
+                    + "failed after " + gene2GOAssLoader.getCount() + " new ones were saved, so the GO association "
+                    + "table is empty or incomplete. Fix the cause and rerun updateGOAnnots; the " + ExternalDatabases.GO
+                    + " database's last-updated date was not changed.", e );
+        }
 
         ExternalDatabase ed = externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GO );
         if ( ed != null ) {

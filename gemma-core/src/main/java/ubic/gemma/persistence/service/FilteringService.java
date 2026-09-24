@@ -74,6 +74,11 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) throws IllegalArgumentException;
 
     /**
+     * @see FilteringDao#getFilter(List, SubqueryMode)
+     */
+    Filter getFilter( List<FilteringDao.ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) throws IllegalArgumentException;
+
+    /**
      * @see FilteringDao#getFilter(String, Filter.Operator, Collection)
      */
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;

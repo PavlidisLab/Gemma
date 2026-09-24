@@ -35,12 +35,37 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test replacements for GEO terms.
+ * <p>
+ * 🛑 NOTHING APPLIES THIS FILE ANY MORE (Paul, 2026-09-04). Both loaders that read it —
+ * {@code GeoConverterImpl} and {@code LoadSimpleExpressionDataCli} — stopped, so a submitter's text
+ * survives import unchanged and grounding is a curation decision.
+ * <p>
+ * This test is deliberately kept live anyway, and it is the only thing standing between the table
+ * and silent rot: the file is a reviewed body of value → term decisions worth preserving for a
+ * future curation-side suggester, and an unresolvable URI in it is still a defect worth failing on.
+ * Do NOT read a green run here as evidence about any import path — there is no longer one.
  */
 @Slf4j
 @Tag("slow")
 @NetworkAvailable(url = "http://purl.obolibrary.org/")
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoTermReplacementTest {
+
+    /**
+     * URIs that {@code valueStringToOntologyTermMappings.txt} keeps on purpose even though no loaded ontology
+     * resolves them.
+     * <p>
+     * Switching {@code url.efOntology} to {@code efo-base.owl} dropped EFO's merged-in copies of the ontologies it
+     * imports, BTO among them. These three were reviewed in July 2026 and kept as valid URIs with no loaded
+     * equivalent, to be resolved on demand rather than remapped to a poorer term — unlike the ECTO, GO and AfPO
+     * casualties of the same switch, which were remapped (05551c8442, 700e77370a, ea9cec7f68). Listing them
+     * individually keeps the rest of the check live: a newly unresolvable term still fails.
+     */
+    private static final Set<String> DELIBERATELY_UNRESOLVED_URIS = new HashSet<>( Arrays.asList(
+            "http://purl.obolibrary.org/obo/BTO_0000155",   // bronchoalveolar lavage
+            "http://purl.obolibrary.org/obo/BTO_0001033",   // prostate cancer cell line
+            "http://purl.obolibrary.org/obo/BTO_0001616"    // colorectal cancer cell line
+    ) );
 
     private static final List<OntologyService> ontologies = new ArrayList<>();
     private static final Map<OntologyService, Collection<String>> prefixesByOntology = new HashMap<>();
@@ -173,6 +198,10 @@ public class GeoTermReplacementTest {
             }
             for ( Rec rec : records ) {
                 if ( prefixesByOntology.get( os ).stream().noneMatch( rec.valueUri::startsWith ) ) {
+                    continue;
+                }
+                if ( DELIBERATELY_UNRESOLVED_URIS.contains( rec.valueUri ) ) {
+                    seen.add( rec.synonym );
                     continue;
                 }
                 OntologyTerm term = os.getTerm( rec.valueUri );

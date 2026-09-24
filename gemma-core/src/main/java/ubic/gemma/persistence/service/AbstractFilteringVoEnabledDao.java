@@ -414,6 +414,75 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property ), property, null );
     }
 
+    @Override
+    public final Filter getFilter( List<ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) {
+        if ( conjuncts.isEmpty() ) {
+            throw new IllegalArgumentException( "At least one predicate is required." );
+        }
+        if ( conjuncts.size() == 1 ) {
+            // identical to the ordinary single-predicate path, including its subquery-mode handling
+            ConjunctSpec c = conjuncts.get( 0 );
+            if ( c.getValues() != null ) {
+                return subqueryMode != null
+                        ? getFilter( c.getProperty(), c.getOperator(), c.getValues(), subqueryMode )
+                        : getFilter( c.getProperty(), c.getOperator(), c.getValues() );
+            }
+            return subqueryMode != null
+                    ? getFilter( c.getProperty(), c.getOperator(), requireNonNullValue( c ), subqueryMode )
+                    : getFilter( c.getProperty(), c.getOperator(), requireNonNullValue( c ) );
+        }
+        if ( subqueryMode == SubqueryMode.ALL ) {
+            throw new IllegalArgumentException( "A conjunction cannot be quantified with all(): "
+                    + "\"every element satisfies A and B\" negates to a disjunction, which a subquery "
+                    + "carrying a conjunction cannot express. Use any() or none()." );
+        }
+        String sharedAlias = null;
+        List<Filter> inner = new ArrayList<>( conjuncts.size() );
+        for ( ConjunctSpec c : conjuncts ) {
+            if ( !filterablePropertiesViaSubquery.contains( c.getProperty() ) ) {
+                throw new IllegalArgumentException( c.getProperty() + " cannot be filtered via a subquery, "
+                        + "so it cannot take part in a conjunction that binds to one element." );
+            }
+            FilterablePropertyMeta meta = getFilterablePropertyMeta( c.getProperty() );
+            if ( inner.isEmpty() ) {
+                sharedAlias = meta.objectAlias;
+            } else if ( !Objects.equals( sharedAlias, meta.objectAlias ) ) {
+                throw new IllegalArgumentException( "Conjoined predicates must all target the same relation; "
+                        + c.getProperty() + " does not belong to the same one as "
+                        + conjuncts.get( 0 ).getProperty() + "." );
+            }
+            inner.add( c.getValues() != null
+                    ? Filter.parse( meta.objectAlias, meta.propertyName, meta.propertyType, c.getOperator(), c.getValues(), c.getProperty() )
+                    : Filter.parse( meta.objectAlias, meta.propertyName, meta.propertyType, c.getOperator(), requireNonNullValue( c ), c.getProperty() ) );
+        }
+        List<Subquery.Alias> aliases = resolveSubqueryAliases( sharedAlias );
+        Filter.Operator op = subqueryMode == SubqueryMode.NONE ? Filter.Operator.notInSubquery : Filter.Operator.inSubquery;
+        return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, op,
+                new Subquery( getElementClass().getName(), getIdentifierPropertyName(), aliases, inner ),
+                conjuncts.get( 0 ).getProperty() );
+    }
+
+    private static String requireNonNullValue( ConjunctSpec c ) {
+        if ( c.getValue() == null ) {
+            throw new IllegalArgumentException( "A value is required for " + c.getProperty() + "." );
+        }
+        return c.getValue();
+    }
+
+    /** Resolve the join aliases a subquery needs to reach {@code objectAlias} from the root entity. */
+    private List<Subquery.Alias> resolveSubqueryAliases( @Nullable String objectAlias ) {
+        if ( objectAlias == null ) {
+            // the property refers to the root entity, no need for aliases
+            return Collections.emptyList();
+        }
+        for ( FilterablePropertyAlias fpa : filterablePropertyObjectAliases ) {
+            if ( objectAlias.equals( fpa.getObjectAlias() ) ) {
+                return SubqueryUtils.guessAliases( fpa.prefix, fpa.getObjectAlias() );
+            }
+        }
+        throw new IllegalArgumentException( String.format( "Could not find a filterable property alias for %s.", objectAlias ) );
+    }
+
     private Filter nestIfSubquery( Filter f, String propertyName, @Nullable SubqueryMode subqueryMode ) {
         if ( !filterablePropertiesViaSubquery.contains( propertyName ) ) {
             if ( subqueryMode != null ) {

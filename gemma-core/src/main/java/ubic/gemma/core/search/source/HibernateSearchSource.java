@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneSet;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,6 +78,12 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
      * large requested page) can't drag arbitrary amounts of work through Hibernate Search.
      */
     private static final int ACL_OVER_FETCH_HARD_CAP = 500;
+
+    /**
+     * Number of unresolvable ACL identities named individually in the warning emitted by
+     * {@link #readAcls(List)}.
+     */
+    private static final int UNRESOLVED_ACL_LOG_LIMIT = 10;
 
     private static final String[] PLATFORM_FIELDS = { "shortName", "name", "description", "alternateNames.name", "externalReferences.accession" };
     private static final String[] PLATFORM_EXACT_FIELDS = { "shortName", "name", "alternateNames.name", "externalReferences.accession" };
@@ -454,7 +461,8 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
      * Filter search results by ACLs (gsec → ubic.gemma.core.security rename has shifted the
      * imports above; the algorithm is unchanged).
      */
-    private <T extends Identifiable> Collection<ubic.gemma.model.common.search.SearchResult<T>> filterByAcls(
+    // visible for testing
+    <T extends Identifiable> Collection<ubic.gemma.model.common.search.SearchResult<T>> filterByAcls(
             Collection<ubic.gemma.model.common.search.SearchResult<T>> results, Class<? extends Securable> resultType ) {
         if ( results.isEmpty() ) {
             return results;
@@ -463,13 +471,72 @@ public class HibernateSearchSource implements FieldAwareSearchSource {
         List<ObjectIdentity> aclIdentities = results.stream()
                 .map( r -> new AclObjectIdentity( resultType, r.getResultId() ) )
                 .collect( Collectors.toList() );
-        Set<Long> filteredIds = aclService.readAclsById( aclIdentities ).values().stream()
-                .filter( acl -> aclGrantsRead( acl, sids ) )
-                .map( acl -> ( Long ) acl.getObjectIdentity().getIdentifier() )
+        // Key off the identities we passed in rather than the Acl's own ObjectIdentity: on the
+        // degraded path below the map is assembled from our own keys, and it spares us a guess at
+        // which ObjectIdentity implementation the AclService chose to key its result map by.
+        Set<Long> filteredIds = readAcls( aclIdentities ).entrySet().stream()
+                .filter( e -> aclGrantsRead( e.getValue(), sids ) )
+                .map( e -> ( ( Number ) e.getKey().getIdentifier() ).longValue() )
                 .collect( Collectors.toSet() );
         return results.stream()
                 .filter( s -> filteredIds.contains( s.getResultId() ) )
                 .collect( Collectors.toList() );
+    }
+
+    /**
+     * Bulk-read the ACLs for {@code identities}, tolerating identities that have no ACL row at all.
+     * <p>
+     * Spring Security's {@link org.springframework.security.acls.jdbc.JdbcAclService#readAclsById(List)}
+     * is all-or-nothing: it discards the entire batch and throws {@link NotFoundException} if even one
+     * requested identity is unresolved. For a search post-filter that is the wrong contract twice over
+     * — an unresolvable identity should drop one hit, not 500 the request (the reported failure), and
+     * certainly not deny the whole page (what a blanket catch-and-empty-map would do).
+     * <p>
+     * The realistic source of an unresolvable identity is a Lucene document outliving its entity: the
+     * index still carries a deleted dataset, so both the row and its {@code ACLOBJECTIDENTITY} entry
+     * are gone. Hit 2026-08-14 on a local instance — {@code /datasets?query=brain} matched
+     * ExpressionExperiment 91719, absent from {@code INVESTIGATION}, and the batch read aborted the
+     * whole search. A stale hit is unreadable by definition, so dropping it is also the right answer
+     * for the user; the {@code warn} is aimed at the operator, for whom it means "reindex".
+     * <p>
+     * The failed batch call has already populated the ACL cache for every identity that DID resolve
+     * (the throw happens in {@code JdbcAclService} after {@code BasicLookupStrategy} has cached its
+     * hits), so the retry loop costs cache lookups plus one query per genuinely missing row.
+     */
+    private Map<ObjectIdentity, Acl> readAcls( List<ObjectIdentity> identities ) {
+        try {
+            return aclService.readAclsById( identities );
+        } catch ( NotFoundException e ) {
+            Map<ObjectIdentity, Acl> acls = HashMap.newHashMap( identities.size() );
+            List<ObjectIdentity> unresolved = new ArrayList<>();
+            for ( ObjectIdentity oid : identities ) {
+                try {
+                    acls.put( oid, aclService.readAclById( oid ) );
+                } catch ( NotFoundException nfe ) {
+                    unresolved.add( oid );
+                }
+            }
+            log.warn( String.format(
+                    "No ACL information for %d of %d search hits; dropping them from the results. "
+                            + "This usually means the search index references entities that no longer "
+                            + "exist and needs to be rebuilt. Affected: %s",
+                    unresolved.size(), identities.size(), summarize( unresolved ) ) );
+            return acls;
+        }
+    }
+
+    /**
+     * Render at most {@link #UNRESOLVED_ACL_LOG_LIMIT} identities for the warning above — a query
+     * that outruns a badly stale index can leave hundreds, and the count already carries the scale.
+     */
+    private static String summarize( List<ObjectIdentity> identities ) {
+        String head = identities.stream()
+                .limit( UNRESOLVED_ACL_LOG_LIMIT )
+                .map( oid -> oid.getType() + ":" + oid.getIdentifier() )
+                .collect( Collectors.joining( ", " ) );
+        return identities.size() > UNRESOLVED_ACL_LOG_LIMIT
+                ? head + ", … (" + ( identities.size() - UNRESOLVED_ACL_LOG_LIMIT ) + " more)"
+                : head;
     }
 
     /**

@@ -1,0 +1,42 @@
+{
+  "artifact": "mesh-disease-synonyms.tsv",
+  "sha256": "8d9aeef6d2088a832e1864acb0ba3edcace4849e52cc3db42ed9df0cf602fd2d",
+  "built": "2026-08-15T02:02:39+00:00",
+  "rows": 8158,
+  "mondo_terms": 2594,
+  "stats": {
+    "mesh_descriptors_joined": 3199,
+    "dropped_ambiguous": 3,
+    "dropped_already_in_mondo": 7058,
+    "dropped_inverted": 8767,
+    "dropped_too_short": 0
+  },
+  "policy": {
+    "disease_tree_prefixes": [
+      "C",
+      "F03"
+    ],
+    "join": "mondo_obo_mesh_xref UNION mondo_sssom_exactMatch",
+    "doid_route": "excluded (8.9% ambiguous)",
+    "ambiguous": "dropped",
+    "concepts": "preferred only",
+    "inverted_headings": "dropped",
+    "min_synonym_length": 3
+  },
+  "sources": {
+    "mesh": {
+      "url": "https://nlmpubs.nlm.nih.gov/projects/mesh/MESH_FILES/xmlmesh/desc2026.gz",
+      "version": "2026",
+      "sha256": "ccd4d0d33bebfd4c836a59e7dd0c635b1d4e20c4f5a6abc55e2eb0ba4c8716dd"
+    },
+    "mondo_obo": {
+      "url": "http://purl.obolibrary.org/obo/mondo.obo",
+      "version": "releases/2026-08-04",
+      "sha256": "fce4bccd97c4eb66161e88272ca0bd6ecd28c003afa878bbec8eae0ceb78fba8"
+    },
+    "mondo_sssom": {
+      "url": "https://raw.githubusercontent.com/monarch-initiative/mondo/master/src/ontology/mappings/mondo.sssom.tsv",
+      "sha256": "701a4c0278a79b173297dfc35331afe443ce7d5f0ec358b5f1328ee08fb8e4d6"
+    }
+  }
+}

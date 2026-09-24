@@ -26,6 +26,8 @@ import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Date;
 import java.util.Objects;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * One progress / state / log record reported by the scheduler-side pipeline.
@@ -45,6 +47,8 @@ import java.util.Objects;
 public class PipelineJobEvent extends AbstractIdentifiable {
 
     @ManyToOne(fetch = FetchType.LAZY)
+    // V18 declares FK_PIPELINE_JOB_EVENT_JOB ON DELETE CASCADE; keep the mapping in step so a Hibernate-generated schema cascades too
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "JOB_FK", nullable = false, columnDefinition = "BIGINT")
     private PipelineJob job;
 

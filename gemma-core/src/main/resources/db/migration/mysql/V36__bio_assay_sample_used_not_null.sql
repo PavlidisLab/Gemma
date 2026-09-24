@@ -1,0 +1,19 @@
+-- BIO_ASSAY.SAMPLE_USED_FK becomes NOT NULL, matching the mapping.
+--
+-- BioAssay.sampleUsed is @ManyToOne(fetch = EAGER) with @JoinColumn(nullable = false), but the
+-- MySQL column has always allowed NULL. The H2 schema, generated from the mapping, has it NOT NULL
+-- already -- so this state was unreachable in tests and reachable only on production.
+--
+-- A row that reaches it is invisible rather than merely wrong. Non-optional plus eager makes
+-- Hibernate's entity loader inner-join BIO_MATERIAL, so session.get() returns null for it with no
+-- exception, while the collection loader still returns it and then fails at flush with
+-- "not-null property references a null or transient value". Both were seen on 2026-08-30: GSE4728
+-- (experiment 22984) had all 9 of its assays in this state, which made them unloadable by the
+-- application, left them without ACL identities that anything could create or parent, and made
+-- deleteExperiments fail on the dataset. They were the only 9 such rows in the corpus and the
+-- dataset was deleted.
+--
+-- This migration will fail if any row has a NULL SAMPLE_USED_FK. That is the point: the fix is to
+-- deal with the row, not to relax the constraint. Find them with
+--   SELECT ID, NAME, EXPRESSION_EXPERIMENT_FK FROM BIO_ASSAY WHERE SAMPLE_USED_FK IS NULL;
+ALTER TABLE BIO_ASSAY MODIFY COLUMN SAMPLE_USED_FK BIGINT NOT NULL;

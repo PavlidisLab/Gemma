@@ -46,6 +46,17 @@ public class AclLinterServiceImpl implements AclLinterService {
     private ParentIdentityRetrievalStrategy parentIdentityRetrievalStrategy;
     @Autowired
     private AclClassMetadata aclClassMetadata;
+    @Autowired
+    private ubic.gemma.core.security.acl.BaseAclAdvice aclAdvice;
+    @Autowired
+    private AclLinterHelperService aclLinterHelperService;
+
+    /**
+     * Identifiers per parent-linking transaction. A bulk repair of BioAssay on production is
+     * 631,709 rows; at this size a failure costs one batch instead of the whole run, and the
+     * re-run picks up what is left because a linked identity no longer matches the query.
+     */
+    private static final int PARENT_LINK_BATCH_SIZE = 500;
 
     /**
      * Renovations Phase 3: gsec HQL deprecation. Direct JdbcTemplate access to the canonical
@@ -218,9 +229,7 @@ public class AclLinterServiceImpl implements AclLinterService {
         }
         for ( Long identifier : list ) {
             if ( config.isApplyFixes() ) {
-                aclService.createAcl( new AclObjectIdentity( clazz, identifier ) );
-                log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
-                results.add( new LintResult( clazz, identifier, "ACL identity was created.", true ) );
+                createMissingAcl( clazz, identifier, results );
             } else {
                 results.add( new LintResult( clazz, identifier, "Entity lacks an ACL identity.", false ) );
             }
@@ -248,12 +257,88 @@ public class AclLinterServiceImpl implements AclLinterService {
             return;
         }
         if ( config.isApplyFixes() ) {
-            aclService.createAcl( new AclObjectIdentity( clazz, identifier ) );
-            log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
-            results.add( new LintResult( clazz, identifier, "ACL identity was created.", true ) );
+            createMissingAcl( clazz, identifier, results );
         } else {
             results.add( new LintResult( clazz, identifier, "Entity lacks an ACL identity.", false ) );
         }
+    }
+
+    /**
+     * Create the ACL a Securable is missing.
+     * <p>
+     * A {@link SecuredChild} gets a bare identity: it holds no ACEs of its own, and
+     * {@link #lintSecuredChildWithoutParent} links it to the parent it inherits from on the same
+     * run.
+     * <p>
+     * A top-level Securable cannot be repaired that way. {@code aclService.createAcl(oi)} writes
+     * {@code parent=NULL, entries_inheriting=1} and no ACEs, which reads as "inherit from a parent
+     * that does not exist": nothing grants ADMINISTRATION or WRITE, so {@code ACL_SECURABLE_EDIT}
+     * denies every caller including an administrator, and the repair leaves the entity exactly as
+     * un-editable as it found it. Observed on ExpressionExperiments 93287, 93288, 93289, 93433 and
+     * 93434, whose factors then inherited from those empty identities and were broken in turn.
+     * Routing through {@link ubic.gemma.core.security.acl.BaseAclAdvice#addOrUpdateAcl} — the same
+     * call {@code AclEventListener.onPostInsert} makes for a newly inserted entity — runs
+     * {@code setupBaseAces} and produces a usable root ACL. It also honours
+     * {@code specialCaseToKeepPrivateOnCreation}, so repairing an Investigation does not hand
+     * anonymous read to a dataset that never had it.
+     */
+    private void createMissingAcl( Class<? extends Securable> clazz, Long identifier, Collection<LintResult> results ) {
+        if ( SecuredChild.class.isAssignableFrom( clazz ) ) {
+            aclService.createAcl( new AclObjectIdentity( clazz, identifier ) );
+            // 🛑 A SecuredChild's new identity carries no ACEs of its own, so without a parent it inherits from
+            // nothing and grants nothing -- the same condition an ACL lookup reports as "Access is denied", to an
+            // administrator, because it finds no permissions rather than refusing one. Creating the row and
+            // stopping there manufactures the defect lintSecuredChildWithoutParent exists to repair.
+            //
+            // It is not theoretical: this created 8 such rows for ExperimentalFactor on production 2026-09-10,
+            // and cab found them. Running --lint-missing-identities over ExpressionAnalysisResultSet, where 1,212
+            // lack identities, would have made 1,212 more.
+            //
+            // Resolve and attach the parent in the same breath, the way lintSecuredChildWithIncorrectParent does.
+            // A child whose parent cannot be resolved is reported unfixed rather than left silently inert.
+            //noinspection unchecked
+            SecuredChild<?> sc = getSecuredChild( ( Class<? extends SecuredChild<?>> ) clazz, identifier );
+            AclObjectIdentity parentAoi = sc != null
+                    ? ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc )
+                    : null;
+            if ( parentAoi != null ) {
+                setParentAcl( clazz, identifier, parentAoi );
+                log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier )
+                        + " and set its parent to " + parentAoi + "." );
+                results.add( new LintResult( clazz, identifier,
+                        "ACL identity was created and its parent ACL identity was set to " + parentAoi + ".", true ) );
+            } else {
+                log.warn( "Created missing ACL identity for " + formatEntity( clazz, identifier )
+                        + ", but could not resolve a parent; it inherits from nothing and grants nothing." );
+                results.add( new LintResult( clazz, identifier,
+                        "ACL identity was created, but no parent ACL identity could be resolved for it.", false ) );
+            }
+            if ( sc != null ) {
+                sessionFactory.getCurrentSession().evict( sc );
+            }
+            return;
+        }
+        Securable s = getSecurable( clazz, identifier );
+        if ( s == null ) {
+            log.warn( "Could not find " + formatEntity( clazz, identifier ) + "." );
+            results.add( new LintResult( clazz, identifier, "Entity lacks an ACL identity. The fix could not be applied because the entity could not be found.", false ) );
+            return;
+        }
+        aclAdvice.addOrUpdateAcl( null, s, null );
+        String fixMessage = "ACL identity was created with base access control entries.";
+        log.info( "Created missing ACL identity for " + formatEntity( clazz, identifier ) + "." );
+        results.add( new LintResult( clazz, identifier, fixMessage, true ) );
+    }
+
+    /**
+     * Attach the ACL identity of {@code identifier} to {@code parentAoi}.
+     * <p>
+     * The write itself lives on {@link AclLinterHelperService} so the bulk repair can drive it in
+     * batches; see {@link AclLinterHelperServiceImpl#setParentAcl} for why it must go through
+     * {@code updateAcl} and why it also turns on {@code entries_inheriting}.
+     */
+    private void setParentAcl( Class<? extends Securable> clazz, Long identifier, AclObjectIdentity parentAoi ) {
+        aclLinterHelperService.setParentAcl( clazz, identifier, parentAoi );
     }
 
     /**
@@ -261,41 +346,54 @@ public class AclLinterServiceImpl implements AclLinterService {
      */
     private void lintSecuredChildWithoutParent( Class<? extends SecuredChild<?>> clazz, AclLinterConfig config, Collection<LintResult> results ) {
         log.info( "Linting " + clazz.getSimpleName() + " lacking parent ACL identities..." );
-        //noinspection unchecked
-        List<AclObjectIdentity> list = sessionFactory.getCurrentSession()
-                .createQuery( "select aoi from AclObjectIdentity aoi "
-                        + "where aoi.type = :type "
-                        + "and aoi.parentObject is null" )
-                .setParameter( "type", clazz.getName() )
-                .setReadOnly( !config.isApplyFixes() )
-                .list();
-        if ( list.isEmpty() ) {
-            log.info( "All " + clazz.getSimpleName() + " have parent ACL identities." );
-        } else {
-            log.warn( "There are " + list.size() + " " + clazz.getSimpleName() + " lacking parent ACL identities." );
+        // Identifiers only, by raw SQL. The previous form loaded every matching AclObjectIdentity
+        // entity into a single list, which for BioAssay on production is 631,709 of them before any
+        // work starts.
+        List<Long> identifiers = jdbcTemplate.queryForList(
+                "select aoi.object_id_identity "
+                        + "from acl_object_identity aoi "
+                        + "join acl_class cls on aoi.object_id_class = cls.id "
+                        // 🛑 entries_inheriting = 0 is caught here too, and by nothing else. A SecuredChild whose
+                        // parent is present AND correct but which does not inherit reaches no other predicate:
+                        // lintSecuredChildWithIncorrectParent compares parent type and identifier and passes it,
+                        // and this check used to require a null parent. Such a row carries no ACEs of its own, so
+                        // it grants nothing -- an ACL lookup finds no permissions and denies, which reads as
+                        // "Access is denied" even for an administrator.
+                        //
+                        // Two live populations on production, 2026-09-10: 292 ExpressionAnalysisResultSet rows in
+                        // exactly this state (285 of them under PUBLIC experiments, so their result sets are
+                        // refused on /resultSets while /analyses/differential serves them to the same anonymous
+                        // caller), and 8 ExperimentalFactor rows this linter had itself just created -- see
+                        // createMissingAcl, which no longer leaves them that way.
+                        //
+                        // setParentAcl repairs both shapes: it sets the parent AND turns inheriting on.
+                        + "where cls.class = ? and (aoi.parent_object is null or aoi.entries_inheriting = 0)",
+                Long.class, clazz.getName() );
+        if ( identifiers.isEmpty() ) {
+            log.info( "All " + clazz.getSimpleName() + " have parent ACL identities and inherit from them." );
+            return;
         }
-        for ( AclObjectIdentity aoi : list ) {
-            if ( config.isApplyFixes() ) {
-                SecuredChild<?> sc = getSecuredChild( clazz, aoi.getIdentifier() );
-                if ( sc == null ) {
-                    log.warn( "Could not find " + formatEntity( clazz, aoi ) + "." );
-                    results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity. The fix could not be applied because the entity could not be found.", false ) );
-                    continue;
-                }
-                AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
-                if ( parentAoi != null ) {
-                    aoi.setParentObject( parentAoi );
-                    String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
-                    log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
-                    results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
-                } else {
-                    results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity. The fix could not be applied because the parent ACL identity could not be found.", false ) );
-                }
-                // remove to prevent SecuredChild to pile up in memory
-                sessionFactory.getCurrentSession().evict( sc );
-            } else {
-                results.add( new LintResult( clazz, aoi.getIdentifier(), "Entity is a SecuredChild with no parent ACL identity.", false ) );
+        log.warn( "There are " + identifiers.size() + " " + clazz.getSimpleName() + " lacking parent ACL identities." );
+        if ( !config.isApplyFixes() ) {
+            for ( Long identifier : identifiers ) {
+                results.add( new LintResult( clazz, identifier, "Entity is a SecuredChild with no parent ACL identity.", false ) );
             }
+            return;
+        }
+        // The batches commit in nested REQUIRES_NEW transactions, so this call must not already
+        // hold write locks on the identities they update. It does whenever lintDanglingIdentities
+        // or lintSecurablesLackingIdentities ran for the same type in this call: lintAcls is
+        // @Transactional, those checks delete and create acl_object_identity rows, and the newly
+        // created ones are exactly the parentless identities this repair then targets. The inner
+        // transaction waits on a lock the outer cannot release until the inner returns, so MySQL
+        // ends it with "Lock wait timeout exceeded" — seen on production 2026-08-30. Select the
+        // check on its own (lintAcls --lint-child-without-parent) to keep this transaction
+        // read-only.
+        for ( int from = 0; from < identifiers.size(); from += PARENT_LINK_BATCH_SIZE ) {
+            List<Long> batch = identifiers.subList( from, Math.min( from + PARENT_LINK_BATCH_SIZE, identifiers.size() ) );
+            results.addAll( aclLinterHelperService.linkParentsInNewTransaction( clazz, batch ) );
+            log.info( String.format( "%s: linked %d/%d.", clazz.getSimpleName(),
+                    Math.min( from + PARENT_LINK_BATCH_SIZE, identifiers.size() ), identifiers.size() ) );
         }
     }
 
@@ -321,7 +419,7 @@ public class AclLinterServiceImpl implements AclLinterService {
             }
             AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
             if ( parentAoi != null ) {
-                aoi.setParentObject( parentAoi );
+                setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
                 String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
                 log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
                 results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
@@ -364,7 +462,7 @@ public class AclLinterServiceImpl implements AclLinterService {
                 }
                 AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
                 if ( parentAoi != null ) {
-                    aoi.setParentObject( parentAoi );
+                    setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
                     String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
                     log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
                     results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
@@ -405,7 +503,7 @@ public class AclLinterServiceImpl implements AclLinterService {
             }
             AclObjectIdentity parentAoi = ( AclObjectIdentity ) parentIdentityRetrievalStrategy.getParentIdentity( sc );
             if ( parentAoi != null ) {
-                aoi.setParentObject( parentAoi );
+                setParentAcl( clazz, aoi.getIdentifier(), parentAoi );
                 String fixMessage = "Parent ACL identity was set to " + parentAoi + ".";
                 log.info( formatEntity( clazz, aoi ) + ": " + fixMessage );
                 results.add( new LintResult( clazz, aoi.getIdentifier(), fixMessage, true ) );
@@ -584,6 +682,11 @@ public class AclLinterServiceImpl implements AclLinterService {
     @Nullable
     private SecuredChild<?> getSecuredChild( Class<? extends SecuredChild<?>> clazz, Long identifier ) {
         return ( SecuredChild<?> ) sessionFactory.getCurrentSession().get( clazz, identifier );
+    }
+
+    @Nullable
+    private Securable getSecurable( Class<? extends Securable> clazz, Long identifier ) {
+        return ( Securable ) sessionFactory.getCurrentSession().get( clazz, identifier );
     }
 
     private String formatEntity( Class<?> clazz, AclObjectIdentity aoi ) {

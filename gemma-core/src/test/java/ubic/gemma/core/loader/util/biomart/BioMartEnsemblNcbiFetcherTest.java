@@ -21,6 +21,7 @@ package ubic.gemma.core.loader.util.biomart;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import ubic.gemma.model.genome.Taxon;
@@ -78,6 +79,14 @@ public class BioMartEnsemblNcbiFetcherTest {
     /*
      * Tests that a file can be downloaded from biomart in this case a rat file as it is quite small Test method for
      */
+    /**
+     * Excluded by default: this downloads a file from BioMart on every run, 25.6 s cold, the
+     * largest single item in the fast suite. The catch below swallows a ConnectException, so an
+     * unreachable host skips quietly — but a reachable host that rejects the request fails the
+     * build with an error that reads like a code fault. The other two methods here touch no
+     * network and stay in the default run.
+     */
+    @Tag("network")
     @Test
     public void testGetEnsemblNcibidata() {
 

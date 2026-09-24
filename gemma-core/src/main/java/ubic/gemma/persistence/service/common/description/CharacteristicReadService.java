@@ -71,6 +71,16 @@ public interface CharacteristicReadService {
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
+     * @see CharacteristicDao#countExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, Collection)
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
+
+    /**
+     * @see CharacteristicDao#countExperimentsByUris(Collection, boolean, boolean, boolean, boolean, Taxon, Collection)
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
+
+    /**
      * Find characteristics that have a particular parent class or lack thereof.
      */
     Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults );
@@ -85,6 +95,13 @@ public interface CharacteristicReadService {
      */
     @Nullable
     Characteristic findBestByUri( String uri );
+
+    /**
+     * For each value URI, return one representative ACL-visible usage, or omit URIs with no accessible usage.
+     *
+     * @see CharacteristicDao#findRepresentativeUsageByValueUris(Collection)
+     */
+    Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
 
     /**
      * Returns a collection of characteristics that have a value starting with the given string.
@@ -109,9 +126,39 @@ public interface CharacteristicReadService {
     Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris );
 
     /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue );
+
+    /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String, Collection)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds );
+
+    /**
+     * @see CharacteristicDao#findPriorCurationByOriginalValue(String, int, Collection)
+     */
+    List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds );
+
+    /**
      * @see CharacteristicDao#findValueGroupedByValueUri(Collection, boolean, boolean, boolean, int)
      */
     Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults );
+
+    /**
+     * @see CharacteristicDao#findCategoryGroupedByCategoryUri(Collection, boolean, int)
+     */
+    Map<String, String> findCategoryGroupedByCategoryUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults );
+
+    /**
+     * @see CharacteristicDao#findByUriInAnySlot(String)
+     */
+    Collection<Characteristic> findByUriInAnySlot( String uri );
+
+    /**
+     * @see CharacteristicDao#findExperimentIdsByUriInAnySlot(String)
+     */
+    Collection<Long> findExperimentIdsByUriInAnySlot( String uri );
 
     /**
      * @param thawParents if true, the parents will be initialized if they are proxies

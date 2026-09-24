@@ -81,7 +81,7 @@ public class PreboardedExperimentServiceTest {
 
         assertThat( result.getAccession() ).isEqualTo( "GSE1" );
         assertThat( result.getSource() ).isEqualTo( "GEO" );
-        assertThat( result.getIdentifyingMetadata() ).contains( "title" );
+        assertThat( result.getSourceMetadata() ).contains( "title" );
         assertThat( result.getWorkflowState() ).isEqualTo( WorkflowState.Preboarded );
         verify( session ).persist( result );
         verify( preboardedAuditService ).recordPreboardedCreated( eq( result ), eq( "GSE1" ) );
@@ -164,6 +164,51 @@ public class PreboardedExperimentServiceTest {
         assertThat( ee.getWorkflowState() ).isEqualTo( WorkflowState.Loaded );
         verify( session ).update( skel );
         verify( session ).update( ee );
+    }
+
+    /**
+     * Promotion used to drop the preboarded's harvested payload, so whatever the scrape found was lost
+     * the moment the data landed.
+     */
+    @Test
+    public void promote_carriesTheSourceMetadataForward() throws Exception {
+        PreboardedExperiment skel = new PreboardedExperiment();
+        skel.setId( 7L );
+        skel.setWorkflowState( WorkflowState.Preboarded );
+        skel.setSourceMetadata( "{\"title\":\"scraped\"}" );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 99L );
+        ee.setWorkflowState( WorkflowState.Preboarded );
+
+        service.promote( ee, skel );
+
+        assertThat( ee.getSourceMetadata() ).isEqualTo( "{\"title\":\"scraped\"}" );
+        verify( session ).update( ee );
+    }
+
+    /**
+     * The import writes the schema-v1 document from the parsed series; a preboarded carries only the
+     * smaller scrape payload. Both land in the same column, so overwriting would silently trade the
+     * richer document for the poorer one.
+     */
+    @Test
+    public void promote_doesNotOverwriteASourceMetadataDocumentTheImportAlreadyWrote() throws Exception {
+        PreboardedExperiment skel = new PreboardedExperiment();
+        skel.setId( 7L );
+        skel.setWorkflowState( WorkflowState.Preboarded );
+        skel.setSourceMetadata( "{\"title\":\"scraped\"}" );
+
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 99L );
+        ee.setWorkflowState( WorkflowState.Preboarded );
+        ee.setSourceMetadata( "{\"schemaVersion\":1}" );
+        ee.setSourceMetadataSchemaVersion( 1 );
+
+        service.promote( ee, skel );
+
+        assertThat( ee.getSourceMetadata() ).isEqualTo( "{\"schemaVersion\":1}" );
+        assertThat( ee.getSourceMetadataSchemaVersion() ).isEqualTo( 1 );
     }
 
     @Test

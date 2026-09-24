@@ -30,6 +30,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import java.util.HashSet;
@@ -47,6 +49,7 @@ import java.util.Set;
 public class MedicalSubjectHeading extends BibRefAnnotation {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "QUALIFIES_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "MEDICAL_SUBJECT_HEADING_QUALIFIES_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<MedicalSubjectHeading> qualifiers = new HashSet<>();

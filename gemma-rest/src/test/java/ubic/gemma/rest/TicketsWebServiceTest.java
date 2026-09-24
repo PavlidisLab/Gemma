@@ -19,7 +19,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.prepost.PreAuthorize;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.security.authentication.UserReadService;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
@@ -27,6 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -48,6 +51,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -80,6 +86,13 @@ public class TicketsWebServiceTest {
 
     @Mock
     private UserReadService userReadService;
+
+    /** Constructor dependency of TicketsWebService; it resolves ticket-target display labels. */
+
+    @Mock
+
+    private ExpressionExperimentService expressionExperimentService;
+
 
     @InjectMocks
     private TicketsWebService webService;
@@ -275,6 +288,75 @@ public class TicketsWebServiceTest {
         assertThat( resp.getData().oldestOpenAgeDays ).isBetween( 9L, 11L );
     }
 
+    /* -------------- scratchpad (/tickets/scratchpad, /tickets/summary) -------------- */
+
+    /**
+     * The route provisions through the service and hands back the projection. The two VO fields
+     * asserted are what a client needs to recognize it and to know it can add to it.
+     */
+    @Test
+    public void getScratchpad_provisionsAndReturnsTheCallersOwn() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        Ticket pad = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad: alice", reporter );
+        pad.setId( 7L );
+        pad.setAcceptsTargets( true );
+        pad.setTargets( new HashSet<>() );
+        TicketEvent opened = TicketEvent.Factory.newInstance( TicketEventType.OPENED, reporter, null );
+        opened.setTicket( pad );
+        opened.setOccurredAt( new Date() );
+        pad.setEvents( new ArrayList<>( Collections.singletonList( opened ) ) );
+        when( ticketService.getOrCreateScratchpad( reporter ) ).thenReturn( pad );
+
+        ResponseDataObject<TicketValueObject> resp = webService.getScratchpad();
+
+        assertThat( resp.getData().getType() ).isEqualTo( TicketType.SCRATCHPAD );
+        assertThat( resp.getData().isAcceptsTargets() )
+                .as( "a scratchpad a client cannot add to is inert" )
+                .isTrue();
+        assertThat( resp.getData().getId() ).isEqualTo( 7L );
+        // the event log rides along, as it does on GET /tickets/{id}
+        assertThat( resp.getData().getEvents() ).hasSize( 1 );
+        verify( ticketService ).getOrCreateScratchpad( reporter );
+    }
+
+    @Test
+    public void getScratchpad_returns401_whenAnonymous() {
+        when( userManager.getCurrentUser() ).thenReturn( null );
+        assertThatThrownBy( () -> webService.getScratchpad() )
+                .isInstanceOf( NotAuthorizedException.class );
+        verify( ticketService, never() ).getOrCreateScratchpad( any() );
+    }
+
+    @Test
+    public void getScratchpad_requiresAuthentication() throws NoSuchMethodException {
+        assertPreAuthorizeIsAuthenticated( TicketsWebService.class.getMethod( "getScratchpad" ) );
+    }
+
+    /**
+     * A scratchpad is never resolved, so counting one as open work would put every curator
+     * permanently behind. It comes out of {@code totalOpen} — but it is NOT hidden: it is reported on
+     * its own field and still appears in the breakdown, so {@code totalOpen + scratchpadOpen} is the
+     * sum of {@code byType} and a caller can add it back.
+     */
+    @Test
+    public void getOpenTicketSummary_holdsScratchpadsOutOfTotalOpen_butStillReportsThem() {
+        java.util.Map<TicketType, Long> byType = new java.util.EnumMap<>( TicketType.class );
+        byType.put( TicketType.CURATION, 5L );
+        byType.put( TicketType.QUALITY_REVIEW, 2L );
+        byType.put( TicketType.SCRATCHPAD, 3L );
+        when( ticketService.countOpenByType() ).thenReturn( byType );
+
+        TicketsWebService.OpenTicketSummaryResponse body = webService.getOpenTicketSummary().getData();
+
+        assertThat( body.totalOpen ).as( "5 curation + 2 quality review, scratchpads excluded" ).isEqualTo( 7L );
+        assertThat( body.scratchpadOpen ).isEqualTo( 3L );
+        assertThat( body.byType ).containsEntry( TicketType.SCRATCHPAD, 3L );
+        long sum = body.byType.values().stream().mapToLong( Long::longValue ).sum();
+        assertThat( body.totalOpen + body.scratchpadOpen )
+                .as( "the exclusion must be recoverable from the payload, not invisible" )
+                .isEqualTo( sum );
+    }
+
     /** Helper: minimal Ticket carrying id, state, updatedAt. */
     private Ticket newTicket( long id, TicketState state, Date updatedAt ) {
         Ticket t = Ticket.Factory.newInstance( TicketType.GENERIC, "t-" + id, reporter );
@@ -376,6 +458,274 @@ public class TicketsWebServiceTest {
         assertThat( body.getData().getId() ).isEqualTo( 1L );
         assertThat( body.getData().getEvents() ).hasSize( 1 );
         verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Test ticket" ), any() );
+    }
+
+    /**
+     * One call opens every target WITH its own task. A ticket carrying a thousand experiments cannot say
+     * in its body what is true of only the 734th, so the per-target payload has to be written alongside
+     * the target rather than by a follow-up call per target (frinkbro, 2026-09-11).
+     */
+    @Test
+    public void testCreateTicket_perTargetPayload_travelsWithEachTarget() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        java.util.concurrent.atomic.AtomicReference<java.util.Set<TicketTarget>> captured =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.CURATION ), eq( "Clause label vs URI" ),
+                any() ) ).thenAnswer( inv -> {
+            captured.set( inv.getArgument( 3 ) );
+            return ticket;
+        } );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.CURATION );
+        req.setTitle( "Clause label vs URI" );
+        TicketsWebService.TicketTargetRequest hypoxia = new TicketsWebService.TicketTargetRequest();
+        hypoxia.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        hypoxia.setTargetId( 273007L );
+        hypoxia.setPayload( "{\"fv\":307136,\"task\":\"EFO_0009444 means hypoxia; drop the URI\"}" );
+        hypoxia.setPayloadSchemaVersion( 1 );
+        TicketsWebService.TicketTargetRequest susceptibility = new TicketsWebService.TicketTargetRequest();
+        susceptibility.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        susceptibility.setTargetId( 237804L );
+        susceptibility.setPayload( "{\"fv\":266260,\"task\":\"MONDO_0042489 means disease susceptibility\"}" );
+        req.setTargets( Arrays.asList( hypoxia, susceptibility ) );
+
+        webService.createTicket( req );
+
+        assertThat( captured.get() ).hasSize( 2 );
+        TicketTarget first = captured.get().stream().filter( t -> t.getTargetId() == 273007L ).findFirst().orElseThrow();
+        TicketTarget second = captured.get().stream().filter( t -> t.getTargetId() == 237804L ).findFirst().orElseThrow();
+        assertThat( first.getPayload() ).contains( "EFO_0009444" );
+        assertThat( first.getPayloadSchemaVersion() ).isEqualTo( 1 );
+        assertThat( second.getPayload() ).contains( "MONDO_0042489" );
+        // Each target carries its own, and an absent version stays absent rather than inheriting a sibling's.
+        assertThat( second.getPayloadSchemaVersion() ).isNull();
+        verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.CURATION ), eq( "Clause label vs URI" ), any() );
+    }
+
+    /** The add-target route carries the same per-target task, for a ticket grown after it was opened. */
+    @Test
+    public void testAddTicketTarget_passesThePerTargetPayloadToTheService() {
+        when( ticketService.load( 1L ) ).thenReturn( ticket );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.addTarget( eq( ticket ), eq( TicketTargetType.EXPRESSION_EXPERIMENT ), eq( 167051L ),
+                eq( reporter ), anyString(), eq( 1 ) ) )
+                .thenReturn( new TicketService.TargetAddition( ticket, true ) );
+
+        TicketsWebService.AddTargetRequest req = new TicketsWebService.AddTargetRequest();
+        TicketsWebService.AddTargetRequest.TargetRef ref = new TicketsWebService.AddTargetRequest.TargetRef();
+        ref.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        ref.setTargetId( 167051L );
+        ref.setPayload( "{\"fv\":187891,\"task\":\"CL_0000134 means mesenchymal stem cell\"}" );
+        ref.setPayloadSchemaVersion( 1 );
+        req.setTargets( Collections.singletonList( ref ) );
+
+        TicketsWebService.AddTargetsResult result = webService.addTicketTarget( 1L, req ).getData();
+
+        assertThat( result.getAdded() ).containsExactly( 167051L );
+        verify( ticketService ).addTarget( ticket, TicketTargetType.EXPRESSION_EXPERIMENT, 167051L, reporter,
+                "{\"fv\":187891,\"task\":\"CL_0000134 means mesenchymal stem cell\"}", 1 );
+    }
+
+    /**
+     * 🛑 The 201 is projected by the service, inside its transaction — never from the instance the handler
+     * is holding. {@code assign()} hands back a REATTACHED ticket whose reporter is an uninitialized proxy,
+     * so building the VO here answered 500 "Could not initialize proxy [Contact#6886] - the owning session
+     * was closed" AFTER the ticket had been committed, and a client retrying on 5xx minted duplicates
+     * (frinkbro, 2026-09-11).
+     *
+     * <p>The stand-in for the proxy is a Ticket whose {@code getReporter()} throws what Hibernate throws.
+     * Touching it at all fails the test.</p>
+     */
+    @Test
+    public void testCreateTicket_withAssignee_neverReadsTheHandlersOwnTicketInstance() {
+        Ticket reattachedWithLazyReporter = new Ticket() {
+            @Override
+            public Contact getReporter() {
+                throw new org.hibernate.LazyInitializationException(
+                        "could not initialize proxy [ubic.gemma.model.common.auditAndSecurity.Contact#6886]"
+                                + " - the owning session was closed" );
+            }
+        };
+        reattachedWithLazyReporter.setId( 1L );
+
+        User assignee = new User();
+        assignee.setId( 77L );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( userReadService.load( 77L ) ).thenReturn( assignee );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.CURATION ), eq( "Assigned on create" ), any() ) )
+                .thenReturn( ticket );
+        when( ticketService.assign( eq( ticket ), eq( reporter ), eq( assignee ) ) )
+                .thenReturn( reattachedWithLazyReporter );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.CURATION );
+        req.setTitle( "Assigned on create" );
+        req.setAssigneeId( 77L );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        Response resp = webService.createTicket( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<TicketValueObject> body = ( ResponseDataObject<TicketValueObject> ) resp.getEntity();
+        assertThat( body.getData().getId() ).isEqualTo( 1L );
+        verify( ticketService ).loadValueObject( 1L, true );
+    }
+
+    /**
+     * A caller holding a GEO accession opens a ticket in one call, and the type defaults to the category the
+     * curation store's own {@code REVIEW} maps onto.
+     */
+    @Test
+    public void testCreateTicketFromAccession_resolvesAndOpens() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 99L );
+        when( expressionExperimentService.findByAccession( "GSE12345" ) )
+                .thenReturn( Collections.singletonList( ee ) );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.CURATION ), any(), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE12345" );
+
+        Response resp = webService.createTicketFromAccession( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Set<TicketTarget>> targets = ArgumentCaptor.forClass( Set.class );
+        verify( ticketService ).openTicket( eq( reporter ), eq( TicketType.CURATION ), any(), targets.capture() );
+        assertThat( targets.getValue() ).singleElement()
+                .satisfies( t -> assertThat( t.getTargetId() ).isEqualTo( 99L ) );
+    }
+
+    /**
+     * 🛑 ONE ACCESSION CAN NAME SEVERAL DATASETS, and all of them become targets.
+     * <p>
+     * A GSE split during import backs one experiment per split. Taking the head of the collection would open a
+     * ticket over one arbitrary part and silently drop the rest — a review that looks complete and is not, which
+     * is worse than a 400. This is the whole reason the route resolves rather than the caller.
+     */
+    @Test
+    public void testCreateTicketFromAccession_aSplitAccessionTargetsEveryPart() {
+        ExpressionExperiment a = new ExpressionExperiment();
+        a.setId( 101L );
+        ExpressionExperiment b = new ExpressionExperiment();
+        b.setId( 102L );
+        when( expressionExperimentService.findByAccession( "GSE999" ) ).thenReturn( java.util.Arrays.asList( a, b ) );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( any(), any(), any(), any() ) ).thenReturn( ticket );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE999" );
+
+        webService.createTicketFromAccession( req );
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Set<TicketTarget>> targets = ArgumentCaptor.forClass( Set.class );
+        verify( ticketService ).openTicket( any(), any(), any(), targets.capture() );
+        assertThat( targets.getValue() ).hasSize( 2 )
+                .extracting( TicketTarget::getTargetId )
+                .containsExactlyInAnyOrder( 101L, 102L );
+    }
+
+    /** Nothing carries the accession as an accession, so the short name is tried before giving up. */
+    @Test
+    public void testCreateTicketFromAccession_fallsBackToShortName() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 77L );
+        when( expressionExperimentService.findByAccession( "GSE4242" ) ).thenReturn( Collections.emptyList() );
+        when( expressionExperimentService.findByShortName( "GSE4242" ) ).thenReturn( ee );
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( any(), any(), any(), any() ) ).thenReturn( ticket );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE4242" );
+
+        assertThat( webService.createTicketFromAccession( req ).getStatus() )
+                .isEqualTo( Response.Status.CREATED.getStatusCode() );
+    }
+
+    /**
+     * An accession naming nothing is a 404 and opens NO ticket.
+     * <p>
+     * A ticket pointing at a dataset that could not be resolved is worse than no ticket: it reads as work
+     * waiting rather than as the error it is.
+     */
+    @Test
+    public void testCreateTicketFromAccession_unknownAccessionOpensNothing() {
+        when( expressionExperimentService.findByAccession( "GSE0" ) ).thenReturn( Collections.emptyList() );
+        when( expressionExperimentService.findByShortName( "GSE0" ) ).thenReturn( null );
+
+        TicketsWebService.CreateTicketFromAccessionRequest req =
+                new TicketsWebService.CreateTicketFromAccessionRequest();
+        req.setAccession( "GSE0" );
+
+        assertThatThrownBy( () -> webService.createTicketFromAccession( req ) )
+                .isInstanceOf( NotFoundException.class );
+        verify( ticketService, never() ).openTicket( any(), any(), any(), any() );
+    }
+
+    /**
+     * A screening agent opens a ticket and says what its screen asked. The payload is stored verbatim and
+     * comes back on the created ticket, so the UI can render the question rather than a fixed GEO-scrape
+     * table with Include/Exclude (uib, 2026-09-03).
+     */
+    @Test
+    public void testCreateTicket_carriesTheScreenPayload() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Screen" ), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.GENERIC );
+        req.setTitle( "Screen" );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+        String payload = "{\"screen_summary\":\"12 series matched\","
+                + "\"decision\":{\"confirm_label\":\"Confirm\",\"reject_label\":\"Reject\"}}";
+        req.setPayload( payload );
+        req.setPayloadSchemaVersion( 2 );
+
+        Response resp = webService.createTicket( req );
+
+        assertThat( resp.getStatus() ).isEqualTo( Response.Status.CREATED.getStatusCode() );
+        assertThat( ticket.getPayload() ).isEqualTo( payload );
+        assertThat( ticket.getPayloadSchemaVersion() ).isEqualTo( 2 );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<TicketValueObject> body = ( ResponseDataObject<TicketValueObject> ) resp.getEntity();
+        assertThat( body.getData().getPayload() ).isEqualTo( payload );
+        assertThat( body.getData().getPayloadSchemaVersion() ).isEqualTo( 2 );
+    }
+
+    /** An ordinary ticket carries none, and creating one must not invent an empty payload. */
+    @Test
+    public void testCreateTicket_withoutAPayloadLeavesItUnset() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.openTicket( eq( reporter ), eq( TicketType.GENERIC ), eq( "Plain" ), any() ) )
+                .thenReturn( ticket );
+
+        TicketsWebService.CreateTicketRequest req = new TicketsWebService.CreateTicketRequest();
+        req.setType( TicketType.GENERIC );
+        req.setTitle( "Plain" );
+        TicketsWebService.TicketTargetRequest tr = new TicketsWebService.TicketTargetRequest();
+        tr.setTargetType( TicketTargetType.EXPRESSION_EXPERIMENT );
+        tr.setTargetId( 99L );
+        req.setTargets( Collections.singletonList( tr ) );
+
+        webService.createTicket( req );
+
+        assertThat( ticket.getPayload() ).isNull();
+        assertThat( ticket.getPayloadSchemaVersion() ).isNull();
     }
 
     @Test
@@ -763,6 +1113,137 @@ public class TicketsWebServiceTest {
         assertPreAuthorizeIsAuthenticated(
                 TicketsWebService.class.getMethod( "deleteTicket",
                         Long.class, String.class ) );
+    }
+
+    // ---------------------------------------------------------------------
+    // GET /tickets/search — the ticket picker
+    // ---------------------------------------------------------------------
+
+    private static TicketSearchHitValueObject searchHit( long id, String title, long targetCount ) {
+        return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION,
+                targetCount, new Date( 1756675380000L ), TicketPriority.NORMAL );
+    }
+
+    @Test
+    public void searchTickets_returnsTheHitsInTheOrderTheServiceGaveThem() {
+        // deliberately neither id-ascending nor id-descending: the exact-id hit leads, and the
+        // title hits behind it are in updatedAt order, so a handler that re-sorted by anything
+        // would be caught here
+        when( ticketService.searchTickets( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Arrays.asList(
+                        searchHit( 6L, "Reference 500 — ongoing curation review", 500L ),
+                        searchHit( 99L, "batch of 6", 2L ),
+                        searchHit( 3L, "6 replicates", 1L ) ) );
+
+        ResponseDataObject<List<TicketSearchHitValueObject>> resp =
+                webService.searchTickets( "6", true, LimitArg.valueOf( "20" ) );
+
+        assertThat( resp.getData() ).extracting( TicketSearchHitValueObject::getId )
+                .containsExactly( 6L, 99L, 3L );
+        TicketSearchHitValueObject first = resp.getData().get( 0 );
+        assertThat( first.getTitle() ).isEqualTo( "Reference 500 — ongoing curation review" );
+        assertThat( first.getState() ).isEqualTo( TicketState.OPEN );
+        assertThat( first.getType() ).isEqualTo( TicketType.CURATION );
+        assertThat( first.getUpdatedAt() ).isEqualTo( new Date( 1756675380000L ) );
+        // a count, and no way to accidentally ship the rows it counts
+        assertThat( first.getTargetCount() ).isEqualTo( 500L );
+        assertThat( TicketSearchHitValueObject.class.getMethods() )
+                .as( "the picker row must not carry a targets collection" )
+                .noneMatch( m -> m.getName().equals( "getTargets" ) );
+    }
+
+    @Test
+    public void searchTickets_requiresAQuery() {
+        assertThatThrownBy( () -> webService.searchTickets( null, true, LimitArg.valueOf( "20" ) ) )
+                .isInstanceOf( BadRequestException.class );
+        assertThatThrownBy( () -> webService.searchTickets( "  ", true, LimitArg.valueOf( "20" ) ) )
+                .isInstanceOf( BadRequestException.class );
+        verify( ticketService, never() ).searchTickets( anyString(), anyBoolean(), any(), anyInt() );
+    }
+
+    /**
+     * A limit the endpoint will not honour is refused, not quietly reduced — a silent clamp teaches
+     * the client nothing about why it got 100 rows back when it asked for 500.
+     */
+    @Test
+    public void searchTickets_refusesALimitAboveTheMaximum_ratherThanClampingIt() {
+        assertThatThrownBy( () -> webService.searchTickets( "reference", true,
+                LimitArg.valueOf( String.valueOf( LimitArg.MAXIMUM + 1 ) ) ) )
+                .isInstanceOf( BadRequestException.class )
+                .hasMessageContaining( String.valueOf( LimitArg.MAXIMUM ) );
+        verify( ticketService, never() ).searchTickets( anyString(), anyBoolean(), any(), anyInt() );
+    }
+
+    @Test
+    public void searchTickets_acceptsALimitAtTheMaximum() {
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", true, LimitArg.valueOf( String.valueOf( LimitArg.MAXIMUM ) ) );
+
+        verify( ticketService ).searchTickets( "reference", true, null, LimitArg.MAXIMUM );
+    }
+
+    /**
+     * The default lives in the {@code @DefaultValue} annotation, which JAX-RS applies during
+     * parameter binding — calling the method directly never sees it, so it is asserted on the wire
+     * contract itself.
+     */
+    @Test
+    public void searchTickets_openOnlyDefaultsToTrueOnTheWire() throws NoSuchMethodException {
+        java.lang.reflect.Method m = TicketsWebService.class.getMethod( "searchTickets",
+                String.class, boolean.class, LimitArg.class );
+        java.lang.annotation.Annotation[] openOnlyAnnotations = m.getParameterAnnotations()[1];
+        jakarta.ws.rs.DefaultValue defaultValue = null;
+        jakarta.ws.rs.QueryParam queryParam = null;
+        for ( java.lang.annotation.Annotation a : openOnlyAnnotations ) {
+            if ( a instanceof jakarta.ws.rs.DefaultValue ) defaultValue = ( jakarta.ws.rs.DefaultValue ) a;
+            if ( a instanceof jakarta.ws.rs.QueryParam ) queryParam = ( jakarta.ws.rs.QueryParam ) a;
+        }
+        assertThat( queryParam ).isNotNull();
+        assertThat( queryParam.value() ).isEqualTo( "openOnly" );
+        assertThat( defaultValue ).as( "openOnly must carry a @DefaultValue" ).isNotNull();
+        assertThat( defaultValue.value() )
+                .as( "work is rarely added to a closed ticket, so openOnly defaults to true" )
+                .isEqualTo( "true" );
+    }
+
+    @Test
+    public void searchTickets_openOnlyFalseIsPassedThrough() {
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", false, LimitArg.valueOf( "20" ) );
+
+        verify( ticketService ).searchTickets( "reference", false, null, 20 );
+    }
+
+    /**
+     * The caller's identity decides whose scratchpad is worth offering, so it has to reach the
+     * service.
+     */
+    @Test
+    public void searchTickets_passesTheCallersContactId_forScratchpadScoping() {
+        when( userManager.getCurrentUser() ).thenReturn( reporter );
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", true, LimitArg.valueOf( "20" ) );
+
+        verify( ticketService ).searchTickets( "reference", true, 42L, 20 );
+    }
+
+    @Test
+    public void searchTickets_anonymousCallerIsServedWithNoContactId() {
+        when( userManager.getCurrentUser() ).thenReturn( null );
+        when( ticketService.searchTickets( anyString(), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        webService.searchTickets( "reference", true, LimitArg.valueOf( "20" ) );
+
+        // null, not a 401: the ticket read surface is open, and an anonymous caller is simply
+        // offered nobody's scratchpad
+        verify( ticketService ).searchTickets( "reference", true, null, 20 );
     }
 
     private static void assertPreAuthorizeIsAuthenticated( java.lang.reflect.Method m ) {

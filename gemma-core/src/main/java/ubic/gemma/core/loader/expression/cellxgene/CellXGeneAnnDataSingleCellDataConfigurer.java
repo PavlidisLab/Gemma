@@ -5,6 +5,7 @@ import ubic.gemma.core.loader.expression.singleCell.*;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataSortBySample;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
+import ubic.gemma.core.util.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,10 +26,18 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
     private final Path annDataFile;
 
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+    private final Path cellXGeneTransposedPath;
+
+    public CellXGeneAnnDataSingleCellDataConfigurer( Path annDataFile, SingleCellDataTransformationFactory singleCellDataTransformationFactory, Path cellXGeneTransposedPath ) {
+        this.annDataFile = annDataFile;
+        this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
+        this.cellXGeneTransposedPath = cellXGeneTransposedPath;
+    }
 
     public CellXGeneAnnDataSingleCellDataConfigurer( Path annDataFile, SingleCellDataTransformationFactory singleCellDataTransformationFactory ) {
         this.annDataFile = annDataFile;
         this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
+        this.cellXGeneTransposedPath = null;
     }
 
     @Override
@@ -56,11 +65,7 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
         return applyConfig( new CellXGeneAnnDataSingleCellDataLoader( finalSortedFile, keepPooledSample, keepUnknownSample ) {
             @Override
             public void close() throws IOException {
-                try {
-                    super.close();
-                } finally {
-                    removeTemporaryFilesSilently( Collections.singleton( finalSortedFile ) );
-                }
+                super.close();
             }
         }, config, wasTransposedOnDisk.get() );
     }
@@ -70,6 +75,12 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
         // transpose it unless the configuration explicitly requests not to
         boolean transposeOnDisk = !( config instanceof AnnDataSingleCellDataLoaderConfig )
                 || !Boolean.FALSE.equals( ( ( AnnDataSingleCellDataLoaderConfig ) config ).getTranspose() );
+
+        if (cellXGeneTransposedPath != null && Files.exists( cellXGeneTransposedPath.resolve( annDataFile.getFileName() ) )) {
+            log.info( "Using pre-transposed file: " + cellXGeneTransposedPath.resolve( annDataFile.getFileName() ) );
+            wasTransposedOnDisk.set( true );
+            return cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
+        }
 
         if ( transposeOnDisk ) {
             log.info( "Transposing " + fileToUse + "..." );
@@ -93,6 +104,17 @@ public class CellXGeneAnnDataSingleCellDataConfigurer implements SingleCellDataL
                 .getTransformation( SingleCellDataSortBySample.class );
         sbs.setSampleColumnName( "donor_id" );
         sbs.setInputFile( fileToUse, SingleCellDataType.ANNDATA );
+
+        if ( cellXGeneTransposedPath != null ) {
+            // every later load uses this file once it exists, so it is moved into place only when complete
+            Path transposedFile = cellXGeneTransposedPath.resolve( annDataFile.getFileName() );
+            FileUtils.writeAtomically( transposedFile, tmp -> {
+                sbs.setOutputFile( tmp, SingleCellDataType.ANNDATA );
+                sbs.perform();
+            } );
+            return transposedFile;
+        }
+
         fileToUse = singleCellDataTransformationFactory.createTemporaryFile( SingleCellDataType.ANNDATA );
         try {
             sbs.setOutputFile( fileToUse, SingleCellDataType.ANNDATA );

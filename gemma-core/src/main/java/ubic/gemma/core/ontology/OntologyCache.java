@@ -42,6 +42,21 @@ class OntologyCache {
         this.minSubsetSize = minSubsetSize;
     }
 
+    /**
+     * Score descending, then URI — because the caller is about to CUT this list at maxResults.
+     * <p>
+     * Score alone leaves ties in whatever order the stored collection iterates, and a broad query
+     * produces equal scores in bulk. Java's sort is stable, so the survivors were decided by the
+     * encounter order of a collection nobody ordered on purpose: identical requests for
+     * `H1 cell line` returned EFO_0003042 at rank 1 on five calls out of six and absent from a
+     * hundred rows on the sixth. A ranker can only reorder what search returned, so a term cut
+     * here is beyond the reach of every relevance rule downstream — which is why the tiebreak
+     * belongs at the cut rather than after it.
+     */
+    private static final Comparator<OntologySearchResult<OntologyTerm>> BY_SCORE_THEN_URI =
+            Comparator.<OntologySearchResult<OntologyTerm>>comparingDouble( osr -> -osr.getScore() )
+                    .thenComparing( osr -> osr.getResult().getUri(), Comparator.nullsLast( Comparator.naturalOrder() ) );
+
     public Collection<OntologySearchResult<OntologyTerm>> findTerm( OntologyService ontology, String query, int maxResults ) throws OntologySearchException {
         SearchCacheKey key = new SearchCacheKey( ontology, query, maxResults );
 
@@ -52,7 +67,7 @@ class OntologyCache {
                 Collection<OntologySearchResult<OntologyTerm>> result = ( Collection<OntologySearchResult<OntologyTerm>> ) value.get();
                 if ( result.size() > maxResults ) {
                     return result.stream()
-                            .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
+                            .sorted( BY_SCORE_THEN_URI )
                             .limit( maxResults )
                             .collect( Collectors.toList() );
                 } else {

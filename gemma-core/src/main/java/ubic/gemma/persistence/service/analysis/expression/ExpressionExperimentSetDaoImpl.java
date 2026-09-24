@@ -201,13 +201,18 @@ public class ExpressionExperimentSetDaoImpl
             throw new IllegalArgumentException( "If provided ids cannot be empty" );
         }
 
+        // LEFT join on the taxon: a set may legitimately have none (see
+        // ExpressionExperimentSetValueObjectHelperImpl.create -- members that disagree leave it
+        // unset so the set can span taxa). An inner join dropped every such set from the result,
+        // which surfaced as a 404 on POST /experiment-sets: the create succeeded and the read-back
+        // that composes the 201 body found nothing.
         String queryString = "select eeset.id , " // 0
                 + "eeset.name, " // 1
                 + "eeset.description, " // 2
                 + "taxon.commonName," // 3
                 + "taxon.id," // 4
                 + "count(ees) " // 5
-                + "from ExpressionExperimentSet as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
+                + "from ExpressionExperimentSet as eeset left join eeset.taxon taxon inner join eeset.experiments ees "
                 + ( ids != null ? "where eeset.id in (:ids) " : "" ) + "group by eeset.id ";
 
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );

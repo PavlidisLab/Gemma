@@ -32,14 +32,27 @@ import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.*;
+import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.locking.FileLockManager;
+
+import java.nio.file.Path;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationRole;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -79,6 +92,13 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     private ArrayDesignPersister arrayDesignPersister;
     @Autowired
     private EeWriteService eeWriteService;
+
+    /**
+     * Builds the schema-v1 upstream-metadata document. Constructed rather than injected, matching
+     * GeoScrapeServiceImpl: the mapper needs no shared configuration and the builder is stateless.
+     */
+    private final GeoSourceMetadataBuilder sourceMetadataBuilder =
+            new GeoSourceMetadataBuilder( new com.fasterxml.jackson.databind.ObjectMapper() );
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -102,18 +122,41 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
     @Autowired
+    private PublicationAssociationService publicationAssociationService;
+    @Autowired
     private GeoUpdateAuditService geoUpdateAuditService;
+
+    @Autowired
+    private FTPClientFactory ftpClientFactory;
+    @Autowired
+    private FileLockManager fileLockManager;
 
     @Value("${geo.minimumSamplesToLoad}")
     private int minimumSampleCountToLoad;
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
+    @Value("${geo.local.datafile.basepath}")
+    private Path geoSeriesDownloadPath;
 
     private GeoDomainObjectGenerator geoDomainObjectGenerator = new GeoDomainObjectGenerator();
 
     @Override
     public void afterPropertiesSet() throws Exception {
         geoDomainObjectGenerator.setNcbiApiKey( ncbiApiKey );
+        geoDomainObjectGenerator.setSeriesFamilySoftFetcher( buildSeriesFamilySoftFetcher() );
+    }
+
+    /**
+     * Build the resilient series-family SOFT downloader (FTP → HTTPS → GEO on-demand generator).
+     * NCBI has been deprecating anonymous FTP, so the legacy FTP-only fetcher fails on files that
+     * are still served over HTTPS. Mirrors the wiring in {@code ExpressionExperimentGeoServiceImpl}:
+     * same retry policy, download path, and shared FTP-client / file-lock infrastructure.
+     */
+    private GeoFetcher buildSeriesFamilySoftFetcher() {
+        GeoFetcher fetcher = new GeoFetcher( new SimpleRetryPolicy( 5, 500, 1.5 ), geoSeriesDownloadPath );
+        fetcher.setFtpClientFactory( ftpClientFactory );
+        fetcher.setFileLockManager( fileLockManager );
+        return fetcher;
     }
 
     @Override
@@ -285,17 +328,116 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         GeoServiceImpl.log.debug( "Converted " + seriesAccession );
         assert eeWriteService != null;
 
+        // One harvest timestamp for the whole import, so sibling experiments from a split series agree
+        // on when Gemma read the source. This is our clock; GEO's own dates ride separately.
+        Date harvestedAt = new Date();
+        // A series that converts to more than one experiment has been split, so each one holds only a
+        // subset of the series' samples.
+        boolean split = result.size() > 1;
+
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
             ee = eeWriteService.create( ee, c );
             persistedResult.add( ee );
             GeoServiceImpl.log.debug( "Persisted " + seriesAccession );
-
+            this.storeSourceMetadata( ee, series, split, harvestedAt );
+            this.recordGeoPublicationProvenance( ee );
         }
         this.updateReports( persistedResult );
 
         return persistedResult;
+    }
+
+    /**
+     * Store the verbatim upstream metadata document on a freshly persisted experiment.
+     * <p>
+     * This runs AFTER {@code create} because {@code experimentId} is part of the document and does not
+     * exist until the row is saved. The sample list is narrowed to this experiment's own GSM
+     * accessions: when a series is split, siblings share accession, title, summary and overall design,
+     * so serializing the series wholesale would give each one the other's samples with nothing in the
+     * document revealing it.
+     * <p>
+     * Never fails the import. The payload is a rebuildable cache of what GEO said; losing it costs a
+     * re-harvest, whereas failing here would cost the entire ingest.
+     */
+    /**
+     * Record where a freshly imported experiment's publications came from.
+     *
+     * <p>The links are set by {@link GeoConverterImpl#convertPubMedIds} straight from the series'
+     * {@code !Series_pubmed_id} values — the first becomes the primary, the rest other-relevant — and
+     * until now that provenance was lost the moment the experiment was persisted. Stating it here
+     * gives a later curator something to disagree with, and gives the rank rule something to compare
+     * against: a link recorded as GEO's can be overruled by a curator, whereas a link with no recorded
+     * authority at all is just a number in a column.</p>
+     *
+     * <p>Best-effort, like {@link #storeSourceMetadata}: an import that succeeded is not failed
+     * because the provenance note did not land.</p>
+     */
+    private void recordGeoPublicationProvenance( ExpressionExperiment ee ) {
+        String geoAccession = ee.getAccession() != null ? ee.getAccession().getAccession() : ee.getShortName();
+        try {
+            if ( ee.getPrimaryPublication() != null ) {
+                publicationAssociationService.assertAccepted( ee,
+                        geoSubmitterLinkAssertion( ee.getPrimaryPublication(), geoAccession ),
+                        PublicationAssociationRole.PRIMARY );
+            }
+            for ( BibliographicReference other : ee.getOtherRelevantPublications() ) {
+                publicationAssociationService.assertAccepted( ee,
+                        geoSubmitterLinkAssertion( other, geoAccession ),
+                        PublicationAssociationRole.OTHER_RELEVANT );
+            }
+        } catch ( Exception e ) {
+            GeoServiceImpl.log.warn( "Failed to record publication provenance for " + ee.getShortName()
+                    + "; the import and its publication links are unaffected.", e );
+        }
+    }
+
+    /**
+     * The claim GEO's own cross-link amounts to: the submitter said so in the series record.
+     * {@link GOEvidenceCode#TAS} rather than {@link GOEvidenceCode#IEA} because there is a traceable
+     * statement behind it — it is just not one anybody checked.
+     */
+    private PublicationAssertion geoSubmitterLinkAssertion( BibliographicReference ref, @Nullable String geoAccession ) {
+        return new PublicationAssertion( ref, PublicationAssociationSource.GEO_SUBMITTER_LINK,
+                "GEO !Series_pubmed_id" + ( geoAccession != null ? " on " + geoAccession : "" )
+                        + ", as written by the submitter; not independently checked against the paper.",
+                null, GOEvidenceCode.TAS, null, null );
+    }
+
+    /**
+     * Best-effort store at import time: a failure is logged and the import carries on.
+     */
+    private void storeSourceMetadata( ExpressionExperiment ee, GeoSeries series, boolean split, Date harvestedAt ) {
+        try {
+            writeSourceMetadata( ee, series, split, harvestedAt );
+        } catch ( Exception e ) {
+            GeoServiceImpl.log.warn( "Failed to store source metadata for " + ee.getShortName()
+                    + "; the import is unaffected and the document can be rebuilt from GEO.", e );
+        }
+    }
+
+    /**
+     * @return false when the builder produced no document, in which case nothing was written
+     */
+    private boolean writeSourceMetadata( ExpressionExperiment ee, @Nullable GeoSeries series, boolean split, Date harvestedAt ) {
+        Set<String> sampleAccessions = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
+                sampleAccessions.add( ba.getAccession().getAccession() );
+            }
+        }
+        GeoSourceMetadataBuilder.ExperimentIdentity identity = new GeoSourceMetadataBuilder.ExperimentIdentity(
+                ee.getShortName(), ee.getId(), split,
+                sampleAccessions.isEmpty() ? null : sampleAccessions );
+        String document = sourceMetadataBuilder.build( series, identity, harvestedAt );
+        if ( document == null ) {
+            return false;
+        }
+        ee.setSourceMetadata( document );
+        ee.setSourceMetadataSchemaVersion( GeoSourceMetadataBuilder.SCHEMA_VERSION );
+        expressionExperimentService.update( ee );
+        return true;
     }
 
     @Override
@@ -310,13 +452,18 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             log.info( "Updating " + ees.size() + " experiments from accession " + geoAccession );
         }
 
-        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+        GeoRefetch refetch = fetchFromGEO( geoAccession, geoUpdateConfig );
 
         // multi-species automatically split by Gemma at conversion stage so we may have >1
-        for ( ExpressionExperiment freshFromGEO : result ) {
+        for ( ExpressionExperiment freshFromGEO : refetch.experiments ) {
             // multi-species automatically split by Gemma at conversion stage so we may have >1
             for ( ExpressionExperiment ee : ees ) { // because it could be a split by us.
                 updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+            }
+        }
+        if ( geoUpdateConfig.sourceMetadata ) {
+            for ( ExpressionExperiment ee : ees ) {
+                refreshSourceMetadata( ee, refetch.series );
             }
         }
     }
@@ -328,15 +475,99 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 "This method is only for GEO experiments" );
 
         String geoAccession = ee.getAccession().getAccession();
-        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+        GeoRefetch refetch = fetchFromGEO( geoAccession, geoUpdateConfig );
 
-        for ( ExpressionExperiment freshFromGEO : result ) {
+        for ( ExpressionExperiment freshFromGEO : refetch.experiments ) {
             updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+        }
+        if ( geoUpdateConfig.sourceMetadata ) {
+            refreshSourceMetadata( ee, refetch.series );
         }
     }
 
-    private Collection<ExpressionExperiment> fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
+    /**
+     * Store (or replace) the source metadata document for one experiment from a series just parsed.
+     * <p>
+     * Split-ness is DERIVED rather than passed: at import the caller knows whether it is splitting,
+     * but a backfill only has the result, and the result says it — an experiment holding fewer of
+     * the series' samples than the series has IS a split of it. Getting this wrong only mislabels
+     * the {@code isSplitSubseries} flag, but the sample list it travels with would then describe a
+     * whole series while claiming to be one part of it.
+     */
+    private void refreshSourceMetadata( ExpressionExperiment ee, @Nullable GeoSeries series ) {
+        ExpressionExperiment thawed = expressionExperimentService.thawLite( ee );
+        // Not the import path's best-effort store: storing this document is all a refresh asked for, so
+        // a failure propagates and a missing document is an error. Swallowed, the backfill CLI recorded
+        // "Stored the GEO source metadata document." for experiments where nothing was written.
+        if ( !writeSourceMetadata( thawed, series, isSplitOfItsSeries( thawed ), new Date() ) ) {
+            throw new IllegalStateException( "No source metadata document could be built for " + thawed.getShortName()
+                    + ( series == null ? ": GEO returned no series" : "" ) + "; nothing was stored." );
+        }
+    }
+
+    /**
+     * Whether this experiment is one of several Gemma made from one GEO series.
+     * <p>
+     * 🛑 NOT "does it hold fewer samples than the series". That was the first version and it is a
+     * different question: GSE8919 is one experiment holding 193 of its series' 200 samples, was
+     * never split, and was flagged as a sub-series on production because of it. Samples get dropped
+     * for reasons that have nothing to do with splitting.
+     * <p>
+     * The import path asks the real question — the conversion produced more than one experiment
+     * from the series — and a refresh has to ask the same one of the database, or the same
+     * experiment carries a different flag depending on which path last wrote its document.
+     */
+    private boolean isSplitOfItsSeries( ExpressionExperiment ee ) {
+        if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
+            return false;
+        }
+        return expressionExperimentService.findByAccession( ee.getAccession().getAccession() ).size() > 1;
+    }
+
+    /**
+     * Whether this refetch is only being asked for the source metadata document.
+     * <p>
+     * The other three flags all write GEO's opinion into Gemma's own fields, and each of them needs
+     * the converted experiment; {@code sourceMetadata} needs only the parsed series. Adding a flag
+     * to {@link GeoUpdateConfig} without adding it here would quietly take the metadata-only path
+     * for a caller that asked for more, so this reads every field rather than a stored count.
+     */
+    private boolean isSourceMetadataOnly( GeoUpdateConfig geoUpdateConfig ) {
+        return geoUpdateConfig.sourceMetadata
+                && !geoUpdateConfig.experimentTags
+                && !geoUpdateConfig.sampleCharacteristics
+                && !geoUpdateConfig.publications;
+    }
+
+    /**
+     * What one refetch produced: the parsed series and the experiments converted from it.
+     * <p>
+     * The series used to be dropped on the floor here. It is the only thing that can build a source
+     * metadata document, so a refetch that discards it cannot record what GEO said even though it
+     * just read it.
+     */
+    private static class GeoRefetch {
+        private final GeoSeries series;
+        private final Collection<ExpressionExperiment> experiments;
+
+        private GeoRefetch( GeoSeries series, Collection<ExpressionExperiment> experiments ) {
+            this.series = series;
+            this.experiments = experiments;
+        }
+    }
+
+    private GeoRefetch fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
         // other complications arise if this is a multiplatform data set that was switched/merged etc, but we will take the data for the corresponding GSMs.
+
+        if ( isSourceMetadataOnly( geoUpdateConfig ) ) {
+            // Nothing downstream reads an ExpressionExperiment on this path: the document is built
+            // from the parsed series alone. Converting anyway meant downloading the family SOFT file
+            // -- platform table and every sample's data table, 36 MB for GSE1024 -- and then building
+            // an experiment to discard it. The metadata-only records are two orders of magnitude
+            // smaller and the conversion is the only thing that needed the platform.
+            return new GeoRefetch( geoDomainObjectGenerator.generateSeriesMetadataOnly( geoAccession ),
+                    Collections.emptyList() );
+        }
 
         // fetch the experiment from GEO
         GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
@@ -359,7 +590,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             this.getPubMedInfo( result );
         }
 
-        return result;
+        return new GeoRefetch( series, result );
     }
 
     /**
@@ -382,10 +613,22 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         ee = expressionExperimentService.thawLite( ee );
 
         if ( geoUpdateConfig.experimentTags ) {
-            // EE tags are often manually curated, so we don't want to overwrite them. Fortunately, the
-            // Characteristic.equals definition has really neat behavior for this
+            // EE tags are often manually curated, so we don't want to overwrite them: add only what is
+            // not already there.
+            // 🛑 The dedup is an explicit sameTag scan rather than Set.add's equals. Two reasons: the
+            // stored tags are persistent and the fresh ones transient, which is the mixed-collection
+            // hashCode trap, and Statement.equals returns false against a plain Characteristic — so once
+            // experiment tags are statements, an equals-based add would re-add every tag that is already
+            // there. sameTag compares content and is blind to both.
             for ( Characteristic newEeTag : freshFromGEO.getCharacteristics() ) {
-                if ( ee.getCharacteristics().add( newEeTag ) ) {
+                boolean present = false;
+                for ( Characteristic existing : ee.getCharacteristics() ) {
+                    if ( CharacteristicUtils.sameTag( existing, newEeTag ) ) {
+                        present = true;
+                        break;
+                    }
+                }
+                if ( !present && ee.getCharacteristics().add( newEeTag ) ) {
                     log.info( "Found a new experiment-level tag for " + geoAccession + ": " + newEeTag );
                     numNewCharacteristics++;
                 }
@@ -395,10 +638,26 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         if ( geoUpdateConfig.publications ) {
             BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
             if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
-                log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
                 primaryPublication = bibliographicReferenceService.findOrCreate( primaryPublication );
-                ee.setPrimaryPublication( primaryPublication ); // persist first?
-                pubUpdate = true;
+                // GEO's !Series_pubmed_id is usually right and occasionally is the wrong one of the
+                // submitter's own papers. When a curator has already read both and ruled this one out,
+                // taking it here is how the correction gets silently undone on the next refresh — so
+                // ask first. A rejection by an authority GEO does not outrank stands.
+                PublicationAssociation blocked = publicationAssociationService.findBlockingRejection(
+                        ee, primaryPublication, PublicationAssociationSource.GEO_SUBMITTER_LINK );
+                if ( blocked != null ) {
+                    log.info( "Leaving " + geoAccession + " without a primary publication: GEO links "
+                            + primaryPublication.getPubAccession() + ", which was rejected by "
+                            + blocked.getSource().getDbValue() + " on " + blocked.getAssertedAt()
+                            + ( blocked.getEvidence() != null ? " — " + blocked.getEvidence() : "" ) );
+                } else {
+                    log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
+                    ee.setPrimaryPublication( primaryPublication ); // persist first?
+                    publicationAssociationService.assertAccepted( ee,
+                            geoSubmitterLinkAssertion( primaryPublication, geoAccession ),
+                            PublicationAssociationRole.PRIMARY );
+                    pubUpdate = true;
+                }
             }
         }
 
@@ -412,7 +671,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
             for ( BioAssay ba : ee.getBioAssays() ) {
                 // this BA is from Gemma, it might lack an accession (although very unlikely!)
-                if ( ba.getAccession() == null || ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+                if ( ba.getAccession() == null || !ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
                     log.warn( ba + " does not have a GEO accession, ignoring." );
                     continue;
                 }
@@ -444,8 +703,12 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                  */
                 Set<Characteristic> bmchars = bm.getCharacteristics();
                 int numOldChars = bmchars.size();
+                // Copied before the clear: remove() used to be handed the set after clear() had emptied
+                // it, so it deleted nothing. The mapping has no orphan removal, so the replaced rows
+                // stayed in CHARACTERISTIC with their biomaterial link nulled.
+                List<Characteristic> oldChars = new ArrayList<>( bmchars );
                 bmchars.clear();
-                characteristicService.remove( bmchars );
+                characteristicService.remove( oldChars );
                 Collection<Characteristic> freshCharacteristics = freshBAsByGSM.get( gsmID ).getSampleUsed().getCharacteristics();
                 if ( log.isDebugEnabled() )
                     log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );

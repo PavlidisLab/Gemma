@@ -70,6 +70,9 @@ public class AdminAclEvaluationTest {
                         "GROUP_RUN_AS_ADMIN > GROUP_ADMIN\n" +
                         "GROUP_USER > IS_AUTHENTICATED_ANONYMOUSLY\n" +
                         "GROUP_RUN_AS_USER > GROUP_USER\n" +
+                        "GROUP_ADMIN > GROUP_CURATOR\n" +
+                        "GROUP_CURATOR > GROUP_USER\n" +
+                        "GROUP_RUN_AS_CURATOR > GROUP_CURATOR\n" +
                         "GROUP_ADMIN > GROUP_AGENT\n" +
                         "GROUP_AGENT > IS_AUTHENTICATED_ANONYMOUSLY\n" +
                         "GROUP_RUN_AS_AGENT > GROUP_AGENT" );
@@ -167,6 +170,151 @@ public class AdminAclEvaluationTest {
 
         // WRITE != ADMINISTRATION — this should legitimately be false.
         assertThat( evaluator.hasPermission( admin, group, "write" ) ).isFalse();
+    }
+
+    /**
+     * A curator holds ADMINISTRATION through the ace {@code setupBaseAces} now grants
+     * GROUP_CURATOR, which is what lets every ACL_SECURABLE_EDIT check pass for them.
+     * <p>
+     * ADMINISTRATION rather than WRITE is deliberate and this is where it shows: it is also what
+     * {@code AclAuthorizationStrategyImpl} falls back to when the caller lacks the configured
+     * authority, so the same ace covers editing a design AND changing a dataset's visibility. A
+     * WRITE ace would satisfy the edit check and then fail on makePublic.
+     */
+    @Test
+    public void curatorHasAdministrationOnAnObjectFromSetupBaseAces() {
+        FakeUserGroup obj = new FakeUserGroup( 43L );
+        MutableAcl acl = aclService.createAcl( new ObjectIdentityImpl( obj.getClass().getName(), obj.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.ADMINISTRATION,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ), true );
+        acl.insertAce( acl.getEntries().size(), BasePermission.ADMINISTRATION,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.CURATOR_GROUP_AUTHORITY ) ), true );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.AGENT_GROUP_AUTHORITY ) ), true );
+        aclService.updateAcl( acl );
+
+        TestingAuthenticationToken curator = new TestingAuthenticationToken(
+                "someCurator", "x", AuthorityConstants.CURATOR_GROUP_AUTHORITY );
+        curator.setAuthenticated( true );
+        SecurityContextHolder.getContext().setAuthentication( curator );
+
+        assertThat( evaluator.hasPermission( curator, obj, "administration" ) ).isTrue();
+
+        // 🛑 NOT hasPermission(..., "read"). An ADMINISTRATION ace does not satisfy a mask check for
+        // READ -- the same contract adminLacksWriteWhenOnlyAdministrationAceExists pins for WRITE.
+        // Production reads go through the ACL_SECURABLE_READ *voter*, which is configured to accept
+        // ADMINISTRATION *or* READ (applicationContext-gsec.xml), so the curator does read; it is the
+        // SpEL hasPermission path that is mask-exact. Admins have always behaved identically here,
+        // so this is a property of the ace, not something the curator grant changed.
+        assertThat( evaluator.hasPermission( curator, obj, "read" ) )
+                .as( "mask-exact SpEL check: ADMINISTRATION is not READ, for a curator as for an admin" )
+                .isFalse();
+    }
+
+    /**
+     * 🛑 The rule the whole widening rests on: an ADMINISTRATOR satisfies a GROUP_CURATOR ace
+     * through the hierarchy. 61 routes moved from {@code hasAuthority('GROUP_ADMIN')} to
+     * {@code hasAuthority('GROUP_CURATOR')}, and if this direction did not hold, every one of them
+     * would have locked administrators out of work they could do the day before.
+     */
+    @Test
+    public void anAdministratorSatisfiesACuratorAce() {
+        FakeUserGroup obj = new FakeUserGroup( 44L );
+        MutableAcl acl = aclService.createAcl( new ObjectIdentityImpl( obj.getClass().getName(), obj.getId() ) );
+        // ONLY the curator ace -- no GROUP_ADMIN ace to fall back on.
+        acl.insertAce( acl.getEntries().size(), BasePermission.ADMINISTRATION,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.CURATOR_GROUP_AUTHORITY ) ), true );
+        aclService.updateAcl( acl );
+
+        TestingAuthenticationToken admin = new TestingAuthenticationToken(
+                "administrator", "x", AuthorityConstants.ADMIN_GROUP_AUTHORITY );
+        admin.setAuthenticated( true );
+        SecurityContextHolder.getContext().setAuthentication( admin );
+
+        assertThat( evaluator.hasPermission( admin, obj, "administration" ) )
+                .as( "GROUP_ADMIN > GROUP_CURATOR, so an admin presents the curator sid too" )
+                .isTrue();
+    }
+
+    /**
+     * 🛑 And it does NOT run the other way. A curator must never satisfy an admin-only ace, or the
+     * user-account and server-operation routes that kept {@code hasAuthority('GROUP_ADMIN')} would
+     * be open to them — which is the entire distinction between the two groups.
+     */
+    @Test
+    public void aCuratorDoesNotSatisfyAnAdminOnlyAce() {
+        FakeUserGroup obj = new FakeUserGroup( 45L );
+        MutableAcl acl = aclService.createAcl( new ObjectIdentityImpl( obj.getClass().getName(), obj.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.ADMINISTRATION,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ), true );
+        aclService.updateAcl( acl );
+
+        TestingAuthenticationToken curator = new TestingAuthenticationToken(
+                "someCurator", "x", AuthorityConstants.CURATOR_GROUP_AUTHORITY );
+        curator.setAuthenticated( true );
+        SecurityContextHolder.getContext().setAuthentication( curator );
+
+        assertThat( evaluator.hasPermission( curator, obj, "administration" ) ).isFalse();
+    }
+
+    /** A plain user is unaffected by the curator ace -- the widening gave nothing to GROUP_USER. */
+    @Test
+    public void aPlainUserDoesNotSatisfyACuratorAce() {
+        FakeUserGroup obj = new FakeUserGroup( 46L );
+        MutableAcl acl = aclService.createAcl( new ObjectIdentityImpl( obj.getClass().getName(), obj.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.ADMINISTRATION,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.CURATOR_GROUP_AUTHORITY ) ), true );
+        aclService.updateAcl( acl );
+
+        TestingAuthenticationToken user = new TestingAuthenticationToken(
+                "someUser", "x", AuthorityConstants.USER_GROUP_AUTHORITY );
+        user.setAuthenticated( true );
+        SecurityContextHolder.getContext().setAuthentication( user );
+
+        assertThat( evaluator.hasPermission( user, obj, "administration" ) ).isFalse();
+    }
+
+    /**
+     * 🛑 A curator has NO ace on a User or UserGroup, so they cannot reach
+     * {@code BaseUserService.removeUserFromGroup} — whose gate is
+     * {@code hasPermission(#group, 'write') or hasPermission(#group, 'administration')}.
+     * <p>
+     * Without the exclusion in {@code setupBaseAces}, a curator satisfies that check and can move
+     * anyone between groups, themselves into Administrators included — which is precisely the
+     * authority the group was defined not to have. This is not hypothetical: the first production
+     * backfill granted over every acl_object_identity and 668 aces (661 users plus the groups) had
+     * to be deleted back out an hour later.
+     * <p>
+     * The ace list here is what setupBaseAces writes for a user-group object: admin and agent, no
+     * curator.
+     */
+    @Test
+    public void aCuratorHasNoAuthorityOverAUserGroup() {
+        FakeUserGroup group = new FakeUserGroup( 47L );
+        MutableAcl acl = aclService.createAcl( new ObjectIdentityImpl( group.getClass().getName(), group.getId() ) );
+        acl.insertAce( acl.getEntries().size(), BasePermission.ADMINISTRATION,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.ADMIN_GROUP_AUTHORITY ) ), true );
+        acl.insertAce( acl.getEntries().size(), BasePermission.READ,
+                new GrantedAuthoritySid( new SimpleGrantedAuthority( AuthorityConstants.AGENT_GROUP_AUTHORITY ) ), true );
+        aclService.updateAcl( acl );
+
+        TestingAuthenticationToken curator = new TestingAuthenticationToken(
+                "someCurator", "x", AuthorityConstants.CURATOR_GROUP_AUTHORITY );
+        curator.setAuthenticated( true );
+        SecurityContextHolder.getContext().setAuthentication( curator );
+
+        assertThat( evaluator.hasPermission( curator, group, "administration" ) )
+                .as( "a curator must not be able to administer a user group" ).isFalse();
+        assertThat( evaluator.hasPermission( curator, group, "write" ) )
+                .as( "nor write it — removeUserFromGroup accepts either" ).isFalse();
+
+        // Control: an administrator still can, so the exclusion took nothing from the group that
+        // is supposed to manage users.
+        TestingAuthenticationToken admin = new TestingAuthenticationToken(
+                "administrator", "x", AuthorityConstants.ADMIN_GROUP_AUTHORITY );
+        admin.setAuthenticated( true );
+        SecurityContextHolder.getContext().setAuthentication( admin );
+        assertThat( evaluator.hasPermission( admin, group, "administration" ) ).isTrue();
     }
 
     /**

@@ -18,14 +18,24 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.util.SymbolFontPua;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetRole;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetSource;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.access.SecurityConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -41,6 +51,11 @@ import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementType;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
+import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -56,6 +71,9 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -90,6 +108,12 @@ public class ExpressionExperimentServiceImpl
     private final ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
+    private AnnotationSetService annotationSetService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService;
+    @Autowired
+    private ubic.gemma.core.security.authentication.UserManager userManager;
+    @Autowired
     private AuditEventService auditEventService;
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
@@ -107,8 +131,21 @@ public class ExpressionExperimentServiceImpl
     private ExperimentalDesignService experimentalDesignService;
     @Autowired
     private FactorValueService factorValueService;
+    /**
+     * Resolves a curated measurement's unit to a persistent {@link Unit}. {@code Measurement.unit} does not cascade
+     * on a factor-value persist, so a transient one would be silently dropped.
+     */
+    @Autowired
+    private UnitDao unitDao;
     @Autowired
     private OntologyService ontologyService;
+    /**
+     * Keeps the publication assertions in step with the publication links. The two are one record
+     * split across two tables (Gemma 1.32.x shares the database and reads only the links), so every
+     * write to either goes through {@link #updatePublications} and reaches both.
+     */
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
     @Autowired
@@ -139,12 +176,25 @@ public class ExpressionExperimentServiceImpl
     @Lazy
     private ExpressionExperimentService self;
     /**
+     * Used by {@link #applyDesignChange} step 2 so a cascaded analysis takes its on-disk artifacts with it.
+     * {@code @Lazy} because {@code DifferentialExpressionAnalyzerServiceImpl} autowires this service back.
+     */
+    @Autowired
+    @Lazy
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+    /**
      * Used inside {@link #commitCuration} to flush after tag/sample-characteristic adds (so the cascaded inserts
      * assign their ids in time to echo {@code clientRef → newId}) and to bump the curation {@code lastUpdated}
      * concurrency token on any change.
      */
     @Autowired
     private SessionFactory sessionFactory;
+    /**
+     * Used by {@link #commitCuration} to bring {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} up to date for the
+     * one experiment the commit touched, inside the commit's own transaction.
+     */
+    @Autowired
+    private ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil;
 
     @Autowired
     public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
@@ -182,6 +232,11 @@ public class ExpressionExperimentServiceImpl
     @Override
     public SortedMap<String, String> loadAllIdentifiersAndName( boolean includeNames ) {
         return readService.loadAllIdentifiersAndName( includeNames );
+    }
+
+    @Override
+    public List<ExpressionExperimentDao.Identifiers> loadIdentifiers( Collection<Long> ids ) {
+        return readService.loadIdentifiers( ids );
     }
 
     @Override
@@ -500,6 +555,13 @@ public class ExpressionExperimentServiceImpl
     @Override
     @Transactional(readOnly = true)
     public DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return previewDesignChange( ee, proposed, null );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DesignPreflightReport previewDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed,
+            @Nullable DesignCommitPlan plan ) {
         ee = expressionExperimentDao.reload( ee );
         DesignPreflightReport report = new DesignPreflightReport();
         DesignPreflightReport.Summary summary = report.getSummary();
@@ -571,6 +633,43 @@ public class ExpressionExperimentServiceImpl
                 }
                 if ( pf.getValues() != null ) {
                     for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                        // Each wire entry is checked as it arrives. The flattened second entry of a compound statement
+                        // carries its clause under predicate/object, so it is a whole pair on its own.
+                        if ( pv.getStatements() != null ) {
+                            for ( StatementValueObject ps : pv.getStatements() ) {
+                                String half = StatementUtils.describeHalfPair( ps );
+                                if ( half != null ) {
+                                    DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                            "STATEMENT_HALF_PAIR",
+                                            "Statement " + ( ps.getId() != null ? ps.getId() + " " : "" )
+                                                    + "'" + ps.getSubject() + "' on factor value "
+                                                    + ( pv.getId() != null ? pv.getId() : "'" + pv.getValue() + "'" )
+                                                    + " carries " + half + "; send both or neither." );
+                                    b.setFactorValueId( pv.getId() );
+                                    b.setStatementId( ps.getId() );
+                                    report.getBlockers().add( b );
+                                }
+                            }
+                        }
+                        // The deprecated free-text value is stored in FACTOR_VALUE.VALUE, a VARCHAR(255) column,
+                        // and the apply path writes it through verbatim. Unchecked, an over-long one reaches the
+                        // flush and MySQL raises `Data too long for column 'VALUE'`, which the REST layer can only
+                        // report as a 500 -- and by then the client has already been told the edit was accepted.
+                        // Measured in code points because the schema is utf8mb4 and MySQL counts characters.
+                        //noinspection deprecation
+                        String pvValue = pv.getValue();
+                        if ( pvValue != null ) {
+                            int len = pvValue.codePointCount( 0, pvValue.length() );
+                            if ( len > FactorValue.MAX_VALUE_LENGTH ) {
+                                DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                        "FACTOR_VALUE_VALUE_TOO_LONG",
+                                        "The free-text value proposed for factor value "
+                                                + ( pv.getId() != null ? pv.getId() : "(new)" ) + " is " + len
+                                                + " characters long; the limit is " + FactorValue.MAX_VALUE_LENGTH + "." );
+                                b.setFactorValueId( pv.getId() );
+                                report.getBlockers().add( b );
+                            }
+                        }
                         if ( pv.getId() != null ) {
                             proposedFvIds.add( pv.getId() );
                             if ( pf.getId() != null ) {
@@ -596,13 +695,34 @@ public class ExpressionExperimentServiceImpl
                             } else if ( existingFv != null && pv.getStatements() != null ) {
                                 Set<Long> existingStmtIds = existingFv.getCharacteristics().stream()
                                         .map( Statement::getId ).collect( Collectors.toSet() );
+                                Map<Long, Integer> proposedPerStatement = new HashMap<>();
                                 for ( StatementValueObject ps : pv.getStatements() ) {
-                                    if ( ps.getId() != null && !existingStmtIds.contains( ps.getId() ) ) {
+                                    if ( ps.getId() == null ) {
+                                        continue;
+                                    }
+                                    if ( !existingStmtIds.contains( ps.getId() ) ) {
                                         DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
                                                 "UNKNOWN_STATEMENT_ID",
                                                 "Statement id " + ps.getId() + " does not belong to factor value " + pv.getId() + "." );
                                         b.setFactorValueId( pv.getId() );
                                         b.setStatementId( ps.getId() );
+                                        report.getBlockers().add( b );
+                                    }
+                                    proposedPerStatement.merge( ps.getId(), 1, Integer::sum );
+                                }
+                                // Two entries for one id is the normal shape of a compound statement on the wire
+                                // (see unflattenStatements). A statement holds two object slots and no more, so a
+                                // third entry has nowhere to go — refuse it here rather than let the extra clause
+                                // be silently dropped on the way in.
+                                for ( Map.Entry<Long, Integer> e : proposedPerStatement.entrySet() ) {
+                                    if ( e.getValue() > 2 ) {
+                                        DesignPreflightReport.Blocker b = new DesignPreflightReport.Blocker(
+                                                "STATEMENT_ID_REPEATED",
+                                                "Statement id " + e.getKey() + " appears " + e.getValue()
+                                                        + " times on factor value " + pv.getId()
+                                                        + "; a statement carries at most two objects." );
+                                        b.setFactorValueId( pv.getId() );
+                                        b.setStatementId( e.getKey() );
                                         report.getBlockers().add( b );
                                     }
                                 }
@@ -611,6 +731,12 @@ public class ExpressionExperimentServiceImpl
                             summary.setFactorValuesToCreate( summary.getFactorValuesToCreate() + 1 );
                         }
                     }
+                    // NOTE: more than one baseline per factor is allowed and is NOT blocked here. A dataset that
+                    // holds two experiments legitimately has a reference level per experiment, and a curator has to
+                    // be able to record that. The constraint belongs where it actually bites: LinearModelAnalyzer
+                    // refuses to run such a factor as a single contrast unless a subset factor is configured
+                    // (MultipleBaselinesRequireSubsetException). Blocking it at curation time instead made the
+                    // legitimate design unrecordable while leaving the analysis free to pick one arbitrarily.
                 }
             }
         }
@@ -677,76 +803,103 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        // ---- impact: differential expression analyses ----
-        // A factor is "affected" (and therefore its DE analyses must be deleted) when:
-        //   (a) the factor itself is being deleted;
-        //   (b) any of its FactorValues is being deleted (Gemma's existing cascade rule, see FactorValueDeletionImpl);
-        //   (c) a new FactorValue is being added under it (changes the design space);
-        //   (d) any biomaterial assignment to one of its FactorValues changes (different sample groupings -> different
-        //       analysis result, even if every row still exists).
-        // Statement edits on a kept FV do NOT count: the analysis math is unchanged, only labels would be stale.
-        Set<Long> factorIdsAffected = new HashSet<>();
-        for ( ExperimentalFactor ef : factorsBeingDeleted ) {
-            factorIdsAffected.add( ef.getId() );
-        }
-        for ( FactorValue fv : fvsBeingDeleted ) {
-            ExperimentalFactor parent = currentFvParentByFvId.get( fv.getId() );
-            if ( parent != null ) {
-                factorIdsAffected.add( parent.getId() );
-            }
-        }
-        // (c) new FV being added under an existing factor
-        if ( proposed.getExperimentalFactors() != null ) {
-            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
-                if ( pf.getId() == null || pf.getValues() == null ) continue;
-                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
-                    if ( pv.getId() == null ) {
-                        factorIdsAffected.add( pf.getId() );
-                        break;
-                    }
-                }
-            }
-        }
-        // (d) biomaterial assignment changes — for each FV whose membership set changed, mark its parent factor
+        // Counted once, here, because the invalidation rule below needs it and the summary needs it too.
+        // It used to be recomputed in a second pass over the same two maps further down.
+        //
+        // Identifiers rather than a running total, because the deferred bindings below can name a biomaterial
+        // this loop has already counted. A biomaterial's assignments changed or they did not.
+        Set<Long> changedBmIds = new HashSet<>();
         for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
             Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
                     .map( FactorValue::getId ).collect( Collectors.toSet() );
             Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
-            // factor membership changed for this biomaterial — flag every involved factor
-            Set<Long> changedFvIds = new HashSet<>( currentFvIds );
-            changedFvIds.addAll( proposedFvIdsForBm );
-            Set<Long> commonFvIds = new HashSet<>( currentFvIds );
-            commonFvIds.retainAll( proposedFvIdsForBm );
-            changedFvIds.removeAll( commonFvIds );
-            for ( Long fvId : changedFvIds ) {
-                ExperimentalFactor parent = currentFvParentByFvId.get( fvId );
-                if ( parent != null ) {
-                    factorIdsAffected.add( parent.getId() );
-                }
-                // Proposed-new FVs (id != null but not in currentFvParentByFvId) are unreachable here because
-                // they have id == null in the proposal; their parent factor is already flagged by rule (c).
+            if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
+                changedBmIds.add( e.getKey() );
             }
         }
 
-        Set<Long> seenAnalysisIds = new HashSet<>();
-        for ( Long efId : factorIdsAffected ) {
-            ExperimentalFactor ef = currentFactorsById.get( efId );
-            if ( ef == null ) continue;
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
-                if ( seenAnalysisIds.add( a.getId() ) ) {
-                    Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
-                    report.getDifferentialExpressionAnalysesToDelete().add(
-                            new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
+        // A biomaterial bound to a factor value this commit CREATES cannot appear in the loop above.
+        // BioMaterialFactorValueAssignment carries factor value ids, and a new factor value has none until the
+        // first apply pass makes it, so the binding is deferred to DesignCommitPlan.pendingAssignments and
+        // attached by a second pass -- see buildAssignmentPass. Preflighting without the plan therefore reports
+        // 0 for a pure create whose bindings do land: measured on GSE35977, preflight 0 against 168 of 168
+        // biomaterials bound (cab, 2026-09-10). A caller reading the field as authoritative refuses a good write.
+        //
+        // Biomaterials the experiment does not carry are skipped for the same reason buildAssignmentPass skips
+        // them -- it binds nothing for a biomaterial absent from the design -- so the prediction matches the apply.
+        if ( plan != null ) {
+            for ( DesignCommitPlan.PendingAssignment pa : plan.getPendingAssignments() ) {
+                for ( Long bmId : pa.getBioMaterialIds() ) {
+                    if ( currentBmsById.containsKey( bmId ) ) {
+                        changedBmIds.add( bmId );
+                    }
                 }
             }
         }
-        // Also: subset-level analyses anchored on a deleted FV (subsetFactorValue FK becomes dangling)
+        int changedBmCount = changedBmIds.size();
+
+        // ---- impact: differential expression analyses ----
+        // An analysis is deleted when the change reaches a factor the analysis uses: the factor is deleted, one of
+        // its values is deleted or added, a sample moves between its values, or its baseline or a measurement on
+        // it changes. Paul, 2026-09-13: "if the factor isn't used in the DEA, then it shouldn't be deleted", with
+        // "if a few simple rules keep unnecessary churn away, we can do it". So adding a factor, or deleting one no
+        // analysis uses, deletes nothing; re-running an analysis to take in a new factor is left to the curator.
+        //
+        // This replaces dataset-wide invalidation (2026-08-26), which deleted every analysis on the experiment for
+        // any of those changes: replacing a categorical age with a continuous one on GSE93069 would have deleted
+        // DEA 352673, whose result sets test biological sex and phenotype only (frinkbro, 2026-09-12).
+        //
+        // Unchanged: statement / characteristic / free-text-value edits on a kept factor value reach no factor.
+        // An analysis whose factors cannot be read -- no result set names one and it has no subset -- keeps the
+        // dataset-wide rule, since not knowing what it uses is not evidence that it uses nothing.
+        boolean structuralChange = summary.getFactorsToCreate() > 0
+                || summary.getFactorsToDelete() > 0
+                || summary.getFactorValuesToCreate() > 0
+                || summary.getFactorValuesToDelete() > 0
+                || changedBmCount > 0;
+        Set<Long> mathChangedFactorIds = factorsWithEditsThatChangeTheMath( ee, proposed );
+
+        Set<Long> touchedFactorIds = new HashSet<>( mathChangedFactorIds );
+        for ( ExperimentalFactor ef : factorsBeingDeleted ) {
+            touchedFactorIds.add( ef.getId() );
+        }
+        for ( FactorValue fv : fvsBeingDeleted ) {
+            touchedFactorIds.add( currentFvParentByFvId.get( fv.getId() ).getId() );
+        }
+        if ( proposed.getExperimentalFactors() != null ) {
+            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+                // A value created under an EXISTING factor. One created under a new factor reaches no analysis, and
+                // the deferred bindings in the plan only ever point at created values, so they add nothing here.
+                if ( pf.getId() != null && pf.getValues() != null
+                        && pf.getValues().stream().anyMatch( v -> v.getId() == null ) ) {
+                    touchedFactorIds.add( pf.getId() );
+                }
+            }
+        }
+        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
+            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
+                    .map( FactorValue::getId ).collect( Collectors.toSet() );
+            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
+            Set<Long> moved = new HashSet<>( currentFvIds );
+            moved.addAll( proposedFvIdsForBm );
+            moved.removeAll( intersection( currentFvIds, proposedFvIdsForBm ) );
+            for ( Long fvId : moved ) {
+                ExperimentalFactor parent = currentFvParentByFvId.get( fvId );
+                if ( parent != null ) {
+                    touchedFactorIds.add( parent.getId() );
+                }
+            }
+        }
+
         for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
-            FactorValue subsetFv = a.getSubsetFactorValue();
-            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() ) && seenAnalysisIds.add( a.getId() ) ) {
+            Set<Long> used = factorIdsUsedBy( a );
+            boolean invalidated = used.isEmpty()
+                    ? structuralChange || !mathChangedFactorIds.isEmpty()
+                    : !Collections.disjoint( used, touchedFactorIds );
+            if ( invalidated ) {
+                Long subsetFvId = a.getSubsetFactorValue() != null ? a.getSubsetFactorValue().getId() : null;
                 report.getDifferentialExpressionAnalysesToDelete().add(
-                        new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFv.getId() ) );
+                        new DesignPreflightReport.AnalysisRef( a.getId(), a.getName(), subsetFvId ) );
             }
         }
         summary.setDifferentialExpressionAnalysesToDelete( report.getDifferentialExpressionAnalysesToDelete().size() );
@@ -777,16 +930,22 @@ public class ExpressionExperimentServiceImpl
         summary.setSubsetsWithStaleAnchor( report.getSubsetsWithStaleAnchor().size() );
 
         // ---- impact: biomaterials with changed assignments ----
-        int changedBmCount = 0;
-        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
-            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
-                    .map( FactorValue::getId ).collect( Collectors.toSet() );
-            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( !currentFvIds.equals( proposedFvIdsForBm ) ) {
-                changedBmCount++;
-            }
-        }
         summary.setBiomaterialsWithChangedAssignments( changedBmCount );
+
+        // ---- impact: in-place edits on kept factors and factor values ----
+        // Reported, never counted as structural. These are the edits the invalidation rule above deliberately
+        // excludes -- they relabel, they move no sample and no level -- so they must stay out of
+        // `structuralChange`. What they must NOT stay out of is the report: before this, re-terming a factor
+        // value preflighted as all-zero, which the caller reads as "nothing to do" for an edit a PUT applies.
+        for ( ExperimentalFactor ef : keptFactorMetadataEdits( ee, proposed ) ) {
+            report.getFactorsToUpdate().add( new DesignPreflightReport.EntityRef( ef.getId(), ef.getName() ) );
+        }
+        summary.setFactorsToUpdate( report.getFactorsToUpdate().size() );
+        for ( FactorValue fv : keptFactorValueEdits( ee, proposed ) ) {
+            report.getFactorValuesToUpdate().add(
+                    new DesignPreflightReport.EntityRef( fv.getId(), FactorValueUtils.getSummaryString( fv ) ) );
+        }
+        summary.setFactorValuesToUpdate( report.getFactorValuesToUpdate().size() );
 
         return report;
     }
@@ -795,7 +954,14 @@ public class ExpressionExperimentServiceImpl
     @Transactional
     @AuditedConditional(value = DesignChangeEvent.class,
             when = "#result.applied",
-            messageSpel = "'Design replaced via REST: factors +' + #result.preflightAtApply.summary.factorsToCreate + ' / -' + #result.preflightAtApply.summary.factorsToDelete + ', factor values +' + #result.preflightAtApply.summary.factorValuesToCreate + ' / -' + #result.preflightAtApply.summary.factorValuesToDelete + ', biomaterial assignments changed: ' + #result.preflightAtApply.summary.biomaterialsWithChangedAssignments + ', analyses removed: ' + #result.preflightAtApply.summary.differentialExpressionAnalysesToDelete + '.'")
+            // 🛑 The `~` counts are the point. This note used to report creates, deletes, assignment
+            // moves and analyses only, so a commit that re-termed a statement, attached evidence,
+            // flipped a baseline or renamed a factor wrote "+0 / -0 ... changed: 0" -- a description
+            // of a real write that reads as a no-op. uib was led to report the commit path as
+            // non-idempotent on the strength of it (2026-09-04); the write was real and the note
+            // denied it. factorsToUpdate / factorValuesToUpdate were already on the summary and
+            // simply were not being said.
+            messageSpel = "'Design replaced via REST: factors +' + #result.preflightAtApply.summary.factorsToCreate + ' / -' + #result.preflightAtApply.summary.factorsToDelete + ' / ~' + #result.preflightAtApply.summary.factorsToUpdate + ', factor values +' + #result.preflightAtApply.summary.factorValuesToCreate + ' / -' + #result.preflightAtApply.summary.factorValuesToDelete + ' / ~' + #result.preflightAtApply.summary.factorValuesToUpdate + ', biomaterial assignments changed: ' + #result.preflightAtApply.summary.biomaterialsWithChangedAssignments + ', analyses removed: ' + #result.preflightAtApply.summary.differentialExpressionAnalysesToDelete + '.'")
     public DesignApplyOutcome applyDesignChange( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
         Assert.notNull( proposed, "A proposed design must be supplied." );
         ee = expressionExperimentDao.reload( ee );
@@ -895,28 +1061,27 @@ public class ExpressionExperimentServiceImpl
             }
         }
 
-        // ---- step 2: remove diff-ex analyses dependent on factors being deleted (or that become invalid) ----
-        // Step 3 (factor removal) will also cascade DE analyses through ExperimentalFactorService#remove, so we
-        // only explicitly remove analyses tied to surviving factors whose membership / structure changed in a way
-        // that the FV/factor cascade won't reach. The preflight already enumerated these (see factorIdsAffected).
-        Set<Long> factorIdsAffected = computeAffectedFactorIds( currentFactorsById, currentFvsById,
-                proposedFactorIds, fvIdsBeingDeleted, proposed, currentBmsById );
-        Set<Long> removedAnalysisIds = new HashSet<>();
-        for ( Long efId : factorIdsAffected ) {
-            ExperimentalFactor ef = currentFactorsById.get( efId );
-            if ( ef == null ) continue;
-            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByFactor( ef ) ) {
-                if ( removedAnalysisIds.add( a.getId() ) ) {
-                    differentialExpressionAnalysisService.remove( a );
+        // ---- step 2: remove the diff-ex analyses the preflight enumerated ----
+        // The invalidation rule lives in previewDesignChange and nowhere else; this side executes the list the
+        // report already carries instead of deriving it a second time. The two derivations DID drift: when the
+        // report was widened to dataset-wide invalidation (2026-08-26) this side still asked per-factor, so a
+        // baseline flip the curator was warned would delete an analysis left that analysis in place, falsified.
+        // Subset-anchored analyses need no separate pass -- the report is built from findByExperiment(ee, true),
+        // so it already names them. Step 4 (factor removal) cascades through ExperimentalFactorService#remove;
+        // whatever it would have reached is already gone by then.
+        Set<Long> analysisIdsToRemove = report.getDifferentialExpressionAnalysesToDelete().stream()
+                .map( DesignPreflightReport.AnalysisRef::getId )
+                .collect( Collectors.toCollection( HashSet::new ) );
+        // Routed through deleteAnalysis, not differentialExpressionAnalysisService.remove: remove drops the rows
+        // only, leaving each analysis's diffex archive and its per-result-set TSV caches on the deployment
+        // volume. deleteAnalysis does the same removal and then those files. It runs at SUPPORTS so it joins
+        // this transaction -- which means the files go before the commit, and a rollback here leaves a
+        // surviving analysis without its caches; both are rebuilt from the database on next request.
+        if ( !analysisIdsToRemove.isEmpty() ) {
+            for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+                if ( analysisIdsToRemove.contains( a.getId() ) ) {
+                    differentialExpressionAnalyzerService.deleteAnalysis( ee, a );
                 }
-            }
-        }
-        // Subset-anchored analyses pointing at deleted FVs would dangle.
-        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
-            FactorValue subsetFv = a.getSubsetFactorValue();
-            if ( subsetFv != null && fvIdsBeingDeleted.contains( subsetFv.getId() )
-                    && removedAnalysisIds.add( a.getId() ) ) {
-                differentialExpressionAnalysisService.remove( a );
             }
         }
 
@@ -945,7 +1110,22 @@ public class ExpressionExperimentServiceImpl
             }
         }
         for ( ExperimentalFactor ef : factorsToRemove ) {
-            ed.getExperimentalFactors().remove( ef );
+            // 🛑 Do NOT detach the factor from ed.experimentalFactors here. experimentalFactorService.remove is a
+            // SECURED call (GROUP_USER + ACL_SECURABLE_EDIT), and an ExperimentalFactor is a SecuredChild whose
+            // ACL parent is resolved by ParentIdentityRetrievalStrategyImpl through
+            // ExpressionExperimentDao.findIdByFactor -- an HQL query that joins ed.experimentalFactors. Removing
+            // the factor from that collection first makes the query auto-flush the pending change and match no
+            // row, so the parent identity comes back null, the factor's ACL cannot inherit from the experiment,
+            // and the vote denies with "Access is denied" -- for an administrator, because the failure is a
+            // lookup that returned nothing rather than a permission that was refused.
+            //
+            // ExperimentalFactorServiceImpl.remove performs exactly this detach itself, after the interceptor
+            // has passed, with the comment "otherwise it will be re-saved in cascade". The line here was a
+            // duplicate of that one, and being on the wrong side of the security proxy is what made it fatal.
+            //
+            // cab hit it on GSE19804 (2026-09-09) re-typing an age factor: the sign 403'd after
+            // deleteAnalysis had already removed DEA 432031's archive, so the transaction rolled back and left
+            // a surviving analysis without its cached files.
             experimentalFactorService.remove( ef );
         }
 
@@ -1054,6 +1234,20 @@ public class ExpressionExperimentServiceImpl
                 || s.getDifferentialExpressionAnalysesToDelete() > 0 ) {
             return false;
         }
+        // The summary counters above track only structural add/delete of factors, factor values, and biomaterial
+        // assignments. An in-place edit to a KEPT factor value (its baseline flag, deprecated value, or statement
+        // set) leaves every counter at zero, so without this check such a PUT would be mistaken for a no-op and
+        // silently dropped — the mutation in applyFactorValueChanges / updateFactorValueStatements would never be
+        // reached.
+        if ( hasKeptFactorValueEdits( ee, proposed ) ) {
+            return false;
+        }
+        // Same blind spot one level up: renaming a kept factor, rewriting its description, or re-terming its
+        // category leaves every structural counter at zero and touches no factor value at all. Without this the
+        // PUT is swallowed and readers keep seeing the old category with nothing to signal otherwise.
+        if ( hasKeptFactorMetadataEdits( ee, proposed ) ) {
+            return false;
+        }
         ExperimentalDesign ed = ee.getExperimentalDesign();
         if ( ed == null ) {
             // current design is null; proposal that introduces any non-null metadata is not a no-op
@@ -1069,59 +1263,407 @@ public class ExpressionExperimentServiceImpl
                 && Objects.equals( ed.getNormalizationDescription(), proposed.getNormalizationDescription() );
     }
 
-    private Set<Long> computeAffectedFactorIds( Map<Long, ExperimentalFactor> currentFactorsById,
-            Map<Long, FactorValue> currentFvsById, Set<Long> proposedFactorIds, Set<Long> fvIdsBeingDeleted,
-            ExperimentalDesignValueObject proposed, Map<Long, BioMaterial> currentBmsById ) {
-        Set<Long> affected = new HashSet<>();
-        // factor being deleted -> handled by experimentalFactorService.remove later; not in this set
-        // factor losing a FV but staying -> affected
-        for ( Long fvId : fvIdsBeingDeleted ) {
-            FactorValue fv = currentFvsById.get( fvId );
-            if ( fv != null && fv.getExperimentalFactor() != null
-                    && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
-                affected.add( fv.getExperimentalFactor().getId() );
+    /**
+     * Whether {@code proposed} carries an in-place edit to an existing (kept) <em>factor</em>: its name, its
+     * description, its category, or its baseline-relevance hint. None of these move a structural counter, and
+     * none of them live on a factor value, so {@link #hasKeptFactorValueEdits} cannot see them either. Mirrors the fields
+     * {@link #updateFactorMetadata} writes and its {@code null = "no change"} convention, including the rule that
+     * a category is only applied when the factor already has one.
+     */
+    private boolean hasKeptFactorMetadataEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return !keptFactorMetadataEdits( ee, proposed ).isEmpty();
+    }
+
+    /**
+     * The kept factors {@link #hasKeptFactorMetadataEdits} finds an in-place edit on, in proposal order.
+     *
+     * @see #keptFactorValueEdits
+     */
+    private List<ExperimentalFactor> keptFactorMetadataEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return Collections.emptyList();
+        }
+        Map<Long, ExperimentalFactor> currentFactorsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            currentFactorsById.put( ef.getId(), ef );
+        }
+        List<ExperimentalFactor> edited = new ArrayList<>();
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getId() == null ) continue; // creations are already counted in the summary
+            ExperimentalFactor cur = currentFactorsById.get( pf.getId() );
+            if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+            if ( pf.getName() != null && !Objects.equals( pf.getName(), cur.getName() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getDescription() != null && !Objects.equals( pf.getDescription(), cur.getDescription() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getCategory() != null && cur.getCategory() != null
+                    && ( !Objects.equals( pf.getCategory().getCategory(), cur.getCategory().getCategory() )
+                    || !Objects.equals( pf.getCategory().getCategoryUri(), cur.getCategory().getCategoryUri() )
+                    || !Objects.equals( pf.getCategory().getValue(), cur.getCategory().getValue() )
+                    || !Objects.equals( pf.getCategory().getValueUri(), cur.getCategory().getValueUri() ) ) ) {
+                edited.add( cur );
+                continue;
+            }
+            // Ticking "no baseline" with a reason and changing nothing else moves no counter, so without these
+            // two the commit would be reported unchanged and the write never reached — the same blind spot the
+            // factor-value evidence clause exists to cover.
+            if ( pf.getBaselineRelevance() != null
+                    && !Objects.equals( blankToNull( pf.getBaselineRelevance() ), cur.getBaselineRelevance() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getBaselineRelevanceReason() != null
+                    && !Objects.equals( blankToNull( pf.getBaselineRelevanceReason() ), cur.getBaselineRelevanceReason() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            // Same blind spot, same fix, for the subset-relevance hint: recommending a subset factor and
+            // changing nothing else moves no counter.
+            if ( pf.getSubsetRelevance() != null
+                    && !Objects.equals( blankToNull( pf.getSubsetRelevance() ), cur.getSubsetRelevance() ) ) {
+                edited.add( cur );
+                continue;
+            }
+            if ( pf.getSubsetRelevanceReason() != null
+                    && !Objects.equals( blankToNull( pf.getSubsetRelevanceReason() ), cur.getSubsetRelevanceReason() ) ) {
+                edited.add( cur );
             }
         }
-        // new FV under existing factor -> affected
-        if ( proposed.getExperimentalFactors() != null ) {
-            for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
-                if ( pf.getId() == null || pf.getValues() == null ) continue;
-                for ( FactorValueBasicValueObject pv : pf.getValues() ) {
-                    if ( pv.getId() == null ) {
-                        affected.add( pf.getId() );
-                        break;
+        return edited;
+    }
+
+    /** An empty baseline-relevance field is the explicit clear, so it compares equal to an unset one. */
+    @Nullable
+    private static String blankToNull( @Nullable String s ) {
+        return StringUtils.isBlank( s ) ? null : s;
+    }
+
+    /**
+     * The factors on which the proposal makes one of the {@link #hasKeptFactorValueEdits} that change the analysis
+     * MATH rather than its labels: a baseline flip, or a measurement change on a continuous factor value.
+     * <p>
+     * A baseline flip reverses the direction of every contrast in an existing DEA —
+     * {@link ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet} records the factor value
+     * that WAS the reference, and each contrast's fold change is relative to it. For a two-level factor that
+     * is a pure negation; for three or more the contrast SET changes (baseline A gives B-vs-A and C-vs-A;
+     * baseline B needs A-vs-B and C-vs-B), so there is no in-place correction and the analysis must be re-run.
+     * A measurement change moves the regression the same way.
+     * <p>
+     * 🛑 Statement, characteristic and free-text {@code value} edits are deliberately NOT here. They relabel a
+     * factor value; they do not move a sample, a level or a reference. That is the ONE exclusion the
+     * invalidation rule in {@link #previewDesignChange} is built around.
+     * <p>
+     * 🛑 Baseline-hood is read from the explicit {@code baseline} flag only. It is deliberately NOT computed
+     * through {@code BaselineSelection}, which falls back to control-group characteristics when the flag is
+     * absent: that would make a statement edit flip a baseline, and statement edits are the exclusion.
+     */
+    private Set<Long> factorsWithEditsThatChangeTheMath( ExpressionExperiment ee,
+            ExperimentalDesignValueObject proposed ) {
+        Set<Long> factorIds = new HashSet<>();
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return factorIds;
+        }
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+            }
+        }
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getValues() == null ) continue;
+            for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                if ( pv.getId() == null ) continue; // a creation; already structural
+                FactorValue cur = currentFvsById.get( pv.getId() );
+                if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+                boolean changesTheMath = ( baselineChanged( pv, cur ) && !agreesWithFittedBaselines( ee, pv, cur ) )
+                        || ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) );
+                if ( changesTheMath && cur.getExperimentalFactor() != null ) {
+                    factorIds.add( cur.getExperimentalFactor().getId() );
+                }
+            }
+        }
+        return factorIds;
+    }
+
+    /**
+     * The factors an analysis uses: those its result sets test, plus the factor of the subset it was run on.
+     * <p>
+     * Empty when neither can be read, which {@link #previewDesignChange} treats as unknown rather than as none.
+     */
+    private static Set<Long> factorIdsUsedBy( DifferentialExpressionAnalysis a ) {
+        Set<Long> ids = new HashSet<>();
+        if ( a.getResultSets() != null ) {
+            for ( ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs : a.getResultSets() ) {
+                if ( rs.getExperimentalFactors() != null ) {
+                    for ( ExperimentalFactor f : rs.getExperimentalFactors() ) {
+                        ids.add( f.getId() );
                     }
                 }
             }
         }
-        // biomaterial assignment changes -> affected (only via parent factor of changed FVs)
-        Map<Long, Set<Long>> proposedAssignByBmId = new HashMap<>();
-        if ( proposed.getBioMaterialAssignments() != null ) {
-            for ( ExperimentalDesignValueObject.BioMaterialFactorValueAssignment a : proposed.getBioMaterialAssignments() ) {
-                if ( a.getBioMaterialId() != null && a.getFactorValueIds() != null ) {
-                    proposedAssignByBmId.put( a.getBioMaterialId(), new HashSet<>( a.getFactorValueIds() ) );
+        if ( a.getSubsetFactorValue() != null && a.getSubsetFactorValue().getExperimentalFactor() != null ) {
+            ids.add( a.getSubsetFactorValue().getExperimentalFactor().getId() );
+        }
+        return ids;
+    }
+
+    private static Set<Long> intersection( Set<Long> a, Set<Long> b ) {
+        Set<Long> both = new HashSet<>( a );
+        both.retainAll( b );
+        return both;
+    }
+
+    /**
+     * Whether {@code proposed} carries an in-place edit to an existing (kept) factor value that the structural
+     * preflight summary does not count: a baseline-flag change, a deprecated-{@code value} change, a statement
+     * edit, or a measurement edit on a continuous factor value. All honour the {@code null = "no change"}
+     * convention used by {@link #applyFactorValueChanges}. Used by {@link #isNoOpDesignApply} so such edits are
+     * not short-circuited away.
+     */
+    private boolean hasKeptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        return !keptFactorValueEdits( ee, proposed ).isEmpty();
+    }
+
+    /**
+     * The kept factor values {@link #hasKeptFactorValueEdits} finds an in-place edit on, in proposal order.
+     * <p>
+     * Returning them rather than a bare boolean is what lets {@link #previewDesignChange} report the edit
+     * instead of counting it as {@code unchanged}: one comparison, read by the no-op gate and by the report,
+     * so the two cannot disagree about what an edit is.
+     */
+    private List<FactorValue> keptFactorValueEdits( ExpressionExperiment ee, ExperimentalDesignValueObject proposed ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        if ( ed == null || proposed.getExperimentalFactors() == null ) {
+            return Collections.emptyList();
+        }
+        Map<Long, FactorValue> currentFvsById = new HashMap<>();
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                currentFvsById.put( fv.getId(), fv );
+            }
+        }
+        List<FactorValue> edited = new ArrayList<>();
+        for ( ExperimentalDesignValueObject.ExperimentalFactorEntry pf : proposed.getExperimentalFactors() ) {
+            if ( pf.getValues() == null ) continue;
+            for ( FactorValueBasicValueObject pv : pf.getValues() ) {
+                if ( pv.getId() == null ) continue; // creations are already counted in the summary
+                FactorValue cur = currentFvsById.get( pv.getId() );
+                if ( cur == null ) continue; // unknown id — a blocker, surfaced by previewDesignChange
+                if ( baselineChanged( pv, cur ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                //noinspection deprecation
+                if ( pv.getValue() != null && !Objects.equals( pv.getValue(), cur.getValue() ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                // Statements are replaced wholesale by updateFactorValueStatements when the payload provides them
+                // (null = "no change"). Compare by content so an add / remove / edit registers, while a pure
+                // round-trip that echoes the same statements stays a no-op.
+                if ( pv.getStatements() != null && statementsChanged( cur, pv ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                // Attaching provenance to an otherwise-unchanged statement leaves the content keys identical, so
+                // statementsChanged cannot see it. Without this an evidence-only write is swallowed exactly the
+                // way a factor description-only write used to be.
+                if ( pv.getStatements() != null && statementEvidenceChanged( cur, proposedStatements( pv ) ) ) {
+                    edited.add( cur );
+                    continue;
+                }
+                // A continuous factor value's measurement is the field its whole meaning rests on; retiming a
+                // timepoint from 7 to 37 days moves no structural counter.
+                if ( pv.getMeasurementObject() != null && measurementChanged( cur, pv.getMeasurementObject() ) ) {
+                    edited.add( cur );
                 }
             }
         }
-        for ( Map.Entry<Long, BioMaterial> e : currentBmsById.entrySet() ) {
-            Set<Long> currentFvIds = e.getValue().getAllFactorValues().stream()
-                    .map( FactorValue::getId ).collect( Collectors.toSet() );
-            Set<Long> proposedFvIdsForBm = proposedAssignByBmId.getOrDefault( e.getKey(), Collections.emptySet() );
-            if ( currentFvIds.equals( proposedFvIdsForBm ) ) continue;
-            Set<Long> changed = new HashSet<>( currentFvIds );
-            changed.addAll( proposedFvIdsForBm );
-            Set<Long> common = new HashSet<>( currentFvIds );
-            common.retainAll( proposedFvIdsForBm );
-            changed.removeAll( common );
-            for ( Long fvId : changed ) {
-                FactorValue fv = currentFvsById.get( fvId );
-                if ( fv != null && fv.getExperimentalFactor() != null
-                        && proposedFactorIds.contains( fv.getExperimentalFactor().getId() ) ) {
-                    affected.add( fv.getExperimentalFactor().getId() );
+        return edited;
+    }
+
+    /**
+     * Whether any proposed statement carries provenance — supporting evidence or an evidence code — that differs
+     * from what the statement it refers to already holds. Resolution mirrors
+     * {@link #updateFactorValueStatements}: by id when the payload supplies one, otherwise by content key. A
+     * proposed statement matching nothing is a creation, which {@link #statementsChanged} already counts, so it
+     * is not considered here.
+     * <p>
+     * Only non-null proposed values are compared, honouring the {@code null = "no change"} convention that
+     * {@link #applyStatementFields} writes under. Both slots go through this one comparison: an evidence code is
+     * as invisible to {@link #statementsChanged} as supporting evidence is, and a second check beside this one
+     * would be a second place for the no-op gate to disagree with the apply.
+     */
+    private static boolean statementEvidenceChanged( FactorValue cur, List<StatementValueObject> proposed ) {
+        Map<Long, Statement> byId = new HashMap<>();
+        Map<String, Statement> byContent = new HashMap<>();
+        for ( Statement s : cur.getCharacteristics() ) {
+            if ( s.getId() != null ) {
+                byId.put( s.getId(), s );
+            }
+            byContent.putIfAbsent( statementContentKey( s ), s );
+        }
+        for ( StatementValueObject ps : proposed ) {
+            Statement match = ps.getId() != null ? byId.get( ps.getId() ) : byContent.get( statementContentKey( ps ) );
+            if ( match == null ) {
+                continue; // a creation; statementsChanged covers it
+            }
+            // Compared in BOTH directions since evidence became replacement: dropping evidence a row has is as
+            // much a change as adding it, and skipping payloads that carry none would report a clear as a no-op.
+            if ( !CharacteristicUtils.sameSupportingEvidence( match.getSupportingEvidence(), ps.getSupportingEvidence() ) ) {
+                return true;
+            }
+            if ( !Objects.equals( parseEvidenceCode( ps.getEvidenceCode() ), match.getEvidenceCode() ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the proposed measurement differs from the one the factor value currently carries. A factor value
+     * that has no measurement yet and is given one counts as changed. Compares the four fields
+     * {@link #applyMeasurementFields} writes, so a verbatim round-trip stays a no-op.
+     */
+    private static boolean measurementChanged( FactorValue cur, MeasurementValueObject proposed ) {
+        Measurement m = cur.getMeasurement();
+        if ( m == null ) {
+            return true;
+        }
+        String currentUnit = m.getUnit() != null ? m.getUnit().getUnitNameCV() : null;
+        String currentType = m.getType() != null ? m.getType().name() : null;
+        String currentRepresentation = m.getRepresentation() != null ? m.getRepresentation().name() : null;
+        return !Objects.equals( m.getValue(), proposed.getValue() )
+                || !Objects.equals( currentUnit, proposed.getUnit() )
+                || !Objects.equals( currentType, proposed.getType() )
+                || !Objects.equals( currentRepresentation, proposed.getRepresentation() );
+    }
+
+    /**
+     * Whether the proposed statement set differs in content from what the factor value currently carries. Compares
+     * a multiset of {@link #statementContentKey content keys} so ordering and database ids are irrelevant — only
+     * add / remove / field edits count. Echoing the current statements verbatim (the common baseline-edit
+     * round-trip) yields equal multisets and is therefore not a change.
+     */
+    /**
+     * Whether the statements {@code pv} proposes differ in content from the ones the factor value holds.
+     * <p>
+     * Compares the multiset of content keys the apply would end up with against the one it starts from, so an
+     * add, a removal and a re-term all register while a payload that echoes what it read stays a no-op.
+     * <p>
+     * 🛑 <b>The proposed side is BOTH projections, not just {@code statements}.</b> A statement with no object
+     * is rendered under {@code characteristics} and left out of {@code statements} entirely
+     * ({@code AbstractFactorValueValueObjectSerializer} writes a statement only when it has an object), and
+     * that is the commonest shape there is — a plain {@code organism part: chorionic villus}. Reading the
+     * statements list alone, a client PUTting back exactly what {@code GET /design} gave it looks like it is
+     * deleting every such row, which cost a spurious design-change event on every full-design round trip and
+     * would have counted the whole design as edited in the preflight report. {@link #updateFactorValueStatements}
+     * has always resolved the two projections together; this is the same resolution, read-only.
+     */
+    private static boolean statementsChanged( FactorValue cur, FactorValueBasicValueObject pv ) {
+        List<StatementValueObject> proposed = proposedStatements( pv );
+        Map<String, Integer> currentKeys = new HashMap<>();
+        Map<Long, Statement> existingById = new HashMap<>();
+        for ( Statement s : cur.getCharacteristics() ) {
+            currentKeys.merge( statementContentKey( s ), 1, Integer::sum );
+            if ( s.getId() != null ) {
+                existingById.put( s.getId(), s );
+            }
+        }
+        Map<String, Integer> proposedKeys = new HashMap<>();
+        Set<Long> claimedByStatement = new HashSet<>();
+        for ( StatementValueObject ps : proposed ) {
+            proposedKeys.merge( statementContentKey( ps ), 1, Integer::sum );
+            if ( ps.getId() != null ) {
+                claimedByStatement.add( ps.getId() );
+            }
+        }
+        if ( pv.getCharacteristics() != null ) {
+            for ( CharacteristicValueObject pc : pv.getCharacteristics() ) {
+                if ( pc.getId() == null || claimedByStatement.contains( pc.getId() ) ) continue;
+                Statement target = existingById.get( pc.getId() );
+                if ( target == null ) continue;
+                // Mirrors applyCharacteristicSubjectFields: the characteristic projection rewrites the subject
+                // side and cannot express a predicate or an object, so the ones on the row survive.
+                proposedKeys.merge( statementContentKey( pc.getCategory(), pc.getCategoryUri(),
+                        pc.getValue(), pc.getValueUri(),
+                        target.getPredicate(), target.getPredicateUri(),
+                        target.getObject(), target.getObjectUri(),
+                        target.getSecondPredicate(), target.getSecondPredicateUri(),
+                        target.getSecondObject(), target.getSecondObjectUri() ), 1, Integer::sum );
+            }
+        }
+        return !currentKeys.equals( proposedKeys );
+    }
+
+    /**
+     * Whether a baseline-flag change agrees with the reference every existing analysis on that factor was fitted
+     * against, so that it moves no contrast.
+     * <p>
+     * The flag and the fitted reference are separate facts. {@code ExpressionAnalysisResultSet.baselineGroup} is
+     * what the analysis used; the flag on the factor value is often never set. GSE391: result set 559530 of DEA
+     * 316735 names FV 783 (30 minute) as its baseline while FV 783's flag is stored null, so a draft setting
+     * {@code isBaseline: true} on it read as a flip and was refused as deleting that analysis — for an edit that
+     * changes no contrast (Paul, 2026-09-12).
+     * <p>
+     * 🛑 Exempts only what is proven harmless, and fails closed otherwise. At least one result set must involve
+     * the factor, every such result set must name its baseline on that factor, and the proposal must agree with
+     * all of them: {@code true} on the value they all use, {@code false} on a value none of them uses. A result
+     * set with no baseline group, or one whose reference sits on another factor (an interaction's second
+     * reference is not mapped on the entity), leaves the reference unknown, and the change still invalidates.
+     */
+    private boolean agreesWithFittedBaselines( ExpressionExperiment ee, FactorValueBasicValueObject pv, FactorValue cur ) {
+        ExperimentalFactor factor = cur.getExperimentalFactor();
+        Long factorId = factor != null ? factor.getId() : null;
+        if ( factorId == null || cur.getId() == null ) {
+            return false;
+        }
+        boolean proposedBaseline = Boolean.TRUE.equals( pv.getBaseline() );
+        int resultSetsOnFactor = 0;
+        for ( DifferentialExpressionAnalysis a : differentialExpressionAnalysisService.findByExperiment( ee, true ) ) {
+            for ( ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet rs : a.getResultSets() ) {
+                if ( rs.getExperimentalFactors() == null || rs.getExperimentalFactors().stream()
+                        .noneMatch( f -> factorId.equals( f.getId() ) ) ) {
+                    continue;
+                }
+                resultSetsOnFactor++;
+                FactorValue fitted = rs.getBaselineGroup();
+                if ( fitted == null || fitted.getExperimentalFactor() == null
+                        || !factorId.equals( fitted.getExperimentalFactor().getId() ) ) {
+                    return false;
+                }
+                boolean fittedHere = cur.getId().equals( fitted.getId() );
+                if ( proposedBaseline != fittedHere ) {
+                    return false;
                 }
             }
         }
-        return affected;
+        return resultSetsOnFactor > 0;
+    }
+
+    /**
+     * Whether a proposed factor value actually moves the baseline flag.
+     * <p>
+     * 🛑 {@code null} and {@code FALSE} both mean "not the baseline", and the stored flag is null on most
+     * values that have never been one. Comparing them with {@code Objects.equals} makes them differ, so a
+     * client that sends {@code isBaseline: false} — which is what any checkbox-backed UI sends for every value
+     * it renders — marked EVERY value of the factor as edited and wrote false over null on each.
+     * <p>
+     * Measured on GSE7866 (Paul, 2026-09-05): renaming one factor, touching no values, reported
+     * "factor values +0 / -0 / ~2" in the audit note and updated both rows. The factor has exactly two values
+     * and both were stored null.
+     * <p>
+     * {@code null} on the proposal still means "no change" and returns false, unchanged.
+     */
+    private static boolean baselineChanged( FactorValueBasicValueObject pv, FactorValue cur ) {
+        return pv.getBaseline() != null
+                && pv.getBaseline() != Boolean.TRUE.equals( cur.getIsBaseline() );
     }
 
     private void updateFactorMetadata( ExperimentalFactor ef, ExperimentalDesignValueObject.ExperimentalFactorEntry pf ) {
@@ -1145,6 +1687,27 @@ public class ExpressionExperimentServiceImpl
             ef.getCategory().setValue( pf.getCategory().getValue() );
             ef.getCategory().setValueUri( pf.getCategory().getValueUri() );
         }
+        // Baseline-relevance hint: null = "no change", like everything else here, but an EMPTY string is an
+        // explicit clear. Evidence below deliberately has no clear because it is an append-only justification;
+        // this is a checkbox with a reason box, and a curator who unticks it has to be able to say so.
+        if ( pf.getBaselineRelevance() != null ) {
+            ef.setBaselineRelevance( StringUtils.isBlank( pf.getBaselineRelevance() ) ? null : pf.getBaselineRelevance() );
+        }
+        if ( pf.getBaselineRelevanceReason() != null ) {
+            ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
+        }
+        // Subset-relevance hint: same null = "no change" / empty = clear convention.
+        if ( pf.getSubsetRelevance() != null ) {
+            ef.setSubsetRelevance( StringUtils.isBlank( pf.getSubsetRelevance() ) ? null : pf.getSubsetRelevance() );
+        }
+        if ( pf.getSubsetRelevanceReason() != null ) {
+            ef.setSubsetRelevanceReason( StringUtils.isBlank( pf.getSubsetRelevanceReason() ) ? null : pf.getSubsetRelevanceReason() );
+        }
+        // Provenance: replacement, like the rest of a gemmaId item. See applyStatementFields for why this stopped
+        // being a delta field on 2026-09-06.
+        if ( !CharacteristicUtils.sameSupportingEvidence( ef.getSupportingEvidence(), pf.getSupportingEvidence() ) ) {
+            ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
+        }
         experimentalFactorService.update( ef );
     }
 
@@ -1167,12 +1730,27 @@ public class ExpressionExperimentServiceImpl
                     //noinspection deprecation
                     existing.setValue( pv.getValue() );
                 }
-                // Baseline flag: null = "no change" (same round-trip-safe convention as `value`).
-                if ( pv.getBaseline() != null ) {
+                // Baseline flag: null = "no change" (same round-trip-safe convention as `value`). Written only
+                // when it actually differs, so echoing the current state touches no row -- see baselineChanged.
+                if ( baselineChanged( pv, existing ) ) {
                     existing.setIsBaseline( pv.getBaseline() );
+                }
+                // Measurement on a continuous factor value: same null = "no change" convention.
+                if ( pv.getMeasurementObject() != null ) {
+                    applyMeasurementFields( existing, pv.getMeasurementObject() );
+                }
+                // Provenance on the VALUE itself, distinct from the evidence on its statements: replacement, as
+                // everywhere else on a gemmaId item.
+                if ( !CharacteristicUtils.sameSupportingEvidence( existing.getSupportingEvidence(), pv.getSupportingEvidence() ) ) {
+                    existing.setSupportingEvidence(
+                            CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
                 }
             }
         }
+        // Siblings are deliberately left alone. Clearing them made a second baseline impossible to record at all:
+        // marking B would silently unmark A, so a two-experiment dataset could never carry its two reference
+        // levels. Each factor value's flag now means exactly what the payload said about that value, and nothing
+        // about its neighbours -- `null` still means "no change", so a client that omits the field is unaffected.
     }
 
     private ExperimentalFactor createFactor( ExperimentalDesign ed, ExpressionExperiment ee,
@@ -1193,6 +1771,11 @@ public class ExpressionExperimentServiceImpl
             cat.setValueUri( pf.getCategory().getValueUri() );
             ef.setCategory( cat );
         }
+        ef.setBaselineRelevance( StringUtils.isBlank( pf.getBaselineRelevance() ) ? null : pf.getBaselineRelevance() );
+        ef.setBaselineRelevanceReason( StringUtils.isBlank( pf.getBaselineRelevanceReason() ) ? null : pf.getBaselineRelevanceReason() );
+        ef.setSubsetRelevance( StringUtils.isBlank( pf.getSubsetRelevance() ) ? null : pf.getSubsetRelevance() );
+        ef.setSubsetRelevanceReason( StringUtils.isBlank( pf.getSubsetRelevanceReason() ) ? null : pf.getSubsetRelevanceReason() );
+        ef.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pf.getSupportingEvidence() ) );
         ef = experimentalFactorService.create( ef );
         if ( pf.getValues() != null ) {
             for ( FactorValueBasicValueObject pv : pf.getValues() ) {
@@ -1218,27 +1801,47 @@ public class ExpressionExperimentServiceImpl
         if ( pv.getBaseline() != null ) {
             fv.setIsBaseline( pv.getBaseline() );
         }
-        if ( pv.getStatements() != null ) {
-            for ( StatementValueObject ps : pv.getStatements() ) {
-                fv.getCharacteristics().add( buildStatement( ps ) );
-            }
+        for ( StatementValueObject ps : proposedStatements( pv ) ) {
+            fv.getCharacteristics().add( buildStatement( ps ) );
         }
         if ( pv.getMeasurementObject() != null ) {
-            ubic.gemma.model.common.measurement.Measurement m = ubic.gemma.model.common.measurement.Measurement.Factory.newInstance();
-            m.setValue( pv.getMeasurementObject().getValue() );
-            if ( pv.getMeasurementObject().getRepresentation() != null ) {
-                m.setRepresentation( ubic.gemma.model.common.quantitationtype.PrimitiveType.valueOf( pv.getMeasurementObject().getRepresentation() ) );
-            }
-            if ( pv.getMeasurementObject().getType() != null ) {
-                m.setType( ubic.gemma.model.common.measurement.MeasurementType.valueOf( pv.getMeasurementObject().getType() ) );
-            }
-            fv.setMeasurement( m );
+            applyMeasurementFields( fv, pv.getMeasurementObject() );
         }
+        fv.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( pv.getSupportingEvidence() ) );
         return factorValueService.create( fv );
     }
 
+    /**
+     * Write a proposed measurement onto a factor value, creating the {@link Measurement} if the factor value does
+     * not have one yet. Shared by the create and update halves of the design apply so a continuous factor value
+     * carries the same fields however it was reached.
+     * <p>
+     * The unit is resolved through {@link UnitDao} rather than attached transiently: {@code FactorValue.measurement}
+     * cascades on persist but {@code Measurement.unit} does not, so a fresh {@link Unit} would be dropped and the
+     * measurement would land as a bare number. Mirrors {@code EeWriteServiceImpl#findOrCreateUnit}.
+     */
+    private void applyMeasurementFields( FactorValue fv, MeasurementValueObject pm ) {
+        Measurement m = fv.getMeasurement();
+        if ( m == null ) {
+            m = Measurement.Factory.newInstance();
+            fv.setMeasurement( m );
+        }
+        m.setValue( pm.getValue() );
+        if ( pm.getRepresentation() != null ) {
+            m.setRepresentation( PrimitiveType.valueOf( pm.getRepresentation() ) );
+        }
+        if ( pm.getType() != null ) {
+            m.setType( MeasurementType.valueOf( pm.getType() ) );
+        }
+        if ( StringUtils.isNotBlank( pm.getUnit() ) ) {
+            Unit unit = Unit.Factory.newInstance( pm.getUnit() );
+            Unit existing = unitDao.find( unit );
+            m.setUnit( existing != null ? existing : unitDao.create( unit ) );
+        }
+    }
+
     private void updateFactorValueStatements( FactorValue existing, FactorValueBasicValueObject pv ) {
-        List<StatementValueObject> proposedStatements = pv.getStatements() != null ? pv.getStatements() : Collections.emptyList();
+        List<StatementValueObject> proposedStatements = proposedStatements( pv );
         List<CharacteristicValueObject> proposedCharacteristics = pv.getCharacteristics() != null ? pv.getCharacteristics() : Collections.emptyList();
 
         Map<Long, Statement> existingById = existing.getCharacteristics().stream()
@@ -1352,17 +1955,130 @@ public class ExpressionExperimentServiceImpl
                 s.getSecondObject(), s.getSecondObjectUri() );
     }
 
+    /**
+     * The entity half of the comparison, canonicalized to match the VO half.
+     * <p>
+     * {@link StatementValueObject} canonicalizes its term URIs and labels on construction and this
+     * side did not, so every stored statement holding a retired URI compared unequal to the very
+     * document that was rendered from it: a preflight that asserted nothing reported updates, on 9
+     * of 9 datasets probed on 2026-08-29. Category and predicate are raw on both sides — the shim
+     * deliberately leaves them alone — so they stay raw here.
+     */
     private static String statementContentKey( Statement s ) {
         return statementContentKey( s.getCategory(), s.getCategoryUri(),
-                s.getSubject(), s.getSubjectUri(),
+                CharacteristicUtils.canonicalLabel( s.getSubjectUri(), s.getSubject() ),
+                CharacteristicUtils.canonicalUri( s.getSubjectUri() ),
                 s.getPredicate(), s.getPredicateUri(),
-                s.getObject(), s.getObjectUri(),
+                CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() ),
+                CharacteristicUtils.canonicalUri( s.getObjectUri() ),
                 s.getSecondPredicate(), s.getSecondPredicateUri(),
-                s.getSecondObject(), s.getSecondObjectUri() );
+                CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() ),
+                CharacteristicUtils.canonicalUri( s.getSecondObjectUri() ) );
     }
 
     private static String statementContentKey( String... fields ) {
-        return Stream.of( fields ).map( f -> f == null ? " " : f ).collect( Collectors.joining( "" ) );
+        return Stream.of( fields ).map( f -> f == null ? "\0" : f ).collect( Collectors.joining( "\u001F" ) );
+    }
+
+    /**
+     * Whether a proposed term differs from the stored one ONLY by the read-time canonicalisation.
+     * <p>
+     * A client edits what the API served it, and the API serves canonical URIs, so a document that
+     * changes nothing still proposes the canonical form of every retired URI it was shown. Writing
+     * that back performs the parked database migration
+     * ({@code scripts/sql/term_uri_migration.sql}) on whichever rows happen to ride along with an
+     * unrelated edit — a migration nobody ran, one row at a time, and no way to tell afterwards
+     * which rows moved. The stored value stays until someone runs the migration deliberately.
+     */
+    private static boolean isOnlyCanonicalization( @Nullable String storedLabel, @Nullable String storedUri,
+            @Nullable String proposedLabel, @Nullable String proposedUri ) {
+        if ( storedUri == null || proposedUri == null || storedUri.equals( proposedUri ) ) {
+            return false;
+        }
+        return proposedUri.equals( CharacteristicUtils.canonicalUri( storedUri ) )
+                && Objects.equals( proposedLabel, CharacteristicUtils.canonicalLabel( storedUri, storedLabel ) );
+    }
+
+    /**
+     * Re-join the halves of a compound statement that the wire format splits apart.
+     * <p>
+     * A statement carrying two objects reaches clients as <em>two</em> entries in {@code statements[]} sharing
+     * one id, the second putting the second clause under the generic {@code predicate} / {@code object} keys.
+     * That flattening is the settled contract (#814, {@code dff752727c}) and is why
+     * {@link StatementValueObject}'s {@code second*} slots are withheld from the API. The write path never
+     * learned the inverse: both entries claimed the same row, {@link #applyStatementFields} ran twice, and each
+     * run wrote the {@code second*} slots as null because neither entry carries them. A GET followed by an
+     * unedited PUT therefore dropped the second clause of every compound statement it touched.
+     * <p>
+     * Rows with no id cannot be two halves of one statement and pass through untouched, in order. A third row
+     * claiming one id is refused by the preflight ({@code STATEMENT_ID_REPEATED}) before anything reaches here,
+     * so the extras dropped below are unreachable from an accepted payload.
+     *
+     * @param proposed statements exactly as the payload carried them
+     * @return one entry per statement, with both object slots filled; never the caller's own instances, since
+     * the same payload is walked again by the preflight
+     */
+    private static List<StatementValueObject> unflattenStatements( List<StatementValueObject> proposed ) {
+        List<StatementValueObject> out = new ArrayList<>( proposed.size() );
+        Map<Long, StatementValueObject> firstById = new HashMap<>();
+        for ( StatementValueObject ps : proposed ) {
+            if ( ps.getId() == null ) {
+                out.add( ps );
+                continue;
+            }
+            StatementValueObject first = firstById.get( ps.getId() );
+            if ( first == null ) {
+                StatementValueObject copy = copyStatementValueObject( ps );
+                firstById.put( ps.getId(), copy );
+                out.add( copy );
+                continue;
+            }
+            if ( first.getSecondPredicate() != null || first.getSecondObject() != null ) {
+                continue;
+            }
+            first.setSecondPredicate( ps.getPredicate() );
+            first.setSecondPredicateUri( ps.getPredicateUri() );
+            first.setSecondObject( ps.getObject() );
+            first.setSecondObjectUri( ps.getObjectUri() );
+            // Provenance rides on whichever half recorded it; the serializer emits it on neither, so this only
+            // matters for a hand-built payload that puts it on the second row.
+            if ( first.getSupportingEvidence() == null ) {
+                first.setSupportingEvidence( ps.getSupportingEvidence() );
+            }
+            if ( first.getEvidenceCode() == null ) {
+                first.setEvidenceCode( ps.getEvidenceCode() );
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The statements a factor-value payload proposes, with split compound statements re-joined.
+     *
+     * @see #unflattenStatements(List)
+     */
+    private static List<StatementValueObject> proposedStatements( FactorValueBasicValueObject pv ) {
+        return pv.getStatements() != null ? unflattenStatements( pv.getStatements() ) : Collections.emptyList();
+    }
+
+    private static StatementValueObject copyStatementValueObject( StatementValueObject ps ) {
+        StatementValueObject copy = new StatementValueObject();
+        copy.setId( ps.getId() );
+        copy.setCategory( ps.getCategory() );
+        copy.setCategoryUri( ps.getCategoryUri() );
+        copy.setSubject( ps.getSubject() );
+        copy.setSubjectUri( ps.getSubjectUri() );
+        copy.setPredicate( ps.getPredicate() );
+        copy.setPredicateUri( ps.getPredicateUri() );
+        copy.setObject( ps.getObject() );
+        copy.setObjectUri( ps.getObjectUri() );
+        copy.setSecondPredicate( ps.getSecondPredicate() );
+        copy.setSecondPredicateUri( ps.getSecondPredicateUri() );
+        copy.setSecondObject( ps.getSecondObject() );
+        copy.setSecondObjectUri( ps.getSecondObjectUri() );
+        copy.setSupportingEvidence( ps.getSupportingEvidence() );
+        copy.setEvidenceCode( ps.getEvidenceCode() );
+        return copy;
     }
 
     private Statement buildStatement( StatementValueObject ps ) {
@@ -1374,16 +2090,66 @@ public class ExpressionExperimentServiceImpl
     private void applyStatementFields( Statement s, StatementValueObject ps ) {
         s.setCategory( ps.getCategory() );
         s.setCategoryUri( ps.getCategoryUri() );
-        s.setSubject( ps.getSubject() );
-        s.setSubjectUri( ps.getSubjectUri() );
+        if ( !isOnlyCanonicalization( s.getSubject(), s.getSubjectUri(), ps.getSubject(), ps.getSubjectUri() ) ) {
+            s.setSubject( ps.getSubject() );
+            s.setSubjectUri( ps.getSubjectUri() );
+        }
         s.setPredicate( ps.getPredicate() );
         s.setPredicateUri( ps.getPredicateUri() );
-        s.setObject( ps.getObject() );
-        s.setObjectUri( ps.getObjectUri() );
+        if ( !isOnlyCanonicalization( s.getObject(), s.getObjectUri(), ps.getObject(), ps.getObjectUri() ) ) {
+            s.setObject( ps.getObject() );
+            s.setObjectUri( ps.getObjectUri() );
+        }
         s.setSecondPredicate( ps.getSecondPredicate() );
         s.setSecondPredicateUri( ps.getSecondPredicateUri() );
-        s.setSecondObject( ps.getSecondObject() );
-        s.setSecondObjectUri( ps.getSecondObjectUri() );
+        if ( !isOnlyCanonicalization( s.getSecondObject(), s.getSecondObjectUri(), ps.getSecondObject(), ps.getSecondObjectUri() ) ) {
+            s.setSecondObject( ps.getSecondObject() );
+            s.setSecondObjectUri( ps.getSecondObjectUri() );
+        }
+        // Evidence follows the section's REPLACEMENT semantics, like every other field here: a gemmaId item is
+        // the row as the client intends it, so evidence the payload does not carry is evidence the client is
+        // saying the row should not have.
+        //
+        // 🛑 This was a delta field until 2026-09-06 and the split is what made both of that night's incidents
+        // possible. The core fields cleared on omission while these two ignored it, so one object carried two
+        // contracts with nothing marking which was which: a delta-shaped item silently blanked a live statement,
+        // and evidence could be set and changed but never removed, because there was no spelling of "I intend
+        // none". Paul ruled full-record replacement, which gives `[]` and an omitted key the same unambiguous
+        // meaning and makes clearing fall out rather than need a new semantic.
+        // Written only when it differs by content, so an echo keeps the stored bytes and text that cannot be read
+        // survives a proposal that could not carry it -- see CharacteristicUtils.sameSupportingEvidence.
+        if ( !CharacteristicUtils.sameSupportingEvidence( s.getSupportingEvidence(), ps.getSupportingEvidence() ) ) {
+            s.setSupportingEvidence( CharacteristicUtils.serializeSupportingEvidence( ps.getSupportingEvidence() ) );
+        }
+        s.setEvidenceCode( parseEvidenceCode( ps.getEvidenceCode() ) );
+    }
+
+    /**
+     * Resolve a {@link GOEvidenceCode} name, case-insensitively. The REST layer validates first and answers a
+     * 400; this is the guard for a direct service caller, and it names the offending value rather than letting
+     * {@code valueOf}'s bare message surface.
+     */
+    /**
+     * Parse an evidence code, or {@code null} for absent.
+     * <p>
+     * Null-tolerant because evidence became a REPLACEMENT field on 2026-09-06: the callers no longer guard on
+     * non-null, since an absent code has to reach the setter to clear a stored one. Returning null keeps
+     * "clear it" and "unknown code" distinct — the latter still throws.
+     */
+    @Nullable
+    private static GOEvidenceCode parseEvidenceCode( @Nullable String name ) {
+        if ( name == null || StringUtils.isBlank( name ) ) {
+            // Blank is the DELIBERATE clear. The field is a String, so an absent key and an explicit null are the
+            // same value to Jackson and cannot carry intent; "" can, and the REST layer refuses a bare omission
+            // on a row that has a code so the two are never confused.
+            return null;
+        }
+        try {
+            return GOEvidenceCode.valueOf( name.trim().toUpperCase( Locale.ROOT ) );
+        } catch ( IllegalArgumentException e ) {
+            throw new IllegalArgumentException( "Unknown evidence code '" + name
+                    + "'; expected a GOEvidenceCode name (IC, IEA, IIA, TAS, …).", e );
+        }
     }
 
     @Override
@@ -1397,8 +2163,18 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperiment expressionExperiment, boolean includeFreeText ) {
+        return readService.getAnnotations( expressionExperiment, includeFreeText );
+    }
+
+    @Override
     public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee ) {
         return readService.getAnnotations( ee );
+    }
+
+    @Override
+    public Set<AnnotationValueObject> getAnnotations( ExpressionExperimentSubSet ee, boolean includeFreeText ) {
+        return readService.getAnnotations( ee, includeFreeText );
     }
 
     @Override
@@ -1681,6 +2457,18 @@ public class ExpressionExperimentServiceImpl
 
     @Override
     @Transactional(readOnly = true)
+    public boolean hasSourceMetadata( ExpressionExperiment ee ) {
+        return expressionExperimentDao.hasSourceMetadata( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getSourceMetadata( ExpressionExperiment ee ) {
+        return expressionExperimentDao.getSourceMetadata( ee );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<QuantitationType, Long> getQuantitationTypeCount( ExpressionExperiment ee ) {
         return this.expressionExperimentDao.getQuantitationTypeCount( ee );
     }
@@ -1797,7 +2585,15 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isSingleCell( ExpressionExperiment ee ) {
+        // Reads the lazy characteristics collection and then hits the DAO, so it needs a session of its
+        // own when called from outside one (the REST layer does). isRNASeq below is already annotated.
+        // 🛑 @Transactional alone is NOT enough: a caller outside a transaction hands us a DETACHED
+        // instance from a transaction that has already closed, and opening a new one does not re-attach
+        // it — ee.getCharacteristics() still throws LazyInitializationException. Re-attach explicitly.
+        // Caught live on GET /datasets/3937/sample-correlation, 2026-08-31.
+        ee = ensureInSession( ee );
         return ( ee.getCharacteristics().stream()
                 .anyMatch( c -> hasCategory( c, Categories.ASSAY ) && hasAnyValue( c,
                         Values.SINGLE_NUCLEUS_RNA_SEQUENCING_ASSAY,
@@ -1831,6 +2627,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Deprecated
     @Transactional(readOnly = true)
     public boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
@@ -1948,6 +2745,11 @@ public class ExpressionExperimentServiceImpl
 
         ee = ensureInSession( ee );
 
+        // Same normalization as addAnnotation: the desired set is what gets written, so it lands as
+        // statements. Existing rows are left as they are — sameTag matches on content, so a plain
+        // stored tag and a bare desired statement still pair up and neither is churned.
+        desired = desired.stream().map( CharacteristicUtils::asStatement ).collect( Collectors.toList() );
+
         Collection<Characteristic> current = ee.getCharacteristics();
         List<Characteristic> toRemove = new ArrayList<>();
         List<Characteristic> toAdd = new ArrayList<>();
@@ -2010,7 +2812,7 @@ public class ExpressionExperimentServiceImpl
                 fresh.setSupportingEvidence( d.getSupportingEvidence() );
                 toAdd.add( fresh );
             } else if ( d.getSupportingEvidence() != null
-                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                    && !CharacteristicUtils.sameSupportingEvidence( match.getSupportingEvidence(), d.getSupportingEvidence() ) ) {
                 // Refresh provenance on an existing tag without disturbing its identity. A desired tag
                 // arriving without evidence (null) leaves any stored evidence intact.
                 match.setSupportingEvidence( d.getSupportingEvidence() );
@@ -2047,43 +2849,81 @@ public class ExpressionExperimentServiceImpl
     }
 
     /**
-     * Replace an EE's primary + other-relevant publications. See the interface javadoc.
-     * <p>
-     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
-     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
-     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
-     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
-     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     * Replace an EE's primary + other-relevant publications, recording every one as a bare curator
+     * assertion. See the interface javadoc.
      */
     @Override
     @Transactional
     public void updatePublications( ExpressionExperiment ee, BibliographicReference primaryPublication,
             Collection<BibliographicReference> otherRelevantPublications ) {
         Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
+        List<PublicationAssertion> other = new ArrayList<>( otherRelevantPublications.size() );
+        for ( BibliographicReference ref : otherRelevantPublications ) {
+            other.add( new PublicationAssertion( ref, PublicationAssociationSource.CURATOR ) );
+        }
+        // null, not emptyList: this form has no rejection argument, so it is not in a position to say
+        // anything about them and must not clear the ones on record.
+        updatePublications( ee,
+                primaryPublication != null ? new PublicationAssertion( primaryPublication, PublicationAssociationSource.CURATOR ) : null,
+                other, null );
+    }
+
+    /**
+     * Replace an EE's publications and the evidence behind them. See the interface javadoc.
+     * <p>
+     * Set-replace: the other-relevant set is cleared and repopulated from {@code otherRelevantPublications}
+     * (skipping any entry that equals the incoming primary, so the primary never doubles as an other-relevant
+     * row), and the primary is set to {@code primaryPublication} (or cleared when null). Persisted through the
+     * inherited {@code update(ee)}, which carries the audit event — matching the legacy
+     * {@code setPrimaryPublication(...) + update(ee)} flow the gemma-web controller and the CLI used.
+     * <p>
+     * The assertions are reconciled first, on purpose. It is the step that can refuse — a publication
+     * standing rejected by an authority the caller does not outrank throws — and doing it before the
+     * links are touched means the refusal happens with the experiment unmodified rather than relying
+     * on the transaction to undo a half-applied change.
+     */
+    @Override
+    @Transactional
+    public void updatePublications( ExpressionExperiment ee, @Nullable PublicationAssertion primaryPublication,
+            Collection<PublicationAssertion> otherRelevantPublications,
+            @Nullable Collection<PublicationAssertion> rejectedPublications ) {
+        Assert.notNull( otherRelevantPublications, "The other-relevant-publication set must not be null (use an empty collection to clear)." );
 
         ee = ensureInSession( ee );
 
-        ee.setPrimaryPublication( primaryPublication );
+        BibliographicReference primaryRef = primaryPublication != null ? primaryPublication.getPublication() : null;
 
         Set<BibliographicReference> desiredOther = new HashSet<>();
-        for ( BibliographicReference ref : otherRelevantPublications ) {
-            if ( primaryPublication != null && Objects.equals( ref.getId(), primaryPublication.getId() ) ) {
+        List<PublicationAssertion> otherAssertions = new ArrayList<>();
+        for ( PublicationAssertion a : otherRelevantPublications ) {
+            if ( primaryRef != null && Objects.equals( a.getPublication().getId(), primaryRef.getId() ) ) {
                 continue;
             }
-            desiredOther.add( ref );
+            if ( desiredOther.add( a.getPublication() ) ) {
+                otherAssertions.add( a );
+            }
         }
+
+        publicationAssociationService.reconcile( ee, primaryPublication, otherAssertions, rejectedPublications );
+
+        ee.setPrimaryPublication( primaryRef );
         ee.getOtherRelevantPublications().clear();
         ee.getOtherRelevantPublications().addAll( desiredOther );
 
         update( ee );
         log.info( "updatePublications: " + ee.getShortName() + " (ID=" + ee.getId() + ") primary="
-                + ( primaryPublication != null ? primaryPublication.getId() : "none" )
-                + " otherRelevant=" + desiredOther.size() );
+                + ( primaryRef != null ? primaryRef.getId() : "none" )
+                + " otherRelevant=" + desiredOther.size()
+                + " rejected=" + ( rejectedPublications != null ? String.valueOf( rejectedPublications.size() ) : "untouched" ) );
     }
 
     @Override
     @Transactional
     public boolean updateNameAndDescription( ExpressionExperiment ee, @Nullable String name, @Nullable String description ) {
+        // Word pastes Symbol-font Greek as private-use codepoints that no font can render. This is the
+        // route a curator's paste takes, so repair here rather than trusting the caller. See SymbolFontPua.
+        name = SymbolFontPua.repair( name );
+        description = SymbolFontPua.repair( description );
         Assert.isTrue( name != null || description != null, "Provide a name and/or a description to update." );
         Assert.isTrue( name == null || StringUtils.isNotBlank( name ), "The name must not be blank when provided." );
 
@@ -2105,10 +2945,69 @@ public class ExpressionExperimentServiceImpl
         return changed;
     }
 
+    /**
+     * The text this commit appends to each annotation audit note: the disposition key and the prose, or
+     * whichever of the two was supplied. Composed once here so every annotation the commit touches
+     * carries the same sentence, and so the key leads — that is the part a later query can group on.
+     */
+    private void requireDeletableCharacteristicIds( ExpressionExperiment ee, CurationCommitRequest request ) {
+        if ( request.isTagsPresent() && !request.getTagsToDelete().isEmpty() ) {
+            Set<Long> tagIds = ee.getCharacteristics().stream()
+                    .map( Characteristic::getId )
+                    .filter( Objects::nonNull )
+                    .collect( Collectors.toSet() );
+            refuseUnknownDeletedIds( request.getTagsToDelete(), tagIds, "tags", "tags of " + ee.getShortName() );
+        }
+        if ( request.isSampleCharsPresent() && !request.getSampleCharsToDelete().isEmpty() ) {
+            Set<Long> sampleCharacteristicIds = new HashSet<>();
+            for ( BioAssay ba : thawBioAssays( ee ).getBioAssays() ) {
+                BioMaterial bm = ba.getSampleUsed();
+                if ( bm == null ) {
+                    continue;
+                }
+                for ( Characteristic c : bm.getCharacteristics() ) {
+                    if ( c.getId() != null ) {
+                        sampleCharacteristicIds.add( c.getId() );
+                    }
+                }
+            }
+            refuseUnknownDeletedIds( request.getSampleCharsToDelete(), sampleCharacteristicIds, "sampleCharacteristics",
+                    "characteristics of a sample of " + ee.getShortName() );
+        }
+    }
+
+    private static void refuseUnknownDeletedIds( Collection<Long> deletedIds, Set<Long> presentIds, String section,
+            String what ) {
+        List<Long> unmatched = deletedIds.stream()
+                .filter( Objects::nonNull )
+                .filter( id -> !presentIds.contains( id ) )
+                .distinct()
+                .sorted()
+                .collect( Collectors.toList() );
+        if ( !unmatched.isEmpty() ) {
+            throw new UnknownDeletedIdsException( section + ".deletedIds references ids that are not " + what + ": "
+                    + unmatched + "." );
+        }
+    }
+
+    @Nullable
+    private static String auditReason( CurationCommitRequest request ) {
+        String code = StringUtils.trimToNull( request.getReasonCode() );
+        String prose = StringUtils.trimToNull( request.getReason() );
+        if ( code == null ) {
+            return prose;
+        }
+        return prose == null ? code : code + ": " + prose;
+    }
+
     @Override
     @Transactional
     public CurationCommitResult commitCuration( ExpressionExperiment ee, CurationCommitRequest request, boolean dryRun ) {
         ee = ensureInSession( ee );
+        // The baseline is compared with the row, not the cached copy: a gemma-cli run writes CURATION_DETAILS without
+        // reaching this process's second-level cache. On GSE90654, 2026-09-15, this check refused the current baseline
+        // after a CLI DEA run, then accepted the one from before the run.
+        expressionExperimentDao.refreshCurationDetails( ee );
 
         // Optimistic concurrency: reject if the dataset moved since the draft's baseline.
         Date expected = request.getExpectedLastUpdated();
@@ -2119,6 +3018,12 @@ public class ExpressionExperimentServiceImpl
                         + " changed since the draft baseline (expected lastUpdated " + expected + ", found " + current + ")." );
             }
         }
+
+        // Before any section writes, and on the dry run too: a delete that names nothing used to be skipped, so the
+        // commit answered 200 with a lower count while every other section applied, and the preflight reported the
+        // count sent. The design section already refuses the same mistake (DatasetsWebService.requireDeletableIds);
+        // cab's one-click executor needs a finding's edits all-or-none (2026-09-13).
+        requireDeletableCharacteristicIds( ee, request );
 
         CurationCommitResult result = new CurationCommitResult();
         boolean anyChange = false;
@@ -2141,15 +3046,18 @@ public class ExpressionExperimentServiceImpl
                     basicsChanged = true;
                 }
             }
-            if ( request.getName() != null && !request.getName().equals( ee.getName() ) ) {
+            // Same repair as updateNameAndDescription: a commit carries curator-typed prose too.
+            String requestedName = SymbolFontPua.repair( request.getName() );
+            String requestedDescription = SymbolFontPua.repair( request.getDescription() );
+            if ( requestedName != null && !requestedName.equals( ee.getName() ) ) {
                 if ( !dryRun ) {
-                    ee.setName( request.getName() );
+                    ee.setName( requestedName );
                 }
                 basicsChanged = true;
             }
-            if ( request.getDescription() != null && !request.getDescription().equals( ee.getDescription() ) ) {
+            if ( requestedDescription != null && !requestedDescription.equals( ee.getDescription() ) ) {
                 if ( !dryRun ) {
-                    ee.setDescription( request.getDescription() );
+                    ee.setDescription( requestedDescription );
                 }
                 basicsChanged = true;
             }
@@ -2159,13 +3067,14 @@ public class ExpressionExperimentServiceImpl
 
         // ── publications (set-replace, diffed by id) ──
         if ( request.isPublicationsPresent() ) {
-            BibliographicReference primary = request.getPrimaryPublication();
-            List<BibliographicReference> desiredOther = new ArrayList<>();
-            for ( BibliographicReference ref : request.getOtherRelevantPublications() ) {
-                if ( primary != null && Objects.equals( ref.getId(), primary.getId() ) ) {
+            PublicationAssertion primary = request.getPrimaryPublication();
+            Long primaryId = primary != null ? primary.getPublication().getId() : null;
+            List<PublicationAssertion> desiredOther = new ArrayList<>();
+            for ( PublicationAssertion a : request.getOtherRelevantPublications() ) {
+                if ( Objects.equals( a.getPublication().getId(), primaryId ) ) {
                     continue;
                 }
-                desiredOther.add( ref );
+                desiredOther.add( a );
             }
             Set<Long> currentIds = new HashSet<>();
             if ( ee.getPrimaryPublication() != null ) {
@@ -2175,11 +3084,11 @@ public class ExpressionExperimentServiceImpl
                 currentIds.add( r.getId() );
             }
             Set<Long> desiredIds = new HashSet<>();
-            if ( primary != null ) {
-                desiredIds.add( primary.getId() );
+            if ( primaryId != null ) {
+                desiredIds.add( primaryId );
             }
-            for ( BibliographicReference r : desiredOther ) {
-                desiredIds.add( r.getId() );
+            for ( PublicationAssertion a : desiredOther ) {
+                desiredIds.add( a.getPublication().getId() );
             }
             int created = 0, deleted = 0, unchanged = 0;
             for ( Long id : desiredIds ) {
@@ -2198,9 +3107,23 @@ public class ExpressionExperimentServiceImpl
             result.setPublicationsDeleted( deleted );
             result.setPublicationsUnchanged( unchanged );
             if ( !dryRun && ( created > 0 || deleted > 0 ) ) {
-                ee.setPrimaryPublication( primary );
+                // Through the same reconcile the standalone write path uses, so a commit cannot leave
+                // an ACCEPTED assertion pointing at a link it has just removed. The caller's basis rides
+                // with each assertion (defaulting to a bare curator claim when none was given), so a
+                // publication this commit adds records why -- and a snapshot replayed as a restore puts a
+                // paper back with the basis it had, instead of as an unexplained curator claim. A kept
+                // publication is untouched unless the incoming source outranks the recorded one.
+                //
+                // Rejections are passed as null -- untouched, not cleared. CurationPublications has no
+                // rejection field, so this section cannot express one, and a section that cannot say a
+                // thing must not be read as denying it. Committing an unrelated edit to a dataset is
+                // not a curator withdrawing a ruling about which paper is not theirs.
+                publicationAssociationService.reconcile( ee, primary, desiredOther, null );
+                ee.setPrimaryPublication( primary != null ? primary.getPublication() : null );
                 ee.getOtherRelevantPublications().clear();
-                ee.getOtherRelevantPublications().addAll( desiredOther );
+                for ( PublicationAssertion a : desiredOther ) {
+                    ee.getOtherRelevantPublications().add( a.getPublication() );
+                }
             }
             anyChange = anyChange || ( created > 0 || deleted > 0 );
         }
@@ -2213,21 +3136,35 @@ public class ExpressionExperimentServiceImpl
         if ( request.isDesignPresent() && request.getProposedDesign() != null ) {
             ExperimentalDesignValueObject edvo1 = request.getProposedDesign();
             if ( dryRun ) {
-                DesignPreflightReport.Summary s = previewDesignChange( ee, edvo1 ).getSummary();
+                DesignPreflightReport.Summary s = previewDesignChange( ee, edvo1, request.getDesignPlan() ).getSummary();
                 result.setDesignCreated( s.getFactorsToCreate() + s.getFactorValuesToCreate() );
                 result.setDesignDeleted( s.getFactorsToDelete() + s.getFactorValuesToDelete() );
-                result.setDesignUpdated( s.getBiomaterialsWithChangedAssignments() );
+                // `updated` is every kind of in-place change: samples moved between factor values, and the
+                // relabels — a statement re-termed, evidence attached, a baseline flipped, a measurement
+                // retimed, a factor renamed or re-categorized. Assignments used to be the only one counted,
+                // so a term-only edit reported `unchanged: 1` and read as "nothing to do" for an edit the
+                // commit would in fact apply (cab, GSE49354.1, 2026-08-27).
+                result.setDesignUpdated( s.getBiomaterialsWithChangedAssignments()
+                        + s.getFactorsToUpdate() + s.getFactorValuesToUpdate() );
                 // Symmetry with basics/publications: a clean no-op keep reports unchanged=1, not all-zero.
                 result.setDesignUnchanged( result.getDesignCreated() + result.getDesignDeleted() + result.getDesignUpdated() == 0 ? 1 : 0 );
                 anyChange = anyChange || result.getDesignCreated() > 0 || result.getDesignDeleted() > 0
                         || result.getDesignUpdated() > 0;
             } else {
+                // Assignments are counted ONCE, up front, from the same plan-aware preflight the dry run above
+                // reports -- so a dry run predicts what the commit reports instead of approximating it.
+                //
+                // Summing the two passes instead double-counts a replace, because both touch the SAME
+                // biomaterials: pass 1 strips the old factor values, pass 2 attaches the new ones. GSE19804 was
+                // reported as 240 changed biomaterials against 120 samples (cab, 2026-09-10).
+                int assignmentsChanged = previewDesignChange( ee, edvo1, request.getDesignPlan() )
+                        .getSummary().getBiomaterialsWithChangedAssignments();
                 // Pass 1 — through the proxy so the DesignChangeEvent audit aspect fires.
                 DesignApplyOutcome outcome1 = self.applyDesignChange( ee, edvo1 );
                 DesignPreflightReport.Summary s1 = outcome1.getPreflightAtApply().getSummary();
                 int created = s1.getFactorsToCreate() + s1.getFactorValuesToCreate();
                 int deleted = s1.getFactorsToDelete() + s1.getFactorValuesToDelete();
-                int updated = s1.getBiomaterialsWithChangedAssignments();
+                int updated = assignmentsChanged + s1.getFactorsToUpdate() + s1.getFactorValuesToUpdate();
 
                 List<Long> auditIds = new ArrayList<>();
                 collectDesignChangeEventId( ee, outcome1, auditIds );
@@ -2240,7 +3177,9 @@ public class ExpressionExperimentServiceImpl
                         ExperimentalDesignValueObject edvo2 = buildAssignmentPass( outcome1.getDesign(), plan, idMap );
                         if ( edvo2 != null ) {
                             DesignApplyOutcome outcome2 = self.applyDesignChange( ee, edvo2 );
-                            updated += outcome2.getPreflightAtApply().getSummary().getBiomaterialsWithChangedAssignments();
+                            // Pass 2 exists only to attach samples to factor values pass 1 created. Its counters
+                            // are not added: assignmentsChanged above already covers these bindings, and the
+                            // in-place counters would restate pass 1's edits. Only its audit event is new.
                             collectDesignChangeEventId( ee, outcome2, auditIds );
                         }
                     }
@@ -2266,13 +3205,13 @@ public class ExpressionExperimentServiceImpl
                 deleted = request.getTagsToDelete().size();
             } else {
                 for ( Long id : request.getTagsToDelete() ) {
-                    if ( self.removeAnnotation( ee, id ) != null ) {
+                    if ( self.removeAnnotation( ee, id, auditReason( request ) ) != null ) {
                         deleted++;
                     }
                 }
                 List<CurationCommitRequest.TagAdd> adds = request.getTagsToAdd();
                 for ( CurationCommitRequest.TagAdd add : adds ) {
-                    self.addAnnotation( ee, add.getCharacteristic() );
+                    self.addAnnotation( ee, add.getCharacteristic(), auditReason( request ) );
                     created++;
                 }
                 if ( created > 0 ) {
@@ -2318,7 +3257,7 @@ public class ExpressionExperimentServiceImpl
                 }
                 for ( Long id : request.getSampleCharsToDelete() ) {
                     BioMaterial bm = charIdToBm.get( id );
-                    if ( bm != null && bioMaterialService.removeAnnotation( ee, bm, id ) != null ) {
+                    if ( bm != null && bioMaterialService.removeAnnotation( ee, bm, id, auditReason( request ) ) != null ) {
                         deleted++;
                     }
                 }
@@ -2329,7 +3268,7 @@ public class ExpressionExperimentServiceImpl
                         throw new IllegalArgumentException( "sampleCharacteristics references biomaterial "
                                 + add.getBioMaterialId() + " which is not part of " + ee.getShortName() + "." );
                     }
-                    bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic() );
+                    bioMaterialService.addAnnotation( ee, bm, add.getCharacteristic(), auditReason( request ) );
                     created++;
                 }
                 if ( created > 0 ) {
@@ -2384,8 +3323,160 @@ public class ExpressionExperimentServiceImpl
             }
             log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") applied" );
         }
+        // ── auto-snapshot: keep the curation this commit displaced ──
+        // The payload was read before anything applied, so the row holds the pre-commit state and the ordinary
+        // restore path puts it back. Minted inside the commit's transaction: a rollback must not leave a snapshot
+        // claiming a state that was never displaced. Only when something actually changed — a no-op commit
+        // displaces nothing, and a row per retry buries the restore points that matter. SNAPSHOT emits no audit
+        // event (AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN excludes it), so this does not touch lastUpdated.
+        if ( !dryRun && anyChange && StringUtils.isNotBlank( request.getSnapshotPayloadJson() ) ) {
+            AnnotationSetService.AttachedAnnotationSet snapshot = annotationSetService.attach( ee,
+                    AnnotationSetRole.SNAPSHOT,
+                    // Gemma read this payload out of itself, so source can only say which kind of actor's commit
+                    // displaced it: a named run means an agent applied it, anything else a curator.
+                    StringUtils.isNotBlank( request.getRunId() ) ? AnnotationSetSource.AGENT : AnnotationSetSource.CURATOR,
+                    null, AnnotationSetService.PRE_COMMIT_SNAPSHOT_RUN_ID_PREFIX + UUID.randomUUID(),
+                    request.getSnapshotCreatedBy(), null, request.getSnapshotPayloadJson(), null );
+            result.setSnapshotAnnotationSetId( snapshot.getAnnotationSet().getId() );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") displaced curation kept as"
+                    + " AnnotationSet#" + snapshot.getAnnotationSet().getId() );
+        }
+
+        // ── run provenance: record WHICH agent run applied this, if the caller named one ──
+        // Minted here rather than in the web layer so it shares the commit's transaction: if the commit rolls back
+        // there must be no row claiming the run applied anything. Sparse by design — a curator commit names no run
+        // and mints nothing. A no-op commit that DID name a run still mints, so that an absent row means "no run
+        // was named" and never "the run did nothing"; those are different facts and identical bytes otherwise.
+        // The event is deliberately suppressed for COMMIT (see AnnotationSetServiceImpl#ATTACH_AUDIT_WHEN) — the
+        // sections above already emitted the trail entries and already moved lastUpdated.
+        if ( !dryRun && StringUtils.isNotBlank( request.getRunId() ) ) {
+            AnnotationSetService.AttachedAnnotationSet attached = annotationSetService.attach( ee,
+                    AnnotationSetRole.COMMIT, AnnotationSetSource.AGENT, null,
+                    request.getRunId(), null, request.getRunProvenance(), null, request.getRunParentProposal() );
+            result.setCommitAnnotationSetId( attached.getAnnotationSet().getId() );
+            log.info( "commitCuration: " + ee.getShortName() + " (ID=" + ee.getId() + ") stamped with run "
+                    + request.getRunId() + " as AnnotationSet#" + attached.getAnnotationSet().getId()
+                    + ( attached.isCreated() ? "" : " (already recorded — this run has committed here before)" ) );
+        }
+
+        // ── close the curation ticket this commit fulfilled ──
+        // In the commit's own transaction (Paul, 2026-08-29): if the commit rolls back, the ticket does
+        // not advance. Restore and preflight leave the flag false, so a revert never closes the ticket.
+        if ( !dryRun && request.isAdvanceLinkedTickets() ) {
+            advanceLinkedCurationTickets( ee );
+        }
+
+        // ── denormalized annotation table ──
+        if ( !dryRun ) {
+            refreshEe2c( ee, result );
+        }
+
         result.setNewLastUpdated( ee.getCurationDetails() != null ? ee.getCurationDetails().getLastUpdated() : null );
         return result;
+    }
+
+    /**
+     * Bring {@code EXPRESSION_EXPERIMENT2CHARACTERISTIC} up to date for the one experiment this commit
+     * touched, in the commit's own transaction.
+     * <p>
+     * The table is denormalized and was refreshed only by the nightly Quartz job, which made a correct
+     * write read as a lost one: {@code EE2C_CHARACTERISTIC_FKC} is {@code ON DELETE CASCADE}, so a deleted
+     * annotation left EE2C immediately while an added one waited for the night. cab's first write-back
+     * (GSE197199, 2026-08-30) saw exactly that — one tag added and one removed in a single all-or-none
+     * commit, and only the removal visible in EE2C, which reads as a partial write of the one endpoint that
+     * guarantees it cannot happen. The nightly job stays; it remains the backstop for every other writer
+     * (GEO import, the CLI, direct SQL, single-cell assignments) and the repair path if this leg fails.
+     * <p>
+     * Three constraints shape what is called here.
+     * <p>
+     * <b>A narrowed level, never {@code null}.</b> The all-levels refresh unions five queries, two of which
+     * ({@code CellTypeAssignment}, {@code CellLevelCharacteristics}) no curation section can affect. On
+     * production's largest single-cell experiment (eid 42860, 1,681,672 EE2C rows) that union measured
+     * 159 s, of which 150 s was the cell-level branch; the three levels a commit can actually move measured
+     * 13-28 ms on that same experiment. Passing {@code null} would put a two-and-a-half-minute write
+     * transaction on a curator's save.
+     * <p>
+     * <b>Only when something changed.</b> A no-op or preflight commit pays nothing.
+     * {@code designUpdated} lumps sample-assignment moves (which do not reach EE2C) in with statement
+     * re-terms (which do), so an assignment-only design change does buy one upsert that changes no rows —
+     * ~13-30 ms, and separating the two would mean splitting a tally the wire format already publishes.
+     * <p>
+     * <b>Flush first.</b> The refresh is a native query that declares only the EE2C query space, so
+     * Hibernate's auto-flush will not notice pending {@code CHARACTERISTIC} inserts and the rebuild would
+     * read the pre-commit state — the very staleness this closes. The tag and sample-characteristic
+     * sections already flush after their adds; the design section does not, and neither flushes after a
+     * delete.
+     */
+    private void refreshEe2c( ExpressionExperiment ee, CurationCommitResult result ) {
+        List<Class<?>> levels = new ArrayList<>( 3 );
+        if ( result.getTagsCreated() > 0 || result.getTagsDeleted() > 0 ) {
+            levels.add( ExpressionExperiment.class );
+        }
+        if ( result.getSampleCharsCreated() > 0 || result.getSampleCharsDeleted() > 0 ) {
+            levels.add( BioMaterial.class );
+        }
+        if ( result.getDesignCreated() > 0 || result.getDesignDeleted() > 0 || result.getDesignUpdated() > 0 ) {
+            levels.add( ExperimentalDesign.class );
+        }
+        if ( levels.isEmpty() ) {
+            return;
+        }
+        sessionFactory.getCurrentSession().flush();
+        for ( Class<?> level : levels ) {
+            tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, level );
+        }
+    }
+
+    /**
+     * After a successful curation commit, walk the open CURATION / SCREENING tickets that target this
+     * dataset: mark each not-yet-DONE target for this EE as DONE, and RESOLVE a ticket whose last open
+     * target this closes. A multi-dataset ticket keeps its other datasets' targets. Called inside
+     * {@link #commitCuration}'s transaction so the advance shares the commit's fate.
+     */
+    private void advanceLinkedCurationTickets( ExpressionExperiment ee ) {
+        User actor = userManager.getCurrentUser();
+        if ( actor == null ) {
+            // No principal to attribute the advance to; leave the ticket for a manual touch rather than
+            // writing an unattributed event.
+            return;
+        }
+        for ( Ticket ticket : ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() ) ) {
+            if ( ticket.getType() != TicketType.CURATION && ticket.getType() != TicketType.SCREENING ) {
+                continue;
+            }
+            Ticket current = ticket;
+            // 🛑 UNDERWAY, not DONE. A commit is evidence that someone STARTED the ask, never that they
+            // finished it: the edit may be unrelated to what the ticket asked, partial, or -- as on 657 on
+            // 2026-09-05 -- a test commit and its revert, which between them moved a target to DONE and left
+            // it there, because a revert deliberately never closes a ticket.
+            //
+            // Paul, 2026-09-05, ruling on exactly that: DONE means "whatever was asked was
+            // done/decided/finished", and "I would have a 'started' flag if there was something done -- to
+            // proposals, audits, direct editing". Activity marks a target started; only a person marks it
+            // finished.
+            //
+            // Already UNDERWAY or DONE is left alone, so a later commit never drags a target a curator
+            // genuinely finished back to in-progress.
+            List<Long> toAdvance = new ArrayList<>();
+            for ( TicketTarget t : current.getTargets() ) {
+                if ( t.getTargetType() == TicketTargetType.EXPRESSION_EXPERIMENT
+                        && ee.getId().equals( t.getTargetId() )
+                        && t.getStatus() == TicketTargetStatus.NOT_DONE ) {
+                    toAdvance.add( t.getId() );
+                }
+            }
+            for ( Long rowId : toAdvance ) {
+                current = ticketService.updateTargetStatus( current, rowId, TicketTargetStatus.UNDERWAY, actor );
+            }
+            // Kept, and now nearly unreachable from here by design: this path no longer sets DONE, so every
+            // target must already have been marked finished by a person for it to fire. That is the one case
+            // where resolving on a commit is not the service asserting something it cannot know.
+            boolean allDone = current.getTargets().stream()
+                    .allMatch( t -> t.getStatus() == TicketTargetStatus.DONE );
+            if ( allDone && current.getState() != TicketState.RESOLVED ) {
+                ticketService.transition( current, TicketState.RESOLVED, actor, "curation committed" );
+            }
+        }
     }
 
     /**
@@ -2557,9 +3648,33 @@ public class ExpressionExperimentServiceImpl
     @Audited(value = TagAddedEvent.class,
             messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value")
     public Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc ) {
+        return doAddAnnotation( ee, vc );
+    }
+
+    /**
+     * Reason-carrying overload. Separate method rather than a parameter on the one above so that every
+     * existing caller and its tests keep the signature they have; the two differ only in the audit note
+     * the aspect writes.
+     * <p>
+     * 🛑 Both are audited and both delegate to the same private body. The delegation is a plain
+     * {@code this} call, so the inner method is NOT re-advised and one call still writes one event.
+     */
+    @Override
+    @Transactional
+    @Audited(value = TagAddedEvent.class,
+            messageSpel = "'Added tag ' + #vc.category + ' = ' + #vc.value + (#reason != null ? ' \u2014 ' + #reason : '')")
+    public Characteristic addAnnotation( ExpressionExperiment ee, Characteristic vc, @Nullable String reason ) {
+        return doAddAnnotation( ee, vc );
+    }
+
+    private Characteristic doAddAnnotation( ExpressionExperiment ee, Characteristic vc ) {
         Assert.notNull( vc, "Characteristic must not be null." );
         Assert.isTrue( StringUtils.isNotBlank( vc.getCategory() ), "Must provide a category" );
         Assert.isTrue( StringUtils.isNotBlank( vc.getValue() ), "Must provide a value" );
+        // Experiment tags are statements; a bare one is a statement with no predicate or object. Doing
+        // this here rather than at each caller means every write path lands the same shape, including
+        // ones added later. sameTag compares content, so this changes no comparison.
+        vc = CharacteristicUtils.asStatement( vc );
         ee = ensureInSession( ee );
         for ( Characteristic existing : ee.getCharacteristics() ) {
             if ( sameTag( existing, vc ) ) {
@@ -2585,6 +3700,22 @@ public class ExpressionExperimentServiceImpl
             messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value")
     @Nullable
     public Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId ) {
+        return doRemoveAnnotation( ee, annotationId );
+    }
+
+    /** Reason-carrying overload; see {@link #addAnnotation(ExpressionExperiment, Characteristic, String)}. */
+    @Override
+    @Transactional
+    @AuditedConditional(value = TagRemovedEvent.class,
+            when = "#result != null",
+            messageSpel = "'Removed tag ' + #result.category + ' = ' + #result.value + (#reason != null ? ' \u2014 ' + #reason : '')")
+    @Nullable
+    public Characteristic removeAnnotation( ExpressionExperiment ee, Long annotationId, @Nullable String reason ) {
+        return doRemoveAnnotation( ee, annotationId );
+    }
+
+    @Nullable
+    private Characteristic doRemoveAnnotation( ExpressionExperiment ee, Long annotationId ) {
         Assert.notNull( annotationId, "Annotation id must not be null." );
         ee = ensureInSession( ee );
         Characteristic target = null;
@@ -2674,18 +3805,5 @@ public class ExpressionExperimentServiceImpl
     @Override
     public long countBioMaterials( @Nullable Filters filters ) {
         return readService.countBioMaterials( filters );
-    }
-
-    /**
-     * Checks for special properties that are allowed to be referenced on certain objects. E.g. characteristics on EEs.
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<ConfigAttribute> getFilterablePropertyConfigAttributes( String property ) {
-        if ( property.equals( "geeq.publicSuitabilityScore" ) ) {
-            return SecurityConfig.createList( "GROUP_ADMIN" );
-        } else {
-            return null;
-        }
     }
 }

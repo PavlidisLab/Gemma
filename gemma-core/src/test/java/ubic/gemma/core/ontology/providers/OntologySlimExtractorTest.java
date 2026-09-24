@@ -4,7 +4,11 @@ import org.apache.jena.ontology.OntClass;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.DC_11;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -27,6 +31,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -102,6 +107,64 @@ class OntologySlimExtractorTest {
         assertTrue( slim.isFile() );
     }
 
+    /**
+     * The slim must answer "which release is this?" the same way the source does.
+     *
+     * <p>OWL-API's module extractor mints a fresh ontology identified only by the output file, so
+     * before 2026-08-16 the slim carried no {@code owl:versionInfo}, {@code owl:versionIRI} or
+     * {@code dc:title}. Those are exactly the properties {@code AbstractOntologyService} scans in
+     * {@code getVersion()} / {@code getName()} / {@code getDescription()}, so every slimmed
+     * ontology reported a null version — which reads as "upstream declares none", not "the slim
+     * dropped it". Answering "what CHEBI are we running?" meant reading the cached source OWL's
+     * header on the deploy host, because neither {@code /annotations/term} nor
+     * {@code /admin/ontologies} could say.
+     *
+     * <p>Asserted through Jena with the same property lookups the service uses, so this fails if
+     * the runtime read path stops seeing them for any reason, not just if the extractor regresses.
+     */
+    @Test
+    void slimCarriesTheSourceVersionMarkedAsASlim( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        OntologySlimExtractor.ExtractResult result =
+                new OntologySlimExtractor().extract( source, List.of( SORAFENIB ), slim );
+
+        // 🛑 MARKED, not verbatim. A slim is a different artifact from the release it was cut from,
+        // and everything downstream reads getVersion(): /admin/ontologies, the relation producer's
+        // coverage log, and every ANNOTATION_RELATION.SOURCE_VERSION row. Copying the version
+        // unchanged told all of them the two were the same thing — CHEBI reported "254" both when it
+        // yielded 25,231 relations from 237,842 classes and 11,378 from 20,964.
+        assertEquals( "254" + OntologySlimExtractor.SLIM_VERSION_SUFFIX, result.getSourceVersion(),
+                "the meta sidecar has to say the artifact is a slim, not just which release it came from" );
+
+        OntModel jenaModel = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM );
+        try ( FileInputStream in = new FileInputStream( slim ) ) {
+            jenaModel.read( in, null );
+        }
+
+        assertEquals( "254" + OntologySlimExtractor.SLIM_VERSION_SUFFIX,
+                firstLiteral( jenaModel, OWL.versionInfo ),
+                "the marker rides in the FILE, not just the sidecar — getVersion() reads the model, so "
+                        + "a slim loaded from cache on a later boot still identifies itself" );
+        assertEquals( "http://purl.obolibrary.org/obo/chebi/254/chebi-mini.owl",
+                firstResourceUri( jenaModel, OWL2.versionIRI ),
+                "owl:versionIRI survives extraction — getVersion()'s fallback for ontologies "
+                        + "that declare no versionInfo" );
+        assertEquals( "CHEBI mini test fixture", firstLiteral( jenaModel, DC_11.title ),
+                "dc:title survives extraction — getName() reads it" );
+    }
+
+    private static String firstLiteral( OntModel model, org.apache.jena.rdf.model.Property p ) {
+        NodeIterator it = model.listObjectsOfProperty( p );
+        return it.hasNext() ? it.next().asLiteral().getString() : null;
+    }
+
+    private static String firstResourceUri( OntModel model, org.apache.jena.rdf.model.Property p ) {
+        NodeIterator it = model.listObjectsOfProperty( p );
+        return it.hasNext() ? it.next().asResource().getURI() : null;
+    }
+
     @Test
     void slimRoundTripsThroughJena( @TempDir Path tempDir ) throws Exception {
         File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
@@ -137,6 +200,88 @@ class OntologySlimExtractorTest {
         assertNotNull( sorafenib, "sorafenib OntClass present" );
         assertEquals( "sorafenib", sorafenib.getLabel( null ),
                 "rdfs:label preserved by STAR + Jena round trip" );
+    }
+
+    /**
+     * The slim must carry the names a term is SEARCHED by, not just its preferred label.
+     *
+     * <p>Regression for the 2026-08-09 CHEBI outage: every CHEBI term was reachable by its
+     * preferred label and by no other name, so {@code acetylsalicylic acid} resolved and
+     * {@code aspirin} — a synonym — found nothing, as did every drug abbreviation. The immediate
+     * cause was the source file, but a module extractor that drops annotation assertions would
+     * reintroduce it silently the moment the slim became the serving path, and the failure looks
+     * like a ranking problem rather than a missing-data one.
+     */
+    @Test
+    void slimCarriesSynonymsNotJustPreferredLabels( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        new OntologySlimExtractor().extract( source, List.of( SORAFENIB ), slim );
+
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology extracted = manager.loadOntologyFromOntologyDocument( slim );
+        OWLClass sorafenib = manager.getOWLDataFactory().getOWLClass( IRI.create( SORAFENIB ) );
+
+        Set<String> annotationValues = extracted.getAnnotationAssertionAxioms( sorafenib.getIRI() ).stream()
+                .map( ax -> ax.getValue().asLiteral().isPresent()
+                        ? ax.getValue().asLiteral().get().getLiteral()
+                        : ax.getValue().toString() )
+                .collect( Collectors.toSet() );
+
+        assertTrue( annotationValues.contains( "sorafenib" ),
+                "preferred label retained; got " + annotationValues );
+        assertTrue( annotationValues.contains( "Nexavar" ),
+                "hasExactSynonym retained — searching the brand name must find the compound; got " + annotationValues );
+    }
+
+    /**
+     * Seeding a role pulls in its bearers even when nothing in the corpus uses them.
+     *
+     * <p>A slim seeded only from corpus usage can return only what was already annotated, so it
+     * cannot help a curator annotate a compound for the first time — the case that matters most in
+     * a picker. Seeding CHEBI's {@code drug} role fixes that. Here water is the only corpus seed;
+     * sorafenib must arrive purely because it bears {@code kinase inhibitor}, which is-a
+     * {@code drug}.
+     */
+    @Test
+    void seedingARolePullsInBearersThatAreNotCorpusSeeds( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        new OntologySlimExtractor().extract( source, List.of( WATER ), List.of( DRUG ), slim );
+
+        Set<String> classUris = classUrisOf( slim );
+        assertTrue( classUris.contains( SORAFENIB ),
+                "sorafenib bears kinase inhibitor, which is-a drug, so the drug role must reach it; got " + classUris );
+        assertTrue( classUris.contains( WATER ), "the corpus seed itself is still present" );
+        // The closure descends the role hierarchy but must not escape it: estradiol bears hormone,
+        // which is a sibling role under `role`, NOT a drug. Seeding `drug` that dragged in every
+        // role bearer would defeat the point of a slim.
+        assertFalse( classUris.contains( ESTRADIOL ),
+                "estradiol bears hormone, which is not under drug, so it must NOT be pulled in; got " + classUris );
+    }
+
+    /** Without a role seed, the same call keeps today's corpus-only behaviour. */
+    @Test
+    void withoutARoleSeedOnlyTheCorpusSeedsArrive( @TempDir Path tempDir ) throws Exception {
+        File source = copyFixture( tempDir, "chebi-mini.test.owl.xml" );
+        File slim = tempDir.resolve( "slim.owl" ).toFile();
+
+        new OntologySlimExtractor().extract( source, List.of( WATER ), slim );
+
+        Set<String> classUris = classUrisOf( slim );
+        assertTrue( classUris.contains( WATER ) );
+        assertFalse( classUris.contains( SORAFENIB ),
+                "no role seed means no pharmacopoeia; got " + classUris );
+    }
+
+    private static Set<String> classUrisOf( File slim ) throws Exception {
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology extracted = manager.loadOntologyFromOntologyDocument( slim );
+        return extracted.getClassesInSignature( Imports.INCLUDED ).stream()
+                .map( c -> c.getIRI().toString() )
+                .collect( Collectors.toSet() );
     }
 
     @Test

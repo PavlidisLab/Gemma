@@ -63,6 +63,57 @@ class AnnotationsWebServiceCurieTest {
                 .isEqualTo( "http://purl.obolibrary.org/obo/GO_0008150" );
     }
 
+    /**
+     * The same identifier spelled the way the URI spells it.
+     *
+     * <p>A term card renders {@code CLO_0007606}; a CURIE column holds {@code CLO:0007606}. Both get
+     * pasted into the search box because both are what the person was shown, and only the second one
+     * resolved. Measured on gemma2 2026-08-18: {@code MONDO:0007254} returned breast cancer and
+     * {@code MONDO_0007254} returned nothing.</p>
+     */
+    @Test
+    void theUnderscoreSpellingOfAnIdentifierResolvesToo() {
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "MONDO_0007254" ) )
+                .isEqualTo( "http://purl.obolibrary.org/obo/MONDO_0007254" );
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "CLO_0007606" ) )
+                .isEqualTo( "http://purl.obolibrary.org/obo/CLO_0007606" );
+        // EFO's non-PURL base is honoured on this spelling as well
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "EFO_0600015" ) )
+                .isEqualTo( "http://www.ebi.ac.uk/efo/EFO_0600015" );
+    }
+
+    /**
+     * 🛑 Cellosaurus is off the PURL and is {@code https}.
+     *
+     * <p>Defaulting {@code CVCL:} to the OBO PURL base would mint
+     * {@code http://purl.obolibrary.org/obo/CVCL_1870}, which 404s and matches no loaded term — a
+     * confident answer that resolves nowhere, which is worse than declining to expand. The canonical
+     * form has to agree with {@code CellosaurusOntologyService.URI_PREFIX}.</p>
+     */
+    @Test
+    void cellosaurusAccessionsExpandToCellosaurusNotToThePurl() {
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "CVCL:1870" ) )
+                .isEqualTo( "https://www.cellosaurus.org/CVCL_1870" );
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "CVCL_1870" ) )
+                .isEqualTo( "https://www.cellosaurus.org/CVCL_1870" );
+        // and a full https URI is passed through, where before only http:// was recognized
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "https://www.cellosaurus.org/CVCL_0031" ) )
+                .isEqualTo( "https://www.cellosaurus.org/CVCL_0031" );
+    }
+
+    /**
+     * The underscore spelling must not swallow free text, and a known ID space is what stops it.
+     * Identifier-shaped strings are common in this domain — gene symbols especially — and every one
+     * of these has to reach the search it was meant for.
+     */
+    @Test
+    void underscoredFreeTextIsNotTreatedAsAnIdentifier() {
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "HLA_DRB1" ) ).isNull();
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "cell_type" ) ).isNull();
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "APP_PS1" ) ).isNull();
+        assertThat( AnnotationsWebService.expandTermQueryToUri( "foo_0001" ) ).isNull();
+    }
+
     @Test
     void unknownPrefixIsNotExpanded() {
         // CURIE-shaped but the prefix is not a recognized ontology id space → free-text fallback.

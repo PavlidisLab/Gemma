@@ -44,6 +44,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author pavlidis
  */
 @Tag("geo")
+// paired with @Tag("geo") so the class is filtered from the default suite: geo is a
+// descriptive marker and is not excluded on its own (see the tag taxonomy in pom.xml).
+// Every method here calls live Entrez. @NetworkAvailable alone does not hold them back —
+// it skips when the host is unreachable, and eutils stays reachable while rejecting a
+// bad request, which is how these ran and failed in Jenkins build #4.
+@Tag("slow")
 @NetworkAvailable(url = EntrezUtils.ESUMMARY)
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoBrowserTest {

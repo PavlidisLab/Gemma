@@ -8,8 +8,24 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.util.Assert;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import org.hibernate.Session;
+import ubic.gemma.core.security.acl.domain.AclEntry;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclPrincipalSid;
+import ubic.gemma.core.security.acl.domain.AclSid;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -123,6 +139,38 @@ public class AclQueryUtils {
     static final String ANONYMOUS_SID_SQL = "select sid.id from acl_sid sid where sid.principal = 0 and sid.sid = 'IS_AUTHENTICATED_ANONYMOUSLY'";
 
     /**
+     * An HQL boolean expression that is true when the object is readable by an anonymous caller —
+     * that is, when it is PUBLIC.
+     * <p>
+     * Public is not a stored flag anywhere: it is an ACE granting READ to the anonymous SID, which
+     * is exactly what the anonymous branch of {@link #formAclRestrictionClause(String, Permission)}
+     * tests. This is that same test, shaped as an expression so a filter can compare it like an
+     * ordinary boolean property.
+     * <p>
+     * 🛑 It matches on {@code aoi.objectIdClass}, the mapped BIGINT, and never on {@code aoi.type},
+     * which is a formula resolving to a correlated subquery on {@code acl_class}. With the formula
+     * the planner re-ran that lookup per outer row and {@code /datasets/count} never finished
+     * against production cardinalities.
+     * <p>
+     * The parameter it declares is this class's own, so a caller that already runs
+     * {@link #addAclParameters(Query, Class)} binds it for free; that method binds only parameters
+     * the query actually declares.
+     *
+     * @param idColumn the outer query's id column, e.g. {@code ee.id}
+     */
+    public static String formIsPubliclyReadableExpression( String idColumn ) {
+        Assert.isTrue( StringUtils.isNotBlank( idColumn ), "The id column cannot be empty." );
+        //language=HQL
+        return "(case when exists ("
+                + "select 1 from AclObjectIdentity paoi join paoi.entries pace "
+                + "where paoi.identifier = " + idColumn + " "
+                + "and paoi.objectIdClass = :" + AOI_CLASS_ID_PARAM + " "
+                + "and bitand(pace.mask, " + BasePermission.READ.getMask() + ") <> 0 "
+                + "and pace.sid in (" + ANONYMOUS_SID_HQL + ")"
+                + ") then true else false end)";
+    }
+
+    /**
      * Create an HQL restriction clause with the {@link BasePermission#READ} permission.
      * @see #formAclRestrictionClause(String, Permission)
      */
@@ -219,6 +267,114 @@ public class AclQueryUtils {
         }
 
         return " where (" + exists + ")";
+    }
+
+    /**
+     * JPA Criteria counterpart of {@link #formAclRestrictionClause(String, Permission)}, for DAOs that
+     * build their queries with {@link CriteriaBuilder} rather than HQL strings.
+     *
+     * <h4>Why a third emitter</h4>
+     *
+     * <p>This class already carries two renderings of one set of semantics — HQL
+     * ({@link #formAclRestrictionClause(String, Permission)}) and native SQL
+     * ({@link #formNativeAclRestrictionClause(SessionFactoryImplementor, String, Permission)}) — because a
+     * caller cannot concatenate an HQL fragment into a query built by another dialect.
+     * {@link ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetDaoImpl}
+     * is Criteria-built (its filters go through {@link FilterJpaUtils}), so it could reach neither, and
+     * {@code GET /resultSets} therefore ran with no ACL restriction at all. Converting that DAO to HQL
+     * would mean replacing its whole filter machinery to fix a missing WHERE clause.</p>
+     *
+     * <p>🛑 <b>Only the EXISTS shape is transcribed here.</b> The part that is subtle — which SIDs the
+     * current principal owns, via group membership — is NOT reimplemented: {@link #CURRENT_USER_SIDS_HQL}
+     * and {@link #ANONYMOUS_SID_HQL} are executed as-is and their results bound as an id set. So a change
+     * to how a user's SIDs are derived reaches this emitter for free, and the thing that could silently
+     * diverge is limited to a four-line boolean.</p>
+     *
+     * <h4>🛑 Pass the id of the object that OWNS the ACEs, not of a SecuredChild</h4>
+     *
+     * <p>The EXISTS body tests the object identity's <em>own</em> entries and does not walk
+     * {@code parentAcl}. A {@link SecuredChild} inherits rather than carrying entries, so restricting on
+     * one matches nothing — which is why this rejects them exactly as
+     * {@link #addAclParameters(Query, Class)} does. For a result set, whose chain is result set →
+     * analysis → experiment, the id to pass is the experiment's.</p>
+     *
+     * @param session          session used to resolve the current principal's SIDs
+     * @param query            the enclosing query or subquery, needed to create the correlated subquery
+     * @param aoiIdExpression  path to the id of the securable being restricted
+     * @param aoiType          the securable's class, resolved to {@code acl_class.id}
+     * @param permission       requested permission(s)
+     * @return a predicate to AND into the caller's restrictions; an always-true conjunction for admins
+     */
+    public static Predicate formAclRestrictionPredicate( Session session, CriteriaBuilder cb,
+            CommonAbstractCriteria query, Expression<Long> aoiIdExpression,
+            Class<? extends Securable> aoiType, Permission permission ) {
+        Assert.isTrue( permission.getMask() > 0, "The mask must have at least one bit set." );
+        if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
+            throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
+        }
+        // Admin bypass, matching the HQL emitter's ` where (1=1)`.
+        if ( SecurityUtil.isUserAdmin() ) {
+            return cb.conjunction();
+        }
+
+        Subquery<Long> sq = query.subquery( Long.class );
+        Root<AclObjectIdentity> aoi = sq.from( AclObjectIdentity.class );
+        sq.select( cb.literal( 1L ) );
+
+        List<Predicate> where = new ArrayList<>();
+        where.add( cb.equal( aoi.get( "identifier" ), aoiIdExpression ) );
+        // objectIdClass (the mapped BIGINT) rather than the formula-backed `type`, for the planner
+        // reason spelled out on formAclRestrictionClause.
+        where.add( cb.equal( aoi.get( "objectIdClass" ), resolveAclClassId( aoiType.getCanonicalName() ) ) );
+
+        if ( SecurityUtil.isUserAnonymous() ) {
+            // Anonymous: the ACE check is the whole predicate, so an inner join is right — an identity
+            // with no entries cannot match.
+            Join<AclObjectIdentity, AclEntry> ace = aoi.join( "entries", JoinType.INNER );
+            where.add( grantsTo( cb, ace, sidsIn( session, ANONYMOUS_SID_HQL, false ), permission ) );
+        } else {
+            // Authenticated non-admin: owner-or-grant. Left join so an owner with no ACE still matches,
+            // mirroring the HQL emitter.
+            Join<AclObjectIdentity, AclEntry> ace = aoi.join( "entries", JoinType.LEFT );
+            Join<AclObjectIdentity, AclSid> owner = aoi.join( "ownerSid", JoinType.INNER );
+            where.add( cb.or(
+                    // owns it — `principal` lives on the AclPrincipalSid branch of the single-table
+                    // hierarchy, hence the treat()
+                    cb.equal( cb.treat( owner, AclPrincipalSid.class ).get( "principal" ),
+                            SecurityUtil.getCurrentUsername() ),
+                    // granted to one of the principal's SIDs
+                    grantsTo( cb, ace, sidsIn( session, CURRENT_USER_SIDS_HQL, true ), permission ),
+                    // or publicly readable
+                    grantsTo( cb, ace, sidsIn( session, ANONYMOUS_SID_HQL, false ), permission ) ) );
+        }
+
+        sq.where( cb.and( where.toArray( new Predicate[0] ) ) );
+        return cb.exists( sq );
+    }
+
+    /**
+     * {@code ace.sid in (:sids) and bitand(ace.mask, <mask>) <> 0}, or an always-false predicate when
+     * the SID set is empty — a user who belongs to no group is granted nothing, and an empty
+     * {@code in ()} is not something to hand the dialect.
+     */
+    private static Predicate grantsTo( CriteriaBuilder cb, Join<AclObjectIdentity, AclEntry> ace,
+            List<AclSid> sids, Permission permission ) {
+        if ( sids.isEmpty() ) {
+            return cb.disjunction();
+        }
+        return cb.and(
+                ace.get( "sid" ).in( sids ),
+                cb.notEqual( cb.function( "bitand", Integer.class, ace.get( "mask" ),
+                        cb.literal( permission.getMask() ) ), 0 ) );
+    }
+
+    /** Run one of the SID-resolving HQL constants, so their logic is reused rather than transcribed. */
+    private static List<AclSid> sidsIn( Session session, String hql, boolean boundToUser ) {
+        org.hibernate.query.Query<AclSid> q = session.createQuery( hql, AclSid.class );
+        if ( boundToUser ) {
+            q.setParameter( USER_NAME_PARAM, SecurityUtil.getCurrentUsername() );
+        }
+        return q.list();
     }
 
     /**
@@ -345,19 +501,25 @@ public class AclQueryUtils {
         if ( SecuredChild.class.isAssignableFrom( aoiType ) ) {
             throw new IllegalArgumentException( "ACL filtering cannot be done on a SecuredChild; instead identify the owner and apply ACLs on it." );
         }
-        if ( SecurityUtil.isUserAdmin() ) {
-            // For administrators, no filtering is needed, so the ACE is completely skipped from
-            // the where clause and no parameters are bound.
-            return;
-        }
         // HQL formAclRestrictionClause uses :aoiClassId (the resolved acl_class.id);
         // native formNativeAclRestrictionClause + loadAclInfoFor use :aoiType (the string).
         // Each call site exposes exactly one of the two parameter names, so bind both
         // conditionally rather than requiring the caller to know which form it built.
+        //
+        // These run BEFORE the admin bypass because the restriction clause is not the only
+        // thing that declares them: formIsPubliclyReadableExpression backs the `isPublic`
+        // filter and emits :aoiClassId for every caller, admin included. Binding is guarded
+        // on the query actually declaring the parameter, so an admin whose query carries only
+        // the ` where (1=1)` placeholder still binds nothing.
         String className = aoiType.getCanonicalName();
         setParameterIfPresent( query, AOI_TYPE_PARAM, className );
         if ( hasNamedParameter( query, AOI_CLASS_ID_PARAM ) ) {
             query.setParameter( AOI_CLASS_ID_PARAM, resolveAclClassId( className ) );
+        }
+        if ( SecurityUtil.isUserAdmin() ) {
+            // For administrators, no ACL restriction clause is emitted, so there is no
+            // user-name parameter to bind.
+            return;
         }
         if ( SecurityUtil.isUserAnonymous() ) {
             // a constant is used directly in ANONYMOUS_SID_HQL/ANONYMOUS_SID_SQL, so no binding is necessary

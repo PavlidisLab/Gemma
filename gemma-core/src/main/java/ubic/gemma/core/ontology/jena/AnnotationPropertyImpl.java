@@ -91,6 +91,16 @@ class AnnotationPropertyImpl extends AbstractOntologyResource implements Annotat
         }
     }
 
+    /**
+     * The value's URI, kept intact rather than resolved to a label the way {@link #getContents()}
+     * does. Null for literals and blank nodes, which have no identity to return.
+     */
+    @Nullable
+    @Override
+    public String getValueUri() {
+        return object != null && object.isURIResource() ? object.asResource().getURI() : null;
+    }
+
     @Override
     public boolean isObsolete() {
         return super.isObsolete() || property.hasSuperProperty( OBO.ObsoleteProperty, false );

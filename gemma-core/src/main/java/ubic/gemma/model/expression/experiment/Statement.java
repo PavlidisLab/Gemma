@@ -187,8 +187,15 @@ public class Statement extends Characteristic {
         return predicateUri;
     }
 
+    /**
+     * Blank is stored as null, for the reason spelled out on
+     * {@link ubic.gemma.model.common.description.Characteristic#setValueUri(String)}: an empty string
+     * is a second dialect for ungrounded and no layer reads it that way. Prod carried 7
+     * {@code PREDICATE_URI = ''} and 3 {@code OBJECT_URI = ''} rows, all factor-value statements, when
+     * this landed — the statement columns were outside the sweep that cleared VALUE_URI.
+     */
     public void setPredicateUri( @Nullable String predicateUri ) {
-        this.predicateUri = predicateUri;
+        this.predicateUri = stripToNull( predicateUri );
     }
 
     @Nullable
@@ -198,7 +205,9 @@ public class Statement extends Characteristic {
     }
 
     public void setObject( @Nullable String object ) {
-        this.object = object;
+        // Same free-text normalization as the subject, which reaches it via super.setValue().
+        // Production carries 151 objects with edge whitespace and 6 with internal runs.
+        this.object = normalizeTermText( object );
     }
 
     @Nullable
@@ -208,7 +217,7 @@ public class Statement extends Characteristic {
     }
 
     public void setObjectUri( @Nullable String objectUri ) {
-        this.objectUri = objectUri;
+        this.objectUri = stripToNull( objectUri );
     }
 
     @Nullable
@@ -228,7 +237,7 @@ public class Statement extends Characteristic {
     }
 
     public void setSecondPredicateUri( @Nullable String secondPredicateUri ) {
-        this.secondPredicateUri = secondPredicateUri;
+        this.secondPredicateUri = stripToNull( secondPredicateUri );
     }
 
     @Nullable
@@ -238,7 +247,7 @@ public class Statement extends Characteristic {
     }
 
     public void setSecondObject( @Nullable String secondObject ) {
-        this.secondObject = secondObject;
+        this.secondObject = normalizeTermText( secondObject );
     }
 
     @Nullable
@@ -248,7 +257,7 @@ public class Statement extends Characteristic {
     }
 
     public void setSecondObjectUri( @Nullable String secondObjectUri ) {
-        this.secondObjectUri = secondObjectUri;
+        this.secondObjectUri = stripToNull( secondObjectUri );
     }
 
     @Nullable
@@ -340,14 +349,23 @@ public class Statement extends Characteristic {
                 && CharacteristicUtils.equals( secondObject, secondObjectUri, that.secondObject, that.secondObjectUri );
     }
 
+    /**
+     * Constant, and the SAME constant {@link Characteristic#hashCode()} returns.
+     * Restated here to say why the predicate fields are NOT hashed, and why this
+     * cannot be {@code getClass().hashCode()}: {@link Characteristic#equals} calls
+     * a Statement equal to a Characteristic with the same category and value, so
+     * a per-class constant would break the equals/hashCode contract between them.
+     *
+     * <p>This hashed the predicate and object terms on top of the superclass's
+     * mutable category/value hash. Every one of those fields is edited in place
+     * by curation, and a Statement lives in {@code FactorValue}'s
+     * {@code Set<Statement>}, so an edit moved the element to a stale bucket.
+     * See {@link Characteristic#hashCode()} for the full reasoning and for the
+     * rule about not keying large maps by these types.</p>
+     */
     @Override
     public int hashCode() {
-        // don't both hashing labels unless the URI is null
-        return super.hashCode() + 31 * Objects.hash(
-                StringUtils.lowerCase( predicateUri != null ? predicateUri : predicate ),
-                StringUtils.lowerCase( objectUri != null ? objectUri : object ),
-                StringUtils.lowerCase( secondPredicateUri != null ? secondPredicateUri : secondPredicate ),
-                StringUtils.lowerCase( secondObjectUri != null ? secondObjectUri : secondObject ) );
+        return Characteristic.class.hashCode();
     }
 
     @Override

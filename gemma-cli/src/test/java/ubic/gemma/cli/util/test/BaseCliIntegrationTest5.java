@@ -4,7 +4,7 @@ import org.springframework.test.context.ActiveProfiles;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 
 /**
- * JUnit 5 (Jupiter) counterpart of {@link BaseCliIntegrationTest}.
+ * JUnit 5 (Jupiter) counterpart of {@code BaseCliIntegrationTest}.
  * <p>
  * Identical contract to the JUnit 4 base, just expressed against the Jupiter
  * integration base so subclasses can use {@code @Test} from

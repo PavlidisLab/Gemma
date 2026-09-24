@@ -36,6 +36,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * One pipeline run against one experiment, dispatched to an external scheduler.
@@ -57,10 +59,14 @@ import java.util.Set;
 public class PipelineJob extends AbstractIdentifiable {
 
     @ManyToOne(fetch = FetchType.LAZY)
+    // V18 declares FK_PIPELINE_JOB_BATCH ON DELETE CASCADE; keep the mapping in step so a Hibernate-generated schema cascades too
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "BATCH_FK", nullable = false, columnDefinition = "BIGINT")
     private PipelineJobBatch batch;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    // V18 declares FK_PIPELINE_JOB_EXPERIMENT ON DELETE CASCADE; keep the mapping in step so a Hibernate-generated schema cascades too
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "EXPERIMENT_FK", nullable = false, columnDefinition = "BIGINT")
     private ExpressionExperiment experiment;
 

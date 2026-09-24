@@ -16,8 +16,11 @@ import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
@@ -51,6 +54,37 @@ public interface TicketService extends BaseService<Ticket> {
      * @param targets  one or more targets; must contain at least one entry
      */
     Ticket openTicket( Contact reporter, TicketType type, String title, Collection<TicketTarget> targets );
+
+    /**
+     * Return the curator's scratchpad, provisioning it on first call.
+     * <p>
+     * A scratchpad is a {@link TicketType#SCRATCHPAD} ticket kept open indefinitely, holding whatever
+     * the curator is currently looking at; finishing with a dataset means REMOVING it from the
+     * scratchpad, not resolving the ticket (Paul, 2026-08-31). It is created with
+     * {@code acceptsTargets = true}, because a scratchpad nothing can be added to is inert, and with
+     * no targets, which is why this does not delegate to {@link #openTicket} (that method requires at
+     * least one).
+     * <p>
+     * Identified by {@code type == SCRATCHPAD} and {@code reporter == curator}, with no state clause:
+     * a cancelled scratchpad is still the curator's, and comes back as-is for them to reopen through
+     * the normal state transition rather than being superseded by a fresh one.
+     * <p>
+     * 🛑 <b>Duplicate prevention is query-then-create inside one transaction, which is not a
+     * guarantee.</b> Nothing in the schema forbids a second row, so two first-calls that both run the
+     * SELECT before either commits will both insert. What IS guaranteed is that the identity never
+     * splits afterwards: {@link TicketDao#findScratchpad} orders by {@code id} ascending and takes
+     * one row, so every later call — this one included — returns the same ticket forever. A stray
+     * duplicate is an orphan row visible in {@code GET /tickets?type=SCRATCHPAD} and reachable by id,
+     * not a scratchpad that flips between two identities. Closing the window properly needs a unique
+     * index, which needs a migration.
+     * <p>
+     * The returned ticket has its lazy fields initialized for
+     * {@link TicketValueObject#from(Ticket, boolean)}, events included, so the REST layer can project
+     * it after the transaction ends.
+     *
+     * @param curator the scratchpad's owner; recorded as the ticket's reporter
+     */
+    Ticket getOrCreateScratchpad( Contact curator );
 
     /**
      * Assign (or re-assign) the ticket. Appends an
@@ -114,8 +148,102 @@ public interface TicketService extends BaseService<Ticket> {
      * @throws IllegalArgumentException if no target with the given row id
      *                                  exists on this ticket.
      */
+    /**
+     * Add a target to a ticket that was already opened.
+     * <p>
+     * Until this existed a ticket's targets were fixed at {@link #openTicket}: the other target methods
+     * only modify rows that are already there. The motivating case is a curator scratchpad — a ticket
+     * someone keeps adding experiments to as they meet them.
+     * <p>
+     * Two conditions, both refused with {@link IllegalStateException}:
+     * <ul>
+     *   <li>the ticket's {@code acceptsTargets} flag must be set. It is false by default and false on
+     *       every ticket predating the flag, so an agent-created ticket keeps the fixed batch it was
+     *       opened for unless someone deliberately opens it up.</li>
+     *   <li>the ticket must not be {@link TicketState#RESOLVED}, whatever the flag says, so a finished
+     *       ticket cannot quietly grow new work. The flag is not rewritten — reopening the ticket makes
+     *       it effective again.</li>
+     * </ul>
+     * Adding a target already on the ticket is idempotent: the ticket comes back unchanged and
+     * {@link TargetAddition#isAdded()} is false.
+     *
+     * @return the saved ticket, and whether this call is what put the target on it
+     */
+    TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor );
+
+    /**
+     * {@link #addTarget(Ticket, TicketTargetType, Long, Contact)} with the new target's own task
+     * attached — see {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget#getPayload()}.
+     * Both payload arguments are optional; passing null for each is the four-argument call.
+     * <p>
+     * On a target already present nothing is written, payload included: the call is idempotent on
+     * {@code (targetType, targetId)}, so a re-add cannot quietly overwrite the task a curator is
+     * working from.
+     */
+    TargetAddition addTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor,
+            @Nullable String payload, @Nullable Integer payloadSchemaVersion );
+
+    /**
+     * What {@link #addTarget} did: the saved ticket, and whether the target was new to it.
+     * <p>
+     * 🛑 The flag is reported here rather than left for the caller to infer, because inferring it
+     * means measuring {@code ticket.getTargets()} before and after — a LAZY collection that a caller
+     * outside the service's transaction holds detached. {@code POST /tickets/{id}/targets} did
+     * exactly that and threw {@code LazyInitializationException} on every call, so the one verb that
+     * grows a queue was a 500 while its mocked test stayed green.
+     */
+    class TargetAddition {
+
+        private final Ticket ticket;
+        private final boolean added;
+
+        public TargetAddition( Ticket ticket, boolean added ) {
+            this.ticket = ticket;
+            this.added = added;
+        }
+
+        public Ticket getTicket() {
+            return ticket;
+        }
+
+        /** False when the target was already on the ticket. */
+        public boolean isAdded() {
+            return added;
+        }
+    }
+
+    /**
+     * Remove a target from a ticket.
+     * <p>
+     * On a curator scratchpad this is what finishing with a dataset looks like — the ticket stays open
+     * and the dataset leaves it — so this is the counterpart of {@link #addTarget} rather than an
+     * afterthought.
+     * <p>
+     * Idempotent: removing a target the ticket does not have returns null rather than throwing, since
+     * the caller has already reached the state it asked for. A terminal ticket
+     * ({@code RESOLVED} / {@code CANCELLED}) refuses the change.
+     * <p>
+     * Removing a target whose status is past {@code NOT_DONE} is permitted — a scratchpad's rows are
+     * all NOT_DONE and refusing would make the common case pay for the rare one — so the removed
+     * status is returned and the caller decides what to say about it.
+     *
+     * @return the status the removed target had, or {@code null} if it was not on the ticket
+     */
+    @Nullable
+    TicketTargetStatus removeTarget( Ticket ticket, TicketTargetType targetType, Long targetId, Contact actor );
+
     Ticket updateTargetStatus( Ticket ticket, Long targetId,
             ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus newStatus, Contact actor );
+
+    /**
+     * Record a {@link ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult} on one
+     * target (by its row id). Uncoupled from
+     * {@link #updateTargetStatus}: the two are set independently. No-op when unchanged;
+     * writes a SCREENING_RESULT_CHANGED ticket event when it changes.
+     */
+    Ticket updateTargetScreeningResult( Ticket ticket, Long targetId,
+            @Nullable ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult screeningResult,
+            @Nullable String reason, boolean reasonProvided, Contact actor );
 
     /**
      * Load a ticket and project it to a {@link TicketValueObject} inside the same
@@ -133,6 +261,10 @@ public interface TicketService extends BaseService<Ticket> {
 
     /** @see TicketDao#findOpenForTarget */
     List<Ticket> findOpenForTarget( TicketTargetType targetType, Long targetId );
+
+    /** @see TicketDao#findOpenSummariesForTargets */
+    Map<Long, List<TicketSummaryForTargetValueObject>> findOpenSummariesForTargets( TicketTargetType targetType,
+            Collection<Long> targetIds );
 
     /** @see TicketDao#findAssignedTo */
     List<Ticket> findAssignedTo( Contact assignee );
@@ -179,4 +311,28 @@ public interface TicketService extends BaseService<Ticket> {
     /** @see TicketDao#findOldestOpenCreatedAt */
     @Nullable
     Date findOldestOpenCreatedAt();
+
+    /**
+     * Find tickets a curator could be meaning when they type into a ticket picker &mdash; backs
+     * {@code GET /tickets/search}. Exists because a flat dropdown of every open ticket stops being
+     * usable well before the corpus does.
+     * <p>
+     * {@code query} matches EITHER a ticket id typed verbatim (digits and nothing else: {@code "6"}
+     * is ticket 6, {@code "6 samples"} is title text) OR a case-insensitive substring of the title
+     * &mdash; a curator has whichever of the two is to hand. An id that parses but names no ticket
+     * simply contributes no hit; it is not an error, and the caller should not turn it into a 404.
+     * <p>
+     * Hits come back exact-id-first, then by {@code updatedAt} descending, truncated to
+     * {@code limit}. Each is a {@link TicketSearchHitValueObject}, whose {@code targetCount} is
+     * counted in SQL &mdash; no {@code TicketTarget} row is loaded.
+     *
+     * @param query           id or title fragment; blank yields no hits
+     * @param openOnly        restrict to OPEN/IN_PROGRESS. The REST default is true: work is rarely
+     *                        added to a closed ticket
+     * @param callerContactId the calling curator's contact id, or null when anonymous. Their own
+     *                        {@link TicketType#SCRATCHPAD} tickets are offered; nobody else's are
+     * @param limit           maximum hits; must be greater than zero
+     */
+    List<TicketSearchHitValueObject> searchTickets( String query, boolean openOnly,
+            @Nullable Long callerContactId, int limit );
 }

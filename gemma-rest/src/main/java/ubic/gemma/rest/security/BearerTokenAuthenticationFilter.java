@@ -25,7 +25,7 @@ import java.io.IOException;
 
 /**
  * Spring Security filter that resolves an {@code Authorization: Bearer <opaque>} header
- * to a {@link Authentication} previously issued by {@link AuthWebService#login} and stored
+ * to a {@link Authentication} previously issued by {@link ubic.gemma.rest.AuthWebService#login} and stored
  * in {@link TokenStore}.
  *
  * <p>If the header is present and the token is valid, the corresponding
@@ -41,7 +41,7 @@ import java.io.IOException;
  * in {@link RestSecurityConfig}.
  *
  * @see TokenStore
- * @see AuthWebService
+ * @see ubic.gemma.rest.AuthWebService
  */
 public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
 

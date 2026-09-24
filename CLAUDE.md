@@ -1,3 +1,4 @@
+
 # Gemma — repo conventions for Claude Code
 
 Ground rules for adding features and tests in this repo. Project-specific; supplements (does not replace) the user-global `~/.claude/CLAUDE.md`.
@@ -15,6 +16,18 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
   mvn -pl gemma-core verify -Dgemma.hibernate.hbm2ddl.auto=create
   ```
   The gemdtest password defaults to `1234` (`default.properties`), which matches the `testdb` service in `docker-compose.yml` — no override needed. Pass `-Dgemma.testdb.password=…` only if your local MySQL's `gemmatest` account uses a different password (it's a throwaway local-dev credential, not a secret).
+
+  **`-Dgemma.hibernate.hbm2ddl.auto=create` is required, not a convenience.** `default.properties:292` leaves the property EMPTY, so without it Hibernate materializes no schema and `applicationContext-dataSourceInitializer` runs `sql/init-acls.sql` against an empty database:
+  ```
+  Failed to execute SQL script statement #2 of [sql/init-acls.sql]:
+      ALTER TABLE acl_entry ADD COLUMN audit_success BIT NOT NULL DEFAULT 0
+  Caused by: Table 'gemdtest.acl_entry' doesn't exist
+  ```
+  `init-acls.sql` says so in its own header — Hibernate creates `acl_sid` / `acl_object_identity` / `acl_entry` from gsec's HBM mappings *on hbm2ddl=create*; only `acl_class` is created by the script. The dependency arrived with the schema-native ACL work (`74982e6f16`, `6e5a3c90ae`).
+
+  **The failure mode is the trap, not the fix.** One failed bean fails the whole `applicationContext-*.xml` context, and every test sharing it is then reported as `IllegalState ApplicationContext failure threshold (1) exceeded: skipping repeated attempt to load context`. That produces hundreds of identical errors (476 in one CI run) that are all symptoms — the real cause appears exactly once, far above them. **Always search for the first `Failed to load ApplicationContext` / `Caused by:` before reading anything else**; the threshold lines carry no diagnostic content.
+
+  This bit CI rather than developers: the Jenkins integration stage did not pass the flag, so it could never have passed, while everyone locally followed the invocation above. Fixed in `.jenkins/Jenkinsfile`; keep the flag there.
 - **gemdtest auto-reset (default path)** — `CreateDatabasePopulator` runs at test context startup (default `gemma.testdb.initialize=true`) and drops+recreates `gemdtest` before Flyway + Hibernate rebuild it. This requires the test user (`gemmatest`) to hold the server-level CREATE privilege on top of the database-scoped grant; one-time fix:
   ```sql
   -- Run once as root; lets `gemmatest` recreate gemdtest after the populator drops it
@@ -36,6 +49,20 @@ Ground rules for adding features and tests in this repo. Project-specific; suppl
   ```
   (`-P 3307` / `-p1234` are the `docker-compose.yml` testdb coordinates. The container's root password is random — `MYSQL_RANDOM_ROOT_PASSWORD=yes` — so if the `gemmatest` grants themselves are missing, fix them through the container instead: `docker compose exec testdb mysql -uroot -p"$(docker compose logs testdb | grep 'GENERATED ROOT PASSWORD')"`, or just recreate the container.)
 - **Compile-clean is the bar for sub-agents.** `mvn -pl gemma-core compile test-compile -q` must pass after any sub-agent edit. Full `mvn verify` is reserved for orchestrator-led runs; it needs gemdtest creds and serializes against other parallel runs.
+- **Javadoc is a build gate, and `mvn verify` does not run it.** The `attach-javadocs` execution lives in the `release` profile of `pavlab-starter-parent`, which has no `<activation>` — Jenkins turns it on through the node's `settings.xml`, so every local `mvn verify` / `mvn package` / compile-clean check passes while javadoc is broken. It fails in the **Package** stage, after the whole suite has already gone green, and it fails per-module, so an error in `gemma-core` hides every error in `gemma-cli` and `gemma-rest`. Reproduce the CI step with:
+  ```bash
+  mvn -B -P release package -DskipTests
+  ```
+  `doclint` is `all,-missing`, so these two are hard errors (empty `<p>`, duplicate `@return`, and `@author` on a method are warnings only — 13 exist today and don't fail the build):
+  - **`reference not found`** — `{@link Foo}` where `Foo` isn't imported (a signature spelling the type out fully-qualified is the usual cause), or `{@link #method(A)}` naming an overload that doesn't exist. Copy the parameter list from the real signature.
+  - **`heading used out of sequence`** — the first heading in a **class** doc comment must be `<h2>`. Javadoc has rendered the class title as `<h1>` since JDK 13; `<h3>` was right under JDK 8/11, which is why the habit persists. Deeper nesting is fine (`<h3>` under an `<h2>`). **In a *method* doc comment the first heading must be `<h4>`** — the implicit preceding heading there is `<h3>` (class `<h1>` → "Method Detail" `<h2>` → the method `<h3>`), so an `<h2>` inside a method comment is an error, which reads as a contradiction of the rule above until you notice the two are different contexts.
+- **`mvn -P release package` does NOT cover the Maven site stage.** It exercises `attach-javadocs` from `<build>`; the **Deploy Maven website** stage runs `mvn site-deploy`, whose `aggregate` / `test-aggregate` reports read the SEPARATE `maven-javadoc-plugin` configuration under **`<reporting>`** (`pom.xml` ~1580). The two blocks are near-copies that drift, and Maven shares nothing between them:
+  - Config added to one and not the other passes locally and fails in CI. That is how the `@todo` `<tags>` registration went missing from `<reporting>` and produced five `unknown tag. Unregistered custom tag?` errors that only the site stage could see. There is a KEEP IN SYNC comment on the reporting block; honour it.
+  - `<pluginManagement>` does **not** apply to `<reporting>` plugins. The reporting javadoc version is pinned to `3.3.2` for that reason — unpinned, it resolved 3.12.0 locally and 3.3.2 on the agent, so the two machines ran different doclint versions over the same sources. Do not remove that `<version>`.
+  - Reproduce the site stage with `mvn -B site` (full reactor). Do **not** use `-N`: a non-recursive run has no module classpaths and buries the real errors under thousands of bogus `cannot find symbol` / `package does not exist` lines.
+  - A javadoc **resolution** error (e.g. `wrong number of type arguments`) aborts before doclint runs, so it masks every tag/heading error in the same module. Expect a second wave after fixing one.
+  - `test-aggregate` javadocs `src/test/java`. It reports 34 errors under 3.12.0 and is unexercised until `aggregate` passes; test sources are held to the same doclint bar as main.
+- **A dependency version can differ per module and only `javadoc:aggregate` will notice.** `gemma-core` pinned `spring-retry` to `1.0.3.RELEASE` while `gemma-cli` / `gemma-rest` resolved `2.0.12` through the parent BOM, which remanages transitives. Per-module javadoc compiles each module against its own classpath and passes; the aggregate report merges all three, the newer jar wins, and gemma-core's sources fail against an API that changed shape. Check with `mvn dependency:tree -Dincludes=<group>:<artifact>` across the reactor before assuming a version is uniform.
 
 ## Parallel work (multi-agent renovations)
 
@@ -61,15 +88,23 @@ The reusable sub-agent brief skeleton lives in user memory (`feedback_agent_brie
 
 `mvn verify` is the day-to-day signal. It MUST be fast and deterministic on Mac and Linux dev boxes — no real network, no env binaries beyond `mysql`, no platform-specific filesystem assumptions.
 
-Anything slow / network-bound / env-dependent stays in the codebase but is *tagged* so it doesn't fire by default. Surefire's `excludedGroups` (parent `pom.xml` line ~1121) already excludes `@Tag("integration")`.
+Anything slow / network-bound / env-dependent stays in the codebase but is *tagged* so it doesn't fire by default. The single source of truth is `${excludedGroups}` = **`network,slow`** (parent `pom.xml` line ~1737, with the taxonomy documented in the comment above it). Surefire consumes it as `integration,${excludedGroups}` (~1113), so `integration` is excluded there too; failsafe consumes it bare (~1170), which is what makes integration tests run in failsafe only.
 
-**Tag taxonomy** (the `excludedGroups` default at the bottom of parent `pom.xml` and the failsafe `<excludedGroups>` both consume `${excludedGroups}` = `network,slow,ubic.gemma.core.util.test.category.SlowTest`):
+**Tag taxonomy:**
 
-- `@Tag("integration")` / `@Category(IntegrationTest.class)` — runs in failsafe only, skipped from surefire. Day-to-day `mvn verify` runs these.
+- `@Tag("integration")` — runs in failsafe only, skipped from surefire. Day-to-day `mvn verify` runs these.
 - `@Tag("network")` — cheap external-URL reachability probe. Excluded by default; opt-in with `-DexcludedGroups=` (run everything) or a different list.
-- `@Tag("slow")` / `@Category(SlowTest.class)` — heavy in-JVM work or large external download (GEO archives, Uberon OWL, UCSC matrices, BLAT alignments, Python subprocesses, etc.). Excluded from BOTH surefire and failsafe by default. Run explicitly with `mvn verify -DexcludedGroups=network` (keep the network exclusion, drop slow) or `-DexcludedGroups=` (clear everything).
+- `@Tag("slow")` — heavy in-JVM work or large external download (GEO archives, Uberon OWL, UCSC matrices, BLAT alignments, Python subprocesses, etc.). Excluded from BOTH surefire and failsafe by default. Run explicitly with `mvn verify -DexcludedGroups=network` (keep the network exclusion, drop slow) or `-DexcludedGroups=` (clear everything).
+- `@Tag("geo")` / `@Tag("pubmed")` / `@Tag("goldenPath")` — **descriptive markers, not filters.** They are NOT excluded by default. A class carrying only one of these runs in the fast suite. Pair every one of them with `@Tag("slow")` or `@Tag("integration")` at CLASS level so it is filtered transitively.
 
-When you add a tag, prefer to pair Jupiter `@Tag("slow")` with the JUnit 4 `@Category(SlowTest.class)` (the vintage exposure path) so both engines see it consistently.
+Two traps that have each cost a red build:
+
+- **A method-level `@Tag("slow")` does not filter the class.** The untagged methods still run. Tag the class.
+- **`@NetworkAvailable` is not an exclusion.** It skips only when the host is *unreachable*. A reachable host that rejects the request — an expired API key, a 400, a 403 — runs the test and fails it. Jenkins build #4 reported 23 such errors that read as code failures; the cause was a revoked NCBI key.
+
+The JUnit 4 vintage path is gone: `@Category` appears in **zero** test files. `ubic.gemma.core.util.test.category.SlowTest` / `IntegrationTest` still exist but are unreferenced and can be deleted. Do not add `-Dgroups=SlowTest` / `-DexcludedGroups=SlowTest` to any invocation — those name a category nothing carries, so the first silently selects no tests and the second silently *replaces* the real `network,slow` default. Both were live in `.jenkins/Jenkinsfile` until 3cdd5a1975.
+
+Selecting slow tests needs both halves: `-Dgroups=slow -DexcludedGroups=network`. On the JUnit Platform an exclude filter beats an include filter, and `slow` is in the default exclusion list, so `-Dgroups=slow` alone matches nothing.
 
 The diagnostic ladder for moving a test off the default-run network/env path:
 
@@ -154,9 +189,18 @@ If something is slow, fix it. Re-engineer if necessary — caching to hide bad c
 
 ## Pitfalls (don't re-learn these)
 
+- **🛑 No transaction may span a compute.** `hibernate.connection.handling_mode = DELAYED_ACQUISITION_AND_HOLD` (`HibernateConfig` ~190, set so `@Transactional(isolation = SERIALIZABLE)` can apply on the physical connection), so a transaction holds its pooled connection from first statement to commit — **including through a stretch that issues no statements at all.** Hikari recycles connections at 30 minutes (`gemma.db.hikari.maxLifetime`). `corrMat -force` on GSE260875 spent 44 minutes in quantile normalization inside one `@Transactional(readOnly = true)` and then failed on its next statement.
+  - The shape is **read in a short transaction, compute with none open, write in a short transaction**. The idiom is `@Transactional(propagation = Propagation.NEVER)` on the orchestrator — already used by `PreprocessorServiceImpl`, `DifferentialExpressionAnalyzerServiceImpl`, `OutlierFlaggingServiceImpl`, `DataUpdaterImpl` and a dozen others. Don't invent a new one.
+  - Mark the computation `@LongComputation`. `TransactionSpanningComputeRuleTest` fails the build when a `@Transactional` method can reach one, searching transitively and resolving interface calls to implementations — a direct-call rule caught none of the original six.
+  - ⚠️ **`Propagation.NEVER` is viral upward**: a transactional caller now fails at entry with `IllegalTransactionStateException`. That is the rule working, not something to route around — the caller needs splitting too. `computeUnmaskedProcessedDataMatrix` and `SampleCoexpressionAnalysisServiceImpl.prepare` had to change in the same commit for this reason.
+  - ⚠️ **A self-invocation no longer inherits a transaction.** Under `NEVER`, `this.someTransactionalMethod()` runs with none at all. Route it through a `@Lazy @Autowired` interface-typed self-reference (`ProcessedExpressionDataVectorServiceImpl`, `SVDServiceImpl`) or a co-bean.
+  - 🛑 **Moving the compute out of the transaction changes what a failure leaves behind.** `remove → compute → persist` in one transaction was safe because a failure rolled the removal back; with the compute outside, removing first commits a deletion that a later failure cannot undo. Reorder to `compute → (remove + persist)` and give the write step a single method — `replaceProcessedDataVectors`, `PrincipalComponentAnalysisService.replaceForExperiment`.
+  - ⚠️ The carrier between the steps holds **detached** entities. Read what is already initialized, navigate nothing new, and test the split somewhere with no ambient transaction — `BaseIntegrationTest5` is not `@Transactional`, `BaseDatabaseTest5` is and would hide the whole failure class.
+
 - **`AbstractAsyncFactoryBean` + spring-test 6.2 init trap** — registering one as a `@Bean` in a JUnit 5 Spring test context forces async init BEFORE `@BeforeEach`, breaking any setter that requires `!isInitialized()`. Workaround: drop `@ContextConfiguration`, construct directly in `@BeforeEach`, call `factory.destroy()` in `@AfterEach`. See `HomologeneServiceTest` 2026-05-20 (commit `139ea7a388`).
 - **Hibernate Search 7 `directory.root` placeholder coercion** — if `gemma.search.dir` resolves to blank / `${...}`-leftover / a relative path, HS 7 writes per-entity Lucene index directories at the CWD (gemma-core's own dir). `HibernateConfig.resolveSearchIndexBase` coerces to `${java.io.tmpdir}/gemmaData/searchIndices`. See commit `04d720c666`.
 - **Sandbox blocks credentialed destructive DB ops** even with explicit user chat authorization. The user must run `DROP DATABASE gemdtest; CREATE DATABASE gemdtest;` via `! <command>` in the prompt.
+- **Never run a single test via `mvn surefire:test`** (or `failsafe:integration-test`, or any other direct goal invocation) — use `mvn test -Dtest=…` / `mvn verify -Dtest=…`. `testJvmOptions` (`pom.xml` ~1744) contains `-javaagent:${org.mockito:mockito-core:jar}`, and that placeholder is resolved by `maven-dependency-plugin:properties` bound to **`process-test-classes`** (`pom.xml` ~1075-1077); surefire and failsafe both consume it through `<argLine>` (`pom.xml` ~1095 / ~1123). A direct goal invocation runs no lifecycle phase, so the placeholder stays literal, the forked JVM is handed a bogus agent path, and it dies during VM init. The reported error hides the cause — you get `Tests run: 0` plus `The forked VM terminated without properly saying goodbye. VM crash or System.exit called?`, which reads like a JVM or test bug; the actual line is `Error opening zip file or JAR manifest missing : ${org.mockito:mockito-core:jar}` further up. Going through the lifecycle costs a recompile pass, which is near-free when nothing changed.
 - **Entity `hashCode()` + mixed persisted/transient collections.** Gemma codebases often hold both saved (`id != null`) and transient (`id == null`) instances of the same entity in a single `Set<...>` — e.g. building up FactorValues for an EE, Characteristics for a sample, ticket targets, etc. The naive `hashCode()` patterns all have failure modes here:
   - **`getId()`-based** — id flips from null → value on persist. An entity added to a HashSet while transient ends up under the wrong hash bucket post-save; `set.contains(entity)` returns `false` even though the entity is in the set. This is the canonical "Hibernate hashCode footgun" Guillaume flagged on PR #1659.
   - **Business-key-based** (`hash(accession)`, `hash(ncbiId)` etc.) — same bug class if the key can be null/mutated after the object is added to a Set. Safer than id-based ONLY when the key is set at construction and never changes.
@@ -165,8 +209,12 @@ If something is slow, fix it. Re-engineer if necessary — caching to hide bad c
 
 ## Reference docs
 
-Working design docs / recces / audits live under `docs/` (see `docs/INDEX.md`); only `README.md`
-and this file stay at the repo root.
+🛑 **New recces, figures and working design docs go in the EVAL repo**
+(`~/Dev/gemma-curation-agents-eval`), not here (Paul, 2026-08-28). This repo tracks code.
+
+The existing `docs/` tree (152 docs, see `docs/INDEX.md`) stays where it is and remains the
+reference for anything already written; only `README.md` and this file sit at the repo root.
+Correct a doc in place if it is already here — the rule is about what gets ADDED.
 
 - `docs/audit/AUDIT_SYSTEM_AUDIT.md` — full audit-system architecture + migration phases.
 - `docs/recce/AUDIT_PHASE_C_RECCE.md` — bucket-by-bucket migration inventory.

@@ -3,9 +3,13 @@ package ubic.gemma.core.loader.expression.cellxgene;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
+import ubic.gemma.core.loader.util.anndata.AnnData;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import java.io.IOException;
@@ -28,7 +32,8 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
         setSampleFactorName( "donor_id" );
         setCellTypeFactorName( "cell_type" );
         setCellTypeUriFactorName( "cell_type_ontology_term_id" );
-        setUnknownCellTypeIndicator( "unknown" );
+        // a CELLxGENE convention, not a property of any one dataset: many have no unknown cells at all
+        setDefaultUnknownCellTypeIndicator( "unknown" );
         setBioAssayToSampleNameMapper( new SimpleBioAssayMapper() );
     }
 
@@ -50,23 +55,42 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
                 .collect( Collectors.toMap( Map.Entry::getKey, e -> mergeOntologyTerms( e.getValue() ) ) );
     }
 
+    @Override
+    public Set<CellTypeAssignment> getCellTypeAssignments( SingleCellDimension dimension ) throws IOException {
+        Set<CellTypeAssignment> assignments = super.getCellTypeAssignments( dimension );
+        for ( CellTypeAssignment cta : assignments ) {
+            cta.setPreferred( true );
+        }
+        return assignments;
+    }
+
+    @Override
+    public Set<QuantitationType> getQuantitationTypes() throws IOException {
+        Set<QuantitationType> qts = super.getQuantitationTypes();
+        for ( QuantitationType qt : qts ) {
+            if ( qt.getDescription() != null && qt.getDescription().contains( "Data from a layer located at 'X'" ) ) {
+                qt.setIsSingleCellPreferred( true );
+            }
+        }
+        return qts;
+    }
+
     /**
      * Ontology terms in CELLxGENE are split in two separate column: one for the label and one for the URI.
      */
-    private Set<Characteristic> mergeOntologyTerms( Set<Characteristic> cs ) {
+    // package-private for direct unit testing
+    Set<Characteristic> mergeOntologyTerms( Set<Characteristic> cs ) {
         cs = new HashSet<>( cs );
         Map<String, Set<Characteristic>> characteristicsByCategory = cs.stream()
                 .filter( c -> c.getCategory() != null )
                 .collect( Collectors.groupingBy( Characteristic::getCategory, Collectors.toSet() ) );
-        for ( Map.Entry<String, Set<Characteristic>> cbcEntry : characteristicsByCategory.entrySet() ) {
-            String category = cbcEntry.getKey();
-            Set<Characteristic> characteristicsForCategory = cbcEntry.getValue();
+        for ( String category : characteristicsByCategory.keySet() ) {
             if ( category.endsWith( "_ontology_term_id" ) ) {
-                if ( characteristicsForCategory.size() > 1 ) {
+                if ( characteristicsByCategory.get( category ).size() > 1 ) {
                     log.warn( "Multiple characteristics for category " + category + ", skipping merging ontology terms." );
                     continue;
                 }
-                Characteristic ontologyTerm = characteristicsForCategory.iterator().next();
+                Characteristic ontologyTerm = characteristicsByCategory.get( category ).iterator().next();
                 String labelColumn = Strings.CS.removeEnd( category, "_ontology_term_id" );
                 if ( characteristicsByCategory.containsKey( labelColumn ) ) {
                     if ( characteristicsByCategory.get( labelColumn ).size() > 1 ) {
@@ -83,7 +107,12 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
                         // treat it as a free-text term
                         ontologyLabel.setValueUri( null );
                         cs.remove( ontologyTerm );
-                    } else if ( "||".contains( ontologyTerm.getValue() ) ) {
+                        // 🛑 The operands were the other way round: `"||".contains( value )` asks whether the
+                        // two-character string contains the VALUE, which is true only for "", "|" and "||". So a
+                        // genuine multi-term cell fell through to the single-term branch below and was stored whole,
+                        // producing one VALUE_URI holding two identifiers -- 723 such rows on production, measured
+                        // 2026-09-10 ("http://...MONDO_0001627 || MONDO:0004977").
+                    } else if ( ontologyTerm.getValue().contains( "||" ) ) {
                         // multi-value, we drop the original label & term, but we create a new characteristic for each
                         // term
                         cs.remove( ontologyLabel );
@@ -92,8 +121,13 @@ public class CellXGeneAnnDataSingleCellDataLoader extends AnnDataSingleCellDataL
                             if ( termId.equals( "na" ) || termId.equals( "unknown" ) ) {
                                 continue;
                             }
-                            cs.add( Characteristic.Factory.newInstance( category, null,
-                                    ontologyLabel.getValue(), CellXGeneUtils.getTermUri( termId ) ) );
+                            // labelColumn, not category: the category here is the "*_ontology_term_id"
+                            // COLUMN, and filing the result under it would categorize a cell type as
+                            // "cell_type_ontology_term_id". The single-term branch below keeps the label
+                            // characteristic, whose category is already labelColumn; this matches it. Dormant
+                            // until the guard above was fixed, so it had never run.
+                            cs.add( Characteristic.Factory.newInstance( labelColumn, null,
+                                    ontologyLabel.getValue(), CellXGeneUtils.getTermUri( termId.trim() ) ) );
                         }
                     } else {
                         // move the URI to the label characteristic and drop the term one

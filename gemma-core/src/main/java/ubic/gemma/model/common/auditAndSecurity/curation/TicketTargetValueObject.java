@@ -39,6 +39,19 @@ public class TicketTargetValueObject implements Serializable {
     private TicketTargetType targetType;
     private Long targetId;
     private TicketTargetStatus status = TicketTargetStatus.NOT_DONE;
+    private ScreeningResult screeningResult;
+    private String screeningResultReason;
+
+    /**
+     * This target's own task — what put THIS experiment on the ticket and what is being asked of the
+     * curator. Opaque JSON text, served verbatim; see {@link TicketTarget#getPayload()}.
+     */
+    @Nullable
+    private String payload;
+
+    /** Which schema {@link #payload} follows, or null when the writer declared none. */
+    @Nullable
+    private Integer payloadSchemaVersion;
 
     /**
      * Short display label for the target (e.g. an EE's {@code shortName} like
@@ -63,6 +76,26 @@ public class TicketTargetValueObject implements Serializable {
         vo.targetType = t.getTargetType();
         vo.targetId = t.getTargetId();
         vo.status = t.getStatus() != null ? t.getStatus() : TicketTargetStatus.NOT_DONE;
+        vo.screeningResult = t.getScreeningResult();
+        vo.screeningResultReason = t.getScreeningResultReason();
+        vo.payload = t.getPayload();
+        vo.payloadSchemaVersion = t.getPayloadSchemaVersion();
         return vo;
+    }
+
+    public ScreeningResult getScreeningResult() {
+        return screeningResult;
+    }
+
+    public void setScreeningResult( ScreeningResult screeningResult ) {
+        this.screeningResult = screeningResult;
+    }
+
+    public String getScreeningResultReason() {
+        return screeningResultReason;
+    }
+
+    public void setScreeningResultReason( String screeningResultReason ) {
+        this.screeningResultReason = screeningResultReason;
     }
 }

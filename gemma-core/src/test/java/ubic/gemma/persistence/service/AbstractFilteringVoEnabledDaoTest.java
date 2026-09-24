@@ -200,7 +200,7 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest5 {
     /**
      * Exercises the .size-suffix filter path on the JPA-Criteria filtering DAO. Pre-Phase-2 this
      * went through the deleted Hibernate Criteria API; Phase 2 round 6 restored it via
-     * {@code cb.size(...)} on a Path<Collection<?>>.
+     * {@code cb.size(...)} on a {@code Path<Collection<?>>}.
      * <p>
      * Uses a manually-opened session bound to the thread (no Spring TM in this lightweight test
      * context) so the DAO's {@code getCurrentSession()} call resolves.

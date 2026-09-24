@@ -93,6 +93,92 @@ public interface OntologyTerm extends OntologyResource {
     Collection<OntologyRestriction> getRestrictions();
 
     /**
+     * Restrictions asserted DIRECTLY on this term, without walking the superclass closure.
+     *
+     * <p>🛑 Prefer this for reading what a term itself states. {@link #getRestrictions()} walks
+     * {@code listSuperClasses(false)} — the full transitive closure — twice, and then walks each
+     * non-restriction superclass's own closure. Under an ontology loaded with
+     * {@code inferenceMode=TRANSITIVE} that is enormous, and it is not stable: two runs of the
+     * relation producer over the identical CLO 2026-06-19 artifact reported
+     * {@code CLO_0000179} at 441 and then at exactly 1000, and {@code CLO_0037207} at 166 and then
+     * at 5. A count that changes between runs of the same input is not a count.</p>
+     *
+     * <p>OBO asserts these on the class itself — {@code rdfs:subClassOf} → {@code owl:Restriction} —
+     * so the closure adds nothing here but cost and noise. One pass over the direct superclasses,
+     * testing {@code isRestriction()} rather than catching an exception from {@code asRestriction()}
+     * for every superclass that is not one.</p>
+     *
+     * <p>Defaults to {@link #getRestrictions()} so implementations that have no notion of directness
+     * keep working.</p>
+     */
+    default Collection<OntologyRestriction> getDirectRestrictions() {
+        return getRestrictions();
+    }
+
+    /**
+     * The taxon this term is restricted to, when the ontology declares one, else {@code null}.
+     * <p>
+     * OBO writes this as {@code relationship: in_taxon NCBITaxon:9940}, which becomes an OWL
+     * {@code SubClassOf(in_taxon some NCBITaxon_9940)} restriction. MONDO uses it almost exclusively
+     * to mark terms that are NOT human — 3,201 terms carry it and only 30 of those are human — so it
+     * is the discriminator a curation client needs to reject a species-mismatched grounding.
+     * <p>
+     * Deliberately narrower than {@link #getRestrictions()}, and not implemented in terms of it.
+     * That method walks the superclass graph twice and uses a thrown exception as a type test for
+     * every non-restriction superclass; running it per search hit is exactly the kind of cost that
+     * makes an endpoint slower over time. This answers one question with one pass over the direct
+     * superclasses and no exceptions.
+     *
+     * @return the taxon restriction, or null when the term declares none (the common case)
+     */
+    @Nullable
+    default TaxonConstraint getTaxonConstraint() {
+        return null;
+    }
+
+    /**
+     * A term's declared {@code in_taxon} value: the NCBITaxon URI, its numeric id, and its label
+     * when the loaded model carries one.
+     * <p>
+     * {@code label} is null whenever NCBITaxon itself is not loaded — Gemma does not load it — and
+     * the referencing ontology declared no {@code rdfs:label} for the class. The id is always
+     * available, and is the field to key on: a label round-trips through a display string, an id
+     * does not.
+     */
+    class TaxonConstraint {
+        private final String uri;
+        @Nullable
+        private final Integer ncbiTaxonId;
+        @Nullable
+        private final String label;
+
+        public TaxonConstraint( String uri, @Nullable Integer ncbiTaxonId, @Nullable String label ) {
+            this.uri = uri;
+            this.ncbiTaxonId = ncbiTaxonId;
+            this.label = label;
+        }
+
+        public String getUri() {
+            return uri;
+        }
+
+        @Nullable
+        public Integer getNcbiTaxonId() {
+            return ncbiTaxonId;
+        }
+
+        @Nullable
+        public String getLabel() {
+            return label;
+        }
+
+        @Override
+        public String toString() {
+            return "TaxonConstraint{" + uri + ( label != null ? " (" + label + ")" : "" ) + "}";
+        }
+    }
+
+    /**
      * @deprecated use {@link #getLabel()} instead.
      */
     @Nullable

@@ -85,6 +85,72 @@ public interface FilteringDao<O extends Identifiable> extends BaseDao<O> {
     Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode );
 
     /**
+     * One predicate of a conjoined subquery filter.
+     */
+    final class ConjunctSpec {
+        private final String property;
+        private final Filter.Operator operator;
+        @Nullable
+        private final String value;
+        @Nullable
+        private final Collection<String> values;
+
+        private ConjunctSpec( String property, Filter.Operator operator, @Nullable String value, @Nullable Collection<String> values ) {
+            this.property = property;
+            this.operator = operator;
+            this.value = value;
+            this.values = values;
+        }
+
+        public static ConjunctSpec of( String property, Filter.Operator operator, String value ) {
+            return new ConjunctSpec( property, operator, value, null );
+        }
+
+        public static ConjunctSpec of( String property, Filter.Operator operator, Collection<String> values ) {
+            return new ConjunctSpec( property, operator, null, values );
+        }
+
+        public String getProperty() {
+            return property;
+        }
+
+        public Filter.Operator getOperator() {
+            return operator;
+        }
+
+        @Nullable
+        public String getValue() {
+            return value;
+        }
+
+        @Nullable
+        public Collection<String> getValues() {
+            return values;
+        }
+    }
+
+    /**
+     * Build a filter requiring a SINGLE element of a to-many relation to satisfy EVERY given predicate.
+     * <p>
+     * Ordinary conjunction cannot express this. {@code valueUri = X and categoryUri = Y} becomes two
+     * independent subqueries and asks "has some characteristic valued X, and has some characteristic
+     * categorised Y" — which is true of a dataset where those are different characteristics. This
+     * conjoins the predicates inside one subquery, so they must hold of the same element.
+     * <p>
+     * Every predicate must be a subquery-filterable property on the same relation.
+     *
+     * @param conjuncts    predicates to conjoin; at least one. A single conjunct behaves exactly like
+     *                     the corresponding {@code getFilter} overload.
+     * @param subqueryMode {@link SubqueryMode#ANY} (the default when null) or {@link SubqueryMode#NONE}.
+     *                     {@link SubqueryMode#ALL} is rejected for more than one conjunct: "every
+     *                     element satisfies A and B" negates to a disjunction, which a subquery
+     *                     carrying a conjunction cannot represent.
+     * @throws IllegalArgumentException if a property is not subquery-filterable, the properties do not
+     *                                  share a relation, or {@code ALL} is combined with a conjunction
+     */
+    Filter getFilter( List<ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) throws IllegalArgumentException;
+
+    /**
      * Similar to {@link #getFilter(String, Filter.Operator, String)}, but with a collection of values.
      */
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;

@@ -24,7 +24,7 @@ import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import java.net.URISyntaxException;
 
 /**
- * JUnit 5 parallel of {@link AbstractGeoServiceTest}, extending the Jupiter
+ * JUnit 5 parallel of {@code AbstractGeoServiceTest}, extending the Jupiter
  * {@link BaseSpringContextTest5} base. Used while the GEO-service test family
  * migrates piecewise to Jupiter.
  *

@@ -58,7 +58,7 @@ import java.util.Map;
  * handling is gone too.
  * <p>
  * Phase 3 persister retirement: methods here are being rewired to delegate to
- * {@link BusinessKey#find(Session, Object)} (where a static resolver exists) followed by a
+ * {@code BusinessKey.find(Session, X)} (where a static resolver exists) followed by a
  * direct {@code dao.create()} on miss, so the whole persister can eventually be deleted in
  * favour of either the DAO {@code findOrCreate} call or a JPA cascade declared in the
  * parent's HBM mapping.

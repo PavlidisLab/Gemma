@@ -32,7 +32,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,6 +53,8 @@ class AdminWebServiceOntologyRefreshTest {
     @Mock private TaxonArgService taxonArgService;
     @Mock private BlacklistedEntityService blacklistedEntityService;
     @Mock private ExternalDatabaseReadService externalDatabaseReadService;
+    @Mock private ubic.gemma.rest.util.args.PlatformArgService platformArgService;
+    @Mock private ubic.gemma.core.analysis.report.ArrayDesignReportService arrayDesignReportService;
     @Mock private GeoScrapeService geoScrapeService;
     @Mock private IndexerService indexerService;
 
@@ -70,7 +71,7 @@ class AdminWebServiceOntologyRefreshTest {
         service = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 List.of( chebi, mondo ), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
-                indexerService );
+                indexerService, platformArgService, arrayDesignReportService );
     }
 
     @Test
@@ -82,7 +83,9 @@ class AdminWebServiceOntologyRefreshTest {
 
         assertThat( resp.getStatus() ).isEqualTo( 202 );
         verify( chebi ).startInitializationThread( true, false );
-        verifyNoInteractions( mondo );
+        // name resolution reads every bean's identifier, so mondo is touched — what matters is
+        // that it isn't refreshed.
+        verify( mondo, org.mockito.Mockito.never() ).startInitializationThread( anyBoolean(), anyBoolean() );
     }
 
     @Test
@@ -93,6 +96,24 @@ class AdminWebServiceOntologyRefreshTest {
         service.refreshOntology( "CHEBI", true );
 
         verify( chebi ).startInitializationThread( true, true );
+    }
+
+    @Test
+    void refreshResolvesAnOntologyWithNoTitleByIdentifierOrAbbreviation() {
+        // The reason this endpoint existed but couldn't reach half the ontologies: getName() reads
+        // dc:title, which CLO / TGEMO / CHEBI don't declare, so they were unreachable by name.
+        ubic.gemma.core.ontology.providers.CellLineOntologyService clo =
+                mock( ubic.gemma.core.ontology.providers.CellLineOntologyService.class );
+        when( clo.getIdentifier() ).thenReturn( "cellLineOntology" );
+        AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
+                sessionRegistry, List.of( clo ), ontologyFacade, dataSource, userManager, annotationSetService,
+                ticketService, taxonArgService, blacklistedEntityService, externalDatabaseReadService,
+                geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
+
+        for ( String alias : new String[]{ "CLO", "clo", "cellLineOntology", "CellLineOntologyService" } ) {
+            assertThat( svc.refreshOntology( alias, false ).getStatus() ).isEqualTo( 202 );
+        }
+        verify( clo, org.mockito.Mockito.times( 4 ) ).startInitializationThread( true, false );
     }
 
     @Test
@@ -161,7 +182,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
                 .isInstanceOf( ServiceUnavailableException.class );
@@ -176,7 +197,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         assertThatThrownBy( () -> svc.rebuildOntologySlim( "CHEBI" ) )
                 .isInstanceOf( ClientErrorException.class )
@@ -193,7 +214,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         Response resp = svc.rebuildOntologySlim( "CHEBI" );
 
@@ -210,7 +231,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService svc = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, java.util.List.of( realChebi ), ontologyFacade, dataSource, userManager,
                 annotationSetService, ticketService, taxonArgService, blacklistedEntityService,
-                externalDatabaseReadService, geoScrapeService, indexerService );
+                externalDatabaseReadService, geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         for ( String alias : new String[]{ "CHEBI", "chebi", "ChebiOntologyService" } ) {
             assertThat( svc.rebuildOntologySlim( alias ).getStatus() ).isEqualTo( 202 );
@@ -284,7 +305,7 @@ class AdminWebServiceOntologyRefreshTest {
         AdminWebService emptyService = new AdminWebService( cacheManager, sessionFactory, taskRunningService,
                 sessionRegistry, Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService,
                 ticketService, taxonArgService, blacklistedEntityService, externalDatabaseReadService,
-                geoScrapeService, indexerService );
+                geoScrapeService, indexerService, platformArgService, arrayDesignReportService );
 
         assertThatThrownBy( () -> emptyService.refreshOntology( "CHEBI", false ) )
                 .isInstanceOf( NotFoundException.class );

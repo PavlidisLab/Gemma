@@ -13,6 +13,7 @@ package ubic.gemma.rest.ranking;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
 import java.util.ArrayList;
@@ -75,12 +76,30 @@ public class CompositeRankingStrategy implements AnnotationSearchRankingStrategy
     public List<CharacteristicValueObject> rank( String originalQuery,
             List<CharacteristicValueObject> rawHits,
             Map<String, Integer> usageCountsByUri ) {
+        return rank( originalQuery, rawHits, usageCountsByUri, Collections.emptyMap(), Collections.emptyMap() );
+    }
+
+    @Override
+    public List<CharacteristicValueObject> rank( String originalQuery,
+            List<CharacteristicValueObject> rawHits,
+            Map<String, Integer> usageCountsByUri,
+            Map<String, Integer> stringPriorByUri,
+            Map<String, String> matchedTextByUri ) {
         Set<String> tokens = tokenise( originalQuery );
         int n = rawHits.size();
         List<Scored> scored = new ArrayList<>( n );
         for ( int i = 0; i < n; i++ ) {
             CharacteristicValueObject hit = rawHits.get( i );
-            double coverage = tokens.isEmpty() ? 0.0 : tokenCoverageFraction( hit, tokens );
+            // Score coverage against the string that actually matched as well as the label, and
+            // keep the better of the two. A synonym match scores 0 on its label by construction --
+            // `dmso` shares nothing with "dimethyl sulfoxide" -- so label-only coverage silently
+            // demoted every hit the synonym index exists to find.
+            String matchedText = hit.getValueUri() != null && matchedTextByUri != null
+                    ? matchedTextByUri.get( hit.getValueUri() )
+                    : null;
+            double coverage = tokens.isEmpty() ? 0.0
+                    : Math.max( tokenCoverageFraction( hit.getValue(), tokens ),
+                            tokenCoverageFraction( matchedText, tokens ) );
             int usage = 0;
             String uri = hit.getValueUri();
             if ( uri != null && usageCountsByUri != null ) {
@@ -127,22 +146,16 @@ public class CompositeRankingStrategy implements AnnotationSearchRankingStrategy
         return Math.min( 1.0, Math.log1p( usageCount ) / LOG1P_MAX_USAGE );
     }
 
+    /**
+     * Content tokens, shared with the relevance tiers via {@link QueryTokens}. This used to be a
+     * bare whitespace split, which mattered because coverage is scored by substring containment:
+     * {@code the} then scored against <em>theca cell</em> and {@code of} against <em>profile</em>.
+     */
     private static Set<String> tokenise( String query ) {
-        if ( query == null || query.trim().isEmpty() ) {
-            return Collections.emptySet();
-        }
-        String[] parts = query.toLowerCase( Locale.ROOT ).trim().split( "\\s+" );
-        if ( parts.length == 0 ) {
-            return Collections.emptySet();
-        }
-        Set<String> out = new LinkedHashSet<>( parts.length );
-        out.addAll( Arrays.asList( parts ) );
-        out.removeIf( String::isEmpty );
-        return out;
+        return new LinkedHashSet<>( QueryTokens.contentTokens( query ) );
     }
 
-    private static double tokenCoverageFraction( CharacteristicValueObject hit, Set<String> tokens ) {
-        String value = hit.getValue();
+    private static double tokenCoverageFraction( @Nullable String value, Set<String> tokens ) {
         if ( value == null || value.isEmpty() ) {
             return 0.0;
         }

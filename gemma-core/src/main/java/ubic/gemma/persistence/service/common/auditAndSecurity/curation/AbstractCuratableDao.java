@@ -15,6 +15,7 @@ import ubic.gemma.persistence.util.*;
 
 import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -96,13 +97,79 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
     }
 
     /**
-     * Restrict results to non-troubled curatable entities for non-administrators
+     * Restrict results to non-troubled curatable entities for callers who do not curate.
+     * <p>
+     * 🛑 Unless the caller asked about trouble themselves. This filter is editorial, not access
+     * control — a troubled dataset is not secret, it is one we are telling ordinary users not to
+     * rely on — and ANDing it onto a query that already says {@code troubled = true} produces a
+     * contradiction that returns an empty list rather than an error. A curator asking Gemma which
+     * of their datasets are troubled was being told "none", which is the one answer that is never
+     * useful and never obviously wrong.
+     * <p>
+     * So: the default still hides them, and a caller who names the troubled flag in their own filter
+     * gets what they asked for. Either spelling counts: {@code curationDetails.troubled} on this
+     * entity, or the short alias {@code troubled}, which the API advertises as an alias for it and
+     * which {@link #resolveFilterablePropertyMeta(String)} resolves onto {@link #CURATION_DETAILS_ALIAS}.
      */
     protected void addNonTroubledFilter( Filters filters, String objectAlias ) {
-        if ( !SecurityUtil.isUserAdmin() ) {
+        // the short spelling names THIS entity's curation details, so it only speaks for the alias
+        // this DAO is filtering on; hiding an associated entity's trouble is a different question
+        String curationDetailsAlias = this.objectAlias.equals( objectAlias ) ? CURATION_DETAILS_ALIAS : null;
+        if ( shouldHideTroubled( filters, objectAlias, curationDetailsAlias ) ) {
             filters.and( objectAlias, "curationDetails.troubled", Boolean.class, Filter.Operator.eq, false );
         }
+    }
 
+    /**
+     * The decision itself, separated so it can be tested without a session factory: a filtered query
+     * for a non-administrator also carries the ACL EXISTS clause, and test-created entities have no
+     * ACL rows, so a DAO-level test of this rule would pass on an empty result either way.
+     * <p>
+     * 🛑 Curators see troubled entities by default, not only when they think to ask. Paul,
+     * 2026-09-09: "troubled experiments have to be reachable by curators, how else can they fix the
+     * trouble." The flag marks work to do, so hiding it from the people whose job is that work
+     * inverts its purpose. This was admin-only until then, which was invisible to human curators —
+     * they hold {@code GROUP_ADMIN} as well — and bit service accounts that hold only
+     * {@code GROUP_CURATOR}: {@code gemmaAgent} could not see GSE16035 to act on it.
+     * <p>
+     * The escape hatch below still matters and is not redundant with this. It serves the ordinary
+     * user who deliberately asks {@code troubled = true}, who is still not a curator.
+     */
+    static boolean shouldHideTroubled( Filters filters, String objectAlias, @Nullable String curationDetailsAlias ) {
+        return !SecurityUtil.isUserCuratorOrAdmin() && !mentionsTroubled( filters, objectAlias, curationDetailsAlias );
+    }
+
+    /**
+     * Whether the caller's own filters already say something about the troubled flag on this alias.
+     * <p>
+     * 🛑 Both spellings the API accepts, or the rule is a trap. {@code curationDetails.troubled}
+     * arrives as that property name on the object alias, while the advertised alias {@code troubled}
+     * arrives as {@code troubled} on the joined curation-details alias — different pair, same column.
+     * Matching only the first left a caller who wrote {@code troubled = true} with
+     * {@code s.troubled = true and ee.curationDetails.troubled = false}: one association reached two
+     * ways, so an empty list where the flag was set, and no sign anything had been added.
+     *
+     * @param curationDetailsAlias alias the short spelling lands on, or {@code null} when the
+     *                             trouble being hidden belongs to an associated entity rather than
+     *                             this one, in which case the short spelling says nothing about it
+     */
+    private static boolean mentionsTroubled( Filters filters, String objectAlias, @Nullable String curationDetailsAlias ) {
+        for ( List<Filter> clause : filters ) {
+            for ( Filter f : clause ) {
+                if ( f == null ) {
+                    continue;
+                }
+                if ( "curationDetails.troubled".equals( f.getPropertyName() )
+                        && Objects.equals( objectAlias, f.getObjectAlias() ) ) {
+                    return true;
+                }
+                if ( curationDetailsAlias != null && "troubled".equals( f.getPropertyName() )
+                        && curationDetailsAlias.equals( f.getObjectAlias() ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

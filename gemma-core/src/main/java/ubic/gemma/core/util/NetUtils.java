@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.SocketException;
+import java.time.Duration;
 
 /**
  * Network / transfer-rate helpers.
@@ -62,8 +63,16 @@ public class NetUtils {
     public static FTPClient connect( int mode, String host, String loginName, String password ) throws SocketException,
         IOException {
         FTPClient f = new FTPClient();
+        // Bound the connect/control/data phases so a dropped or refused connection (NCBI aggressively resets
+        // anonymous FTP under load) fails fast instead of hanging indefinitely on a read. Values mirror the pooled
+        // FTPClientFactoryImpl, but with a more generous data timeout since the SOFT payloads are large.
+        f.setConnectTimeout( ( int ) Duration.ofSeconds( 60 ).toMillis() );
+        f.setDefaultTimeout( ( int ) Duration.ofSeconds( 60 ).toMillis() );
+        f.setDataTimeout( Duration.ofSeconds( 300 ) );
         f.enterLocalPassiveMode();
-        f.setBufferSize( 32 * 2 ^ 20 );
+        // 32 MiB transfer buffer. NB: the previous '32 * 2 ^ 20' used Java's XOR operator (^), yielding an
+        // 84-byte buffer, not 32 MiB — a real throughput bug on large downloads.
+        f.setBufferSize( 32 * 1024 * 1024 );
         boolean success = false;
         f.connect( host );
         int reply = f.getReplyCode();
@@ -103,6 +112,44 @@ public class NetUtils {
         }
         if ( !success ) {
             throw new IOException( "Failed to complete download of " + seekFile );
+        }
+
+        /*
+         * Verify what actually landed on disk. retrieveFile reporting success does not mean the
+         * bytes are right: transfers have delivered both short files and files LONGER than the
+         * remote (a run of already-written bytes replayed mid-stream). Without this check the wrong
+         * file is accepted, cached, and only fails much later in whatever reads it -- a corrupt
+         * GEO _RAW.tar surfaces as "Invalid byte <n> at offset 0 ... len=8" from the tar reader,
+         * which reads like a bad archive rather than a bad transfer. Delete the local copy so the
+         * caller's retry re-fetches instead of reusing it, and so the size check above cannot
+         * later mistake it for a complete download.
+         */
+        long actualSize = outputFile.length();
+        if ( actualSize != expectedSize ) {
+            /*
+             * The remote can also be replaced between the listing and the transfer: NCBI regenerates its gene files
+             * daily, and a 4.68 GB gene2accession that came back 34 MB longer than the listing was discarded after a
+             * 34-minute transfer. Ask again; if the remote now has exactly the size received, the expectation was
+             * stale, not the bytes.
+             */
+            long remoteSizeNow;
+            try {
+                remoteSizeNow = checkForFile( f, seekFile );
+            } catch ( IOException e ) {
+                log.warn( "Could not re-check the remote size of " + seekFile + ": " + e.getMessage() );
+                remoteSizeNow = expectedSize;
+            }
+            if ( remoteSizeNow == actualSize ) {
+                log.warn( String.format( "%s changed on the remote during the download (%d bytes when listed, %d now); "
+                        + "the %d bytes received match the current remote file.", seekFile, expectedSize, remoteSizeNow, actualSize ) );
+                return success;
+            }
+            if ( !outputFile.delete() ) {
+                log.warn( "Could not remove the incomplete download at " + outputFile );
+            }
+            throw new IOException( String.format(
+                    "Download of %s produced %d bytes, expected %d (the remote now reports %d); removed the local copy.",
+                    seekFile, actualSize, expectedSize, remoteSizeNow ) );
         }
         return success;
     }

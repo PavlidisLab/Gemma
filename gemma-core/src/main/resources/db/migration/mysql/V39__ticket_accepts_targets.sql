@@ -1,0 +1,22 @@
+-- TICKET gains ACCEPTS_TARGETS -- whether experiments may be added to the ticket after it was opened.
+--
+-- Until now a ticket's targets were fixed at creation: TicketService.openTicket takes the collection,
+-- and nothing adds to it afterwards (updateTargetStatus and updateTargetScreeningResult only modify
+-- rows that are already there). This flag is what makes a ticket an open list.
+--
+-- The motivating case is a curator scratchpad (Paul, 2026-08-31): a ticket a curator keeps adding
+-- experiments to as they come across them, rather than one describing a fixed batch of work.
+--
+-- DEFAULT FALSE, and the existing rows are left FALSE, so behaviour is unchanged for every ticket that
+-- exists today -- including the agent-created ones, whose target list is meant to be the batch it was
+-- opened for. A curator opts a ticket in.
+--
+-- Deliberately a flag and not a TicketType value: what a ticket IS and what may be DONE to it are
+-- different axes, and a BATCH_INFO_NEEDED ticket should be able to accept additions without becoming a
+-- different kind of ticket.
+--
+-- The flag is necessary but not sufficient: a RESOLVED ticket refuses additions whatever it says, so a
+-- finished ticket cannot quietly grow new work. That rule lives in the service, not here, because
+-- reopening the ticket has to restore the flag's effect without rewriting it.
+ALTER TABLE TICKET
+    ADD COLUMN ACCEPTS_TARGETS TINYINT(1) NOT NULL DEFAULT 0 AFTER MODE;

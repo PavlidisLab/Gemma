@@ -11,6 +11,7 @@
 package ubic.gemma.core.config;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +23,11 @@ import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.core.security.authentication.ManualAuthenticationServiceBasedSecurityContextFactory;
 import ubic.gemma.core.util.DummyMailSender;
 
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Renovations Phase 3: Java-config replacement for {@code applicationContext-dataSource.xml}.
@@ -80,6 +84,24 @@ public class DataSourceConfig {
     @Value("${gemma.db.hikari.sessionVariables}")
     private String hikariSessionVariables;
 
+    @Value("${gemma.db.hikari.readOnlyPropagatesToServer}")
+    private String hikariReadOnlyPropagatesToServer;
+
+    /**
+     * Server-side statement timeout in milliseconds, appended to {@link #hikariSessionVariables}
+     * as MySQL's {@code max_execution_time}. Blank (the shipped default) leaves the session
+     * variables untouched, so gemma-cli — which reads the same {@code default.properties} — keeps
+     * running unbounded statements. It is set per-deployment for gemma-rest, where an abandoned
+     * read holds a pooled connection until the server finishes it: a client timeout is not a
+     * cancellation.
+     * <p>
+     * It is composed here rather than left to the deployment because overriding
+     * {@code gemma.db.hikari.sessionVariables} wholesale replaces the sql_mode above, which would
+     * restore ONLY_FULL_GROUP_BY and break Gemma's aggregate HQL.
+     */
+    @Value("${gemma.db.hikari.maxExecutionTime:}")
+    private String hikariMaxExecutionTime;
+
     /**
      * Pool-level Hikari knobs (distinct from the {@code dataSourceProperties} driver-level knobs
      * above). All four default to {@code null} so that an unset key falls through to Hikari's own
@@ -108,9 +130,89 @@ public class DataSourceConfig {
         props.setProperty( "rewriteBatchedStatements", hikariRewriteBatchedStatements );
         // Default timezone for storage of DATETIME mapped to java.util.Date.
         props.setProperty( "connectionTimeZone", hikariConnectionTimeZone );
-        // Drop ONLY_FULL_GROUP_BY from sql_mode for the connection's session.
-        props.setProperty( "sessionVariables", hikariSessionVariables );
+        // Drop ONLY_FULL_GROUP_BY from sql_mode for the connection's session, plus the statement
+        // timeout when the deployment sets one.
+        props.setProperty( "sessionVariables", withMaxExecutionTime( hikariSessionVariables, hikariMaxExecutionTime ) );
+        // Off: every read-only transaction otherwise costs a round-trip that changes nothing we use.
+        // Connector/J's default propagates Connection.setReadOnly() to the server, and Spring calls it on
+        // each read-only transaction and again on release. performance_schema on prod-db has counted
+        // SELECT @@SESSION.transaction_read_only 23.6 million times since May on one digest and 10.1 million
+        // on another -- 525 seconds of server time returning a single row (measured 2026-09-17).
+        // ⚠️ It is not free either way. With it on, the server gets SET SESSION TRANSACTION READ ONLY and
+        // InnoDB can skip assigning a transaction id; with it off it cannot, and read-only transactions look
+        // like ordinary ones to the server. Gemma is read-heavy and latency-bound rather than
+        // transaction-id-bound, so the round-trip is the worse cost -- but that is a judgement, not a
+        // measurement, and the saving has not been measured end to end either. It is a property rather than
+        // a literal so a deployment can put it back without a rebuild.
+        props.setProperty( "readOnlyPropagatesToServer", hikariReadOnlyPropagatesToServer );
         return props;
+    }
+
+    /**
+     * The variable has to start the list or follow a comma. Matching it anywhere would read
+     * {@code foo_max_execution_time=42} as a 42 ms cap -- a wrong number, which is worse than no
+     * answer, since this is what an operator checks to decide whether the cap is on.
+     */
+    private static final Pattern MAX_EXECUTION_TIME =
+            Pattern.compile( "(?:^|,)\\s*max_execution_time\\s*=\\s*(\\d+)" );
+
+    /**
+     * Append {@code max_execution_time} to a Connector/J {@code sessionVariables} list.
+     * <p>
+     * Connector/J splits that list on commas <em>outside</em> quotes, so appending to the sql_mode
+     * value — which contains commas inside its quotes — is safe; both variables arrive as one
+     * {@code SET SESSION} on every new connection.
+     *
+     * @param sessionVariables  the configured list, never null
+     * @param maxExecutionTimeMs milliseconds, or blank to leave the list alone
+     * @throws IllegalStateException if the timeout is set to something other than a
+     *                               non-negative whole number of milliseconds — a typo here would
+     *                               otherwise reach MySQL as an unparseable SET and fail every
+     *                               connection attempt with a message about sql_mode.
+     */
+    static String withMaxExecutionTime( String sessionVariables, @Nullable String maxExecutionTimeMs ) {
+        if ( StringUtils.isBlank( maxExecutionTimeMs ) ) {
+            return sessionVariables;
+        }
+        long ms;
+        try {
+            ms = Long.parseLong( maxExecutionTimeMs.trim() );
+        } catch ( NumberFormatException e ) {
+            throw new IllegalStateException( "gemma.db.hikari.maxExecutionTime must be a whole number of milliseconds, got '"
+                    + maxExecutionTimeMs + "'." );
+        }
+        if ( ms < 0 ) {
+            throw new IllegalStateException( "gemma.db.hikari.maxExecutionTime must not be negative, got " + ms + "." );
+        }
+        // Only separate from a list that has something in it. Connector/J splits on commas and
+        // would read the empty leading field of ",max_execution_time=3000" as a variable with no
+        // name, failing every connection attempt at pool start — with a message about sql_mode,
+        // which is the misdirection this method's javadoc warns about.
+        return StringUtils.isBlank( sessionVariables )
+                ? "max_execution_time=" + ms
+                : sessionVariables + ",max_execution_time=" + ms;
+    }
+
+    /**
+     * Read back the statement timeout {@link #withMaxExecutionTime} composed, in milliseconds, or
+     * {@code null} when the list carries none.
+     * <p>
+     * It lives beside the composer so the two cannot drift, and it exists because the setting is
+     * otherwise invisible from outside the JVM: the deployment sets an environment variable, the
+     * variable becomes a Connector/J property, and nothing between there and MySQL says whether it
+     * arrived. {@code GET /admin/db/pool} reports what this returns, so "is the cap on?" is a
+     * question the running server answers about itself rather than one answered by reading
+     * env files and inferring.
+     *
+     * @param sessionVariables a Connector/J session-variable list, possibly null
+     */
+    @Nullable
+    public static Long maxExecutionTimeOf( @Nullable String sessionVariables ) {
+        if ( sessionVariables == null ) {
+            return null;
+        }
+        Matcher m = MAX_EXECUTION_TIME.matcher( sessionVariables );
+        return m.find() ? Long.valueOf( m.group( 1 ) ) : null;
     }
 
     /**

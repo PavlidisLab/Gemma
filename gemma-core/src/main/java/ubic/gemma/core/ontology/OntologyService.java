@@ -23,6 +23,7 @@ import ubic.gemma.model.genome.Taxon;
 
 import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -45,17 +46,39 @@ public interface OntologyService {
     Map<OntologyTerm, Long> findObsoleteTermUsage( long timeout, TimeUnit timeUnit ) throws TimeoutException;
 
     /**
+     * Report the obsolete terms Gemma's annotations still use, with the replacement each owning ontology asserts.
+     * <p>
+     * Same question as {@link #findObsoleteTermUsage(long, TimeUnit)} asked a cheaper way. Obsolescence is a property
+     * of the URI, not of the row, so this groups CHARACTERISTIC by URI and checks each distinct URI once instead of
+     * walking every characteristic in the corpus. That is what makes it callable from a running application rather
+     * than only from an overnight CLI — the ontologies are already in memory, so the remaining work is one grouped
+     * query plus a hash lookup per URI.
+     * <p>
+     * Gene Ontology annotations are skipped, matching {@code findObsoleteTermUsage}: those are gene annotations and
+     * their obsolescence is a separate problem.
+     *
+     * @param timeout  budget for resolving terms against the loaded ontologies
+     * @return one entry per obsolete term in use, ordered by descending experiment count so the biggest problems
+     *         read first
+     */
+    List<ObsoleteTermUsage> findObsoleteTermsInUse( long timeout, TimeUnit timeUnit ) throws TimeoutException;
+
+    /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
      * of possible choices
      *
      * @param searchQuery           search query
      * @param useNeuroCartaOntology use neurocarta ontology
+     * @param forceGeneOntology     always consult the Gene Ontology, even when other ontologies already
+     *                              returned hits. GO is otherwise a fallback (searched only when nothing
+     *                              else matched); set this when the caller explicitly wants GO terms
+     *                              (e.g. an annotation search filtered to the {@code GO_} URI prefix).
      * @return characteristic vos
      * @throws ubic.gemma.core.search.SearchTimeoutException if the search times out
      */
     @Deprecated
     Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
+            boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException;
 
     /**
      * Given a search string will look through the loaded ontologies for terms that match the search term. If the query

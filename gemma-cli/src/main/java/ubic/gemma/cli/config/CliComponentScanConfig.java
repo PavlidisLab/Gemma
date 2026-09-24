@@ -46,7 +46,7 @@ import ubic.gemma.core.context.TestComponent;
  * Also re-declares the {@link LazyInitByDefaultPostProcessor} bean that the XML defined
  * as a bare {@code <bean class="..."/>}; the post-processor must be returned from a
  * {@code static} {@code @Bean} method so the container instantiates it before the
- * @Configuration class is fully populated (it's a {@link org.springframework.beans.factory.config.BeanFactoryPostProcessor}).
+ * {@code @Configuration} class is fully populated (it's a {@link org.springframework.beans.factory.config.BeanFactoryPostProcessor}).
  * <p>
  * The whole configuration is gated on the {@code cli} profile, matching the legacy XML's
  * {@code profile="cli"} attribute, so the CLI scans don't fire in web/REST contexts.

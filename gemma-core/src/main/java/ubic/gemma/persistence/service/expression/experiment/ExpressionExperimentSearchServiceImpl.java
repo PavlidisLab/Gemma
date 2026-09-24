@@ -350,7 +350,9 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         for ( ExpressionExperimentSetValueObject evo : evos ) {
 
-            if ( taxonLimited && !evo.getTaxonId().equals( taxonId ) ) {
+            // taxonId first: a set that spans taxa carries none, and this listing now sees such
+            // sets. A taxon-limited browse excludes them rather than throwing.
+            if ( taxonLimited && !taxonId.equals( evo.getTaxonId() ) ) {
                 continue;
             }
 

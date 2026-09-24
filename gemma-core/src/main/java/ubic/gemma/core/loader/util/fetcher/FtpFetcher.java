@@ -22,9 +22,12 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import ubic.gemma.core.util.NetDatasourceUtil;
 import ubic.gemma.core.util.NetUtils;
+import ubic.gemma.core.util.SimpleRetry;
+import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.concurrent.Executors;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -38,6 +41,14 @@ import java.util.concurrent.*;
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 public abstract class FtpFetcher extends AbstractFetcher {
+
+    /**
+     * Retry transient FTP failures (connection reset / socket closed, which NCBI throws freely when many anonymous
+     * connections arrive at once) with exponential backoff: up to 3 retries, 1s base delay, 1.5x factor. The staggered
+     * backoff also breaks up the connection burst from concurrent imports so the retries do not all collide again.
+     */
+    private static final SimpleRetry<IOException> ftpRetry =
+            new SimpleRetry<>( new SimpleRetryPolicy( 3, 1000, 1.5 ), IOException.class, FtpFetcher.class.getName() );
 
     protected FTPClient ftpClient;
 
@@ -93,7 +104,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
     }
 
     protected Collection<File> doTask( Callable<Boolean> callable, long expectedSize, String seekFileName,
-            String outputFileName ) {
+            String outputFileName ) throws IOException {
 
         ExecutorService executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
         Future<Boolean> future = executor.submit( callable );
@@ -117,6 +128,11 @@ public abstract class FtpFetcher extends AbstractFetcher {
                 return result;
             }
         } catch ( ExecutionException e ) {
+            // Surface a transient network failure (connection reset, socket closed, ...) as an IOException so the
+            // retry wrapper in fetch() can re-attempt it, rather than burying it in a non-retryable RuntimeException.
+            if ( e.getCause() instanceof IOException ) {
+                throw ( IOException ) e.getCause();
+            }
             throw new RuntimeException( "Couldn't fetch " + seekFileName, e );
         } catch ( InterruptedException e ) {
             log.warn( "Interrupted: Couldn't fetch " + seekFileName, e );
@@ -132,22 +148,17 @@ public abstract class FtpFetcher extends AbstractFetcher {
         File existingFile = null;
         try {
             File newDir = mkdir( identifier );
-            String outputFileName = formLocalFilePath( identifier, newDir );
+            final String outputFileName = formLocalFilePath( identifier, newDir );
 
             existingFile = new File( outputFileName );
 //            if ( this.avoidDownload || ( existingFile.canRead() && allowUseExisting ) ) {
 //                // log.info( outputFileName + " already exists." );
 //            }
 
-            if ( ftpClient == null || !ftpClient.isConnected() ) {
-                ftpClient = this.getNetDataSourceUtil().connect( FTP.BINARY_FILE_TYPE );
-                assert ftpClient != null; // otherwise should have gotten an exception from connect()
-            }
-
-            long expectedSize = getExpectedSize( seekFile );
-
-            Callable<Boolean> future = this.defineTask( outputFileName, seekFile );
-            return this.doTask( future, expectedSize, seekFile, outputFileName );
+            // A transient IOException (connection reset, socket closed) is retried with backoff; each attempt starts
+            // from a fresh connection since the reset control channel is unusable. A non-transient failure or exhausted
+            // retries fall through to the fallback handling below.
+            return fetchWithRetry( seekFile, outputFileName );
         } catch ( UnknownHostException e ) {
             if ( force || !allowUseExisting || existingFile == null )
                 throw new RuntimeException( e );
@@ -191,6 +202,60 @@ public abstract class FtpFetcher extends AbstractFetcher {
                 //noinspection ThrowFromFinallyBlock
                 throw new RuntimeException( "Could not disconnect: " + e.getMessage() );
             }
+        }
+    }
+
+    /**
+     * Run {@link #attemptFetch} under the retry wrapper, unwrapping a {@link NonRetryableIOException} back to the
+     * underlying {@link IOException} so the caller's fallback handling still sees the real (e.g. file-not-found) cause.
+     */
+    private Collection<File> fetchWithRetry( String seekFile, String outputFileName ) throws IOException {
+        try {
+            return ftpRetry.execute( ctx -> attemptFetch( seekFile, outputFileName ),
+                    seekFile + " from " + this.getNetDataSourceUtil().getHost() );
+        } catch ( NonRetryableIOException e ) {
+            throw e.getCause();
+        }
+    }
+
+    /**
+     * A single connect + size-check + download attempt. Establishes a fresh FTP connection (dropping any stale one
+     * from a prior try) so it is safe to invoke repeatedly under the retry wrapper. Throws {@link IOException} on a
+     * transient network failure so the caller's retry can re-attempt it; a {@link FileNotFoundException} (the remote
+     * file genuinely does not exist) is re-wrapped as {@link NonRetryableIOException} so it fails fast without retries.
+     */
+    private Collection<File> attemptFetch( String seekFile, String outputFileName ) throws IOException {
+        if ( ftpClient != null && ftpClient.isConnected() ) {
+            try {
+                ftpClient.disconnect();
+            } catch ( IOException e ) {
+                log.warn( "Could not disconnect a stale FTP connection before retrying: " + e.getMessage() );
+            }
+        }
+        ftpClient = this.getNetDataSourceUtil().connect( FTP.BINARY_FILE_TYPE );
+        assert ftpClient != null; // otherwise should have gotten an exception from connect()
+
+        try {
+            long expectedSize = getExpectedSize( seekFile );
+            Callable<Boolean> task = this.defineTask( outputFileName, seekFile );
+            return this.doTask( task, expectedSize, seekFile, outputFileName );
+        } catch ( FileNotFoundException e ) {
+            throw new NonRetryableIOException( e );
+        }
+    }
+
+    /**
+     * Marks an {@link IOException} that should NOT be retried by {@link #ftpRetry} (it is not an {@link IOException}
+     * itself, so the retry template lets it propagate). Mirrors the escape hatch used by {@code GeoBrowserImpl}.
+     */
+    private static class NonRetryableIOException extends RuntimeException {
+        private NonRetryableIOException( IOException cause ) {
+            super( cause );
+        }
+
+        @Override
+        public IOException getCause() {
+            return ( IOException ) super.getCause();
         }
     }
 

@@ -56,7 +56,7 @@ import java.util.Date;
  * Hibernate persists the AuditTrail ahead of its parent, satisfying the
  * {@code AUDIT_TRAIL_FK NOT NULL} constraint on the parent table.
  *
- * <h3>Audit Phase C-2: auto-CREATE / auto-DELETE via Hibernate listeners</h3>
+ * <h2>Audit Phase C-2: auto-CREATE / auto-DELETE via Hibernate listeners</h2>
  *
  * As of Phase C-2 (per AUDIT_MIGRATION_PHASE_C_RECCE.md §2.1) this class additionally
  * implements {@link PostInsertEventListener} and {@link PreDeleteEventListener} and

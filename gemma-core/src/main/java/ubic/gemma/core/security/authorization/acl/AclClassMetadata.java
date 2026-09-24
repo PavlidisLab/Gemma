@@ -73,15 +73,24 @@ public class AclClassMetadata {
                 "select ee.id from ExpressionExperiment ee join ee.bioAssays ba where ba.sampleUsed.id = :identifier group by ee",
                 //language=HQL
                 "select eess.sourceExperiment.id from ExpressionExperimentSubSet eess join eess.bioAssays ba where ba.sampleUsed.id = :identifier group by eess.sourceExperiment" );
+        // These three carried the ExpressionAnalysisResultSet query below rather than their own —
+        // one copy-paste that propagated down three consecutive registrations. Each now resolves
+        // through its actual association: a subset names its source experiment, while the design
+        // and the mean-variance relation are named BY the experiment.
+        //
+        // The wrong queries did not deny anyone anything: these are consistency checks read only by
+        // AclLinterServiceImpl, and a query returning no row counts as agreement rather than as a
+        // mismatch. Against an unrelated table they returned nothing for every input, so the linter
+        // reported all three clean without ever checking them.
         addSecuredChildToParent( ExpressionExperimentSubSet.class, ExpressionExperiment.class,
                 //language=HQL
-                "select ears.analysis.id from ExpressionAnalysisResultSet ears where ears.id = :identifier" );
+                "select eess.sourceExperiment.id from ExpressionExperimentSubSet eess where eess.id = :identifier" );
         addSecuredChildToParent( MeanVarianceRelation.class, ExpressionExperiment.class,
                 //language=HQL
-                "select ears.analysis.id from ExpressionAnalysisResultSet ears where ears.id = :identifier" );
+                "select ee.id from ExpressionExperiment ee where ee.meanVarianceRelation.id = :identifier" );
         addSecuredChildToParent( ExperimentalDesign.class, ExpressionExperiment.class,
                 //language=HQL
-                "select ears.analysis.id from ExpressionAnalysisResultSet ears where ears.id = :identifier" );
+                "select ee.id from ExpressionExperiment ee where ee.experimentalDesign.id = :identifier" );
         addSecuredChildToParent( ExperimentalFactor.class, ExpressionExperiment.class,
                 //language=HQL
                 "select ee.id from ExpressionExperiment ee join ee.experimentalDesign ed join ed.experimentalFactors ef where ef.id = :identifier group by ee" );

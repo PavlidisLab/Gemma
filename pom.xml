@@ -1013,7 +1013,7 @@
 		<dependency>
 			<groupId>com.tngtech.archunit</groupId>
 			<artifactId>archunit-junit5</artifactId>
-			<version>1.3.0</version>
+			<version>1.4.1</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -1111,6 +1111,19 @@
 					OR on the JUnit Platform.
 					-->
 					<excludedGroups>integration,${excludedGroups}</excludedGroups>
+					<!--
+					Pinned so Jenkins and a dev box execute test classes in the same
+					sequence. Surefire/failsafe otherwise default to `filesystem`,
+					which is directory-entry order and therefore differs per machine;
+					that is why the TAXON foreign-key cascade seen on Jenkins
+					2026-09-11 could not be reproduced locally at the same commit,
+					and why reasoning about "what ran before the failure" needed a
+					console log that no longer existed. Override with
+					-DtestRunOrder=filesystem to replay the old behaviour, or with
+					any other surefire runOrder (random, reversealphabetical, ...)
+					to hunt order-dependent failures on purpose.
+					-->
+					<runOrder>${testRunOrder}</runOrder>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipUnitTests}</skip>
 				</configuration>
@@ -1136,8 +1149,23 @@
 					leak worth investigating, not a knob to widen further.
 					-->
 					<forkedProcessExitTimeoutInSeconds>120</forkedProcessExitTimeoutInSeconds>
+					<!--
+					**/*IT.java is here because failsafe's own default
+					includes do NOT apply once <includes> is declared, and
+					this block previously listed only **/*Test.java. Five
+					classes were therefore compiled and never run:
+					AnnotationSetPersistenceIT, TicketPersistenceIT,
+					PublicationAssociationPersistenceIT, HqlSmokeIT and
+					HibernateSqmFragileShapesIT. Measured 2026-08-25: 841
+					surefire reports under gemma-core/target, zero for any
+					of them. Nothing fails when a test class matches no
+					include pattern, which is why it went unnoticed.
+					Prefer the *IT.java suffix for new integration tests;
+					they will now actually run.
+					-->
 					<includes>
 						<include>**/*Test.java</include>
+						<include>**/*IT.java</include>
 					</includes>
 					<!--
 					<groups> is a JUnit Platform tag expression. "integration"
@@ -1153,6 +1181,8 @@
 					run everything).
 					-->
 					<excludedGroups>${excludedGroups}</excludedGroups>
+					<!-- Pinned for reproducibility; see the surefire <runOrder> note above. -->
+					<runOrder>${testRunOrder}</runOrder>
 					<!--suppress MavenModelInspection -->
 					<skip>${skipIntegrationTests}</skip>
 				</configuration>
@@ -1220,6 +1250,23 @@
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
+					<additionalOptions>
+						<additionalOption>-Xmaxerrs 100000</additionalOption>
+						<additionalOption>-Xmaxwarns 100000</additionalOption>
+					</additionalOptions>
+					<!--
+					    @todo is used in the ported baseCode math/ sources and a few
+					    older Gemma classes. It is not a standard javadoc tag, so
+					    doclint rejects it as an unknown tag; registering it here keeps
+					    the notes rendering instead of rewriting them into prose.
+					-->
+					<tags>
+						<tag>
+							<name>todo</name>
+							<placement>a</placement>
+							<head>To Do:</head>
+						</tag>
+					</tags>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -1546,6 +1593,17 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<!--
+				    Pinned because <pluginManagement> does NOT apply to <reporting> plugins:
+				    without a version here Maven resolves whatever it finds, which was 3.12.0
+				    locally and 3.3.2 on the Jenkins agent. Two machines running different
+				    doclint versions over the same sources is not a reproducible gate. 3.3.2
+				    matches what CI already ran and what attach-javadocs uses in <build>, so
+				    this pins current behaviour rather than changing it. Moving to 3.12.0 is a
+				    separate job: it is stricter, and test-aggregate reports 34 errors in test
+				    sources under it.
+				-->
+				<version>3.3.2</version>
 				<configuration>
 					<sourcepath>${javadocSourcePaths}</sourcepath>
 					<quiet>true</quiet>
@@ -1564,6 +1622,26 @@
 					<additionalJOptions>
 						<additionalJOption>-J-Xmx2g</additionalJOption>
 					</additionalJOptions>
+					<!--
+					    KEEP IN SYNC with the maven-javadoc-plugin configuration in <build>
+					    above. The two are separate configurations that Maven does not share:
+					    `mvn javadoc:aggregate` reads the build one, while the aggregate REPORT
+					    run by maven-site-plugin reads this one. Anything added there and not
+					    here passes locally and fails in the Deploy Maven website stage.
+					    That is how the @todo registration below came to be missing: five
+					    "unknown tag" errors that only the site stage could see.
+					-->
+					<additionalOptions>
+						<additionalOption>-Xmaxerrs 100000</additionalOption>
+						<additionalOption>-Xmaxwarns 100000</additionalOption>
+					</additionalOptions>
+					<tags>
+						<tag>
+							<name>todo</name>
+							<placement>a</placement>
+							<head>To Do:</head>
+						</tag>
+					</tags>
 				</configuration>
 				<reportSets>
 					<!--
@@ -1720,6 +1798,8 @@
 		      @Tag("integration"), so they're filtered transitively.
 		-->
 		<excludedGroups>network,slow</excludedGroups>
+		<!-- Test-class execution order for surefire and failsafe; see their <runOrder> notes. -->
+		<testRunOrder>alphabetical</testRunOrder>
 		<skipJavadoc>false</skipJavadoc>
 		<skipWebpack>false</skipWebpack>
 		<maven.javadoc.skip>${skipJavadoc}</maven.javadoc.skip>

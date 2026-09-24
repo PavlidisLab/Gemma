@@ -2,6 +2,7 @@ package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +10,10 @@ import lombok.Setter;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.measurement.MeasurementValueObject;
+
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -82,6 +86,22 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
     private Boolean baseline;
 
     /**
+     * Verbatim provenance backing this factor VALUE — a JSON array of {@code {quote, source, location, …}} items
+     * the curation agents emitted. Gemma stores and serves it opaquely; the agents repo owns the schema.
+     * <p>
+     * 🛑 Not a roll-up of the evidence on {@link #getStatements() statements}, and not a fallback for it. A
+     * statement's evidence backs its triple; this backs the value — its label, its baseline flag, its
+     * measurement, the samples it covers — and a value carrying no statements at all still has a curator behind
+     * those choices. Reading one for the other conflates two levels that a composed factor value keeps apart.
+     * <p>
+     * Null means nothing was recorded, which is the expected reading for most rows.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Verbatim provenance backing this factor value — a JSON array of {quote, source, location} items the curation agents emitted. Distinct from the evidence on its statements. Null when none is recorded.")
+    private JsonNode supportingEvidence;
+
+    /**
      * Human-readable summary of the factor value.
      */
     private String summary;
@@ -123,7 +143,19 @@ public abstract class AbstractFactorValueValueObject extends IdentifiableValueOb
 
         this.baseline = fv.getIsBaseline();
 
-        this.summary = FactorValueUtils.getSummaryString( fv );
+        this.supportingEvidence = CharacteristicUtils.parseSupportingEvidence( fv.getSupportingEvidence() );
+
+        // Summarize the STATEMENTS this object is about to serialize, not the entity they came
+        // from. The statement VOs above canonicalize their term URIs and labels; the entity does
+        // not, so one factor value was serializing summary "KMH-2 cell" beside subject
+        // "KM-H2 cell" -- the same object disagreeing with itself about what it says.
+        //
+        // With no statements and no measurement there is nothing for that to matter to, and only
+        // the entity can reach the denormalized FACTOR_VALUE.VALUE column: the subclass field
+        // holding it is not assigned until after this constructor returns.
+        this.summary = ( this.statements.isEmpty() && this.measurementObject == null )
+                ? FactorValueUtils.getSummaryString( fv )
+                : FactorValueUtils.getSummaryString( this );
     }
 
     /**

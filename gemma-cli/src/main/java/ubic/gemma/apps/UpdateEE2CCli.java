@@ -11,6 +11,7 @@ import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.cli.util.RestCacheEviction;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import org.springframework.lang.Nullable;
@@ -25,7 +26,8 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
     private static final String
             LEVEL_OPTION = "l",
             SINCE_OPTION = "s",
-            TRUNCATE_OPTION = "truncate";
+            TRUNCATE_OPTION = "truncate",
+            RELATIONS_OPTION = "relations";
 
     @Getter
     private enum Level {
@@ -56,8 +58,10 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
     private Level level;
     private Date sinceLastUpdate;
     private boolean truncate;
+    private boolean relations;
 
     private int updated = 0;
+    private int relationsWritten = 0;
 
     @Nullable
     @Override
@@ -68,7 +72,7 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table";
+        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table (and, with --relations, ANNOTATION_RELATION)";
     }
 
     @Override
@@ -76,6 +80,10 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
         addEnumOption( options, LEVEL_OPTION, "level", "Only update characteristic at the given level.", Level.class );
         addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date.", options );
         options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it." );
+        // Same CLI because the harvest READS EE2C: run separately and it either repeats the work or
+        // reads a table that is mid-rebuild. Ordering is the reason to keep them in one command.
+        options.addOption( RELATIONS_OPTION, "relations", false,
+                "Also rebuild ANNOTATION_RELATION from the curated statements EE2C carries." );
     }
 
     @Override
@@ -87,6 +95,7 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
             sinceLastUpdate = null;
         }
         truncate = commandLine.hasOption( TRUNCATE_OPTION );
+        relations = commandLine.hasOption( RELATIONS_OPTION );
     }
 
     @Override
@@ -96,16 +105,25 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
         } else {
             updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
         }
+        if ( relations ) {
+            relationsWritten += tableMaintenanceUtil.updateAnnotationRelationEntries( null );
+        }
     }
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
         updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( expressionExperiment,
                 level != null ? level.getLevelClass() : null );
+        if ( relations ) {
+            relationsWritten += tableMaintenanceUtil.updateAnnotationRelationEntries( expressionExperiment );
+        }
     }
 
     @Override
     protected void postprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
+        if ( relations ) {
+            log.info( "Wrote " + relationsWritten + " CURATED relation rows." );
+        }
         if ( updated > 0 ) {
             try {
                 gemmaRestApiClient.perform( "/datasets/annotations/refresh" );
@@ -113,6 +131,13 @@ public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
             } catch ( Exception e ) {
                 log.warn( "Failed to refresh EE2C from " + gemmaRestApiClient.getHostUrl(), e );
             }
+        }
+        if ( relations ) {
+            // That refresh evicts the EE2C query space only. The relation rows this run rewrote live
+            // in a different space, and the CURATED path does not even evict it locally -- it relies
+            // on addSynchronizedQuerySpace, which is scoped to this JVM and says nothing to the
+            // process actually serving the rows.
+            RestCacheEviction.evictAfterRebuild( gemmaRestApiClient, log );
         }
     }
 }

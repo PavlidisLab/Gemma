@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.core.security.authentication.UserManager;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.security.authentication.UserReadService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
@@ -54,7 +55,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link TicketsWebService#getTickets(boolean, Long, TicketPriority, OffsetArg, LimitArg, CursorArg)}
+ * {@code TicketsWebService#getTickets(boolean, Long, TicketPriority, OffsetArg, LimitArg, CursorArg)}
  * as step 1o of {@code CURSOR_PAGINATION_STEP1_PLAN.md}. Pure Mockito — the goal is to
  * verify the WebService routes cursor vs offset modes to the right helper and emits the
  * right response wrapper, not to retest the DAO (the keyset HQL is covered separately).
@@ -78,6 +79,13 @@ public class TicketsWebServiceCursorTest {
     @Mock
     @SuppressWarnings("unused")
     private UserReadService userReadService;
+
+    /** Constructor dependency of TicketsWebService; it resolves ticket-target display labels. */
+
+    @Mock
+
+    private ExpressionExperimentService expressionExperimentService;
+
 
     @InjectMocks
     private TicketsWebService webService;

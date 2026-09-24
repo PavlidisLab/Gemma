@@ -22,7 +22,8 @@ package ubic.gemma.model.expression.experiment;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Setter;
 import lombok.ToString;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.service.expression.experiment.GeeqServiceImpl;
 
@@ -40,28 +41,6 @@ import java.util.Date;
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     private double publicQualityScore;
-    private double publicSuitabilityScore;
-
-    /*
-     * Suitability score factors
-     */
-
-    @JsonProperty("sScorePublication")
-    private double sScorePublication;
-    @JsonProperty("sScorePlatformAmount")
-    private double sScorePlatformAmount;
-    @JsonProperty("sScorePlatformTechMulti")
-    private double sScorePlatformsTechMulti;
-    @JsonProperty("sScoreAvgPlatformPopularity")
-    private double sScoreAvgPlatformPopularity;
-    @JsonProperty("sScoreAvgPlatformSize")
-    private double sScoreAvgPlatformSize;
-    @JsonProperty("sScoreSampleSize")
-    private double sScoreSampleSize;
-    @JsonProperty("sScoreRawData")
-    private double sScoreRawData;
-    @JsonProperty("sScoreMissingValues")
-    private double sScoreMissingValues;
 
     /*
      * Quality score factors
@@ -115,16 +94,6 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         super( g );
         this.setPublicQualityScore( g.getDetectedQualityScore(), g.getManualQualityScore(),
                 g.isManualQualityOverride() );
-        this.setPublicSuitabilityScore( g.getDetectedSuitabilityScore(), g.getManualSuitabilityScore(),
-                g.isManualSuitabilityOverride() );
-        this.sScorePublication = g.getsScorePublication();
-        this.sScorePlatformAmount = g.getsScorePlatformAmount();
-        this.sScorePlatformsTechMulti = g.getsScorePlatformsTechMulti();
-        this.sScoreAvgPlatformPopularity = g.getsScoreAvgPlatformPopularity();
-        this.sScoreAvgPlatformSize = g.getsScoreAvgPlatformSize();
-        this.sScoreSampleSize = g.getsScoreSampleSize();
-        this.sScoreRawData = g.getsScoreRawData();
-        this.sScoreMissingValues = g.getsScoreMissingValues();
         this.qScoreOutliers = g.getqScoreOutliers();
         this.qScoreSampleMeanCorrelation = g.getqScoreSampleMeanCorrelation();
         this.qScoreSampleMedianCorrelation = g.getqScoreSampleMedianCorrelation();
@@ -146,92 +115,56 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
         return publicQualityScore;
     }
 
-    public double getPublicSuitabilityScore() {
-        return publicSuitabilityScore;
-    }
-
-
-    @GemmaWebOnly
-    public double getsScorePublication() {
-        return sScorePublication;
-    }
-
-    @GemmaWebOnly
-    public double getsScorePlatformAmount() {
-        return sScorePlatformAmount;
-    }
-
-    @GemmaWebOnly
-    public double getsScorePlatformsTechMulti() {
-        return sScorePlatformsTechMulti;
-    }
-
-    @GemmaWebOnly
-    public double getsScoreAvgPlatformPopularity() {
-        return sScoreAvgPlatformPopularity;
-    }
-
-    @GemmaWebOnly
-    public double getsScoreAvgPlatformSize() {
-        return sScoreAvgPlatformSize;
-    }
-
-    @GemmaWebOnly
-    public double getsScoreSampleSize() {
-        return sScoreSampleSize;
-    }
-
-    @GemmaWebOnly
-    public double getsScoreRawData() {
-        return sScoreRawData;
-    }
-
-    @GemmaWebOnly
-    public double getsScoreMissingValues() {
-        return sScoreMissingValues;
-    }
-
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreOutliers() {
         return qScoreOutliers;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleMeanCorrelation() {
         return qScoreSampleMeanCorrelation;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleMedianCorrelation() {
         return qScoreSampleMedianCorrelation;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreSampleCorrelationVariance() {
         return qScoreSampleCorrelationVariance;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePlatformsTech() {
         return qScorePlatformsTech;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreReplicates() {
         return qScoreReplicates;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScoreBatchInfo() {
         return qScoreBatchInfo;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePublicBatchEffect() {
         return qScorePublicBatchEffect;
     }
 
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.REDUNDANT,
+            comment = "inert: the field carries @JsonProperty, which publishes this score regardless")
     public double getqScorePublicBatchConfound() {
         return qScorePublicBatchConfound;
     }
@@ -259,10 +192,6 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
     private void setPublicQualityScore( double detected, double manual, boolean override ) {
         this.publicQualityScore = override ? manual : detected;
-    }
-
-    private void setPublicSuitabilityScore( double detected, double manual, boolean override ) {
-        this.publicSuitabilityScore = override ? manual : detected;
     }
 
     private void setQScorePublicBatchEffect( double detected, boolean manualStrong, boolean manualNone,

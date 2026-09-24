@@ -80,12 +80,22 @@ public class SlackAppender extends AbstractAppender {
 
     private final String token;
     private final String channel;
+    /**
+     * Whether a usable token was supplied.
+     * <p>
+     * 🛑 An unresolved {@code ${gemma.slack.token}} is not a token. A deployment that does not set
+     * one gets the placeholder verbatim, and every ERROR then became three lines instead of one:
+     * the error, a Slack SDK warning, and {@code auth.test API (error: invalid_auth)} from the
+     * failed post. Measured on frink during the GEO metadata backfill, 2026-08-29.
+     */
+    private final boolean configured;
     private final MessageSource messageSource;
 
     private SlackAppender( final String name, final Filter filter, final boolean ignoreExceptions, final Property[] properties, String token, String channel ) {
         super( name, filter, null, ignoreExceptions, properties );
         this.token = token;
         this.channel = channel;
+        this.configured = token != null && !token.trim().isEmpty() && !token.contains( "${" );
         ReloadableResourceBundleMessageSource bundle = new ReloadableResourceBundleMessageSource();
         bundle.setBasenames( "classpath:ubic/gemma/core/logging/log4j/messages" );
         this.messageSource = bundle;
@@ -98,11 +108,19 @@ public class SlackAppender extends AbstractAppender {
 
     @Override
     public void append( LogEvent loggingEvent ) {
+        if ( !configured ) {
+            // nowhere to post; the event has already gone to the console, the file and the error file
+            return;
+        }
         try {
             Locale locale = Locale.getDefault();
             ChatPostMessageRequest.ChatPostMessageRequestBuilder request = ChatPostMessageRequest.builder()
                     .channel( channel )
                     .metadata( metadataFromLogEvent( loggingEvent ) )
+                    // the blocks carry the real content; `text` is the fallback Slack uses where
+                    // blocks cannot be rendered -- push notifications, screen readers -- and
+                    // omitting it makes the SDK warn on every single post
+                    .text( loggingEvent.getMessage().getFormattedMessage() )
                     .blocks( blocksFromLogEvent( loggingEvent, locale ) );
 
             // attach a stacktrace if available

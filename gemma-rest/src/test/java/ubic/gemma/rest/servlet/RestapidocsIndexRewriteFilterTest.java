@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 public class RestapidocsIndexRewriteFilterTest {
@@ -22,6 +23,8 @@ public class RestapidocsIndexRewriteFilterTest {
         FilterChain filterChain = mock( FilterChain.class );
         new RestapidocsIndexRewriteFilter().doFilter( req, res, filterChain );
         verifyNoInteractions( filterChain );
+        // the forward drops the type DefaultServlet would otherwise set, and nosniff then renders the page as text
+        assertThat( res.getContentType() ).isEqualTo( RestapidocsIndexRewriteFilter.INDEX_CONTENT_TYPE );
     }
 
     @Test

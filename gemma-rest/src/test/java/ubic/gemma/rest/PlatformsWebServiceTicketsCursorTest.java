@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDecisionManager;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
@@ -105,6 +106,13 @@ public class PlatformsWebServiceTicketsCursorTest {
     private AccessDecisionManager accessDecisionManager;
     @Mock
     private TicketService ticketService;
+
+    /** Constructor dependency of TicketsWebService; it resolves ticket-target display labels. */
+
+    @Mock
+
+    private ExpressionExperimentService expressionExperimentService;
+
 
     @InjectMocks
     private TicketsWebService ticketsWebService;

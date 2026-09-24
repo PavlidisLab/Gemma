@@ -153,7 +153,7 @@ public class Histogram {
 
     /**
      * Find the bin below which i% of the values are contained. This is only approximate (especially if the number of
-     * bins is <~100)
+     * bins is &lt;~100)
      * 
      * @param q
      * @return approximate quantile. Passing values of 0 and 100 is equivalent to min() and max() respectively.

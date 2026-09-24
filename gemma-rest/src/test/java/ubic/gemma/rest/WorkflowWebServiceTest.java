@@ -161,10 +161,10 @@ public class WorkflowWebServiceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = ( Map<String, Object> ) entity;
         assertThat( body ).containsEntry( "error", "Disallowed transition" );
-        assertThat( body ).containsEntry( "current_state", "Loaded" );
-        assertThat( body ).containsEntry( "target_state", "Public" );
+        assertThat( body ).containsEntry( "currentState", "Loaded" );
+        assertThat( body ).containsEntry( "targetState", "Public" );
         @SuppressWarnings("unchecked")
-        List<String> allowed = ( List<String> ) body.get( "allowed_next_states" );
+        List<String> allowed = ( List<String> ) body.get( "allowedNextStates" );
         assertThat( allowed ).containsExactly( "Curate" );
     }
 
@@ -181,7 +181,7 @@ public class WorkflowWebServiceTest {
 
     @Test
     public void getWorkflowQueue_missingStateThrows400() {
-        assertThatThrownBy( () -> webService.getWorkflowQueue( null, null, null, null,
+        assertThatThrownBy( () -> webService.getWorkflowQueue( null, null, null, null, null,
                 ubic.gemma.rest.util.args.OffsetArg.valueOf( "0" ),
                 ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ) ) )
                 .isInstanceOf( BadRequestException.class );
@@ -189,7 +189,7 @@ public class WorkflowWebServiceTest {
 
     @Test
     public void getWorkflowQueue_unknownStateThrows400() {
-        assertThatThrownBy( () -> webService.getWorkflowQueue( "NotAState", null, null, null,
+        assertThatThrownBy( () -> webService.getWorkflowQueue( "NotAState", null, null, null, null,
                 ubic.gemma.rest.util.args.OffsetArg.valueOf( "0" ),
                 ubic.gemma.rest.util.args.LimitArg.valueOf( "20" ) ) )
                 .isInstanceOf( BadRequestException.class );

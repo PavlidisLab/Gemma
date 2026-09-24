@@ -18,9 +18,17 @@
          xmlns:owl="http://www.w3.org/2002/07/owl#"
          xmlns:obo="http://purl.obolibrary.org/obo/"
          xmlns:oboInOwl="http://www.geneontology.org/formats/oboInOwl#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
          xml:base="http://purl.obolibrary.org/obo/chebi">
 
-    <owl:Ontology rdf:about="http://purl.obolibrary.org/obo/chebi-mini.owl"/>
+    <!-- Header shaped like real CHEBI's: a release number in owl:versionInfo, the same
+         release as a versionIRI, and a dc:title. The slim extractor must carry these
+         onto its output; see slimCarriesTheSourceOntologyVersion. -->
+    <owl:Ontology rdf:about="http://purl.obolibrary.org/obo/chebi-mini.owl">
+        <owl:versionIRI rdf:resource="http://purl.obolibrary.org/obo/chebi/254/chebi-mini.owl"/>
+        <owl:versionInfo>254</owl:versionInfo>
+        <dc:title>CHEBI mini test fixture</dc:title>
+    </owl:Ontology>
 
     <!-- Object property: has_role (RO:0000087) -->
     <owl:ObjectProperty rdf:about="http://purl.obolibrary.org/obo/RO_0000087">

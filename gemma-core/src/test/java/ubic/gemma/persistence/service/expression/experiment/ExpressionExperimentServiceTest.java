@@ -22,6 +22,7 @@ import ubic.gemma.persistence.service.blacklist.BlacklistedEntityService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.common.measurement.UnitDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
@@ -51,6 +52,21 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         @Bean
         public ExpressionExperimentService expressionExperimentService( ExpressionExperimentDao expressionExperimentDao ) {
             return new ExpressionExperimentServiceImpl( expressionExperimentDao );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService annotationSetService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService.class );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService() {
+            return mock( ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService.class );
+        }
+
+        @Bean
+        public ubic.gemma.core.security.authentication.UserManager userManager() {
+            return mock( ubic.gemma.core.security.authentication.UserManager.class );
         }
 
         @Bean
@@ -139,6 +155,11 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         }
 
         @Bean
+        public ubic.gemma.persistence.service.common.description.PublicationAssociationService publicationAssociationService() {
+            return mock( ubic.gemma.persistence.service.common.description.PublicationAssociationService.class );
+        }
+
+        @Bean
         public PrincipalComponentAnalysisService principalComponentAnalysisService() {
             return mock( PrincipalComponentAnalysisService.class );
         }
@@ -191,6 +212,16 @@ public class ExpressionExperimentServiceTest extends BaseTest5 {
         @Bean
         public AuditTrailService auditTrailService() {
             return mock();
+        }
+
+        @Bean
+        public UnitDao unitDao() {
+            return mock();
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil tableMaintenanceUtil() {
+            return mock( ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.class );
         }
     }
 

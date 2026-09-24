@@ -75,6 +75,11 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     }
 
     @Override
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        return readService.countExperimentsByUris( uris, includeSubjects, includePredicates, includeObjects, taxon, excludedExperimentIds );
+    }
+
+    @Override
     public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults ) {
         return readService.findByParentClasses( parentClasses, includeNoParents, category, maxResults );
     }
@@ -88,6 +93,11 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     @Override
     public Characteristic findBestByUri( String uri ) {
         return readService.findBestByUri( uri );
+    }
+
+    @Override
+    public Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris ) {
+        return readService.findRepresentativeUsageByValueUris( valueUris );
     }
 
     @Override
@@ -113,6 +123,21 @@ public class CharacteristicServiceImpl extends AbstractFilteringVoEnabledService
     @Override
     public Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris ) {
         return readService.findEeCountsByUriGroupedByCategory( uris );
+    }
+
+    @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue ) {
+        return readService.findEeCountsByUriForOriginalValue( uris, originalValue );
+    }
+
+    @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds ) {
+        return readService.findEeCountsByUriForOriginalValue( uris, originalValue, excludedExperimentIds );
+    }
+
+    @Override
+    public List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds ) {
+        return readService.findPriorCurationByOriginalValue( originalValue, maxResults, excludedExperimentIds );
     }
 
     @Override

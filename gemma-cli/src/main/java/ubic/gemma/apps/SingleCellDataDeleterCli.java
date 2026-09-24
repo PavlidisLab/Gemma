@@ -1,6 +1,8 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,10 +65,14 @@ public class SingleCellDataDeleterCli extends ExpressionExperimentVectorsManipul
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
-        options.addOption( DELETE_CELL_TYPE_ASSIGNMENT, "delete-cell-type-assignment", true, "Delete a cell type assignment." );
-        options.addOption( DELETE_ALL_CELL_TYPE_ASSIGNMENT, "delete-all-cell-type-assignments", false, "Delete all cell type assignments." );
-        options.addOption( DELETE_CELL_LEVEL_CHARACTERISTICS, "delete-cell-level-characteristics", true, "Delete a cell-level characteristics identified by its ID or name" );
-        options.addOption( DELETE_ALL_CELL_LEVEL_CHARACTERISTICS, "delete-all-cell-level-characteristics", false, "Delete all cell-level characteristics" );
+        // each option selects a single mode, so combining them is refused at parsing rather than silently dropping all
+        // but the first one
+        OptionGroup modes = new OptionGroup();
+        modes.addOption( new Option( DELETE_CELL_TYPE_ASSIGNMENT, "delete-cell-type-assignment", true, "Delete a cell type assignment." ) );
+        modes.addOption( new Option( DELETE_ALL_CELL_TYPE_ASSIGNMENT, "delete-all-cell-type-assignments", false, "Delete all cell type assignments." ) );
+        modes.addOption( new Option( DELETE_CELL_LEVEL_CHARACTERISTICS, "delete-cell-level-characteristics", true, "Delete a cell-level characteristics identified by its ID or name" ) );
+        modes.addOption( new Option( DELETE_ALL_CELL_LEVEL_CHARACTERISTICS, "delete-all-cell-level-characteristics", false, "Delete all cell-level characteristics" ) );
+        options.addOptionGroup( modes );
     }
 
     @Override

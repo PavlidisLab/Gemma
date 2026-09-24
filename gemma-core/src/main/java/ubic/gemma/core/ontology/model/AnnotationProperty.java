@@ -32,7 +32,28 @@ public interface AnnotationProperty extends OntologyResource {
 
     /**
      * The value associated to this annotation as a string.
+     * <p>
+     * 🛑 When the value is a RESOURCE, this returns its {@code rdfs:label} — not its URI — and null
+     * when the resource carries no label. That indirection is right for display and wrong for
+     * identity: use {@link #getValueUri()} whenever the annotation names a term rather than
+     * describes one.
      */
     @Nullable
     String getContents();
+
+    /**
+     * The URI of this annotation's value when the value is a URI resource, else {@code null}
+     * (literal values, blank nodes).
+     * <p>
+     * Exists because {@link #getContents()} resolves a resource to its label, and a label is not an
+     * identity. MONDO's {@code crossSpeciesExactMatch} is the case that proved it: the mapping
+     * {@code MONDO:0700199 → MONDO:0005061} came back as the string {@code "lung adenocarcinoma"},
+     * which names BOTH {@code MONDO:0005061} (a disease) and {@code HP:0030078} (a phenotype)
+     * equally well. A consumer repairing an annotation from that string can silently land on the
+     * phenotype — worse than not repairing, because it looks like it worked.
+     */
+    @Nullable
+    default String getValueUri() {
+        return null;
+    }
 }

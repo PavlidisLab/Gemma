@@ -41,7 +41,6 @@ import static java.util.Objects.requireNonNull;
  * We have our own implementation of the AclDao in part because of deadlock problems caused by the default JDBC-based
  * spring security DAO. As documented here:
  * <a href="http://www.ericsimmerman.com/2012/06/resolving-spring-security-acl-deadlock.html">...</a>:
- * </p>
  * <blockquote> The default JDBCTemplate based implementation of Spring Security ACLs removes and recreates the entire
  * ACL for each update. That requires both deletes and inserts into the same table within the same JPA transaction and
  * is a recipe for deadlock when using the default MySQL transaction isolation level of REPEATABLE_READ. </blockquote>

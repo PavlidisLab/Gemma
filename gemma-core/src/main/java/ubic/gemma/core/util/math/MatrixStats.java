@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.util.math;
 
+import ubic.gemma.core.architecture.LongComputation;
+
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix1D;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -111,6 +113,7 @@ public class MatrixStats {
      * @param data
      * @return a symmetric matrix that has the rows and columns set to be the names of the rows of the input.
      */
+    @LongComputation("All-pairs correlation; quadratic in the column count.")
     public static <R, C> DoubleMatrix<R, R> correlationMatrix( DoubleMatrix<R, C> data ) {
         DoubleMatrix<R, R> result = new DenseDoubleMatrix<>( data.rows(), data.rows() );
 
@@ -139,6 +142,7 @@ public class MatrixStats {
      * @return a sparse symmetric matrix that has the rows and columns set to be the names of the rows of the input. The
      *         diagonal is set to Double.NaN
      */
+    @LongComputation("All-pairs correlation; quadratic in the column count.")
     public static <R, C> SparseDoubleMatrix<R, R> correlationMatrix( DoubleMatrix<R, C> data, double threshold ) {
         SparseDoubleMatrix<R, R> result = new SparseDoubleMatrix<>( data.rows(), data.rows() );
 
@@ -166,7 +170,7 @@ public class MatrixStats {
     /**
      * Iteratively standardize the columns and rows of the matrix.
      * 
-     * @param data
+     * @param matrix
      */
     public static <R, C> DoubleMatrix<R, C> doubleStandardize( DoubleMatrix<R, C> matrix ) {
         DoubleMatrix<R, C> newMatrix = matrix.copy();
@@ -227,7 +231,7 @@ public class MatrixStats {
      * Log-transform the values in a matrix (log base 2). Values that are less than or equal to zero are left as
      * Double.NaN.
      * 
-     * @param matrixToNormalize
+     * @param matrix
      */
     public static <R, C> void logTransform( DoubleMatrix<R, C> matrix ) {
         for ( int j = 0; j < matrix.rows(); j++ ) {
@@ -374,7 +378,7 @@ public class MatrixStats {
      * 
      * @param <R>
      * @param <C>
-     * @param data
+     * @param matrix
      * @return
      */
     public static <R, C> DoubleMatrix<R, C> standardize( DoubleMatrix<R, C> matrix ) {

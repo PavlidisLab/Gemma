@@ -31,6 +31,8 @@ import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.args.CompositeSequenceArgService;
 import ubic.gemma.rest.util.args.CursorArg;
+import ubic.gemma.rest.util.args.FilterArg;
+import ubic.gemma.rest.util.args.QueryArg;
 import ubic.gemma.rest.util.args.LimitArg;
 import ubic.gemma.rest.util.args.OffsetArg;
 import ubic.gemma.rest.util.args.PlatformArg;
@@ -50,7 +52,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link PlatformsWebService#getPlatformElements(PlatformArg, OffsetArg, LimitArg, CursorArg)} as
+ * {@link PlatformsWebService#getPlatformElements(PlatformArg, OffsetArg, LimitArg, CursorArg, boolean, boolean, QueryArg, FilterArg)} as
  * step 1e of {@code CURSOR_PAGINATION_STEP1_PLAN.md}. Pure Mockito — the goal is to verify the
  * WebService routes cursor vs offset modes to the right helper and emits the right response
  * wrapper, not to retest the DAO (covered by {@code ExpressionExperimentDaoCursorTest} +
@@ -122,9 +124,9 @@ public class PlatformsWebServiceElementsCursorTest {
                 Arrays.asList( cs1, cs2 ),
                 Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
                 0, 20, 2L );
-        when( arrayDesignArgService.getElements( any( PlatformArg.class ), anyInt(), anyInt(), anyBoolean() ) ).thenReturn( slice );
+        when( arrayDesignArgService.getElements( any( PlatformArg.class ), any(), any(), anyInt(), anyInt(), anyBoolean(), anyBoolean() ) ).thenReturn( slice );
 
-        Object response = webService.getPlatformElements( platformArg, offset( "0" ), limit( "20" ), null, false );
+        Object response = webService.getPlatformElements( platformArg, offset( "0" ), limit( "20" ), null, false, false, null, FilterArg.valueOf( "" ) );
 
         assertThat( response ).isInstanceOf( PaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -135,7 +137,7 @@ public class PlatformsWebServiceElementsCursorTest {
         assertThat( page.getLimit() ).isEqualTo( 20 );
         assertThat( page.getTotalElements() ).isEqualTo( 2L );
 
-        verify( arrayDesignArgService, never() ).getElementsByCursor( any( PlatformArg.class ), any(), anyInt(), anyBoolean() );
+        verify( arrayDesignArgService, never() ).getElementsByCursor( any( PlatformArg.class ), any(), any(), any(), anyInt(), anyBoolean(), anyBoolean() );
     }
 
     @Test
@@ -148,10 +150,10 @@ public class PlatformsWebServiceElementsCursorTest {
                 /* nextCursor */ "next-cursor-token",
                 /* prevCursor */ "prev-cursor-token",
                 /* totalElements */ null );
-        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), eq( c ), eq( 20 ), eq( false ) ) ).thenReturn( cp );
+        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), any(), any(), eq( c ), eq( 20 ), eq( false ), eq( false ) ) ).thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getPlatformElements( platformArg, offset( "0" ), limit( "20" ), arg, false );
+        Object response = webService.getPlatformElements( platformArg, offset( "0" ), limit( "20" ), arg, false, false, null, FilterArg.valueOf( "" ) );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -165,7 +167,7 @@ public class PlatformsWebServiceElementsCursorTest {
         assertThat( page.getLimit() ).isEqualTo( 20 );
 
         // offset-mode legacy helper must not be touched
-        verify( arrayDesignArgService, never() ).getElements( any( PlatformArg.class ), anyInt(), anyInt(), anyBoolean() );
+        verify( arrayDesignArgService, never() ).getElements( any( PlatformArg.class ), any(), any(), anyInt(), anyInt(), anyBoolean(), anyBoolean() );
     }
 
     @Test
@@ -176,12 +178,12 @@ public class PlatformsWebServiceElementsCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<CompositeSequenceValueObject> cp = new CursorPage<>(
                 List.of( cs2 ), null, 5, null, "prev", null );
-        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), eq( c ), eq( 5 ), eq( false ) ) ).thenReturn( cp );
+        when( arrayDesignArgService.getElementsByCursor( any( PlatformArg.class ), any(), any(), eq( c ), eq( 5 ), eq( false ), eq( false ) ) ).thenReturn( cp );
 
-        Object response = webService.getPlatformElements( platformArg, offset( "0" ), limit( "5" ), CursorArg.valueOf( c.encode() ), false );
+        Object response = webService.getPlatformElements( platformArg, offset( "0" ), limit( "5" ), CursorArg.valueOf( c.encode() ), false, false, null, FilterArg.valueOf( "" ) );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
-        verify( arrayDesignArgService ).getElementsByCursor( any( PlatformArg.class ), eq( c ), eq( 5 ), eq( false ) );
+        verify( arrayDesignArgService ).getElementsByCursor( any( PlatformArg.class ), any(), any(), eq( c ), eq( 5 ), eq( false ), eq( false ) );
     }
 
     @Test
@@ -192,10 +194,10 @@ public class PlatformsWebServiceElementsCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<CompositeSequenceValueObject> cp = new CursorPage<>(
                 List.of( cs1 ), null, 10, null, null, null );
-        when( arrayDesignArgService.getElementsByCursor( eq( platformArg ), eq( c ), eq( 10 ), eq( false ) ) ).thenReturn( cp );
+        when( arrayDesignArgService.getElementsByCursor( eq( platformArg ), any(), any(), eq( c ), eq( 10 ), eq( false ), eq( false ) ) ).thenReturn( cp );
 
-        webService.getPlatformElements( platformArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ), false );
+        webService.getPlatformElements( platformArg, offset( "0" ), limit( "10" ), CursorArg.valueOf( c.encode() ), false, false, null, FilterArg.valueOf( "" ) );
 
-        verify( arrayDesignArgService ).getElementsByCursor( eq( platformArg ), eq( c ), eq( 10 ), eq( false ) );
+        verify( arrayDesignArgService ).getElementsByCursor( eq( platformArg ), any(), any(), eq( c ), eq( 10 ), eq( false ), eq( false ) );
     }
 }

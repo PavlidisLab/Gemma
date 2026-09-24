@@ -259,4 +259,49 @@ public class CompletionsWebServiceTest {
                 .extracting( CompletionValueObject::getValue )
                 .containsExactly( "CL:0000084" );
     }
+
+    /**
+     * 🛑 The picker must not hand out a term the read path is going to rewrite.
+     * <p>
+     * The corpus stores {@code CLO_0007365} "LNCAP cell" and every read serves
+     * {@code CLO_0037116} "LNCaP cell". Suggesting the stored spelling is how new rows in the
+     * retired form kept being written: the curator picks it, it is saved verbatim, and the design
+     * tab renders the other one back. Reported by uib as one value rendering two names, 2026-08-28.
+     */
+    @Test
+    public void testTheRetiredSpellingIsNotSuggested() {
+        TreeMap<String, String> uriToLabel = new TreeMap<>();
+        uriToLabel.put( "http://purl.obolibrary.org/obo/CLO_0007365", "LNCAP cell" );
+        when( characteristicService.findValueGroupedByValueUri( null, true, false, true, -1 ) )
+                .thenReturn( uriToLabel );
+
+        ResponseDataObject<List<CompletionValueObject>> resp = webService.getOntologyTermCompletions( "", 50 );
+
+        assertThat( resp.getData() )
+                .extracting( CompletionValueObject::getValue )
+                .contains( "http://purl.obolibrary.org/obo/CLO_0037116", "CLO:0037116" )
+                .doesNotContain( "http://purl.obolibrary.org/obo/CLO_0007365", "CLO:0007365" );
+        assertThat( resp.getData() )
+                .extracting( CompletionValueObject::getDescription )
+                .as( "the label moves with the URI" )
+                .contains( "LNCaP cell" );
+    }
+
+    /**
+     * ...and typing the retired id still finds the term. Matching on the canonical spelling alone
+     * would answer a well-formed lookup with nothing at all.
+     */
+    @Test
+    public void testTypingTheRetiredIdStillFindsTheTerm() {
+        TreeMap<String, String> uriToLabel = new TreeMap<>();
+        uriToLabel.put( "http://purl.obolibrary.org/obo/CLO_0007365", "LNCAP cell" );
+        when( characteristicService.findValueGroupedByValueUri( null, true, false, true, -1 ) )
+                .thenReturn( uriToLabel );
+
+        ResponseDataObject<List<CompletionValueObject>> resp = webService.getOntologyTermCompletions( "CLO:0007365", 50 );
+
+        assertThat( resp.getData() )
+                .extracting( CompletionValueObject::getValue )
+                .containsExactly( "CLO:0037116" );
+    }
 }

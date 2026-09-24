@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.report;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -38,6 +38,11 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
@@ -60,7 +65,14 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * shared or mounted from less-trusted storage.
      */
     private static final ObjectInputFilter REPORT_DESERIALIZATION_FILTER = ObjectInputFilter.Config.createFilter(
-            "ubic.gemma.**;java.util.**;java.lang.**;java.time.**;java.math.**;java.sql.**;!*" );
+            // java.net.** is required, not optional: ArrayDesignValueObject.releaseUrl is a
+            // java.net.URL and is populated for every platform carrying a GPL accession, i.e.
+            // nearly all of them. Without it the filter rejects the stream, getSummaryObject
+            // swallows the InvalidClassException and returns null, and every consumer sees "no
+            // report" for a report that is present, readable and correctly written. That failed
+            // silently for as long as nothing read these files; exposing the counts over REST is
+            // what surfaced it.
+            "ubic.gemma.**;java.util.**;java.lang.**;java.net.**;java.time.**;java.math.**;java.sql.**;!*" );
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -77,6 +89,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     private static final List<Class<? extends AuditEventType>> eventTypes = Arrays.asList(
             ArrayDesignSequenceUpdateEvent.class, ArrayDesignSequenceAnalysisEvent.class,
             ArrayDesignGeneMappingEvent.class, ArrayDesignRepeatAnalysisEvent.class );
+
+    @Override
+    public String getReportDir() {
+        return appdataHome + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR;
+    }
 
     @Override
     public void generateAllArrayDesignReport() {
@@ -99,24 +116,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 
-        // remove file first
-        File f = new File( appdataHome + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
-        if ( f.exists() ) {
-            if ( !f.canWrite() || !f.delete() ) {
-                ArrayDesignReportServiceImpl.log.warn( "Cannot write to file." );
-                return;
-            }
-        }
-        try ( FileOutputStream fos = new FileOutputStream( appdataHome + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
-                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
-            oos.writeObject( adVo );
-        } catch ( Throwable e ) {
-            // cannot write to file. Just fail gracefully.
-            ArrayDesignReportServiceImpl.log.error( "Cannot write to file." );
+        Path f = Paths.get( appdataHome, ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR,
+                ArrayDesignReportServiceImpl.ARRAY_DESIGN_SUMMARY );
+        try {
+            writeReport( f, adVo );
+        } catch ( IOException e ) {
+            throw new UncheckedIOException( "Failed to write the all-platforms report to " + f, e );
         }
         ArrayDesignReportServiceImpl.log.info( "Done making reports" );
     }
@@ -129,7 +134,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
         ArrayDesignReportServiceImpl.log.info( "Creating reports for " + ads.size() + " platforms" );
         for ( ArrayDesignValueObject ad : ads ) {
-            this.generateArrayDesignReport( ad );
+            try {
+                this.generateArrayDesignReport( ad );
+            } catch ( UncheckedIOException e ) {
+                // one platform's report must not stop the others
+                ArrayDesignReportServiceImpl.log.error( e.getMessage(), e.getCause() );
+            }
         }
 
         ArrayDesignReportServiceImpl.log.info( "Generating global report" );
@@ -160,38 +170,38 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 
-        // check the directory exists.
-        String reportDir = appdataHome + File.separatorChar
-                + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR;
-        File reportDirF = new File( reportDir );
+        Path f = Paths.get( appdataHome, ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_DIR,
+                ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + adVo.getId() );
         try {
-            FileUtils.forceMkdir( reportDirF );
+            writeReport( f, adVo );
         } catch ( IOException e ) {
-            log.error( "Failed to create report parent directory: " + reportDirF );
-            return;
-        }
-
-        String reportFileName =
-                reportDir + File.separatorChar + ArrayDesignReportServiceImpl.ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
-                        + adVo.getId();
-        File f = new File( reportFileName );
-
-        if ( f.exists() ) {
-            if ( !f.canWrite() || !f.delete() ) {
-                ArrayDesignReportServiceImpl.log
-                        .warn( "Report exists but cannot overwrite, leaving the old one in place: " + reportFileName );
-                return;
-            }
-        }
-
-        try ( FileOutputStream fos = new FileOutputStream( reportFileName );
-                ObjectOutputStream oos = new ObjectOutputStream( fos ) ) {
-            oos.writeObject( adVo );
-        } catch ( Throwable e ) {
-            ArrayDesignReportServiceImpl.log.error( "Cannot write to file: " + reportFileName, e );
-            return;
+            throw new UncheckedIOException( "Failed to write the report for " + ad + " to " + f, e );
         }
         ArrayDesignReportServiceImpl.log.info( "Generated report for " + ad );
+    }
+
+    /**
+     * Write a report next to its final location and move it into place, so that a failed write leaves the previous
+     * report (if any) untouched rather than deleted or truncated.
+     */
+    private static void writeReport( Path target, Serializable report ) throws IOException {
+        Files.createDirectories( target.getParent() );
+        // not Files.createTempFile(), which creates the file readable by its owner only (0600); the report keeps the
+        // permissions the umask gives, as the previous in-place write did
+        Path tmp = target.resolveSibling( target.getFileName() + "." + UUID.randomUUID() + ".tmp" );
+        try {
+            try ( ObjectOutputStream oos = new ObjectOutputStream( Files.newOutputStream( tmp, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE ) ) ) {
+                oos.writeObject( report );
+            }
+            Files.move( tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE );
+        } catch ( IOException | RuntimeException e ) {
+            try {
+                Files.deleteIfExists( tmp );
+            } catch ( IOException e2 ) {
+                e.addSuppressed( e2 );
+            }
+            throw e;
+        }
     }
 
     @Override
@@ -199,7 +209,15 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Collection<ArrayDesignValueObject> adVo = arrayDesignService
                 .loadValueObjectsByIds( Collections.singleton( id ) );
         if ( adVo != null && !adVo.isEmpty() ) {
-            this.generateArrayDesignReport( adVo.iterator().next() );
+            try {
+                this.generateArrayDesignReport( adVo.iterator().next() );
+            } catch ( UncheckedIOException e ) {
+                // Most callers regenerate the report as a side effect of other work (sometimes inside a transaction),
+                // which a report that cannot be written must not undo. Callers that need to know use
+                // generateArrayDesignReport(ArrayDesignValueObject), which throws.
+                ArrayDesignReportServiceImpl.log.error( e.getMessage(), e.getCause() );
+                return null;
+            }
             return this.getSummaryObject( id );
         }
         ArrayDesignReportServiceImpl.log.warn( "No value objects return for requested platforms" );
@@ -224,6 +242,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
 
             } catch ( Throwable e ) {
+                // Deliberately broad, but no longer silent: a report that exists and cannot be read
+                // is a different problem from one that was never generated, and the caller cannot
+                // tell them apart from a null return.
+                log.warn( String.format( "Failed to read the cached report for platform %d from %s: %s",
+                        id, f, ExceptionUtils.getRootCauseMessage( e ) ) );
                 return null;
             }
         }
@@ -391,15 +414,45 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             if ( origVo == null )
                 continue;
             ArrayDesignValueObject cachedVo = this.getSummaryObject( origVo.getId() );
-            if ( cachedVo != null ) {
-                origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
-                origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
-                origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() );
-                origVo.setNumGenes( cachedVo.getNumGenes() );
-                origVo.setDateCached( cachedVo.getDateCached() );
-                origVo.setDesignElementCount( cachedVo.getDesignElementCount() );
+            if ( cachedVo == null ) {
+                continue;
             }
+            if ( isForADifferentPlatform( origVo, cachedVo ) ) {
+                log.warn( String.format(
+                        "The cached report at id %d was written for %s but %s holds that id now; ignoring it.",
+                        origVo.getId(), cachedVo.getShortName(), origVo.getShortName() ) );
+                continue;
+            }
+            origVo.setNumProbeSequences( cachedVo.getNumProbeSequences() );
+            origVo.setNumProbeAlignments( cachedVo.getNumProbeAlignments() );
+            origVo.setNumProbesToGenes( cachedVo.getNumProbesToGenes() );
+            origVo.setNumGenes( cachedVo.getNumGenes() );
+            origVo.setDateCached( cachedVo.getDateCached() );
+            origVo.setDesignElementCount( cachedVo.getDesignElementCount() );
         }
+    }
+
+    /**
+     * Whether a cached report belongs to a platform other than the one it is about to be applied to.
+     * <p>
+     * A report is one file per database id ({@code ArrayDesignReport.<id>}) and carries no back-reference to its
+     * platform beyond that filename. So whenever an id comes to mean a different platform than it did when the
+     * report was written, the report is applied to the wrong platform — and silently, because the counts are
+     * plausible numbers either way. Two ways that happens: an appdata home that outlives the database it was
+     * written against (a recreated {@code gemdtest} restarts the auto-increment sequence), and one appdata home
+     * shared by two deployments, which have independent sequences to begin with.
+     * <p>
+     * Observed 2026-08-26 rather than imagined: {@code PlatformsWebServiceTest} asserted that a freshly seeded
+     * microarray with no report has null gene counts, and read 0 — out of a two-day-old report for a different
+     * test platform that had held the same id in a previous {@code gemdtest}.
+     * <p>
+     * Short name is the check: it is the platform's stable public identifier (GPL96) and every report carries it.
+     * When either side has none the report is accepted, because the point is to catch a mismatch rather than an
+     * unknown, and refusing on absence would drop reports written before the field was captured.
+     */
+    private static boolean isForADifferentPlatform( ArrayDesignValueObject origVo, ArrayDesignValueObject cachedVo ) {
+        return origVo.getShortName() != null && cachedVo.getShortName() != null
+                && !origVo.getShortName().equals( cachedVo.getShortName() );
     }
 
     @Override

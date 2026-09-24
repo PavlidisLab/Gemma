@@ -170,7 +170,7 @@ class ExpressionExperimentFilterRewriteHelperService {
         } else if ( subClause.getOperator() == Filter.Operator.notEq
                 || subClause.getOperator() == Filter.Operator.notIn
                 // handle subqueries with a non-nested clause
-                || ( subClause.getRequiredValue() instanceof Subquery && eqOrIn( ( ( Subquery ) subClause.getRequiredValue() ).getFilter() ) ) ) {
+                || ( isRewritableSubquery( subClause.getRequiredValue() ) && eqOrIn( ( ( Subquery ) subClause.getRequiredValue() ).getFilter() ) ) ) {
             boolean inSubquery;
             boolean inClause;
             if ( subClause.getRequiredValue() instanceof Subquery ) {
@@ -207,7 +207,19 @@ class ExpressionExperimentFilterRewriteHelperService {
     private boolean canBeGroupedWithOtherSubClauses( Filter filter ) {
         return filter.getOperator() == Filter.Operator.eq
                 || filter.getOperator() == Filter.Operator.in
-                || ( filter.getOperator() == Filter.Operator.inSubquery && filter.getRequiredValue() instanceof Subquery && canBeGroupedWithOtherSubClauses( ( ( Subquery ) filter.getRequiredValue() ).getFilter() ) );
+                || ( filter.getOperator() == Filter.Operator.inSubquery && isRewritableSubquery( filter.getRequiredValue() ) && canBeGroupedWithOtherSubClauses( ( ( Subquery ) filter.getRequiredValue() ).getFilter() ) );
+    }
+
+    /**
+     * Whether a subquery right-hand side can take part in the inference rewrite.
+     * <p>
+     * A subquery carrying CONJOINED filters cannot: the rewrite unnests one inner filter and rebuilds
+     * the clause around it, which would silently drop the other conjuncts and widen the query — a
+     * "this gene URI as a genotype" filter would come back meaning "this gene URI anywhere". Such
+     * clauses are passed through untouched, so they simply do not gain inferred terms.
+     */
+    private static boolean isRewritableSubquery( @Nullable Object requiredValue ) {
+        return requiredValue instanceof Subquery && ( ( Subquery ) requiredValue ).getFilters().size() == 1;
     }
 
     private boolean eqOrIn( Filter filter ) {

@@ -30,7 +30,6 @@ import ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.visualization.ChartThemeUtils;
-import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -62,8 +61,6 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
 
     // uris checked Aug 2024.
     public static final String COLLECTION_OF_MATERIAL_URI = "http://www.ebi.ac.uk/efo/EFO_0005066";
-    public static final String DE_EXCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00014";
-    public static final String DE_INCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00013";
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -199,7 +196,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      * Restore the outliers by basically overwriting the original matrix with the corrected values, leaving outlier samples as they were.
      * This is a lot easier than starting over with a new matrix.
      *
-     * @return the originalDataMatrix with the corrected values now plugged in, or, if no outliers were present, the correctedMatrix because why not.s
+     * @return the originalDataMatrix with the corrected values now plugged in and the batch-corrected quantitation
+     * types applied, or, if no outliers were present, the correctedMatrix because why not.
      */
     private ExpressionDataDoubleMatrix restoreOutliers( ExpressionDataDoubleMatrix originalDataMatrix, ExpressionDataDoubleMatrix correctedMatrix ) {
         if ( originalDataMatrix.getBioAssayDimension().getBioAssays().size() == correctedMatrix.columns() ) {
@@ -234,7 +232,19 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
             }
         }
 
-        return originalDataMatrix;
+        // the values are ComBat's now, so the matrix has to carry ComBat's quantitation types. Handing back
+        // originalDataMatrix as-is keeps the original QT, whose isBatchCorrected is false, and the caller rejects it.
+        Map<QuantitationType, QuantitationType> correctedQts = new HashMap<>();
+        for ( CompositeSequence designElement : originalDataMatrix.getDesignElements() ) {
+            QuantitationType originalQt = originalDataMatrix.getQuantitationType( designElement );
+            QuantitationType correctedQt = correctedMatrix.getQuantitationType( designElement );
+            if ( originalQt == null || correctedQt == null ) {
+                throw new IllegalStateException( "Missing a quantitation type for " + designElement + " while restoring outliers." );
+            }
+            correctedQts.put( originalQt, correctedQt );
+        }
+
+        return originalDataMatrix.withMatrix( originalDataMatrix.getMatrix(), correctedQts );
     }
 
     /**
@@ -404,15 +414,9 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      * @return true if the factor should be used in the model for batch correction
      */
     private boolean retainForBatchCorrection( ExperimentalFactor ef ) {
-        if ( ef.getCategory() != null && COLLECTION_OF_MATERIAL_URI.equals( ef.getCategory().getCategoryUri() ) ) {
-            for ( FactorValue fv : ef.getFactorValues() ) {
-                for ( Characteristic c : fv.getCharacteristics() ) {
-                    if ( c.getValueUri() != null && ( c.getValueUri().equals( DE_EXCLUDE_URI ) || c.getValueUri().equals( DE_INCLUDE_URI ) ) ) {
-                        log.info( "Dropping factor " + ef.getName() + " from batch correction model because it is for DE_Exclude/Include" );
-                        return false;
-                    }
-                }
-            }
+        if ( ExperimentFactorUtils.isDeIncludeExcludeFactor( ef ) ) {
+            log.info( "Dropping factor " + ef.getName() + " from batch correction model because it is for DE_Exclude/Include" );
+            return false;
         }
         log.info( "Retaining factor " + ef.getName() + " for batch correction model" );
         return true;

@@ -29,6 +29,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
@@ -77,6 +79,7 @@ public class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultS
      * proactive loading; @Immutable retained.
      */
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "RESULT_SET_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "HIT_LIST_SIZE_RESULT_SET_FKC"))
     @Immutable

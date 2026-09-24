@@ -89,7 +89,7 @@ public interface BaseDao<T extends Identifiable> {
      *
      * @param ids the IDs of entities to be loaded. If some IDs are not found or null, they are skipped.
      * @return collection of entities with given ids.
-     * @see org.hibernate.Session#get(Class, Serializable)
+     * @see org.hibernate.Session#get(Class, Object)
      */
     Collection<T> load( Collection<Long> ids );
 
@@ -98,7 +98,7 @@ public interface BaseDao<T extends Identifiable> {
      *
      * @param id the id of entity to load.
      * @return the entity with given ID, or null if such entity does not exist or if the passed ID was null
-     * @see org.hibernate.Session#get(Class, Serializable)
+     * @see org.hibernate.Session#get(Class, Object)
      */
     @Nullable
     T load( Long id );

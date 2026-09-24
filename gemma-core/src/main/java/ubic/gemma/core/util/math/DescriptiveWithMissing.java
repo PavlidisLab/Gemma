@@ -240,10 +240,10 @@ public class DescriptiveWithMissing {
     /**
      * Returns the geometric mean of a data sequence. Missing values are ignored. Note that for a geometric mean to be
      * meaningful, the minimum of the data sequence must not be less or equal to zero. <br>
-     * The geometric mean is given by <tt>pow( Product( data[i] ),
-     * 1/data.size())</tt>. This method tries to avoid overflows at the expense of an equivalent but somewhat slow
-     * definition: <tt>geo = Math.exp( Sum(
-     * Log(data[i]) ) / data.size())</tt>.
+     * The geometric mean is given by {@code pow( Product( data[i] ),
+     * 1/data.size())}. This method tries to avoid overflows at the expense of an equivalent but somewhat slow
+     * definition: {@code geo = Math.exp( Sum(
+     * Log(data[i]) ) / data.size())}.
      *
      * @param data DoubleArrayList
      * @return double
@@ -253,8 +253,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the kurtosis (aka excess) of a data sequence, which is <tt>-3 +
-     * moment(data,4,mean) / standardDeviation<sup>4</sup></tt>.
+     * Returns the kurtosis (aka excess) of a data sequence, which is {@code -3 +
+     * moment(data,4,mean) / standardDeviation<sup>4</sup>}.
      *
      * @param data              DoubleArrayList
      * @param mean              double
@@ -400,9 +400,9 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the moment of <tt>k</tt> -th order with constant <tt>c</tt> of a data sequence, which is
-     * <tt>Sum( (data[i]-c)<sup>k</sup> ) /
-     * data.size()</tt>.
+     * Returns the moment of {@code k} -th order with constant {@code c} of a data sequence, which is
+     * {@code Sum( (data[i]-c)<sup>k</sup> ) /
+     * data.size()}.
      *
      * @param data DoubleArrayList
      * @param k    int
@@ -414,8 +414,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the product of a data sequence, which is <tt>Prod( data[i] )</tt>. Missing values are ignored. In other
-     * words: <tt>data[0]*data[1]*...*data[data.size()-1]</tt>. Note that you may easily get numeric overflows.
+     * Returns the product of a data sequence, which is {@code Prod( data[i] )}. Missing values are ignored. In other
+     * words: {@code data[0]*data[1]*...*data[data.size()-1]}. Note that you may easily get numeric overflows.
      *
      * @param data DoubleArrayList
      * @return double
@@ -436,12 +436,12 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the <tt>phi-</tt> quantile; that is, an element <tt>elem</tt> for which holds that <tt>phi</tt> percent
-     * of data elements are less than <tt>elem</tt>. Missing values are ignored. The quantile need not necessarily be
+     * Returns the {@code phi-} quantile; that is, an element {@code elem} for which holds that {@code phi} percent
+     * of data elements are less than {@code elem}. Missing values are ignored. The quantile need not necessarily be
      * contained in the data sequence, it can be a linear interpolation.
      *
      * @param data the data sequence, does not have to be sorted.
-     * @param phi  the percentage; must satisfy <tt>0 &lt;= phi &lt;= 1</tt>.
+     * @param phi  the percentage; must satisfy {@code 0 &lt;= phi &lt;= 1}.
      * @return double
      * @todo possibly implement so a copy is not made.
      */
@@ -452,13 +452,13 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns how many percent of the elements contained in the receiver are <tt>&lt;= element</tt>. Does linear
+     * Returns how many percent of the elements contained in the receiver are {@code &lt;= element}. Does linear
      * interpolation if the element is not contained but lies in between two contained elements. Missing values are
      * ignored.
      *
      * @param data    the list to be searched
      * @param element the element to search for.
-     * @return the percentage <tt>phi</tt> of elements <tt>&lt;= element</tt>(<tt>0.0 &lt;= phi &lt;= 1.0)</tt>.
+     * @return the percentage {@code phi} of elements {@code &lt;= element}({@code 0.0 &lt;= phi &lt;= 1.0)}.
      */
     public static double quantileInverse( DoubleArrayList data, double element ) {
         data = data.copy();
@@ -472,7 +472,7 @@ public class DescriptiveWithMissing {
      *
      * @param data        the data sequence; does not have to be sorted
      * @param percentages the percentages for which quantiles are to be computed. Each percentage must be in the
-     *                    interval <tt>[0.0,1.0]</tt>.
+     *                    interval {@code [0.0,1.0]}.
      * @return the quantiles.
      */
     public static DoubleArrayList quantiles( DoubleArrayList data, DoubleArrayList percentages ) {
@@ -488,8 +488,8 @@ public class DescriptiveWithMissing {
 
     /**
      * Returns the linearly interpolated number of elements in a list less or equal to a given element. Missing values
-     * are ignored. The rank is the number of elements <= element. Ranks are of the form
-     * <tt>{0, 1, 2,..., sortedList.size()}</tt>. If no element is <= element, then the rank is zero. If the element
+     * are ignored. The rank is the number of elements &lt;= element. Ranks are of the form
+     * {@code {0, 1, 2,..., sortedList.size()}}. If no element is &lt;= element, then the rank is zero. If the element
      * lies in between two contained elements, then linear interpolation is used and a non integer value is returned.
      *
      * @param data    the list to be searched, does not have to be sorted
@@ -528,8 +528,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the sample variance of a data sequence. That is <tt>Sum (
-     * (data[i]-mean)^2 ) / (data.size()-1)</tt>.
+     * Returns the sample variance of a data sequence. That is {@code Sum (
+     * (data[i]-mean)^2 ) / (data.size()-1)}.
      *
      * @param data DoubleArrayList
      * @param mean double
@@ -554,8 +554,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the skew of a data sequence, which is <tt>moment(data,3,mean) /
-     * standardDeviation<sup>3</sup></tt>.
+     * Returns the skew of a data sequence, which is {@code moment(data,3,mean) /
+     * standardDeviation<sup>3</sup>}.
      *
      * @param data              DoubleArrayList
      * @param mean              double
@@ -579,13 +579,13 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Modifies a data sequence to be standardized. Missing values are ignored. Changes each element <tt>data[i]</tt> as
-     * follows: <tt>data[i] = (data[i]-mean)/standardDeviation</tt> unless the standard deviation is 0.00 or very close to zero (indicating the data are constant),
+     * Modifies a data sequence to be standardized. Missing values are ignored. Changes each element {@code data[i]} as
+     * follows: {@code data[i] = (data[i]-mean)/standardDeviation} unless the standard deviation is 0.00 or very close to zero (indicating the data are constant),
      * in which case we return a vector of zeros (in effect just doing mean subtraction)
      *
      * @param data              DoubleArrayList
      * @param mean              mean of data
-     * @param standardDeviation stdev of data. |stdev| < Constants.TINY is treated as zero.
+     * @param standardDeviation stdev of data. |stdev| &lt; Constants.TINY is treated as zero.
      */
     public static void standardize( DoubleArrayList data, double mean, double standardDeviation ) {
         double[] elements = data.elements();
@@ -609,7 +609,7 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the sum of a data sequence. That is <tt>Sum( data[i] )</tt>.
+     * Returns the sum of a data sequence. That is {@code Sum( data[i] )}.
      *
      * @param data DoubleArrayList
      * @return double
@@ -619,8 +619,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the sum of inversions of a data sequence, which is <tt>Sum( 1.0 /
-     * data[i])</tt>.
+     * Returns the sum of inversions of a data sequence, which is {@code Sum( 1.0 /
+     * data[i])}.
      *
      * @param data the data sequence.
      * @param from the index of the first data element (inclusive).
@@ -632,8 +632,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the sum of logarithms of a data sequence, which is <tt>Sum(
-     * Log(data[i])</tt>. Missing values are ignored.
+     * Returns the sum of logarithms of a data sequence, which is {@code Sum(
+     * Log(data[i])}. Missing values are ignored.
      *
      * @param data the data sequence.
      * @param from the index of the first data element (inclusive).
@@ -653,8 +653,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns <tt>Sum( (data[i]-c)<sup>k</sup> )</tt>; optimized for common parameters like <tt>c == 0.0</tt> and/or
-     * <tt>k == -2 .. 4</tt>.
+     * Returns {@code Sum( (data[i]-c)<sup>k</sup> )}; optimized for common parameters like {@code c == 0.0} and/or
+     * {@code k == -2 .. 4}.
      *
      * @param data DoubleArrayList
      * @param k    int
@@ -666,8 +666,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns <tt>Sum( (data[i]-c)<sup>k</sup> )</tt> for all <tt>i = from ..
-     * to</tt>; optimized for common parameters like <tt>c == 0.0</tt> and/or <tt>k == -2 .. 5</tt>. Missing values are
+     * Returns {@code Sum( (data[i]-c)<sup>k</sup> )} for all {@code i = from ..
+     * to}; optimized for common parameters like {@code c == 0.0} and/or {@code k == -2 .. 5}. Missing values are
      * ignored.
      *
      * @param data DoubleArrayList
@@ -833,8 +833,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the sum of powers of a data sequence, which is <tt>Sum (
-     * data[i]<sup>k</sup> )</tt>.
+     * Returns the sum of powers of a data sequence, which is {@code Sum (
+     * data[i]<sup>k</sup> )}.
      *
      * @param data DoubleArrayList
      * @param k    int
@@ -890,8 +890,8 @@ public class DescriptiveWithMissing {
     }
 
     /**
-     * Returns the weighted mean of a data sequence. That is <tt> Sum (data[i] *
-     * weights[i]) / Sum ( weights[i] )</tt>.
+     * Returns the weighted mean of a data sequence. That is {@code  Sum (data[i] *
+     * weights[i]) / Sum ( weights[i] )}.
      *
      * @param data    DoubleArrayList
      * @param weights DoubleArrayList

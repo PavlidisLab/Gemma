@@ -1,5 +1,12 @@
 # Workflow Groups CRUD + `/datasets/{id}/groups` — Reconnaissance
 
+> **Still unbuilt as of 2026-08-11** — no `WORKFLOW_GROUP` table or entity
+> exists on `phase2-acl-migrate`. A hand-curated "review" group and the
+> computed curator queue in
+> [`WORKFLOW_STATE_TRACKS_RECCE.md`](WORKFLOW_STATE_TRACKS_RECCE.md) §7 are
+> complementary queue surfaces; read that before building this one so the two
+> do not diverge.
+
 **Status:** recce only. No production code touched.
 **Scope:** Curation-UI top-3 blocker #2, set-navigator panel (the primary
 in-batch navigation UI). Per `CURATION_UI_HANDOFF_INVENTORY.md` row 18 +
@@ -187,14 +194,32 @@ Rationale:
 
 ### Migration files
 
-- `gemma-core/src/main/resources/db/migration/mysql/V4__workflow_groups.sql`
-  (next free: V1 baseline, V2 audit_event_payload, V3 ticket_layer.)
-- `gemma-core/src/main/resources/db/migration/h2/V6__workflow_groups.sql`
-  (next free after V5 ticket_layer.)
+- `gemma-core/src/main/resources/db/migration/mysql/V<next>__workflow_groups.sql`
+- `gemma-core/src/main/resources/db/migration/h2/V<next>__workflow_groups.sql`
 
-Both write the same DDL in their respective dialects. Existing
-sister-pair pattern (V4__audit_event_payload.sql ↔ V2__audit_event_payload.sql)
-is the template.
+🛑 **Do not copy a version number out of this doc.** The two dialect
+directories advance independently and both have moved since this recce
+was written — resolve `<next>` at implementation time:
+
+```bash
+ls gemma-core/src/main/resources/db/migration/mysql/ | sort -V | tail -1
+ls gemma-core/src/main/resources/db/migration/h2/    | sort -V | tail -1
+```
+
+As of 2026-08-12 the tails are `mysql/V24__investigation_source_metadata.sql`
+and `h2/V25__investigation_source_metadata.sql`, so the pair would land at
+mysql **V25** / h2 **V26** — the same logical change gets different `V`
+numbers in each dialect, which is normal here.
+
+Both write the same DDL in their respective dialects. The
+`V24__investigation_source_metadata.sql` ↔ `V25__investigation_source_metadata.sql`
+sister pair is the template.
+
+`EXPERIMENT_FK` references `INVESTIGATION (ID)` on purpose, not a
+notional `EXPRESSION_EXPERIMENT` table: EE is a joined subclass and
+`INVESTIGATION` carries the ID. Verified 2026-08-12 — every existing
+EE-referencing migration (`V7`, `V11`, `V12`, `V18`, `V20`, `V23`) does
+the same.
 
 ---
 

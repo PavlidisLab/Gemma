@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.util.RoundingUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.genome.Gene;
 
@@ -39,7 +40,7 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
     /**
      * Variant that carries per-gene differential-expression statistics for the contrast represented by the
-     * result-set used to build the response. See {@link #geneOfficialName} accessors on
+     * result-set used to build the response. See {@code geneOfficialName} accessors on
      * {@link GeneElementExpressionsValueObject} for the exposed fields.
      */
     public ExperimentExpressionLevelsValueObject( long datasetId,
@@ -59,6 +60,24 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
                                 stats != null ? stats.log2FoldChange : null,
                                 vpgEntry.getValue(), keepGeneNonSpecific, conslidationMode ) );
             }
+        }
+    }
+
+    /**
+     * Round every expression value and per-gene statistic in this response to
+     * {@link RoundingUtils#JSON_SIGNIFICANT_DIGITS} significant digits.
+     * <p>
+     * Gemma's expression data descends from 16-bit measurements and these values are plotted rather than
+     * recomputed from; the digits this drops are also incompressible, so they cost the most on the largest
+     * responses. The REST layer applies this unless the caller asks for {@code precise=true}.
+     * <p>
+     * Mutates in place. That is safe here and only here: the producer builds a fresh value object per
+     * request, and {@code VectorElementValueObject} copies each vector's values into its own map, so the
+     * cached {@link DoubleVectorValueObject} arrays are never reached.
+     */
+    public void roundValuesForJson() {
+        for ( GeneElementExpressionsValueObject gene : geneExpressionLevels ) {
+            gene.roundValuesForJson();
         }
     }
 
@@ -185,6 +204,15 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             return elements;
         }
 
+        void roundValuesForJson() {
+            this.correctedPvalue = RoundingUtils.round( this.correctedPvalue );
+            this.pvalue = RoundingUtils.round( this.pvalue );
+            this.log2FoldChange = RoundingUtils.round( this.log2FoldChange );
+            for ( VectorElementValueObject element : elements ) {
+                element.roundValuesForJson();
+            }
+        }
+
         private VectorElementValueObject pickMax( List<DoubleVectorValueObject> vectors ) {
             if ( vectors == null || vectors.size() <= 1 ) {
                 throw new IllegalArgumentException( GeneElementExpressionsValueObject.MSG_ERR_VECS_MAX );
@@ -272,6 +300,20 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
     public static class VectorElementValueObject implements Serializable {
         private String designElementName;
         private Map<String, Double> bioAssayExpressionLevels = new HashMap<>();
+        /**
+         * Stored expression-level rank of this vector, by mean and by max, in [0, 1].
+         * <p>
+         * 🛑 Experiment-scoped: computed over the whole experiment when the vectors were
+         * processed, and reported unchanged however the request narrowed the samples. Use for
+         * "is this probe generally expressed in this study", not to order what was returned.
+         * {@code null} when the vector did not come from processed data, and on a sliced vector —
+         * {@code DoubleVectorValueObject.slice} drops the ranks rather than carry a number that
+         * no longer describes its data.
+         */
+        @Nullable
+        private Double rankByMean;
+        @Nullable
+        private Double rankByMax;
 
         public VectorElementValueObject() {
             super();
@@ -279,6 +321,8 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
 
         public VectorElementValueObject( DoubleVectorValueObject vector ) {
             this.designElementName = vector.getDesignElement().getName();
+            this.rankByMean = vector.getRankByMean();
+            this.rankByMax = vector.getRankByMax();
             this.extractProbeLevels( vector );
         }
 
@@ -287,6 +331,10 @@ public class ExperimentExpressionLevelsValueObject implements Serializable {
             for ( Map.Entry<String, Double> entry : bioAssayValues.entrySet() ) {
                 bioAssayExpressionLevels.put( entry.getKey(), entry.getValue() );
             }
+        }
+
+        void roundValuesForJson() {
+            bioAssayExpressionLevels.replaceAll( ( bioAssayName, level ) -> RoundingUtils.round( level ) );
         }
 
         private void extractProbeLevels( DoubleVectorValueObject vector ) {

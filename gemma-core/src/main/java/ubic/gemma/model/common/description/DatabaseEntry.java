@@ -26,6 +26,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -83,6 +85,7 @@ public class DatabaseEntry extends AbstractIdentifiable {
     @Column(name = "URI", columnDefinition = "VARCHAR(255)")
     private String uri;
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "EXTERNAL_DATABASE_FK", nullable = false, columnDefinition = "BIGINT")
     private ExternalDatabase externalDatabase;
 

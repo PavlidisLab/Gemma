@@ -68,14 +68,20 @@ No renames applied: there is nothing to rename.
 - `ubic.gemma.rest.util.OpenApiFactory` -- an `AbstractAsyncFactoryBean<OpenAPI>`
   that calls `JaxrsOpenApiContextBuilder.buildContext(false)` from
   `swagger-jaxrs2`. Singleton scope.
-- `ubic.gemma.rest.providers.OpenApiGzipHeaderDecorator` -- a JAX-RS
-  `WriterInterceptor` that adds `Content-Encoding: gzip` to the
-  spec response (hacky but documented as such in the source).
+- `ubic.gemma.rest.OpenApiWebService` -- our own `@Path("/openapi.{type:json|yaml}")`
+  resource, which resolves the `openApi` bean's `Future<OpenAPI>` and serializes
+  it. It sets `Content-Encoding: gzip` when the client advertises gzip, which is
+  what makes Jersey's `GZipEncoder` (a `ContentEncoder`, keyed off that response
+  header rather than off `Accept-Encoding`) compress the ~600 kB payload.
+  Replaced `OpenApiGzipHeaderDecorator` (deleted) plus Swagger's `OpenApiResource`
+  -- see "Why we serve the spec ourselves" below.
 - `swagger-jaxrs2-servlet-initializer-v2-jakarta` provides a
-  `ServletContainerInitializer` that auto-registers
-  `io.swagger.v3.jaxrs2.integration.resources.OpenApiResource` and friends
-  -- no explicit `@Path` registration of `OpenApiResource` is needed in our
-  code (this is how swagger-jaxrs2 has always worked).
+  `ServletContainerInitializer` (`SwaggerServletInitializer`). NOTE: contrary to
+  what this audit originally said, it does NOT register `OpenApiResource`; all it
+  does is `buildContext(true)` under the *default* context id from the `@Path`
+  classes it scanned. `OpenApiResource` used to be reachable only because
+  `io.swagger.v3.jaxrs2.integration.resources` was in
+  `jersey.config.server.provider.packages` in `web.xml` -- that entry is now gone.
 
 ## OpenAPI doc URL
 
@@ -89,11 +95,31 @@ This is **constructed in code** in
 `ubic.gemma.rest.RootWebService.welcome()` (around line 94-98) as
 `uriInfo.getBaseUriBuilder().path("/openapi.json")...`, then surfaced
 to API consumers in the `ApiInfoValueObject.specificationUrl` field.
-The endpoint itself is provided by the
-auto-registered `OpenApiResource` from swagger-jaxrs2.
+The endpoint itself is `ubic.gemma.rest.OpenApiWebService`.
 
-YAML is also available (`/openapi.yaml`) -- swagger-jaxrs2 serves both
-by default.
+YAML is also available (`/openapi.yaml`) -- the same resource serves both
+extensions off the one path template.
+
+## Why we serve the spec ourselves
+
+`OpenApiFactory.createObject()` decorates the object `ctx.read()` hands back
+(the `servers` list built from `gemma.hosturl`, the `FilterArg`/`SortArg`
+examples for issue #786, `${...}` placeholder resolution) rather than the
+context's cache slot. Swagger's `GenericOpenApiContext.read()` caches with
+`cacheTTL = -1` -- forever -- but its check-then-act is unsynchronized, and the
+factory runs on `AbstractAsyncFactoryBean`'s background thread while Tomcat is
+already serving. A request for `/openapi.json` landing inside that window built
+a *second* `OpenAPI` instance and pinned it in the cache for the life of the
+JVM; the Spring bean kept the decorated copy, so error responses still carried
+the right `apiVersion` while the served document had no `servers` at all. With
+no `servers`, Swagger UI falls back to the page origin and "Try it out" drops
+the `/rest/v2` base path.
+
+Observed on frink 2026-07-30: `/rest/v2/openapi.json` answered 24 kB, then
+57 kB, then 76 kB within five seconds of the connector opening (a curation-UI
+health probe polls that URL every 15 s), and the 76 kB undecorated copy was
+served for the next 17 hours. Serving the bean's `Future` leaves exactly one
+instance and nothing to race over; `OpenApiWebServiceTest` pins it.
 
 A baked Swagger UI distribution ships under
 `gemma-rest/src/main/resources/restapidocs/` and is exposed at
@@ -103,6 +129,13 @@ A baked Swagger UI distribution ships under
 
 - `OpenApiTest` (gemma-rest/src/test) builds + asserts the generated spec
   resolves a representative set of paths, parameters, and responses.
+- `OpenApiWebServiceTest` (gemma-rest/src/test) asserts that
+  `/openapi.{json,yaml}` serializes the `openApi` bean's own instance, using a
+  server URL only that bean carries.
+- `scripts/poll_openapi.py` polls a live instance from the moment its port
+  opens, which is the only way to exercise the startup window the race lived in.
+  It reports `servers` / examples / wire size per response and exits non-zero if
+  any response lacked `servers`.
 - Compile clean against bumped 2.2.50:
   `JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn compile test-compile -DskipTests` -- BUILD SUCCESS.
 
@@ -122,11 +155,13 @@ A baked Swagger UI distribution ships under
    emitted spec to 3.1 is a Swagger Core config flag but would require
    downstream tooling (the baked Swagger UI bundle, any client codegen)
    to support 3.1. Not pursued here.
-5. **Remove the gzip header decorator hack** -- the comment in
-   `OpenApiGzipHeaderDecorator` notes "we don't control the endpoint from
-   Swagger's jax-rs integration". A cleaner path is to subclass
-   `OpenApiResource` and register it explicitly, but that swaps a 30-line
-   hack for ~100 lines of plumbing; the current code works. Skip.
+5. ~~**Remove the gzip header decorator hack**~~ -- DONE 2026-07-30. The
+   assessment that "the current code works" turned out to be wrong: not owning
+   the endpoint was also what let the served spec lose its `servers` list (see
+   "Why we serve the spec ourselves"). `OpenApiWebService` replaced both the
+   decorator and Swagger's `OpenApiResource` in ~70 lines, and the gzip header
+   is now set where the entity is built -- no more matching the payload by its
+   leading `{"openapi"` characters.
 
 ## Changes in this commit
 

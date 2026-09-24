@@ -21,7 +21,22 @@ import java.util.stream.Collectors;
  * Attempt to identify a preset value (ontology term) for certain strings found in GEO data sets and other places.
  * <p>
  * The presets are stored in valueStringToOntologyTermMappings.txt.
+ *
+ * @deprecated Nothing calls this any more (Paul, 2026-09-04): we do not map submitter text onto
+ * preset ontology terms on import. Both callers are gone —
+ * {@code GeoConverterImpl} and {@code LoadSimpleExpressionDataCli} — so a value written by a
+ * submitter now survives the load unchanged and grounding is a curation decision rather than
+ * something a loader guesses from a 1,386-row lookup table.
+ * <p>
+ * 🛑 Kept rather than deleted, and the mapping file with it. The table is a reviewed body of
+ * value → term decisions built up over years; it is the obvious starting point for a curation-side
+ * suggester, and re-deriving it would be expensive. {@code GeoTermReplacementTest} still validates
+ * that its URIs resolve, which is what stops it rotting while it sits unused.
+ * <p>
+ * Do not wire it back into a loader. If a caller wants these terms, the decision to apply one
+ * belongs to a curator or to an agent proposing to a curator, not to the import path.
  */
+@Deprecated
 @Slf4j
 public class ValueStringToOntologyMapping {
 

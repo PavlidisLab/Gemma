@@ -14,6 +14,11 @@ class OBO {
 
     public static final Property id = property( "id" );
     public static final Property hasDbXref = property( "hasDbXref" );
+    /**
+     * Qualifies an assertion, most usefully the {@code owl:Axiom} reifying a {@link #hasDbXref} — that
+     * is where MONDO records whether a cross-reference is an equivalence or something looser.
+     */
+    public static final Property source = property( "source" );
     public static final Property hasSynonym = property( "hasSynonym" );
     public static final Property hasExactSynonym = property( "hasExactSynonym" );
     public static final Property hasBroadSynonym = property( "hasBroadSynonm" );

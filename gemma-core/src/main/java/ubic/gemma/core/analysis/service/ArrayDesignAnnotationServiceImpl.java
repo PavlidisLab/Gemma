@@ -19,7 +19,6 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.collections4.iterators.TransformIterator;
-import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,6 +30,8 @@ import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyUtils;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.FileUtils;
+import ubic.gemma.core.util.GzipUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.Characteristic;
@@ -43,13 +44,13 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
 
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.core.util.TsvUtils.appendBaseHeader;
 
@@ -329,10 +330,11 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             goMappings = gene2GOAssociationService.findByGenes( genes );
         }
 
+        Set<String> unresolvedUris = new HashSet<>();
         for ( Gene gene : genes ) {
             Collection<OntologyTerm> ontologyTerms = new ArrayList<>();
             if ( useGO ) {
-                ontologyTerms = this.getGoTerms( goMappings.get( gene ), OutputType.SHORT );
+                ontologyTerms = this.getGoTerms( goMappings.get( gene ), OutputType.SHORT, unresolvedUris );
             }
 
             Integer ncbiId = gene.getNcbiGeneId();
@@ -369,6 +371,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         Set<String> geneIds = new LinkedHashSet<>();
         Set<String> ncbiIds = new LinkedHashSet<>();
         Set<String> ensembleIds = new LinkedHashSet<>();
+        Set<String> unresolvedUris = new HashSet<>();
 
         Map<Gene, Collection<Characteristic>> goMappings = this.getGOMappings( genesWithSpecificity );
 
@@ -396,7 +399,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 Gene g = b2g.getGeneProduct().getGene();
 
                 if ( useGO ) {
-                    goTerms = this.getGoTerms( goMappings.get( g ), ty );
+                    goTerms = this.getGoTerms( goMappings.get( g ), ty, unresolvedUris );
                 }
                 String gemmaId = g.getId() == null ? "" : g.getId().toString();
                 String ncbiId = g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString();
@@ -435,7 +438,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 }
 
                 if ( useGO )
-                    goTerms.addAll( this.getGoTerms( goMappings.get( g ), ty ) );
+                    goTerms.addAll( this.getGoTerms( goMappings.get( g ), ty, unresolvedUris ) );
             }
 
             String geneString = StringUtils.join( genes, "|" );
@@ -483,7 +486,12 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
      *            only.
      * @return the goTerms for a given gene, as configured
      */
-    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty ) {
+    /**
+     * @param unresolvedUris collects the URIs the loaded GO could not resolve, so each one is reported once per
+     *                       file rather than once per element.
+     */
+    private Collection<OntologyTerm> getGoTerms( Collection<Characteristic> ontologyTerms, OutputType ty,
+            Set<String> unresolvedUris ) {
 
         Collection<OntologyTerm> results = new HashSet<>();
         if ( ontologyTerms == null || ontologyTerms.isEmpty() )
@@ -491,7 +499,21 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
 
         for ( Characteristic vc : ontologyTerms ) {
             if ( vc.getValueUri() != null ) {
-                results.add( goService.getTerm( vc.getValueUri() ) );
+                OntologyTerm term = goService.getTerm( vc.getValueUri() );
+                if ( term == null ) {
+                    // the association points at a term the loaded GO doesn't have (obsoleted, merged into an
+                    // alt_id, or simply not a GO URI). A null here reaches getAllParents() and
+                    // writeAnnotationLine(), both of which dereference every element, so drop it. Warn rather
+                    // than skip quietly: a GENE2GO row that stopped resolving means the gene lost that
+                    // annotation, and nothing else in the pipeline would say so.
+                    if ( unresolvedUris.add( vc.getValueUri() ) ) {
+                        ArrayDesignAnnotationServiceImpl.log.warn( "The loaded GO has no term for "
+                                + vc.getValueUri() + "; it will be omitted from the annotations"
+                                + " (further occurrences of this URI are not reported)" );
+                    }
+                    continue;
+                }
+                results.add( term );
             }
         }
 
@@ -520,26 +542,17 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         return results;
     }
 
-    private Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean useGO ) throws IOException {
+    /**
+     * @param file the file to write, or null for the standard output
+     */
+    private Writer initOutputFile( ArrayDesign arrayDesign, @Nullable Path file, boolean useGO ) throws IOException {
 
         Writer writer;
-        if ( StringUtils.isBlank( fileBaseName ) ) {
+        if ( file == null ) {
             ArrayDesignAnnotationServiceImpl.log.info( "Output to stdout" );
             writer = new PrintWriter( new OutputStreamWriter( System.out, StandardCharsets.UTF_8 ) );
         } else {
-
-            Path f = getFileName( fileBaseName );
-
-            if ( Files.deleteIfExists( f ) ) {
-                ArrayDesignAnnotationServiceImpl.log.warn( "Will overwrite existing file " + f );
-            } else {
-                ArrayDesignAnnotationServiceImpl.log.info( "Creating new annotation file " + f + " \n" );
-            }
-
-            // ensure the parent directory exists
-            PathUtils.createParentDirectories( f );
-
-            writer = new OutputStreamWriter( new GZIPOutputStream( Files.newOutputStream( f ) ), StandardCharsets.UTF_8 );
+            writer = new OutputStreamWriter( GzipUtils.newGzipOutputStream( Files.newOutputStream( file ) ), StandardCharsets.UTF_8 );
         }
         appendBaseHeader( "Platform annotations", buildInfo, new Date(), writer );
         writer.append( "#" ).append( "\n" );
@@ -568,13 +581,27 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
             return;
         }
 
-        try ( Writer writer = initOutputFile( arrayDesign, fileBaseName, useGO ) ) {
+        if ( StringUtils.isBlank( fileBaseName ) ) {
+            writeAnnotationFile( arrayDesign, null, outputType, genesWithSpecificity, useGO );
+            return;
+        }
 
-            // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
-            if ( writer == null ) {
-                log.info( arrayDesign.getName() + " annotation file already exits.  Skipping. " );
-                return;
-            }
+        Path f = getFileName( fileBaseName );
+        if ( Files.exists( f ) ) {
+            ArrayDesignAnnotationServiceImpl.log.warn( "Will overwrite existing file " + f );
+        } else {
+            ArrayDesignAnnotationServiceImpl.log.info( "Creating new annotation file " + f + " \n" );
+        }
+        // a failure leaves the previous file in place, not a truncated one
+        FileUtils.writeAtomically( f, tmp -> writeAnnotationFile( arrayDesign, tmp, outputType, genesWithSpecificity, useGO ) );
+    }
+
+    /**
+     * @param file the file to write, or null for the standard output
+     */
+    private void writeAnnotationFile( ArrayDesign arrayDesign, @Nullable Path file, OutputType outputType,
+            Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, Boolean useGO ) throws IOException {
+        try ( Writer writer = initOutputFile( arrayDesign, file, useGO ) ) {
 
             log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
 

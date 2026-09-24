@@ -436,7 +436,7 @@ public class MatrixDisplay<R, C> extends JPanel {
     /**
      * compute the size of the matrix in pixels.
      * 
-     * @param withLabels
+     * @param showLabels
      * @return
      */
     protected Dimension computeSize( boolean showLabels, boolean showScalebar ) {

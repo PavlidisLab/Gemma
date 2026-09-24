@@ -22,13 +22,17 @@ import lombok.Data;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.util.math.linearmodels.ContrastCoding;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import org.springframework.lang.Nullable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -58,12 +62,35 @@ public class DifferentialExpressionAnalysisConfig {
 
     private final Set<ExperimentalFactor> factorsToInclude = new HashSet<>();
 
+    /**
+     * How each categorical factor's levels are coded in the design matrix, which decides what its coefficients
+     * mean. A factor absent from this map is {@link ContrastCoding#TREATMENT}.
+     * <p>
+     * Per factor rather than per analysis because the two codings answer different questions and a single model
+     * can want both: a genotype factor with a wild-type control is read against that control, while a tissue
+     * factor in the same design has no control to be read against and wants
+     * {@link ContrastCoding#SUM_TO_ZERO}, where every level is reported against the mean of the level means.
+     *
+     * @see #setContrastCoding(ExperimentalFactor, ContrastCoding)
+     */
+    private final Map<ExperimentalFactor, ContrastCoding> contrastCoding = new HashMap<>();
+
     private final Set<Set<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
 
     /**
      * Indicate if this analysis should be persisted.
      */
     private boolean persist = true;
+
+    /**
+     * After the new analyses are saved, delete the experiment's other analyses on the same subset factor: without a
+     * subset factor, every other analysis that is not a subset analysis; with one, every other analysis of that
+     * factor's subsets.
+     * <p>
+     * Only a fresh run honours this, and only when {@code persist} is set. Nothing is deleted before the new analyses
+     * are saved, so a run that fails leaves the existing analyses in place.
+     */
+    private boolean deleteOtherAnalyses = false;
 
     /**
      * Factor to subset the analysis on, if non-null.
@@ -82,8 +109,10 @@ public class DifferentialExpressionAnalysisConfig {
     /**
      * Keep processing other subsets when encountering an {@link AnalysisException} on a subset.
      * <p>
-     * If all subset fails, an {@link AllSubSetAnalysesFailedException} will be raised which will contain individual
-     * subset failures.
+     * This is about carrying on when SOME subsets succeed. If no subset yields an analysis, an
+     * {@link AllSubSetAnalysesFailedException} is raised regardless of this setting — it carries whichever subset
+     * failures were collected, and a subset can also leave the loop skipped rather than failed (DE_Exclude, no
+     * samples left to analyze, or no factor the subset can model).
      */
     private boolean ignoreFailingSubsets = false;
 
@@ -168,6 +197,7 @@ public class DifferentialExpressionAnalysisConfig {
         this.factorsToInclude.addAll( baseConfig.getFactorsToInclude() );
         this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
         this.persist = baseConfig.isPersist();
+        this.deleteOtherAnalyses = baseConfig.isDeleteOtherAnalyses();
         this.subsetFactor = baseConfig.getSubsetFactor();
         this.subsetFactorValue = baseConfig.getSubsetFactorValue();
         this.ignoreFailingSubsets = baseConfig.isIgnoreFailingSubsets();
@@ -185,6 +215,23 @@ public class DifferentialExpressionAnalysisConfig {
     /**
      * Add a collection of factors to include in the analysis.
      */
+    /**
+     * Choose how one factor's levels are coded. Continuous factors have no levels and are rejected.
+     */
+    public void setContrastCoding( ExperimentalFactor factor, ContrastCoding coding ) {
+        Assert.notNull( coding, "Contrast coding cannot be null." );
+        Assert.isTrue( factor.getType() != FactorType.CONTINUOUS,
+                "A continuous factor has one column and no levels, so it has no contrast coding: " + factor );
+        this.contrastCoding.put( factor, coding );
+    }
+
+    /**
+     * How the given factor's levels are coded; {@link ContrastCoding#TREATMENT} unless set.
+     */
+    public ContrastCoding getContrastCoding( ExperimentalFactor factor ) {
+        return this.contrastCoding.getOrDefault( factor, ContrastCoding.TREATMENT );
+    }
+
     public void addFactorsToInclude( Collection<ExperimentalFactor> factors ) {
         factorsToInclude.addAll( factors );
     }

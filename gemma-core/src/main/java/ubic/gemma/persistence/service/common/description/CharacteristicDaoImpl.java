@@ -255,6 +255,107 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
         return result2;
     }
 
+    @Override
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        return countExperimentsByUris( uris, includeSubjects, includePredicates, includeObjects, false, taxon, excludedExperimentIds );
+    }
+
+    @Override
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        if ( uris.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // The URI columns collate case-insensitively, so two spellings of one URI form a single
+        // group in the database. Collapse them here too: left alone they could be split across two
+        // batches and come back as two rows carrying the same key, which the loop below would then
+        // resolve by overwriting rather than by adding.
+        Set<String> distinctUris = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        distinctUris.addAll( uris );
+        String qs = buildCountExperimentsByUrisUnionAll( includeSubjects, includePredicates, includeObjects, includeCategories, taxon, !excludedExperimentIds.isEmpty() );
+
+        Query query = getSessionFactory().getCurrentSession().createNativeQuery( qs )
+                .addScalar( "URI", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                // invalidate the cache when the EE2C table is updated
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                // invalidate the cache when EEs are added/removed
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                // invalidate the cache when new characteristics are added/removed
+                .addSynchronizedEntityClass( Characteristic.class );
+
+        if ( taxon != null ) {
+            query.setParameter( "taxonId", taxon.getId() );
+        }
+
+        if ( !excludedExperimentIds.isEmpty() ) {
+            // padding repeats the largest id, which a NOT IN cannot be changed by
+            query.setParameterList( "excludedEeIds", optimizeParameterList( excludedExperimentIds ) );
+        }
+
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+
+        query.setCacheable( true );
+
+        // Batching is safe for an aggregate here only because the grouping key IS the batching key:
+        // every row for a given URI is produced by the batch that URI belongs to, so each group is
+        // complete within its batch. Do not reuse this shape for an aggregate grouped by anything
+        // else.
+        Map<String, Long> counts = new HashMap<>();
+        QueryUtils.<String, Object[]>streamByBatch( query, "uris", distinctUris, 2048 )
+                .forEach( row -> counts.put( ( String ) row[0], ( Long ) row[1] ) );
+        return counts;
+    }
+
+    /**
+     * Build the {@code countExperimentsByUris} query: the same {@code UNION ALL} of per-column range
+     * scans as {@link #buildFindExperimentsByUrisUnionAll}, projecting only the matched URI and the
+     * experiment id, wrapped in a {@code group by} that counts distinct experiments per URI.
+     * <p>
+     * The {@code count(distinct ...)} sits OUTSIDE the union so an EE2C row whose URI appears in
+     * more than one column contributes once, which is what the caller-side {@code Set<Long>} of
+     * experiment ids used to guarantee.
+     */
+    private String buildCountExperimentsByUrisUnionAll( boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, boolean excludeExperiments ) {
+        Assert.isTrue( includeSubjects || includePredicates || includeObjects || includeCategories, "At least one of the source URIs must be included." );
+        List<String> uriColumns = new ArrayList<>( 6 );
+        if ( includeSubjects ) {
+            uriColumns.add( "VALUE_URI" );
+        }
+        if ( includePredicates ) {
+            uriColumns.add( "PREDICATE_URI" );
+            uriColumns.add( "SECOND_PREDICATE_URI" );
+        }
+        if ( includeObjects ) {
+            uriColumns.add( "OBJECT_URI" );
+            uriColumns.add( "SECOND_OBJECT_URI" );
+        }
+        if ( includeCategories ) {
+            // EE2C_CATEGORY_URI_CATEGORY_VALUE_URI_VALUE leads with CATEGORY_URI, so this arm gets the same
+            // range scan as the others rather than falling back to a table scan.
+            uriColumns.add( "CATEGORY_URI" );
+        }
+        String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.EXPRESSION_EXPERIMENT_FK", "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        String taxonJoin = taxon != null ? " join INVESTIGATION I on T.EXPRESSION_EXPERIMENT_FK = I.ID " : "";
+        String taxonWhere = taxon != null ? " and I.TAXON_FK = :taxonId" : "";
+        String excludedWhere = excludeExperiments ? " and T.EXPRESSION_EXPERIMENT_FK not in (:excludedEeIds)" : "";
+        StringBuilder sb = new StringBuilder();
+        sb.append( "select U.URI as URI, count(distinct U.EE) as N from (" );
+        for ( int i = 0; i < uriColumns.size(); i++ ) {
+            if ( i > 0 ) {
+                sb.append( " union all " );
+            }
+            sb.append( "select T." ).append( uriColumns.get( i ) ).append( " as URI, T.EXPRESSION_EXPERIMENT_FK as EE" )
+                    .append( " from EXPRESSION_EXPERIMENT2CHARACTERISTIC T" )
+                    .append( taxonJoin )
+                    .append( " where T." ).append( uriColumns.get( i ) ).append( " in (:uris)" )
+                    .append( taxonWhere )
+                    .append( aclWhere )
+                    .append( excludedWhere );
+        }
+        sb.append( ") U group by U.URI" );
+        return sb.toString();
+    }
+
     private Map<Class<? extends Identifiable>, Map<String, Set<Long>>> findExperimentsByUrisInternal( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, boolean rankByLevel, int limit ) {
         // Use UNION ALL of per-column range scans instead of a 5-column OR.
         // MySQL gives up on index_merge once the per-column row estimate exceeds a threshold
@@ -414,6 +515,106 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Collection<Characteristic> findByUriInAnySlot( String uri ) {
+        if ( StringUtils.isBlank( uri ) ) {
+            return new HashSet<>();
+        }
+        Query<?> q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select C.ID from CHARACTERISTIC as C where "
+                        + "C.VALUE_URI = :uri or C.CATEGORY_URI = :uri or C.PREDICATE_URI = :uri "
+                        + "or C.SECOND_PREDICATE_URI = :uri or C.OBJECT_URI = :uri or C.SECOND_OBJECT_URI = :uri" )
+                .addScalar( "ID", StandardBasicTypes.LONG )
+                .setParameter( "uri", uri );
+        //noinspection unchecked
+        return loadByIds( ( List<Long> ) q.list() );
+    }
+
+    @Override
+    public Collection<Long> findExperimentIdsByUriInAnySlot( String uri ) {
+        if ( StringUtils.isBlank( uri ) ) {
+            return new HashSet<>();
+        }
+        //noinspection unchecked
+        List<Long> ids = ( List<Long> ) this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select distinct T.EXPRESSION_EXPERIMENT_FK as ID "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC T where T.EXPRESSION_EXPERIMENT_FK is not null "
+                        + "and (T.VALUE_URI = :uri or T.CATEGORY_URI = :uri or T.PREDICATE_URI = :uri "
+                        + "or T.SECOND_PREDICATE_URI = :uri or T.OBJECT_URI = :uri or T.SECOND_OBJECT_URI = :uri)" )
+                .addScalar( "ID", StandardBasicTypes.LONG )
+                .setParameter( "uri", uri )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .list();
+        return new LinkedHashSet<>( ids );
+    }
+
+    @Override
+    public Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris ) {
+        if ( valueUris == null || valueUris.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // ACL-restricted: exposes a specific dataset + statement, so it goes through the same EE2C ACL clause
+        // as the usage-frequency queries. Matches on VALUE_URI (the term as a tag value / statement subject).
+        String aclWhere = EE2CAclQueryUtils.formNativeAclRestrictionClause( ( SessionFactoryImplementor ) getSessionFactory(), "T.EXPRESSION_EXPERIMENT_FK", "T.ACL_IS_AUTHENTICATED_ANONYMOUSLY_MASK" );
+        Query query = getSessionFactory().getCurrentSession().createNativeQuery(
+                        // VALUE / PREDICATE / OBJECT (and the SECOND_ variants) are reserved words — backtick
+                        // them like LEVEL so both MySQL and H2 (MODE=MYSQL) parse the projection.
+                        "select T.`LEVEL`, T.CATEGORY, T.CATEGORY_URI, T.`VALUE`, T.VALUE_URI, "
+                                + "T.`PREDICATE`, T.PREDICATE_URI, T.`OBJECT`, T.OBJECT_URI, "
+                                + "T.`SECOND_PREDICATE`, T.SECOND_PREDICATE_URI, T.`SECOND_OBJECT`, T.SECOND_OBJECT_URI, "
+                                + "T.EXPRESSION_EXPERIMENT_FK "
+                                + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC T "
+                                + "where T.VALUE_URI in (:uris)" + aclWhere
+                                // deterministic representative pick: lowest accessible experiment id per URI
+                                + " order by T.EXPRESSION_EXPERIMENT_FK" )
+                .addScalar( "LEVEL", StandardBasicTypes.CLASS )
+                .addScalar( "CATEGORY", StandardBasicTypes.STRING )
+                .addScalar( "CATEGORY_URI", StandardBasicTypes.STRING )
+                .addScalar( "VALUE", StandardBasicTypes.STRING )
+                .addScalar( "VALUE_URI", StandardBasicTypes.STRING )
+                .addScalar( "PREDICATE", StandardBasicTypes.STRING )
+                .addScalar( "PREDICATE_URI", StandardBasicTypes.STRING )
+                .addScalar( "OBJECT", StandardBasicTypes.STRING )
+                .addScalar( "OBJECT_URI", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_PREDICATE", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_PREDICATE_URI", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_OBJECT", StandardBasicTypes.STRING )
+                .addScalar( "SECOND_OBJECT_URI", StandardBasicTypes.STRING )
+                .addScalar( "EXPRESSION_EXPERIMENT_FK", StandardBasicTypes.LONG )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class );
+        EE2CAclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        query.setCacheable( true );
+
+        List<Object[]> rows;
+        if ( valueUris.size() > MAX_PARAMETER_LIST_SIZE ) {
+            rows = listByBatch( query, "uris", valueUris, 2048, -1 );
+        } else {
+            //noinspection unchecked
+            rows = query.setParameterList( "uris", optimizeParameterList( valueUris ) ).list();
+        }
+
+        // First accessible row per VALUE_URI wins (rows are ordered by experiment id). Case-insensitive key
+        // match mirrors findExperimentsByUrisInternal so a URI cased differently in the request still lands.
+        TreeSet<String> urisIgnoreCase = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+        urisIgnoreCase.addAll( valueUris );
+        Map<String, CharacteristicDao.UsageExample> result = new HashMap<>();
+        for ( Object[] r : rows ) {
+            String valueUri = ( String ) r[4];
+            if ( valueUri == null || !urisIgnoreCase.contains( valueUri ) || result.containsKey( valueUri ) ) {
+                continue;
+            }
+            //noinspection unchecked
+            result.put( valueUri, new CharacteristicDao.UsageExample(
+                    ( Class<? extends Identifiable> ) r[0], ( String ) r[1], ( String ) r[2], ( String ) r[3], valueUri,
+                    ( String ) r[5], ( String ) r[6], ( String ) r[7], ( String ) r[8],
+                    ( String ) r[9], ( String ) r[10], ( String ) r[11], ( String ) r[12],
+                    r[13] != null ? ( Long ) r[13] : 0L ) );
+        }
+        return result;
+    }
+
+    @Override
     public Characteristic findBestByUri( String uri ) {
         return ( Characteristic ) getSessionFactory().getCurrentSession()
                 .createQuery( "select c from Characteristic c "
@@ -539,6 +740,151 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
     }
 
     @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue ) {
+        return findEeCountsByUriForOriginalValue( uris, originalValue, Collections.emptySet() );
+    }
+
+    @Override
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue,
+            Collection<Long> excludedExperimentIds ) {
+        String wanted = originalValue != null ? originalValue.trim().toLowerCase( Locale.ROOT ) : "";
+        if ( uris.isEmpty() || wanted.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // A value with no letters in it is a quantity, not a name — a dose, a timepoint, a
+        // concentration, a replicate number. `24` appears as an original value across unrelated
+        // experiments meaning 24 hours, 24 degrees and 24 samples, so a count of it says nothing
+        // about which term anyone meant and would hand whichever candidate happened to collect
+        // those rows a decisive-looking score. Refuse to form a prior from one.
+        if ( wanted.chars().noneMatch( Character::isLetter ) ) {
+            return Collections.emptyMap();
+        }
+        // GEO ships the submitter's string with the characteristic field it came from glued on the
+        // front — `treatment: DMSO`, `agent: DMSO`, `vehicle: DMSO` — and on the production corpus
+        // that prefixed form is by far the COMMON one (439 of DMSO's 508 experiments; the bare
+        // string accounts for 24). Counting only the bare string would miss most of the evidence,
+        // so the suffix pattern picks up any `<field>: <value>` framing. Trailing content is
+        // deliberately not matched: whoever wrote `0.3% DMSO` or `DMSO for 24h` wrote a different
+        // string, and folding those in would credit this string with annotations nobody spelled
+        // this way.
+        //
+        // lower() on both sides rather than leaning on MySQL's case-insensitive collation, so the
+        // H2 test path agrees with production. It costs nothing here: there is no index on
+        // ORIGINAL_VALUE to forfeit, and the indexed VALUE_URI IN-clause is what bounds the scan.
+        boolean excluding = excludedExperimentIds != null && !excludedExperimentIds.isEmpty();
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select VALUE_URI as V, count(distinct EXPRESSION_EXPERIMENT_FK) as N "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
+                        + "where VALUE_URI in :uris and ORIGINAL_VALUE is not null "
+                        + ( excluding ? "and EXPRESSION_EXPERIMENT_FK not in :excludedEeIds " : "" )
+                        + "and (lower(ORIGINAL_VALUE) = :wanted "
+                        + "or lower(ORIGINAL_VALUE) like :prefixed escape '" + LIKE_ESCAPE + "') "
+                        + "group by VALUE_URI" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .setParameter( "wanted", wanted )
+                .setParameter( "prefixed", "%: " + escapeForLike( wanted ) )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setCacheable( true );
+        if ( excluding ) {
+            q.setParameterList( "excludedEeIds", excludedExperimentIds );
+        }
+        Map<String, Long> out = new HashMap<>();
+        QueryUtils.<String, Object[]>streamByBatch( q, "uris", uris, 2048 )
+                // A URI can only appear once per batch, but a URI set larger than the batch size is
+                // split across queries, so merge rather than overwrite.
+                .forEach( row -> out.merge( ( String ) row[0], ( Long ) row[1], Long::sum ) );
+        return out;
+    }
+
+    @Override
+    public List<PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults ) {
+        return findPriorCurationByOriginalValue( originalValue, maxResults, Collections.emptySet() );
+    }
+
+    @Override
+    public List<PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults,
+            Collection<Long> excludedExperimentIds ) {
+        String wanted = originalValue != null ? originalValue.trim().toLowerCase( Locale.ROOT ) : "";
+        if ( wanted.isEmpty() || wanted.chars().noneMatch( Character::isLetter ) ) {
+            return Collections.emptyList();
+        }
+        // No VALUE_URI restriction here, unlike the sibling method — the whole point is to find
+        // terms the caller does NOT already have in hand. That costs a scan of EE2C rather than an
+        // index range (~1s against production's 2.5M rows), which is why this is opt-in at the web
+        // layer and cached on the string alone. The result depends on nothing but the string, so
+        // unlike the candidate-restricted tally a cached entry is always complete.
+        //
+        // The label comes off EE2C rather than from resolving the term, which keeps the result
+        // readable for ontologies that are not loaded — including the flat lexical catalogues.
+        // MIN picks it: the stored VALUE for a given URI is the ontology label and barely varies,
+        // and MIN is both deterministic and portable, where a most-frequent pick would need
+        // MySQL-only aggregation and break the H2 test path.
+        boolean excluding = excludedExperimentIds != null && !excludedExperimentIds.isEmpty();
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select VALUE_URI as V, min(`VALUE`) as L, "
+                        + "count(distinct EXPRESSION_EXPERIMENT_FK) as N "
+                        + "from EXPRESSION_EXPERIMENT2CHARACTERISTIC "
+                        + "where VALUE_URI is not null and ORIGINAL_VALUE is not null "
+                        + ( excluding ? "and EXPRESSION_EXPERIMENT_FK not in :excludedEeIds " : "" )
+                        + "and (lower(ORIGINAL_VALUE) = :wanted "
+                        + "or lower(ORIGINAL_VALUE) like :prefixed escape '" + LIKE_ESCAPE + "') "
+                        + "group by VALUE_URI order by N desc" )
+                .addScalar( "V", StandardBasicTypes.STRING )
+                .addScalar( "L", StandardBasicTypes.STRING )
+                .addScalar( "N", StandardBasicTypes.LONG )
+                .setParameter( "wanted", wanted )
+                .setParameter( "prefixed", "%: " + escapeForLike( wanted ) )
+                .addSynchronizedQuerySpace( EE2C_QUERY_SPACE )
+                .addSynchronizedEntityClass( ExpressionExperiment.class )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setCacheable( true );
+        if ( excluding ) {
+            q.setParameterList( "excludedEeIds", excludedExperimentIds );
+        }
+        // Deliberately NOT capped in SQL: the cap is applied below, after the total is known, so
+        // that `agreement` is a share of everything curators did with this string rather than of
+        // the handful of rows that survived truncation. A string maps to few distinct terms in
+        // practice (`dmso` 2, the worst offender `control` 24), so reading them all is cheap.
+        //noinspection unchecked
+        List<Object[]> rows = q.list();
+        long total = 0;
+        for ( Object[] row : rows ) {
+            total += ( Long ) row[2];
+        }
+        List<PriorCurationUsage> out = new ArrayList<>( rows.size() );
+        for ( Object[] row : rows ) {
+            if ( maxResults > 0 && out.size() >= maxResults ) {
+                break;
+            }
+            long n = ( Long ) row[2];
+            out.add( new PriorCurationUsage( ( String ) row[0], ( String ) row[1], n,
+                    total > 0 ? ( double ) n / total : 0.0 ) );
+        }
+        return out;
+    }
+
+    /**
+     * Escape character for {@code LIKE} patterns built from caller-supplied text. Backslash is
+     * avoided because it is also MySQL's string-literal escape, which makes the doubling rules
+     * ambiguous to read and easy to get wrong.
+     */
+    private static final String LIKE_ESCAPE = "!";
+
+    /**
+     * Neutralise {@code LIKE} wildcards in caller-supplied text. Without this, a query string
+     * containing {@code _} (common in annotation values — {@code TNF_alpha}) would match any
+     * single character, and one containing {@code %} would match anything at all.
+     */
+    private static String escapeForLike( String s ) {
+        return s.replace( LIKE_ESCAPE, LIKE_ESCAPE + LIKE_ESCAPE )
+                .replace( "%", LIKE_ESCAPE + "%" )
+                .replace( "_", LIKE_ESCAPE + "_" );
+    }
+
+    @Override
     public Map<String, Long> countByValueUriGroupedByNormalizedValue( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents ) {
         if ( uris.isEmpty() ) {
             return Collections.emptyMap();
@@ -618,6 +964,25 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                     result.put( ( String ) row[2], ( String ) row[3] );
                 }
             }
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, String> findCategoryGroupedByCategoryUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        Map<String, String> result = new HashMap<>();
+        //noinspection unchecked
+        // MAX(CATEGORY) keeps this ONLY_FULL_GROUP_BY-compliant, same as the VALUE branch of
+        // findValueGroupedByValueUri: one representative label per CATEGORY_URI.
+        List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select CATEGORY_URI, MAX(CATEGORY) from CHARACTERISTIC C "
+                        + "where CATEGORY_URI is not null "
+                        + ( parentClasses != null || includeNoParents ? "and " + createOwningEntityConstraint( parentClasses, includeNoParents ) + " " : "" ) + " "
+                        + "group by CATEGORY_URI" )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
+                .list();
+        for ( Object[] row : rows ) {
+            result.put( ( String ) row[0], ( String ) row[1] );
         }
         return result;
     }
@@ -739,7 +1104,11 @@ public class CharacteristicDaoImpl extends AbstractNoopFilteringVoEnabledDao<Cha
                         + ( !oe.isEmpty() || includeNoParents ? " and " + createOwningEntityConstraint( oe, includeNoParents ) : "" ) );
 
         List<Object[]> result = QueryUtils.listByBatch( query, "ids", charById.keySet(), MAX_PARAMETER_LIST_SIZE );
-        Map<Characteristic, Identifiable> charToParent = new HashMap<>();
+        // TreeMap, not HashMap: Characteristic.hashCode() is constant (it has to be -- curation edits
+        // the fields a content hash would use), so a HashMap keyed by Characteristic puts every entry
+        // in one bucket. This map is as large as the batch handed in. The comparator's id tiebreaker
+        // keeps distinct persisted characteristics distinct.
+        Map<Characteristic, Identifiable> charToParent = new TreeMap<>( Characteristic.getComparator() );
         for ( Object[] row : result ) {
             Number charId = ( Number ) row[0];
             Characteristic c = charById.get( charId.longValue() );

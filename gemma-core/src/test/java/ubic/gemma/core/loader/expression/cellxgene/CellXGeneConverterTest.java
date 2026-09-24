@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -43,6 +45,11 @@ import static org.mockito.Mockito.when;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
 @ContextConfiguration
+// This class carried no tag at all, so nothing kept it out of the default suite. It
+// reaches the CellxGene API and, through CellXGeneConverter.convertPublications, live
+// Entrez as well. @NetworkAvailable does not hold it back — it skips only when the host
+// is unreachable.
+@Tag("slow")
 @ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
 public class CellXGeneConverterTest extends BaseTest5 {
@@ -91,7 +98,7 @@ public class CellXGeneConverterTest extends BaseTest5 {
                         // this will skip the transpose and sort by sample steps
                         .ignoreDataVectors( true )
                         .build() );
-        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, "Clarence-2025", dataLoader, false );
+        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, Collections.emptySet(), "Clarence-2025", dataLoader, false );
         assertThat( ee.getAccession() ).isNotNull().satisfies( accession -> {
             assertThat( accession.getAccession() ).isEqualTo( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
             assertThat( accession.getUri() ).isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
@@ -143,7 +150,7 @@ public class CellXGeneConverterTest extends BaseTest5 {
                             .hasSize( 7 )
                             .extracting( Characteristic::getCategory )
                             .containsExactlyInAnyOrder(
-                                    "sex",
+                                    "biological sex",
                                     "assay",
                                     "suspension_type",
                                     "development_stage",
@@ -168,7 +175,7 @@ public class CellXGeneConverterTest extends BaseTest5 {
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         dataLoader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
-        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, "Clarence-2025", dataLoader, true );
+        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, designElements, "Clarence-2025", dataLoader, true );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 );
         assertThat( ee.getSingleCellExpressionDataVectors() ).hasSize( 2 );
     }

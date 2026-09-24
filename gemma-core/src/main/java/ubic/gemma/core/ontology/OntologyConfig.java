@@ -34,6 +34,7 @@ import java.nio.file.Path;
 
 @Configuration
 @Profile({ "!" + EnvironmentProfiles.TEST }) // we use a different set of ontologies in tests
+@lombok.extern.slf4j.Slf4j
 public class OntologyConfig {
 
     @Value("${load.ontologies}")
@@ -158,6 +159,15 @@ public class OntologyConfig {
             // one place.
             File cacheDir = OntologyLoader.getDiskCachePath( "chebiOntology" ).getParentFile();
             service.setSlimCacheDir( cacheDir );
+        } else {
+            // An unset cache dir disables the slim, and loadModel's fall-through then looks
+            // identical to a context that never had a slim at all. Say which half is missing:
+            // diagnosing this from the outside took a boot log, a term count and a bean-wiring
+            // argument, and the answer was one field either way.
+            log.info( "CHEBI slim is disabled: slimExtractor={}, seedResolver={}; the full source"
+                            + " will be parsed on every load.",
+                    slimExtractor != null ? "present" : "ABSENT",
+                    seedResolver != null ? "present" : "ABSENT" );
         }
 
         OntologyServiceFactory<ChebiOntologyService> factory = new OntologyServiceFactory<>( service );
@@ -199,6 +209,41 @@ public class OntologyConfig {
     }
 
     @Bean
+    public FactoryBean<CellosaurusOntologyService> cellosaurusOntologyService() {
+        return createOntologyFactory( CellosaurusOntologyService.class, CellosaurusOntologyService.URI_PREFIX + "CVCL_" );
+    }
+
+    @Bean
+    public FactoryBean<MgiStrainOntologyService> mgiStrainOntologyService() {
+        return createOntologyFactory( MgiStrainOntologyService.class, MgiStrainOntologyService.URI_PREFIX + "MGI:" );
+    }
+
+    @Bean
+    public FactoryBean<MgiAlleleOntologyService> mgiAlleleOntologyService() {
+        return createOntologyFactory( MgiAlleleOntologyService.class, MgiAlleleOntologyService.URI_PREFIX + "MGI:" );
+    }
+
+    @Bean
+    public FactoryBean<NeuroBehaviorOntologyService> neuroBehaviorOntologyService() {
+        return createOntologyFactory( NeuroBehaviorOntologyService.class, "http://purl.obolibrary.org/obo/NBO_" );
+    }
+
+    @Bean
+    public FactoryBean<GenotypeOntologyService> genotypeOntologyService() {
+        return createOntologyFactory( GenotypeOntologyService.class, "http://purl.obolibrary.org/obo/GENO_" );
+    }
+
+    /**
+     * Extra search strings for MONDO disease terms, not a vocabulary of its own — the URI prefix is
+     * MONDO's, which also fences the table to MONDO URIs should the builder ever emit anything else.
+     */
+    @Bean
+    public FactoryBean<MeshDiseaseSynonymOntologyService> meshDiseaseSynonymOntologyService() {
+        return createOntologyFactory( MeshDiseaseSynonymOntologyService.class,
+                MeshDiseaseSynonymOntologyService.URI_PREFIX );
+    }
+
+    @Bean
     public FactoryBean<UberonOntologyService> uberonOntologyServiceOntologyService() {
         return createOntologyFactory( UberonOntologyService.class, "http://purl.obolibrary.org/obo/UBERON_" );
     }
@@ -209,20 +254,40 @@ public class OntologyConfig {
     }
 
     /**
-     * MONDO with slim-cache wiring, parallel to {@link #chebiOntologyService}. Uses the
-     * pre-built {@link OntologyServiceFactory#OntologyServiceFactory(OntologyService)}
-     * constructor so the slim plumbing lands BEFORE the factory's auto-load thread runs.
+     * MONDO, parallel to {@link #chebiOntologyService}. Uses the pre-built
+     * {@link OntologyServiceFactory#OntologyServiceFactory(OntologyService)} constructor so any slim plumbing
+     * lands BEFORE the factory's auto-load thread runs.
+     * <p>
+     * 🛑 <b>The slim is OFF for MONDO by default, and the seeding is why.</b>
+     * {@link MondoSeedResolver#resolveCorpusSeeds()} seeds from MONDO terms the corpus ALREADY uses, so the slim
+     * holds what we have annotated and nothing else. That is fine for looking up a term we already applied and
+     * wrong for every question about a term we have not: notably, when EFO obsoletes a term and names a MONDO
+     * successor, that successor is by definition a term we do not use yet, so the slim cannot contain it. Measured
+     * 2026-08-19: the slim served 9,989 classes against 36,083 in the release, and 22 obsolete terms were
+     * unfixable purely because their named replacement was missing.
+     * <p>
+     * Loading the full source costs a ~250 MB parse at startup (the slim loaded in ~15s). Set
+     * {@code gemma.ontology.mondo.slim.enabled=true} to go back to the slim on a host that cannot afford it.
      */
     @Bean
     public FactoryBean<MondoOntologyService> mondoOntologyServiceOntologyService(
             @Autowired(required = false) OntologySlimExtractor slimExtractor,
-            @Autowired(required = false) MondoSeedResolver seedResolver ) {
+            @Autowired(required = false) MondoSeedResolver seedResolver,
+            @Value("${gemma.ontology.mondo.slim.enabled:false}") boolean mondoSlimEnabled ) {
         MondoOntologyService service = new MondoOntologyService();
         service.setSlimExtractor( slimExtractor );
         service.setSeedResolver( seedResolver );
-        if ( slimExtractor != null && seedResolver != null ) {
+        // Leaving the slim cache dir unset is what disables the slim: resolveSlimFile() then yields null and
+        // loadModel falls through to the full source. An already-cached slim file is left on disk, never read.
+        if ( mondoSlimEnabled && slimExtractor != null && seedResolver != null ) {
             File cacheDir = OntologyLoader.getDiskCachePath( "mondoOntology" ).getParentFile();
             service.setSlimCacheDir( cacheDir );
+        } else {
+            log.info( "MONDO slim is disabled: enabled={}, slimExtractor={}, seedResolver={};"
+                            + " the full source will be parsed on every load.",
+                    mondoSlimEnabled,
+                    slimExtractor != null ? "present" : "ABSENT",
+                    seedResolver != null ? "present" : "ABSENT" );
         }
         OntologyServiceFactory<MondoOntologyService> factory = new OntologyServiceFactory<>( service );
         factory.setAutoLoad( loadOntologies );
@@ -248,6 +313,83 @@ public class OntologyConfig {
             @Value("${gemma.ontology.unified.tdb.dir}") Path tdbDir
     ) {
         return new JenaTextOntologySearchService( tdbDir, enabled );
+    }
+
+    /**
+     * Writes the {@code ONTOLOGY} rows of {@code ANNOTATION_RELATION} — the relations CLO and CHEBI
+     * already assert and nothing has ever read.
+     *
+     * <p>Declared here rather than component-scanned so it lives and dies with the ontologies it reads:
+     * a context with no ontology services has nothing for it to do, and {@code TableMaintenanceUtil}
+     * takes it optionally for exactly that reason.</p>
+     *
+     * <p>The ontologies arrive as the whole list and are matched by name through
+     * {@link ubic.gemma.core.ontology.providers.OntologyServiceResolver}, so the producer holds no
+     * bean-level dependency on any one of them and a disabled ontology is a warning rather than a
+     * startup failure.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.OntologyRelationProducer ontologyRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService,
+            @Autowired(required = false) ubic.gemma.core.ontology.OntologyService ontologyService ) {
+        return new ubic.gemma.core.ontology.relation.OntologyRelationProducerImpl( ontologies, annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ), taxonService,
+                ontologyService );
+    }
+
+    /**
+     * The entailed CL cell type &rarr; anatomical structure locations, from a reviewed file.
+     *
+     * <p>Beside the other two file-backed producers and wired the same way. It reads no ontology
+     * model at all: the rows were adjudicated offline and are shipped as a classpath resource, so
+     * the only collaborators are the DAO and a transaction.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.ClInferredLocationProducer clInferredLocationProducer(
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager ) {
+        return new ubic.gemma.core.ontology.relation.ClInferredLocationProducer( annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ) );
+    }
+
+    /**
+     * MGI's genotype-to-disease reports as {@code EXTERNAL} relations.
+     *
+     * <p>Declared here beside {@link #ontologyRelationProducer} because it shares the one thing that
+     * makes either work: MONDO, which is what MGI's {@code DOID:} identifiers are translated out of.
+     * It reads no other ontology — the statements themselves come off MGI's download server.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.MgiRelationProducer mgiRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService ) {
+        return new ubic.gemma.core.ontology.relation.MgiRelationProducer( ontologies, annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ),
+                taxonService );
+    }
+
+    /**
+     * Cellosaurus as {@code EXTERNAL} relations — donor disease and derived-from site.
+     *
+     * <p>Beside {@link #mgiRelationProducer} and for the same reason: MONDO is what its {@code NCIt:}
+     * disease identifiers are translated out of. It reads no ontology model otherwise; the statements
+     * come from the cached Cellosaurus artifact the lexical service already downloads.</p>
+     */
+    @Bean
+    public ubic.gemma.core.ontology.relation.CellosaurusRelationProducer cellosaurusRelationProducer(
+            @Autowired(required = false) java.util.List<OntologyService> ontologies,
+            ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao,
+            org.springframework.transaction.PlatformTransactionManager transactionManager,
+            @Autowired(required = false) ubic.gemma.persistence.service.genome.taxon.TaxonService taxonService ) {
+        return new ubic.gemma.core.ontology.relation.CellosaurusRelationProducer( ontologies,
+                annotationRelationDao,
+                new org.springframework.transaction.support.TransactionTemplate( transactionManager ),
+                taxonService );
     }
 
     private <T extends OntologyService> OntologyServiceFactory<T> createOntologyFactory( Class<T> ontologyClass, String... allowedUriPrefixes ) {

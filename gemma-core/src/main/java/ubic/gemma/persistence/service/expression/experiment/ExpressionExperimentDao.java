@@ -63,6 +63,15 @@ public interface ExpressionExperimentDao
 
     void evictQuantitationTypesCache( ExpressionExperiment ee );
 
+    /**
+     * Reload the experiment's curation details from the database, replacing their second-level cache entry.
+     * <p>
+     * A write by another process, such as a gemma-cli run, does not reach this process's cache, and loading the
+     * experiment with {@link org.hibernate.CacheMode#REFRESH} leaves the cached curation details as they were
+     * (measured 2026-09-15).
+     */
+    void refreshCurationDetails( ExpressionExperiment ee );
+
     @Data
     class Identifiers {
         Long id;
@@ -76,6 +85,17 @@ public interface ExpressionExperimentDao
      * Load all possible identifiers for all experiments.
      */
     List<Identifiers> loadAllIdentifiers();
+
+    /**
+     * Load identifiers for the given experiments only.
+     * <p>
+     * Same projection and the same ACL restriction as {@link #loadAllIdentifiers()}: an id the caller
+     * cannot read simply does not come back, so a caller resolving names for a list it was handed
+     * cannot use this to learn about a dataset it could not otherwise see.
+     *
+     * @param ids the experiments to resolve; an empty collection yields an empty list without a query
+     */
+    List<Identifiers> loadIdentifiers( Collection<Long> ids );
 
     Collection<Long> filterByTaxon( Collection<Long> ids, Taxon taxon );
 
@@ -365,6 +385,25 @@ public interface ExpressionExperimentDao
      */
     boolean hasProcessedExpressionData( ExpressionExperiment ee );
 
+    /**
+     * Whether a source metadata document is stored for this experiment.
+     * <p>
+     * A projection rather than a read of the field: {@code SOURCE_METADATA} is a LONGTEXT holding
+     * the whole GEO record, and the backfill asks this question once per experiment across the
+     * corpus purely to decide whether to skip it.
+     */
+    boolean hasSourceMetadata( ExpressionExperiment ee );
+
+    /**
+     * The stored GEO source metadata document, or null when none has been harvested.
+     * <p>
+     * Separate from {@link #hasSourceMetadata(ExpressionExperiment)} because this one reads the
+     * LONGTEXT: p95 is 142 KB and the largest on production is 1.09 MB, which is why the document
+     * is not a field on the experiment value object.
+     */
+    @Nullable
+    String getSourceMetadata( ExpressionExperiment ee );
+
     Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
 
@@ -515,6 +554,21 @@ public interface ExpressionExperimentDao
      * Obtain factor value-level annotations for a given subset.
      */
     List<Statement> getFactorValueAnnotations( ExpressionExperimentSubSet ee );
+
+    /**
+     * Obtain factor value-level annotations together with the owning factor value and experimental factor, so the read
+     * VO can carry the term's parent context ({@code parentName} = the factor value, {@code parentOfParentName} = the
+     * factor) without a second query. Each row is {@code [Statement, FactorValue, ExperimentalFactor]}. The
+     * factor-value → statement and factor → factor-value joins the projection widens are already traversed by
+     * {@link #getFactorValueAnnotations(ExpressionExperiment)}; this only stops discarding the parents.
+     */
+    List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperiment ee );
+
+    /**
+     * Subset variant of {@link #getFactorValueAnnotationsWithParents(ExpressionExperiment)}. Each row is
+     * {@code [Statement, FactorValue, ExperimentalFactor]}.
+     */
+    List<Object[]> getFactorValueAnnotationsWithParents( ExpressionExperimentSubSet subset );
 
     /**
      * Special indicator for free-text terms.
@@ -744,6 +798,14 @@ public interface ExpressionExperimentDao
     SingleCellDimension getPreferredSingleCellDimensionsWithoutCellIds( ExpressionExperiment ee, boolean includeBioAssays, boolean includeCtas, boolean includeClcs, boolean includeProtocol, boolean includeCharacteristics, boolean includeIndices );
 
     /**
+     * Create single-cell data vectors in batches to avoid OutOfMemoryError.
+     * <p>
+     * Accepts any {@link Iterable} so the caller can supply a lazy or streaming source; vectors
+     * are flushed and evicted every 500 rows rather than being held for the duration.
+     */
+    void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors );
+
+    /**
      * Create a single-cell dimension for a given experiment.
      *
      * @throws IllegalArgumentException if the single-cell dimension is invalid
@@ -761,6 +823,13 @@ public interface ExpressionExperimentDao
      * Delete the given single-cell dimension.
      */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Remove all the cell-level characteristics of a single-cell dimension.
+     *
+     * @return the number of cell-level characteristics removed
+     */
+    int removeAllCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
      * Reload a single-cell dimension.

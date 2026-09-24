@@ -65,6 +65,12 @@ import java.util.stream.Collectors;
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class FactorValue extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
+    /**
+     * Maximum length of {@link #getValue()}, in characters: the {@code VALUE} column is {@code VARCHAR(255)} and
+     * the schema is {@code utf8mb4}, so MySQL counts code points, not bytes.
+     */
+    public static final int MAX_VALUE_LENGTH = 255;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "EXPERIMENTAL_FACTOR_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalFactor experimentalFactor;
@@ -120,6 +126,24 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
 
     @Column(name = "NEEDS_ATTENTION", nullable = false, columnDefinition = "TINYINT")
     private boolean needsAttention;
+
+    /**
+     * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
+     * backing this factor value as a curated claim — the same verbatim provenance
+     * {@link ubic.gemma.model.common.description.Characteristic#getSupportingEvidence()} carries for a tag or a
+     * statement. Gemma parses it only to serve it and to compare a proposal with it by content
+     * ({@code CharacteristicUtils.sameSupportingEvidence}); it is never queried, and the agents repo owns the
+     * evidence schema.
+     * <p>
+     * 🛑 Distinct from the evidence on this value's {@link #getCharacteristics() statements}, which is not a
+     * fallback for it. A statement's evidence backs the triple; this backs the VALUE — its label, its baseline
+     * flag, its measurement, the samples it covers — and a value carrying no statements at all (a continuous
+     * value, a plain free-text one) can still have a curator's justification behind it. Null when none was
+     * recorded.
+     */
+    @Nullable
+    @Column(name = "SUPPORTING_EVIDENCE", columnDefinition = "TEXT")
+    private String supportingEvidence;
 
     @Transient
     private ExpressionExperiment securityOwner = null;
@@ -220,6 +244,15 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
         this.needsAttention = troubled;
     }
 
+    @Nullable
+    public String getSupportingEvidence() {
+        return supportingEvidence;
+    }
+
+    public void setSupportingEvidence( @Nullable String supportingEvidence ) {
+        this.supportingEvidence = supportingEvidence;
+    }
+
     @Transient
     @Override
     public ExpressionExperiment getSecurityOwner() {
@@ -232,8 +265,20 @@ public class FactorValue extends AbstractIdentifiable implements SecuredChild<Ex
 
     @Override
     public int hashCode() {
-        // experimentalFactor is lazy-loaded, so it cannot be used in the hashCode() implementation
-        return Objects.hash( getMeasurement(), getCharacteristics() );
+        // Constant on purpose. The previous Objects.hash( getMeasurement(), getCharacteristics() ) moved
+        // whenever a statement was added to, removed from or re-termed on this factor value, because a Set's
+        // hash is the sum of its elements' and Statement hashes its predicate/object content. BioMaterial
+        // holds its factor values in a HashSet mapped @ManyToMany onto BIO_MATERIAL_FACTOR_VALUES, so an
+        // element whose hash moved mid-transaction is no longer where Hibernate's load-time snapshot recorded
+        // it, and the flush emits an INSERT for a join row that already exists: 19 of a 500-dataset curation
+        // run died on `Duplicate entry '520917-172185'` (cab, 2026-09-01, GSE117511 and 18 others). It took a
+        // commit that BOTH edited an existing factor value's statements and assigned a new factor value to the
+        // same biomaterial — the edit moved the hash, the assignment forced the collection to flush.
+        //
+        // experimentalFactor is lazy-loaded and the id flips null → value on persist, so neither of those can
+        // be hashed either. That leaves nothing stable to hash, and a constant is always correct: it costs a
+        // linear scan within one bucket, over collections that hold a handful of factor values.
+        return getClass().hashCode();
     }
 
     @Override

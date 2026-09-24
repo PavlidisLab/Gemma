@@ -21,26 +21,28 @@ import java.util.List;
 /**
  * Wire payload for {@code GET /resultSets/{id}/pvalueDistribution}.
  * <p>
- * A binned histogram of the raw or corrected p-values for a differential-expression result set;
- * bins are uniform-width over {@code [0, 1]}. Replaces the UIB pattern of fetching the full result
- * TSV and binning client-side.
+ * The stored histogram of the raw p-values for a differential-expression result set, optionally
+ * down-binned by merging adjacent stored bins; bins are uniform-width over {@code [0, 1]}. Replaces
+ * the UIB pattern of fetching the full result TSV and binning client-side.
  */
 @Getter
-@Schema(description = "Binned p-value histogram for a differential-expression result set.")
+@Schema(description = "Stored p-value histogram for a differential-expression result set.")
 public class PvalueDistributionValueObject {
 
     @Schema(description = "Result set identifier.")
     private final Long resultSetId;
 
-    @Schema(description = "Which p-value column was binned: 'raw' (PVALUE) or 'corrected' (CORRECTED_PVALUE).",
-            allowableValues = { "raw", "corrected" })
+    @Schema(description = "Which p-value column the histogram covers. Always 'raw' (PVALUE) — only the raw "
+            + "distribution is stored.",
+            allowableValues = { "raw" })
     private final String column;
 
-    @Schema(description = "Total number of non-null p-values across all bins.")
+    @Schema(description = "Total number of p-values across all bins.")
     private final long n;
 
-    @Schema(description = "Bin counts; length equals the requested `bins`. Bin i covers [i/bins, (i+1)/bins), "
-            + "with the last bin closed on the right so values exactly equal to 1.0 fall in the final bin.")
+    @Schema(description = "Bin counts; length equals the requested `bins`. Bin i covers (i/bins, (i+1)/bins], "
+            + "with the first bin also including 0.0 — the closed-on-the-right convention the stored "
+            + "histogram was built with.")
     private final List<Bin> bins;
 
     public PvalueDistributionValueObject( Long resultSetId, String column, long[] counts ) {
@@ -61,11 +63,11 @@ public class PvalueDistributionValueObject {
 
     @Getter
     @AllArgsConstructor
-    @Schema(description = "A single histogram bin: half-open range [lo, hi) (the last bin is closed on the right).")
+    @Schema(description = "A single histogram bin: half-open range (lo, hi] (the first bin also includes lo == 0.0).")
     public static class Bin {
-        @Schema(description = "Lower edge of the bin (inclusive).")
+        @Schema(description = "Lower edge of the bin (exclusive, except for the first bin which includes 0.0).")
         private final double lo;
-        @Schema(description = "Upper edge of the bin (exclusive, except for the last bin which is inclusive).")
+        @Schema(description = "Upper edge of the bin (inclusive).")
         private final double hi;
         @Schema(description = "Number of p-values that fell into this bin.")
         private final long count;

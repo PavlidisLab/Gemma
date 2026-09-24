@@ -20,6 +20,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSetPayloadCounts;
 import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
@@ -43,6 +44,9 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
 
     private static final String DRAFT_RUN_ID_PREFIX = "draft-";
 
+    /** Cap matching {@code ANNOTATION_SET.FINALIZED_NOTES VARCHAR(2048)}. */
+    private static final int MAX_FINALIZED_NOTES_LENGTH = 2048;
+
     private final AnnotationSetDao annotationSetDao;
 
     @Autowired
@@ -50,17 +54,56 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         this.annotationSetDao = annotationSetDao;
     }
 
+    /**
+     * When a newly-attached set earns an audit event.
+     * <p>
+     * Not for a SNAPSHOT. Every audit event on a curatable sets {@code curationDetails.lastUpdated} to the event
+     * date — see {@code AbstractCuratableDao#updateCurationDetailsFromAuditEvent}, which does it unconditionally
+     * for every event type. A snapshot captures existing state and changes nothing, so an event there would make
+     * a dataset look edited by the act of backing it up.
+     * <p>
+     * That is not cosmetic: {@code lastUpdated} is the optimistic-concurrency token the curation commit checks,
+     * so taking a backup would 409 every in-flight curator draft on that dataset. The AnnotationSet row is
+     * already its own record, carrying {@code createdAt}, {@code createdBy} and {@code runId}, so nothing is
+     * lost by staying quiet.
+     * <p>
+     * PROPOSAL and DRAFT keep their event: an agent attaching a hypothesis, or a curator opening a buffer, is
+     * activity on the dataset worth a trail entry.
+     * <p>
+     * COMMIT is quiet for the same reason and one more. A COMMIT row is minted inside the curation commit's own
+     * transaction, and that commit has already emitted its own events and already moved {@code lastUpdated} — an
+     * {@code AnnotationSetEvent} on top would be one more event for a commit that emits too many already, saying
+     * nothing the design/tag events did not. The row records who applied the curation; the events record what was
+     * applied.
+     */
+    private static final String ATTACH_AUDIT_WHEN =
+            "#result != null and #result.created"
+                    + " and #result.annotationSet.role.name() != 'SNAPSHOT'"
+                    + " and #result.annotationSet.role.name() != 'COMMIT'";
+
+    /**
+     * Audit note for a newly-attached set, shared by both {@code attach} overloads.
+     * <p>
+     * Extracted to a constant so the two cannot drift: the deprecated overload self-invokes the other, which
+     * means the aspect fires on whichever method the caller entered through (a same-class call bypasses the
+     * proxy), so BOTH need the annotation and both must say the same thing. Reads everything off
+     * {@code #result} rather than the parameters, so one expression fits both signatures.
+     */
+    private static final String ATTACH_AUDIT_MESSAGE = "'AnnotationSet#' + #result.annotationSet.id"
+            + " + ' role=' + #result.annotationSet.role.dbValue"
+            + " + ' source=' + #result.annotationSet.source.dbValue"
+            + " + (#result.annotationSet.kind != null ? ' kind=' + #result.annotationSet.kind.dbValue : '')"
+            + " + ' run=' + #result.annotationSet.runId"
+            + " + (#result.annotationSet.agentName != null ? ' agent=' + #result.annotationSet.agentName : '')"
+            + " + (#result.annotationSet.agentVersion != null ? ' version=' + #result.annotationSet.agentVersion : '')"
+            + " + (#result.annotationSet.model != null ? ' model=' + #result.annotationSet.model : '')"
+            + " + (#result.annotationSet.runSha != null ? ' sha=' + #result.annotationSet.runSha : '')";
+
     @Override
     @Transactional
     @AuditedConditional(value = AnnotationSetEvent.class,
-            when = "#result != null and #result.created",
-            messageSpel = "'AnnotationSet#' + #result.annotationSet.id"
-                    + " + ' role=' + #result.annotationSet.role.dbValue"
-                    + " + ' source=' + #result.annotationSet.source.dbValue"
-                    + " + (#result.annotationSet.kind != null ? ' kind=' + #result.annotationSet.kind.dbValue : '')"
-                    + " + ' run=' + #result.annotationSet.runId"
-                    + " + (#agentVersion != null ? ' agent=' + #agentVersion : '')"
-                    + " + (#model != null ? ' model=' + #model : '')")
+            when = ATTACH_AUDIT_WHEN,
+            messageSpel = ATTACH_AUDIT_MESSAGE)
     public AttachedAnnotationSet attach( Investigation investigation,
             AnnotationSetRole role,
             AnnotationSetSource source,
@@ -72,9 +115,30 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
             @Nullable Date ranAt,
             @Nullable String payloadJson,
             @Nullable AnnotationSet parent ) {
+        return attach( investigation, role, source, kind, runId, createdBy,
+                new RunProvenance( agentVersion, model, null, null, ranAt ), payloadJson, parent );
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional(value = AnnotationSetEvent.class,
+            when = ATTACH_AUDIT_WHEN,
+            messageSpel = ATTACH_AUDIT_MESSAGE)
+    public AttachedAnnotationSet attach( Investigation investigation,
+            AnnotationSetRole role,
+            AnnotationSetSource source,
+            @Nullable AgentCurationKind kind,
+            @Nullable String runId,
+            @Nullable String createdBy,
+            @Nullable RunProvenance runProvenance,
+            @Nullable String payloadJson,
+            @Nullable AnnotationSet parent ) {
         Assert.notNull( investigation, "Investigation must not be null." );
         Assert.notNull( role, "role must not be null." );
         Assert.notNull( source, "source must not be null." );
+        String agentVersion = runProvenance != null ? runProvenance.getAgentVersion() : null;
+        String model = runProvenance != null ? runProvenance.getModel() : null;
+        Date ranAt = runProvenance != null ? runProvenance.getRanAt() : null;
         String effectiveRunId = resolveRunId( role, runId, createdBy );
         AnnotationSet existing = annotationSetDao.findByInvestigationAndRoleAndRunId(
                 investigation, role, effectiveRunId );
@@ -93,8 +157,17 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         a.setUpdatedAt( now );
         a.setAgentVersion( agentVersion );
         a.setModel( model );
+        if ( runProvenance != null ) {
+            a.setRunSha( runProvenance.getRunSha() );
+            a.setAgentName( runProvenance.getAgentName() );
+        }
         a.setRanAt( ranAt != null ? ranAt : ( source == AnnotationSetSource.AGENT ? now : null ) );
-        a.setPayloadJson( payloadJson );
+        applyPayload( a, payloadJson );
+        // A proposal starts un-ruled. Every other role is not a thing that gets reviewed, and its
+        // status stays null -- see AnnotationSet#getStatus for why those two readings are distinct.
+        if ( role == AnnotationSetRole.PROPOSAL ) {
+            a.setStatus( INITIAL_PROPOSAL_STATUS );
+        }
         a.setParent( parent );
         AnnotationSet saved = annotationSetDao.create( a );
         return new AttachedAnnotationSet( saved, true );
@@ -115,7 +188,7 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
                 investigation, AnnotationSetRole.DRAFT, runId );
         Date now = new Date();
         if ( existing != null ) {
-            existing.setPayloadJson( payloadJson );
+            applyPayload( existing, payloadJson );
             existing.setParkedElements( parkedElements );
             existing.setUpdatedAt( now );
             if ( parent != null && existing.getParent() == null ) {
@@ -132,7 +205,7 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         a.setCreatedBy( createdBy );
         a.setCreatedAt( now );
         a.setUpdatedAt( now );
-        a.setPayloadJson( payloadJson );
+        applyPayload( a, payloadJson );
         a.setParkedElements( parkedElements );
         a.setParent( parent );
         return annotationSetDao.create( a );
@@ -203,9 +276,12 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     public List<AnnotationSetSummaryValueObject> listSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
-            @Nullable List<Long> investigationIds, int offset, int limit ) {
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
+            @Nullable List<Long> investigationIds, int offset, int limit,
+            @Nullable AnnotationSetDao.SummarySort sort, boolean descending ) {
         return annotationSetDao.listSummaries( roleFilter, sourceFilter, createdByFilter,
-                investigationIds, offset, limit );
+                kindFilter, statusFilter, investigationIds, offset, limit, sort, descending );
     }
 
     @Override
@@ -213,24 +289,36 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
     public long countSummaries( @Nullable AnnotationSetRole roleFilter,
             @Nullable AnnotationSetSource sourceFilter,
             @Nullable String createdByFilter,
+            @Nullable AgentCurationKind kindFilter,
+            @Nullable String statusFilter,
             @Nullable List<Long> investigationIds ) {
         return annotationSetDao.countSummaries( roleFilter, sourceFilter, createdByFilter,
-                investigationIds );
+                kindFilter, statusFilter, investigationIds );
     }
 
     @Nullable
     @Override
     @Transactional
-    public AnnotationSet finalizeSet( Long id, @Nullable String finalizedBy ) {
+    public AnnotationSet finalizeSet( Long id, @Nullable String finalizedBy, @Nullable String notes ) {
         Assert.notNull( id, "id must not be null." );
         AnnotationSet a = annotationSetDao.load( id );
         if ( a == null ) return null;
+        String trimmedNotes = truncateNotes( notes );
         if ( a.getFinalizedAt() != null ) {
+            // Already closed. Re-stamping the timestamp would rewrite when the decision was
+            // made, so it stays; but a note that arrives now is recorded rather than dropped,
+            // since a caller cannot tell a silently discarded sentence from a stored one.
+            if ( trimmedNotes != null && !trimmedNotes.equals( a.getFinalizedNotes() ) ) {
+                a.setFinalizedNotes( trimmedNotes );
+                a.setUpdatedAt( new Date() );
+                annotationSetDao.update( a );
+            }
             return a;
         }
         Date now = new Date();
         a.setFinalizedAt( now );
         a.setFinalizedBy( finalizedBy );
+        a.setFinalizedNotes( trimmedNotes );
         a.setUpdatedAt( now );
         annotationSetDao.update( a );
         return a;
@@ -249,9 +337,65 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
         Date now = new Date();
         a.setFinalizedAt( null );
         a.setFinalizedBy( null );
+        // The note explains one closure; keeping it would attach those words to the next one.
+        a.setFinalizedNotes( null );
         a.setUpdatedAt( now );
         annotationSetDao.update( a );
         return a;
+    }
+
+    @Nullable
+    @Override
+    @Transactional
+    public AnnotationSet updateProvenance( Long id, RunProvenance provenance ) {
+        Assert.notNull( id, "id must not be null." );
+        Assert.notNull( provenance, "provenance must not be null." );
+        AnnotationSet a = annotationSetDao.load( id );
+        if ( a == null ) return null;
+        if ( provenance.getAgentVersion() != null ) {
+            a.setAgentVersion( blankToNull( provenance.getAgentVersion() ) );
+        }
+        if ( provenance.getModel() != null ) {
+            a.setModel( blankToNull( provenance.getModel() ) );
+        }
+        if ( provenance.getRunSha() != null ) {
+            a.setRunSha( blankToNull( provenance.getRunSha() ) );
+        }
+        if ( provenance.getAgentName() != null ) {
+            a.setAgentName( blankToNull( provenance.getAgentName() ) );
+        }
+        if ( provenance.getRanAt() != null ) {
+            a.setRanAt( provenance.getRanAt() );
+        }
+        a.setUpdatedAt( new Date() );
+        annotationSetDao.update( a );
+        return a;
+    }
+
+    @Nullable
+    private static String blankToNull( String s ) {
+        return s.trim().isEmpty() ? null : s;
+    }
+
+    /**
+     * Trim, blank-to-null, and cut to {@code FINALIZED_NOTES VARCHAR(2048)}.
+     * <p>
+     * Truncated rather than rejected, matching how a triage note is handled:
+     * losing the tail of an explanation is a smaller harm than refusing a
+     * closure the curator has already decided on, and the closure is the part
+     * that matters.
+     */
+    @Nullable
+    private static String truncateNotes( @Nullable String notes ) {
+        if ( notes == null ) {
+            return null;
+        }
+        String trimmed = notes.trim();
+        if ( trimmed.isEmpty() ) {
+            return null;
+        }
+        return trimmed.length() <= MAX_FINALIZED_NOTES_LENGTH
+                ? trimmed : trimmed.substring( 0, MAX_FINALIZED_NOTES_LENGTH );
     }
 
     @Override
@@ -303,9 +447,46 @@ public class AnnotationSetServiceImpl implements AnnotationSetService {
             case SNAPSHOT:
                 return UUID.randomUUID().toString();
             case PROPOSAL:
+            case COMMIT:
             default:
+                // PROPOSAL and COMMIT both name a run that really happened on the producing side.
+                // Synthesizing an id here would invent provenance rather than record it, and a
+                // synthesized id is indistinguishable from a real one once it is in the column.
+                // Any role added later lands here too, which is the safe direction to fail.
                 throw new IllegalArgumentException(
                         "runId must be supplied for role=" + role );
         }
+    }
+
+    /**
+     * The status a proposal is created with. Lowercase because that is the spelling the column and
+     * the wire share; a free string rather than a constant of some enum, deliberately -- see
+     * {@link AnnotationSet#getStatus()}.
+     */
+    private static final String INITIAL_PROPOSAL_STATUS = "pending";
+
+    /**
+     * Store a payload and the two counts derived from it, together.
+     * <p>
+     * One method because they must not drift: a payload written without refreshing the counts leaves
+     * an inbox card describing the previous revision, and the draft upsert rewrites the payload of a
+     * row that already has counts on it. Both write paths and the draft update go through here.
+     */
+    private static void applyPayload( AnnotationSet a, @Nullable String payloadJson ) {
+        a.setPayloadJson( payloadJson );
+        AnnotationSetPayloadCounts counts = AnnotationSetPayloadCounts.of( payloadJson );
+        a.setFactorCount( counts.getFactorCount() );
+        a.setTagCount( counts.getTagCount() );
+    }
+
+    @Override
+    @Transactional
+    public AnnotationSet updateStatus( AnnotationSet annotationSet, String status ) {
+        Assert.notNull( annotationSet, "annotationSet must not be null." );
+        Assert.hasText( status, "status must be non-blank." );
+        annotationSet.setStatus( status );
+        annotationSet.setUpdatedAt( new Date() );
+        annotationSetDao.update( annotationSet );
+        return annotationSet;
     }
 }

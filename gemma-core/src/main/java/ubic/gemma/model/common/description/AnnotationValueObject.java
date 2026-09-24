@@ -19,12 +19,12 @@
 package ubic.gemma.model.common.description;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.lang.Nullable;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -35,14 +35,29 @@ import ubic.gemma.model.expression.experiment.Statement;
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
 @Data
-@EqualsAndHashCode(of = { "className", "classUri", "objectClass", "termUri", "termName" }, callSuper = true)
+// The statement labels are part of the identity because they are the only thing separating two
+// annotations that share a subject under one category -- "wild type genotype" bare and
+// "wild type genotype has background APP/PS1". Without them the two VOs compare equal whenever
+// their ids are null, and a Set of annotations silently keeps one.
+@EqualsAndHashCode(of = { "category", "categoryUri", "objectClass", "valueUri", "value",
+        "predicate", "object", "secondPredicate", "secondObject" }, callSuper = true)
 public class AnnotationValueObject extends IdentifiableValueObject<Characteristic> {
 
-    private String classUri;
-    private String className;
-    private String termUri;
-    private String termName;
-    @GemmaWebOnly
+    /** Category URI. Same field as {@link Characteristic#getCategoryUri()}, under the same name. */
+    private String categoryUri;
+    /** Category label. Same field as {@link Characteristic#getCategory()}, under the same name. */
+    private String category;
+    /** URI of the annotated term. On a {@link Statement} row this is the subject's URI. */
+    private String valueUri;
+    /**
+     * Label of the annotated term — the value as curated. On a {@link Statement} row this is the
+     * subject's label, and the predicate / object labels stay in their own fields: this field never
+     * carries a composed sentence. {@link ubic.gemma.model.expression.experiment.FactorValueUtils#getSummaryString}
+     * is the separate sentence-builder for display.
+     */
+    private String value;
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "no constructor or caller ever populates it")
     private String description;
     @Schema(implementation = GOEvidenceCode.class)
     private String evidenceCode;
@@ -53,8 +68,8 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
      * {@code predicate*} / {@code object*} pair, together with the optional
      * {@code secondPredicate*} / {@code secondObject*} pair, exposes the Statement
      * relational shape to read-side consumers without breaking the Characteristic
-     * wire shape — the existing {@link #termName} / {@link #termUri} fields still carry
-     * the statement's subject (Statement aliases subject → value internally).
+     * wire shape — {@link #valueUri} and {@link #value} carry the statement's subject URI and
+     * label (Statement aliases subject → value internally).
      */
     @Nullable
     @Schema(description = "Predicate label of a Statement-backed annotation (e.g. \"has_dose\"). Null on plain Characteristic rows.")
@@ -80,17 +95,23 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Nullable
     @Schema(description = "Second object URI for compound Statement annotations.")
     private String secondObjectUri;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentName;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentDescription;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentLink;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentName;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentDescription;
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "ontology-tree render state, never populated; superseded by /annotations/term")
     private String parentOfParentLink;
     /**
      * Verbatim provenance backing a curated tag — a JSON array of {@code {quote, source, location, ...}}
@@ -102,8 +123,6 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Schema(description = "Verbatim provenance backing a curated tag — a JSON array of {quote, source, location} items the curation agents emitted. Null when the tag has no recorded evidence.")
     private JsonNode supportingEvidence;
 
-    private static final ObjectMapper SUPPORTING_EVIDENCE_MAPPER = new ObjectMapper();
-
     public AnnotationValueObject() {
         super();
     }
@@ -112,50 +131,36 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
         super( id );
     }
 
-    public AnnotationValueObject( String classUri, String className, String termUri, String termName, Class<?> objectClass ) {
-        this.classUri = classUri;
-        this.className = className;
-        this.termUri = termUri;
-        this.termName = termName;
+    public AnnotationValueObject( String categoryUri, String category, String valueUri, String value, Class<?> objectClass ) {
+        this.categoryUri = categoryUri;
+        this.category = category;
+        this.valueUri = valueUri;
+        this.value = value;
         this.objectClass = formatObjectClass( objectClass );
     }
 
     public AnnotationValueObject( Characteristic c ) {
         super( c );
-        classUri = c.getCategoryUri();
-        className = c.getCategory();
-        termUri = c.getValueUri();
-        termName = c.getValue();
+        categoryUri = c.getCategoryUri();
+        category = c.getCategory();
+        // See CharacteristicUtils#canonicalUri: a read-time stand-in for the parked migration.
+        valueUri = CharacteristicUtils.canonicalUri( c.getValueUri() );
+        value = CharacteristicUtils.canonicalLabel( c.getValueUri(), c.getValue() );
         evidenceCode = c.getEvidenceCode() != null ? c.getEvidenceCode().name() : null;
         if ( c instanceof Statement ) {
             Statement s = ( Statement ) c;
             predicate = s.getPredicate();
             predicateUri = s.getPredicateUri();
-            object = s.getObject();
-            objectUri = s.getObjectUri();
+            // A Statement has three annotatable value slots, and a term is as often in the
+            // object as the subject -- canonicalizing only the subject would fix a third of it.
+            objectUri = CharacteristicUtils.canonicalUri( s.getObjectUri() );
+            object = CharacteristicUtils.canonicalLabel( s.getObjectUri(), s.getObject() );
             secondPredicate = s.getSecondPredicate();
             secondPredicateUri = s.getSecondPredicateUri();
-            secondObject = s.getSecondObject();
-            secondObjectUri = s.getSecondObjectUri();
+            secondObjectUri = CharacteristicUtils.canonicalUri( s.getSecondObjectUri() );
+            secondObject = CharacteristicUtils.canonicalLabel( s.getSecondObjectUri(), s.getSecondObject() );
         }
-        supportingEvidence = parseSupportingEvidence( c.getSupportingEvidence() );
-    }
-
-    /**
-     * Parse the opaque stored JSON into a tree for serialization. Writes always store a serialized
-     * {@code JsonNode}, so this round-trips cleanly; a null/blank or (defensively) unparseable value
-     * yields {@code null} rather than propagating a parse failure into the read response.
-     */
-    @Nullable
-    private static JsonNode parseSupportingEvidence( @Nullable String json ) {
-        if ( json == null || json.isEmpty() ) {
-            return null;
-        }
-        try {
-            return SUPPORTING_EVIDENCE_MAPPER.readTree( json );
-        } catch ( Exception e ) {
-            return null;
-        }
+        supportingEvidence = CharacteristicUtils.parseSupportingEvidence( c.getSupportingEvidence() );
     }
 
     public AnnotationValueObject( Characteristic c, Class<?> objectClass ) {
@@ -174,10 +179,10 @@ public class AnnotationValueObject extends IdentifiableValueObject<Characteristi
     @Override
     public String toString() {
         return "AnnotationValueObject{" +
-                "classUri='" + classUri + '\'' +
-                ", className='" + className + '\'' +
-                ", termUri='" + termUri + '\'' +
-                ", termName='" + termName + '\'' +
+                "categoryUri='" + categoryUri + '\'' +
+                ", category='" + category + '\'' +
+                ", valueUri='" + valueUri + '\'' +
+                ", value='" + value + '\'' +
                 '}';
     }
 }

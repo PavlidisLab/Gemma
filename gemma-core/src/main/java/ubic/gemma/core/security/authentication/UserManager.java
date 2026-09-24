@@ -92,6 +92,16 @@ public interface UserManager extends UserDetailsManager, GroupManager {
     @Secured("GROUP_USER")
     void changePassword( String oldPassword, String newPassword );
 
+    /**
+     * Administrative password reset: set a new password for the named user without
+     * requiring their current password. Distinct from {@link #changePasswordForUser(String, String, String)}
+     * (the email-confirmation reset flow, which disables the account and issues a
+     * signup token) — this leaves the account enabled and immediately usable. The
+     * new password is encoded before storage.
+     */
+    @Secured("GROUP_ADMIN")
+    void adminChangePassword( String username, String newPassword );
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     boolean validateSignupToken( String username, String key );

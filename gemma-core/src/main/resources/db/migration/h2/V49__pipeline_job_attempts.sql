@@ -1,0 +1,28 @@
+-- See db/migration/mysql/V57__pipeline_job_attempts.sql for the canonical description.
+-- The version number differs because the H2 + MySQL migration streams are keyed
+-- independently. Unlike MySQL, H2 does NOT accept repeated `ADD COLUMN a, ADD COLUMN b`
+-- clauses in one ALTER TABLE; it uses the parenthesized bulk form `ADD ( col ..., col ... )`.
+
+ALTER TABLE PIPELINE_JOB
+    ADD (
+        ATTEMPT          INT         NOT NULL DEFAULT 1,
+        RETRY_OF_FK      BIGINT      NULL,
+        SUPERSEDED_BY_FK BIGINT      NULL,
+        FAILURE_CLASS    VARCHAR(16) NULL,
+        PARAMS_JSON      CLOB        NULL
+    );
+
+ALTER TABLE PIPELINE_JOB
+    ADD CONSTRAINT CK_PIPELINE_JOB_FAILURE_CLASS
+        CHECK (FAILURE_CLASS IS NULL OR FAILURE_CLASS IN ('TRANSIENT', 'PERMANENT', 'UNKNOWN'));
+
+CREATE INDEX IDX_PIPELINE_JOB_BATCH_EE_ATTEMPT
+    ON PIPELINE_JOB (BATCH_FK, EXPERIMENT_FK, ATTEMPT);
+
+ALTER TABLE PIPELINE_JOB
+    ADD CONSTRAINT FK_PIPELINE_JOB_RETRY_OF
+        FOREIGN KEY (RETRY_OF_FK) REFERENCES PIPELINE_JOB (ID) ON DELETE SET NULL;
+
+ALTER TABLE PIPELINE_JOB
+    ADD CONSTRAINT FK_PIPELINE_JOB_SUPERSEDED_BY
+        FOREIGN KEY (SUPERSEDED_BY_FK) REFERENCES PIPELINE_JOB (ID) ON DELETE SET NULL;

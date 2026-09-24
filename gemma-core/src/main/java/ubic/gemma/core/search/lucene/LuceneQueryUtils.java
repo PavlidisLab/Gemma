@@ -6,6 +6,7 @@ import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.TokenMgrError;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PrefixQuery;
@@ -41,7 +42,9 @@ import java.util.regex.Pattern;
 @CommonsLog
 public class LuceneQueryUtils {
 
-    private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\]" );
+    // Mirrors Lucene's own QueryParserBase.escape() set, including '/' — an unescaped
+    // '/' opens a regex term and an unterminated one ("100 ng/ml") makes the lexer throw.
+    private static final Pattern LUCENE_RESERVED_CHARS = Pattern.compile( "[+\\-&|!(){}\\[\\]^\"~*?:\\\\/]" );
 
     private static QueryParser createQueryParser() {
         // KeywordAnalyzer emits the input as a single token — equivalent to HS 5's
@@ -66,19 +69,21 @@ public class LuceneQueryUtils {
      */
     public static Query parseSafely( String query, QueryParser queryParser, @Nullable Consumer<Throwable> report ) throws SearchException {
         try {
-            return queryParser.parse( query );
+            return parse( queryParser, query );
         } catch ( ParseException e ) {
             String strippedQuery = escape( query );
+            // Free-text queries routinely carry Lucene operators — a '/' in "100 ng/ml",
+            // brackets in a chemical name. A first-pass parse failure that recovers by
+            // escaping is the expected path, not a fault, so keep it at debug; the reporter
+            // (when present) is how a caller opts in to surfacing it.
             String m = String.format( "Failed to parse '%s': %s, it will be reattempted stripped from Lucene special characters as '%s'.",
                     query, ExceptionUtils.getRootCauseMessage( e ), strippedQuery );
+            log.debug( m, e );
             if ( report != null ) {
-                log.debug( m, e );
                 report.accept( e );
-            } else {
-                log.warn( m, e );
             }
             try {
-                return queryParser.parse( strippedQuery );
+                return parse( queryParser, strippedQuery );
             } catch ( ParseException e2 ) {
                 throw new LuceneParseSearchException(
                         strippedQuery,
@@ -86,6 +91,34 @@ public class LuceneQueryUtils {
                         e2,
                         new LuceneParseSearchException( query, ExceptionUtils.getRootCauseMessage( e ), e ) );
             }
+        }
+    }
+
+    /**
+     * Parse a query, normalizing the parser's two non-{@link ParseException} failure modes into
+     * a {@link ParseException}.
+     * <p>
+     * The lexer throws {@link TokenMgrError} — an {@link Error}, not an exception — for some
+     * malformed inputs (an unterminated regex from a stray '/', an open range from '['). It is
+     * usually wrapped into a {@link ParseException} by {@link QueryParser#parse}, but can escape
+     * unwrapped during grammar lookahead, in which case it would slip past a plain
+     * {@code catch (ParseException)} and bubble up to the retry interceptor.
+     * <p>
+     * A CLOSED regex whose body is not a valid regex fails differently again: the lexer is
+     * satisfied, and {@code RegExp} rejects the body with an {@link IllegalArgumentException}.
+     * That is the {@code a/b (c/d)} shape — the '(' falls between the two slashes, so the body is
+     * {@code b (c} — and it answered 500 on every endpoint reachable through
+     * {@link #prepareDatabaseQuery(SearchSettings, Consumer)} until it was normalized here.
+     * <p>
+     * Normalize both so the escape-and-retry fallback always runs.
+     */
+    private static Query parse( QueryParser queryParser, String query ) throws ParseException {
+        try {
+            return queryParser.parse( query );
+        } catch ( TokenMgrError | IllegalArgumentException e ) {
+            ParseException pe = new ParseException( "Cannot parse '" + query + "': " + e.getMessage() );
+            pe.initCause( e );
+            throw pe;
         }
     }
 
@@ -257,7 +290,7 @@ public class LuceneQueryUtils {
      */
     public static boolean isWildcard( SearchSettings settings ) {
         try {
-            return isWildcard( createQueryParser().parse( settings.getQuery() ) );
+            return isWildcard( parse( createQueryParser(), settings.getQuery() ) );
         } catch ( ParseException e ) {
             return false;
         }

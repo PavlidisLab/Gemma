@@ -38,7 +38,9 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.model.common.auditAndSecurity.curation.AnnotationSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AnnotationSetService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -88,6 +90,9 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
     private ExpressionExperimentSetService expressionExperimentSetService;
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    /** Needed by {@link #remove} — annotation sets hold a non-cascading FK to the investigation. */
+    @Autowired
+    private AnnotationSetService annotationSetService;
     @Autowired
     private FactorValueService factorValueService;
     @Autowired
@@ -320,6 +325,15 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
         Collection<ExpressionExperimentSubSet> subsets = expressionExperimentDao.getSubSets( ee );
         for ( ExpressionExperimentSubSet subset : subsets ) {
             expressionExperimentSubSetService.remove( subset );
+        }
+
+        // Remove annotation sets — agent proposals, curator drafts, and curation snapshots.
+        // ANNOTATION_SET.INVESTIGATION_FK carries no ON DELETE CASCADE, so without this the delete fails at
+        // commit with a foreign-key violation: any experiment an agent has ever proposed against, or that
+        // anyone has taken a curation backup of, becomes undeletable. Parent edges between sets are
+        // ON DELETE SET NULL, so the order within this loop does not matter.
+        for ( AnnotationSet annotationSet : annotationSetService.findByInvestigation( ee, null ) ) {
+            annotationSetService.delete( annotationSet.getId() );
         }
 
         // Remove differential expression analyses

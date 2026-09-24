@@ -1,12 +1,18 @@
 package ubic.gemma.core.security.authorization.acl;
 
+import ubic.gemma.core.security.acl.BaseAclAdvice;
 import ubic.gemma.core.security.acl.ObjectIdentityRetrievalStrategyImpl;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.acls.domain.BasePermission;
+import org.springframework.security.acls.model.AccessControlEntry;
+import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
@@ -18,6 +24,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
@@ -28,6 +35,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -43,6 +53,11 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
         @Bean
         public AclLinterService aclLinterService() {
             return new AclLinterServiceImpl();
+        }
+
+        @Bean
+        public AclLinterHelperService aclLinterHelperService() {
+            return new AclLinterHelperServiceImpl();
         }
 
         @Bean
@@ -64,6 +79,12 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
         public AclClassMetadata aclClassMetadata( SessionFactory sessionFactory ) {
             return new AclClassMetadata( sessionFactory );
         }
+
+        @Bean
+        public BaseAclAdvice aclAdvice( AclService aclService, SessionFactory sessionFactory,
+                ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy ) {
+            return new AclAdvice( aclService, sessionFactory, objectIdentityRetrievalStrategy );
+        }
     }
 
     @Autowired
@@ -71,6 +92,9 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private AclService aclService;
 
     @Test
     @WithMockUser(authorities = { "GROUP_ADMIN" })
@@ -374,5 +398,100 @@ public class AclLinterServiceTest extends BaseDatabaseTest5 {
                             && Long.valueOf( 33333L ).equals( r.getIdentifier() ),
                     "Id with no AOI should not be reported by SecuredNotChild lint, got: " + r );
         }
+    }
+
+    /**
+     * Repairing a top-level Securable must leave it editable.
+     * <p>
+     * The fix used to be a bare {@code aclService.createAcl(oi)}, which writes an identity with no
+     * parent, no access control entries and {@code entries_inheriting} set — "inherit from a parent
+     * that does not exist". Nothing then grants ADMINISTRATION or WRITE, so the
+     * {@code ACL_SECURABLE_EDIT} voter denies every caller including an administrator, and the
+     * linter reports a successful fix on an entity that is still un-writable. That is how
+     * ExpressionExperiments 93287, 93288, 93289, 93433 and 93434 came out of a repair run still
+     * answering 403.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testFixingATopLevelSecurableGrantsAdministration() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        sessionFactory.getCurrentSession().persist( ee );
+        sessionFactory.getCurrentSession().flush();
+        assertNotNull( ee.getId() );
+
+        AclLinterConfig config = AclLinterConfig.builder()
+                .lintSecurablesLackingIdentities( true )
+                .applyFixes( true )
+                .build();
+        aclLinterService.lintAcls( ExpressionExperiment.class, ee.getId(), config );
+
+        Acl acl = aclService.readAclById( new AclObjectIdentity( ExpressionExperiment.class, ee.getId() ) );
+        assertNull( acl.getParentAcl(), "A top-level Securable inherits from nothing." );
+        assertFalse( acl.getEntries().isEmpty(),
+                "The repaired ACL carries no access control entries, so nothing grants edit." );
+
+        boolean adminMayAdminister = false;
+        boolean anonymousMayRead = false;
+        for ( AccessControlEntry ace : acl.getEntries() ) {
+            String sid = ace.getSid().toString();
+            if ( sid.contains( "GROUP_ADMIN" ) && ace.getPermission().getMask() == BasePermission.ADMINISTRATION.getMask()
+                    && ace.isGranting() ) {
+                adminMayAdminister = true;
+            }
+            if ( sid.contains( "IS_AUTHENTICATED_ANONYMOUSLY" ) ) {
+                anonymousMayRead = true;
+            }
+        }
+        assertTrue( adminMayAdminister,
+                "GROUP_ADMIN has no ADMINISTRATION entry, so ACL_SECURABLE_EDIT denies an administrator: "
+                        + acl.getEntries() );
+        // ExpressionExperiment is an Investigation, which AclAdvice keeps private on creation. A
+        // repair must not hand anonymous read to a dataset that never had it.
+        assertFalse( anonymousMayRead,
+                "Repairing an Investigation made it publicly readable: " + acl.getEntries() );
+    }
+
+    /**
+     * 🛑 A SecuredChild whose parent is present AND CORRECT but which does not inherit reaches no other
+     * predicate, and grants nothing.
+     * <p>
+     * {@code lintSecuredChildWithIncorrectParent} compares parent type and identifier and passes such a row;
+     * this check used to require a null parent and passed it too. The row carries no ACEs of its own, so an ACL
+     * lookup finds no permissions and denies — "Access is denied" even for an administrator.
+     * <p>
+     * Two live populations on production 2026-09-10: 292 ExpressionAnalysisResultSet rows in exactly this state,
+     * 285 of them under PUBLIC experiments, and 8 ExperimentalFactor rows this linter had itself created.
+     */
+    @Test
+    @WithMockUser(authorities = { "GROUP_ADMIN" })
+    public void testLintChildWithoutParentAlsoSeesAPresentParentThatIsNotInherited() {
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
+        Long classId = aclClassIdFor( jt, ExperimentalFactor.class.getName() );
+        Long parentClassId = aclClassIdFor( jt, ExpressionExperiment.class.getName() );
+
+        // a parent identity, and a child that points at it but does NOT inherit
+        jt.update( "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, NULL, 1, 0)",
+                parentClassId, 88801L );
+        Long parentAoiId = jt.queryForObject(
+                "select id from acl_object_identity where object_id_class = ? and object_id_identity = ?",
+                Long.class, parentClassId, 88801L );
+        jt.update( "insert into acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting) values (?, ?, ?, 1, 0)",
+                classId, 88802L, parentAoiId );
+
+        Collection<AclLinterService.LintResult> results = aclLinterService.lintAcls( ExperimentalFactor.class,
+                AclLinterConfig.builder().lintChildWithoutParent( true ).applyFixes( false ).build() );
+
+        assertTrue( results.stream().anyMatch( r -> Long.valueOf( 88802L ).equals( r.getIdentifier() ) ),
+                "a child with a present-but-not-inherited parent must be reported; it grants nothing. Got: " + results );
+    }
+
+    /** Resolve or create the acl_class row for a class name. */
+    private Long aclClassIdFor( JdbcTemplate jt, String className ) {
+        List<Long> existing = jt.queryForList( "select id from acl_class where class = ?", Long.class, className );
+        if ( !existing.isEmpty() ) {
+            return existing.get( 0 );
+        }
+        jt.update( "insert into acl_class (class) values (?)", className );
+        return jt.queryForObject( "select id from acl_class where class = ?", Long.class, className );
     }
 }

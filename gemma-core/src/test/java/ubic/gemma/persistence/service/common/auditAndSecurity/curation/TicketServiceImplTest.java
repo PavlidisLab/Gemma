@@ -19,10 +19,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -30,19 +32,34 @@ import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TicketOpenedEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.util.CursorPage;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -282,6 +299,13 @@ public class TicketServiceImplTest {
     @Test
     public void findTicketsByCursorExtended_passesAllFiltersThroughToDao() {
         Date since = new Date( 3000L );
+        // The service walks the returned page to initialize each ticket for projection, so an
+        // unstubbed DAO hands it null and it NPEs before reaching the assertion. Stub an empty
+        // page: this test is about the filters reaching the DAO, and an empty result isolates
+        // that from anything the initialization pass does.
+        when( ticketDao.findTicketsByCursor( anyBoolean(), any(), any(), any(), any(), any(), any(), any(), anyInt() ) )
+                .thenReturn( new CursorPage<>( Collections.emptyList(), null, 10, null, null, 0L ) );
+
         service.findTicketsByCursor( false, null, TicketPriority.LOW,
                 TicketType.REALIGNMENT_NEEDED, TicketState.IN_PROGRESS,
                 TicketTargetType.ARRAY_DESIGN, since, null, 10 );
@@ -350,6 +374,342 @@ public class TicketServiceImplTest {
         verify( ticketDao ).save( t );
     }
 
+    /**
+     * 🛑 The reattach copy list in {@link TicketServiceImpl#updateMetadata} is hand-maintained, and a
+     * field left off it is dropped in silence: the REST layer mutates a DETACHED ticket, the copy skips
+     * the field, and the caller is answered 200. payload / payloadSchemaVersion shipped that way until
+     * 2026-09-04 and acceptsTargets until 2026-09-11.
+     *
+     * <p>This walks {@link Ticket}'s own fields and fails on any one that does not survive the call, so
+     * a field added to the entity has to be classified deliberately — copied in {@code updateMetadata},
+     * or named in {@code ownedElsewhere} below because another service method writes it. A field whose
+     * type this test cannot mint a distinct value for also fails, rather than being skipped.</p>
+     *
+     * <p>{@code title} and {@code body} live on the superclass and so are not walked; they are covered
+     * by {@code TicketPersistenceIT}, which asserts {@code title} as the control of its copy-list
+     * regression tests.</p>
+     *
+     * <p>The sibling test above passes a TRANSIENT ticket, where {@code reattach} short-circuits and the
+     * copy list never runs — which is why it cannot see any of this.</p>
+     */
+    @Test
+    public void updateMetadata_copiesEveryMutableMetadataField_offADetachedTicket() throws Exception {
+        // Owned by a dedicated path rather than by updateMetadata: set at create (type, reporter,
+        // createdAt), written by transition (state), by assign (assignee), by bumpUpdated (updatedAt),
+        // and by addTarget / appendEvent (the two collections).
+        Set<String> ownedElsewhere = new HashSet<>( Arrays.asList(
+                "type", "state", "reporter", "assignee", "createdAt", "updatedAt", "targets", "events" ) );
+
+        // Two instances with the same id: what the REST layer holds (detached, mutated by the handler)
+        // and what reattach() loads inside the service transaction.
+        Ticket detached = Ticket.Factory.newInstance( TicketType.CURATION, "copy-list-guard", reporter );
+        detached.setId( 7L );
+        Ticket attached = Ticket.Factory.newInstance( TicketType.CURATION, "copy-list-guard", reporter );
+        attached.setId( 7L );
+        when( ticketDao.load( 7L ) ).thenReturn( attached );
+        stubDaoSaveEchoes();
+
+        List<Field> walked = new ArrayList<>();
+        for ( Field f : Ticket.class.getDeclaredFields() ) {
+            if ( f.isSynthetic() || Modifier.isStatic( f.getModifiers() ) || Modifier.isFinal( f.getModifiers() ) ) {
+                continue;
+            }
+            if ( ownedElsewhere.contains( f.getName() ) ) {
+                continue;
+            }
+            f.setAccessible( true );
+            Object value = distinctValueFor( f.getType(), f.get( detached ) );
+            if ( value == null ) {
+                fail( "No distinct test value can be minted for Ticket." + f.getName() + " (" + f.getType()
+                        + "). Extend distinctValueFor, or name the field in ownedElsewhere if a dedicated"
+                        + " service method writes it." );
+            }
+            f.set( detached, value );
+            walked.add( f );
+        }
+        assertFalse( walked.isEmpty(), "no metadata fields were walked -- the guard would pass vacuously" );
+
+        service.updateMetadata( detached, "copy-list guard" );
+
+        for ( Field f : walked ) {
+            assertEquals( f.get( detached ), f.get( attached ),
+                    "updateMetadata does not copy `" + f.getName() + "` onto the reattached ticket, so a caller"
+                            + " that sets it is answered 200 and the value is lost. Copy it in"
+                            + " TicketServiceImpl.updateMetadata, or name it in ownedElsewhere if another"
+                            + " service method owns it." );
+        }
+    }
+
+    /**
+     * A value of {@code type} that differs from {@code current}, or null when this test does not know how
+     * to mint one — which the caller turns into a failure rather than a skip.
+     */
+    private static Object distinctValueFor( Class<?> type, Object current ) {
+        if ( type == String.class ) {
+            return "copy-list-guard";
+        }
+        if ( type == boolean.class || type == Boolean.class ) {
+            return Boolean.TRUE.equals( current ) ? Boolean.FALSE : Boolean.TRUE;
+        }
+        if ( type == int.class || type == Integer.class ) {
+            return 4242;
+        }
+        if ( type == long.class || type == Long.class ) {
+            return 4242L;
+        }
+        if ( type == Date.class ) {
+            return new Date( 1234567890L );
+        }
+        if ( type.isEnum() ) {
+            for ( Object constant : type.getEnumConstants() ) {
+                if ( !constant.equals( current ) ) {
+                    return constant;
+                }
+            }
+        }
+        return null;
+    }
+
+    /* ---- scratchpad provisioning ---------------------------------------- */
+
+    /**
+     * First call mints it. The two properties asserted here are the ones that make it a scratchpad
+     * rather than an ordinary ticket: the type, and {@code acceptsTargets} — a scratchpad nothing can
+     * be added to is inert, and the flag defaults to false.
+     */
+    @Test
+    public void getOrCreateScratchpad_createsOneOnFirstCall() {
+        when( ticketDao.findScratchpad( reporter ) ).thenReturn( null );
+        stubDaoCreateEchoes();
+
+        Ticket t = service.getOrCreateScratchpad( reporter );
+
+        assertEquals( TicketType.SCRATCHPAD, t.getType() );
+        assertTrue( t.isAcceptsTargets(), "a scratchpad nothing can be added to is pointless" );
+        assertEquals( TicketState.OPEN, t.getState() );
+        assertSame( reporter, t.getReporter() );
+        assertTrue( t.getTargets().isEmpty(), "a fresh scratchpad holds nothing yet" );
+        assertTrue( t.getTitle().contains( "Scratchpad" ), "title was " + t.getTitle() );
+        assertTrue( containsEventOfType( t, TicketEventType.OPENED ) );
+        verify( ticketDao ).create( any( Ticket.class ) );
+    }
+
+    /**
+     * The title names the owner, and a curator whose Contact name was never filled in is named by
+     * their username rather than losing their identity to a bare "Scratchpad" (uib, 2026-09-02).
+     */
+    @Test
+    public void getOrCreateScratchpad_titlesItByUsername_whenTheContactNameIsMissing() {
+        User nameless = User.Factory.newInstance( "amaximo" );
+        nameless.setId( 52731L );
+        when( ticketDao.findScratchpad( nameless ) ).thenReturn( null );
+        stubDaoCreateEchoes();
+
+        Ticket t = service.getOrCreateScratchpad( nameless );
+
+        assertEquals( "Scratchpad: amaximo", t.getTitle() );
+    }
+
+    /** An existing scratchpad is handed back untouched — no second row, no second OPENED event. */
+    @Test
+    public void getOrCreateScratchpad_returnsTheExistingOne_withoutCreating() {
+        Ticket existing = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad: Reporter", reporter );
+        existing.setId( 77L );
+        existing.setAcceptsTargets( true );
+        when( ticketDao.findScratchpad( reporter ) ).thenReturn( existing );
+
+        Ticket t = service.getOrCreateScratchpad( reporter );
+
+        assertSame( existing, t );
+        assertTrue( t.getEvents().isEmpty(), "re-reading a scratchpad must not append to its log" );
+        verify( ticketDao, never() ).create( any( Ticket.class ) );
+    }
+
+    /**
+     * The duplicate guard as a caller experiences it: call twice, get one ticket. The DAO stub stores
+     * what create() was handed and hands it back to the next findScratchpad, which is what a committed
+     * row does. Nothing in the schema enforces this — see TicketService#getOrCreateScratchpad for the
+     * race that survives — but the query-then-create path itself must not mint a second one.
+     */
+    @Test
+    public void getOrCreateScratchpad_secondCallReturnsTheSameTicket_andCreatesOnlyOnce() {
+        java.util.concurrent.atomic.AtomicReference<Ticket> stored = new java.util.concurrent.atomic.AtomicReference<>();
+        when( ticketDao.findScratchpad( reporter ) ).thenAnswer( inv -> stored.get() );
+        when( ticketDao.create( any( Ticket.class ) ) ).thenAnswer( inv -> {
+            Ticket arg = inv.getArgument( 0 );
+            arg.setId( 4242L );
+            stored.set( arg );
+            return arg;
+        } );
+
+        Ticket first = service.getOrCreateScratchpad( reporter );
+        Ticket second = service.getOrCreateScratchpad( reporter );
+
+        assertSame( first, second, "a curator has ONE scratchpad" );
+        verify( ticketDao, org.mockito.Mockito.times( 1 ) ).create( any( Ticket.class ) );
+    }
+
+    /**
+     * The lookup is scoped by curator, not global. One curator already has a scratchpad and the other
+     * does not: the first must get theirs back and the second must get a new one of their own. A
+     * lookup that ignored the curator would hand the second curator the first one's, or miss the
+     * first's entirely.
+     */
+    @Test
+    public void getOrCreateScratchpad_isScopedToTheCurator() {
+        Ticket reportersOwn = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "Scratchpad: Reporter", reporter );
+        reportersOwn.setId( 88L );
+        when( ticketDao.findScratchpad( reporter ) ).thenReturn( reportersOwn );
+        when( ticketDao.findScratchpad( assignee ) ).thenReturn( null );
+        stubDaoCreateEchoes();
+
+        Ticket mine = service.getOrCreateScratchpad( reporter );
+        Ticket theirs = service.getOrCreateScratchpad( assignee );
+
+        assertSame( reportersOwn, mine );
+        assertNotSame( mine, theirs, "the other curator must not be handed this one's scratchpad" );
+        assertSame( assignee, theirs.getReporter() );
+        verify( ticketDao, org.mockito.Mockito.times( 1 ) ).create( any( Ticket.class ) );
+    }
+
+    @Test
+    public void getOrCreateScratchpad_rejectsANullCurator() {
+        assertThrows( IllegalArgumentException.class, () -> service.getOrCreateScratchpad( null ) );
+    }
+
+    @Test
+    public void addTarget_appendsTheTarget_andLogsTargetAdded() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+        int eventsBefore = t.getEvents().size();
+        stubDaoSaveEchoes();
+
+        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ).getTicket();
+
+        assertEquals( 1, saved.getTargets().size() );
+        TicketTarget added = saved.getTargets().iterator().next();
+        assertEquals( 4242L, added.getTargetId() );
+        assertEquals( TicketTargetType.EXPRESSION_EXPERIMENT, added.getTargetType() );
+        assertEquals( TicketTargetStatus.NOT_DONE, added.getStatus(), "a freshly added target is not done" );
+        assertSame( saved, added.getTicket(), "the back-reference must be set or the row orphans" );
+        assertEquals( eventsBefore + 1, saved.getEvents().size() );
+        assertTrue( containsEventOfType( saved, TicketEventType.TARGET_ADDED ) );
+    }
+
+    /**
+     * The flag is the whole gate. False is the default and the state of every ticket that predates it,
+     * so without this check an agent-created ticket's fixed batch could silently grow.
+     */
+    @Test
+    public void addTarget_refusesWhenTheTicketDoesNotAcceptAdditions() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "fixed-batch", reporter );
+        assertFalse( t.isAcceptsTargets(), "the flag must default to false" );
+
+        assertThrows( IllegalStateException.class,
+                () -> service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        assertTrue( t.getTargets().isEmpty(), "nothing may be added when the gate refuses" );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /** State wins over the flag: a finished ticket must not quietly grow new work. */
+    @Test
+    public void addTarget_refusesOnAResolvedTicketEvenWithTheFlagOn() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "done", reporter );
+        t.setAcceptsTargets( true );
+        t.setState( TicketState.RESOLVED );
+
+        assertThrows( IllegalStateException.class,
+                () -> service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        assertTrue( t.getTargets().isEmpty() );
+        assertTrue( t.isAcceptsTargets(), "the flag must be left alone so reopening restores it" );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /**
+     * Idempotent, NOT a conflict. uib's argument, which is the deciding one: the client cannot know
+     * membership at click time — a menu may have been open for a minute — and a curator clicking twice
+     * must not get an error for reaching the state they asked for, nor a duplicate row on a
+     * 500-target ticket.
+     */
+    @Test
+    public void addTarget_isIdempotentOnADuplicate() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+        TicketTarget existing = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 4242L );
+        existing.setTicket( t );
+        t.getTargets().add( existing );
+
+        Ticket saved = service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ).getTicket();
+
+        assertEquals( 1, saved.getTargets().size(), "the duplicate must not be appended" );
+        assertFalse( containsEventOfType( saved, TicketEventType.TARGET_ADDED ),
+                "a no-op must not pollute the event log" );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /** A cancelled ticket is as finished as a resolved one; both refuse target changes. */
+    @Test
+    public void addTarget_refusesOnACancelledTicket() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "cancelled", reporter );
+        t.setAcceptsTargets( true );
+        t.setState( TicketState.CANCELLED );
+
+        assertThrows( IllegalStateException.class,
+                () -> service.addTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        assertTrue( t.getTargets().isEmpty() );
+    }
+
+    /**
+     * On a scratchpad, removing IS finishing (Paul, 2026-08-31) — the ticket stays open and the dataset
+     * leaves it — so this is the counterpart of addTarget, not an afterthought.
+     */
+    @Test
+    public void removeTarget_removesMembership_andLogsTargetRemoved() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+        TicketTarget tgt = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 4242L );
+        tgt.setStatus( TicketTargetStatus.NOT_DONE );
+        tgt.setTicket( t );
+        t.getTargets().add( tgt );
+        stubDaoSaveEchoes();
+
+        TicketTargetStatus removed = service.removeTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter );
+
+        assertEquals( TicketTargetStatus.NOT_DONE, removed, "the caller is told what it discarded" );
+        assertTrue( t.getTargets().isEmpty() );
+        assertTrue( containsEventOfType( t, TicketEventType.TARGET_REMOVED ),
+                "membership goes, the history stays" );
+    }
+
+    /** Removing something that is not there has already reached the asked-for state. */
+    @Test
+    public void removeTarget_isIdempotentWhenAbsent() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.SCRATCHPAD, "scratchpad", reporter );
+        t.setAcceptsTargets( true );
+
+        assertNull( service.removeTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 4242L, reporter ) );
+        verify( ticketDao, never() ).save( any( Ticket.class ) );
+    }
+
+    /**
+     * A completed target may be removed — a scratchpad's rows are all NOT_DONE and refusing would make
+     * the common case pay for the rare one. The status comes back so the caller can say what went.
+     */
+    @Test
+    public void removeTarget_allowsRemovingCompletedWork_butReportsIt() {
+        Ticket t = Ticket.Factory.newInstance( TicketType.CURATION, "worklist", reporter );
+        t.setAcceptsTargets( true );
+        TicketTarget tgt = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 99L );
+        tgt.setStatus( TicketTargetStatus.DONE );
+        tgt.setTicket( t );
+        t.getTargets().add( tgt );
+        stubDaoSaveEchoes();
+
+        assertEquals( TicketTargetStatus.DONE,
+                service.removeTarget( t, TicketTargetType.EXPRESSION_EXPERIMENT, 99L, reporter ) );
+        assertTrue( t.getTargets().isEmpty() );
+    }
+
     @Test
     public void updateTargetStatus_appendsTargetStatusChangedEvent_andBumpsUpdatedAt() {
         // Multi-target ticket; agent marks one target DONE while the other stays NOT_DONE.
@@ -412,6 +772,116 @@ public class TicketServiceImplTest {
 
         assertThrows( IllegalArgumentException.class, () ->
                 service.updateTargetStatus( t, 9999L, TicketTargetStatus.DONE, reporter ) );
+    }
+
+    // ---------------------------------------------------------------------
+    // searchTickets — the ticket picker behind GET /tickets/search
+    // ---------------------------------------------------------------------
+
+    private static TicketSearchHitValueObject hit( long id, String title ) {
+        return new TicketSearchHitValueObject( id, title, TicketState.OPEN, TicketType.CURATION, 3L, new Date(), TicketPriority.NORMAL );
+    }
+
+    @Test
+    public void searchTickets_listsTheVerbatimIdMatchFirst() {
+        when( ticketDao.findSearchHitById( eq( 6L ), anyBoolean(), any() ) )
+                .thenReturn( hit( 6L, "Reference 500 — ongoing curation review" ) );
+        // the title scan comes back updatedAt-desc and does not know about the id match
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( java.util.Arrays.asList( hit( 99L, "batch of 6" ), hit( 41L, "6 more" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "6", true, null, 20 );
+
+        assertEquals( java.util.Arrays.asList( 6L, 99L, 41L ),
+                hits.stream().map( TicketSearchHitValueObject::getId ).collect( java.util.stream.Collectors.toList() ),
+                "the ticket whose id was typed comes first, then the title matches in the order the DAO gave them" );
+    }
+
+    /**
+     * A ticket whose title is also the number typed would otherwise be listed twice — once as the
+     * id match, once as a title match.
+     */
+    @Test
+    public void searchTickets_doesNotListTheIdMatchTwiceWhenItAlsoMatchesTheTitle() {
+        when( ticketDao.findSearchHitById( eq( 6L ), anyBoolean(), any() ) ).thenReturn( hit( 6L, "6" ) );
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( java.util.Arrays.asList( hit( 6L, "6" ), hit( 99L, "batch of 6" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "6", true, null, 20 );
+
+        assertEquals( java.util.Arrays.asList( 6L, 99L ),
+                hits.stream().map( TicketSearchHitValueObject::getId ).collect( java.util.stream.Collectors.toList() ) );
+    }
+
+    /**
+     * A number that parses but names no ticket is a non-hit, not an error — the caller must not
+     * turn it into a 404, because the same string is still a legitimate title search.
+     */
+    @Test
+    public void searchTickets_idThatNamesNoTicket_yieldsNoHitRatherThanAnError() {
+        when( ticketDao.findSearchHitById( eq( 123456L ), anyBoolean(), any() ) ).thenReturn( null );
+        when( ticketDao.findSearchHitsByTitle( eq( "123456" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.singletonList( hit( 7L, "cohort 123456" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "123456", true, null, 20 );
+
+        assertEquals( 1, hits.size() );
+        assertEquals( 7L, hits.get( 0 ).getId() );
+    }
+
+    @Test
+    public void searchTickets_nonNumericQuery_neverRunsTheIdLookup() {
+        when( ticketDao.findSearchHitsByTitle( eq( "reference" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.singletonList( hit( 6L, "Reference 500" ) ) );
+
+        service.searchTickets( "reference", true, null, 20 );
+
+        verify( ticketDao, never() ).findSearchHitById( any(), anyBoolean(), any() );
+    }
+
+    /**
+     * "Verbatim" excludes text that merely starts with digits: "6 samples" is a title, and reading
+     * it as ticket 6 would put an unrelated ticket at the top of the list.
+     */
+    @Test
+    public void searchTickets_digitsFollowedByText_isTitleTextNotAnId() {
+        when( ticketDao.findSearchHitsByTitle( eq( "6 samples" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        service.searchTickets( "6 samples", true, null, 20 );
+
+        verify( ticketDao, never() ).findSearchHitById( any(), anyBoolean(), any() );
+    }
+
+    @Test
+    public void searchTickets_passesOpenOnlyAndTheCallersContactIdToBothQueries() {
+        when( ticketDao.findSearchHitById( eq( 6L ), eq( false ), eq( 11L ) ) ).thenReturn( null );
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), eq( false ), eq( 11L ), eq( 20 ) ) )
+                .thenReturn( Collections.emptyList() );
+
+        service.searchTickets( "6", false, 11L, 20 );
+
+        verify( ticketDao ).findSearchHitById( 6L, false, 11L );
+        verify( ticketDao ).findSearchHitsByTitle( "6", false, 11L, 20 );
+    }
+
+    @Test
+    public void searchTickets_truncatesToTheLimit() {
+        when( ticketDao.findSearchHitById( eq( 6L ), anyBoolean(), any() ) ).thenReturn( hit( 6L, "six" ) );
+        when( ticketDao.findSearchHitsByTitle( eq( "6" ), anyBoolean(), any(), anyInt() ) )
+                .thenReturn( java.util.Arrays.asList( hit( 99L, "a" ), hit( 98L, "b" ), hit( 97L, "c" ) ) );
+
+        java.util.List<TicketSearchHitValueObject> hits = service.searchTickets( "6", true, null, 2 );
+
+        assertEquals( java.util.Arrays.asList( 6L, 99L ),
+                hits.stream().map( TicketSearchHitValueObject::getId ).collect( java.util.stream.Collectors.toList() ),
+                "the id match must not be dropped to make room for a title match" );
+    }
+
+    @Test
+    public void searchTickets_blankQuery_returnsNothingAndQueriesNothing() {
+        assertTrue( service.searchTickets( "   ", true, null, 20 ).isEmpty() );
+        org.mockito.Mockito.verifyNoInteractions( ticketDao );
     }
 
     private static TicketEvent mostRecentEventOfType( Ticket t, TicketEventType type ) {

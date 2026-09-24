@@ -96,7 +96,7 @@ public class BrainKeywordMatcher implements GeoRecordMatcher {
         appendLowercase( haystack, joinCollection( r.getMeshHeadings() ) );
         String hay = haystack.toString();
         for ( String k : kw ) {
-            if ( hay.contains( k ) ) {
+            if ( containsWord( hay, k ) ) {
                 return MatchResult.hit( "brain keyword: " + k );
             }
         }
@@ -145,5 +145,37 @@ public class BrainKeywordMatcher implements GeoRecordMatcher {
     private static String joinCollection( @Nullable Collection<String> c ) {
         if ( c == null || c.isEmpty() ) return "";
         return String.join( " ", c );
+    }
+
+    /**
+     * Whole-word containment. A raw {@code contains} matched a keyword anywhere inside a longer
+     * word, so {@code "cortical"} fired on {@code "adrenocortical"} — bro reported GSE343489,
+     * a pediatric ADRENOcortical carcinoma study, returned as a {@code brain} match on
+     * 2026-08-12. {@code "neural"} inside {@code "neuralgia"} and {@code "cortex"} inside
+     * {@code "adrenal cortex"} are the same shape.
+     * <p>
+     * Boundaries are non-letter/digit rather than {@code \\b} on a regex, because several
+     * keywords are multi-word ({@code "substantia nigra"}, {@code "nucleus accumbens"}) and
+     * compiling a pattern per keyword per record is needless work on a hot scan path. Hyphens
+     * and slashes count as boundaries, so {@code "cortex-specific"} still matches.
+     */
+    static boolean containsWord( String haystack, String needle ) {
+        if ( haystack == null || needle == null || needle.isEmpty() ) {
+            return false;
+        }
+        int from = 0;
+        while ( true ) {
+            int i = haystack.indexOf( needle, from );
+            if ( i < 0 ) {
+                return false;
+            }
+            boolean leftOk = i == 0 || !Character.isLetterOrDigit( haystack.charAt( i - 1 ) );
+            int end = i + needle.length();
+            boolean rightOk = end >= haystack.length() || !Character.isLetterOrDigit( haystack.charAt( end ) );
+            if ( leftOk && rightOk ) {
+                return true;
+            }
+            from = i + 1;
+        }
     }
 }

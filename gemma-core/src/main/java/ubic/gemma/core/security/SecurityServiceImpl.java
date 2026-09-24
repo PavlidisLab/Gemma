@@ -18,6 +18,10 @@
  */
 package ubic.gemma.core.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.core.security.acl.domain.AclService;
 import org.springframework.security.acls.domain.GrantedAuthoritySid;
 import org.springframework.security.acls.domain.PrincipalSid;
@@ -60,6 +64,14 @@ import java.util.stream.Collectors;
 public class SecurityServiceImpl implements SecurityService {
 
     private final Log log = LogFactory.getLog( SecurityServiceImpl.class );
+
+    /**
+     * Injected by type rather than through the constructor: this bean is declared in
+     * {@code applicationContext-gsec.xml} with positional {@code constructor-arg}s, and
+     * {@code <context:annotation-config/>} is active, so a field keeps the wiring in one place.
+     */
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     private final AclService aclService;
     private final SessionRegistry sessionRegistry;
@@ -610,6 +622,23 @@ public class SecurityServiceImpl implements SecurityService {
             new SimpleGrantedAuthority( AuthenticatedVoter.IS_AUTHENTICATED_ANONYMOUSLY ) ), true );
 
         aclService.updateAcl( acl );
+
+        // Recorded here because this is the only place the ACL actually flips. The REST endpoints used to
+        // record it beside their own calls, which is why MakePublicEvent had 0 occurrences across a
+        // 200-dataset sample of production on 2026-08-21 -- anything made public by the CLI, a bulk job or
+        // any other service caller went unrecorded. From here every path is covered.
+        //
+        // The early return above means this fires on the transition and not on a no-op, so the EARLIEST
+        // MakePublicEvent on a trail is the first time the object became public. That is the question this
+        // answers; a last-event query cannot.
+        //
+        // Guarded on Auditable because makePublic accepts any Securable and only an Auditable has a trail.
+        // Auditable arrives via AbstractAuditable, which sits above Investigation -- the @Entity root of the
+        // hierarchy -- so a Hibernate proxy still satisfies it. (Curatable, implemented at the leaf, would
+        // not; see the proxy rule.)
+        if ( object instanceof Auditable ) {
+            auditTrailService.addUpdateEvent( ( Auditable ) object, MakePublicEvent.class, "Made public" );
+        }
 
         // this will fail if the acl changes haven't been flushed ...
         // if ( isPrivate( object ) ) {

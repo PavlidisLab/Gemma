@@ -551,7 +551,7 @@ public class DifferentialExpressionSearchTaskImpl
 
         int i = 0;
         Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = resultSets.stream()
-                .collect( Collectors.toMap( DiffExResultSetSummaryValueObject::getResultSetId, rs -> rs, ( a, b ) -> b ) );
+                .collect( Collectors.toMap( DiffExResultSetSummaryValueObject::getId, rs -> rs, ( a, b ) -> b ) );
 
         for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
 

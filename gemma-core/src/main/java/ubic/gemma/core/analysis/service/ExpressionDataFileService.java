@@ -79,13 +79,18 @@ public interface ExpressionDataFileService {
      * Delete all data files for a given QT.
      * <p>
      * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType}.
+     *
+     * @throws java.io.UncheckedIOException if a file could not be deleted; the others are deleted first
      */
     int deleteAllDataFiles( ExpressionExperiment ee, QuantitationType qt );
 
     /**
      * Delete all the processed files for a given experiment.
      * <p>
-     * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType}.
+     * This includes all the possible file types enumerated in {@link ExpressionExperimentDataFileType} and the
+     * processed data design file.
+     *
+     * @throws java.io.UncheckedIOException if a file could not be deleted; the others are deleted first
      */
     int deleteAllProcessedDataFiles( ExpressionExperiment ee );
 
@@ -327,6 +332,37 @@ public interface ExpressionDataFileService {
     int writeProcessedExpressionData( ExpressionExperiment ee, List<BioAssay> samples, boolean filtered, @Nullable ScaleType scaleType, boolean excludeSampleIdentifiers, boolean useBioAssayIds, boolean useRawColumnNames, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
 
     /**
+     * Stream the processed expression data to the writer while populating the cache file in the same pass.
+     * <p>
+     * One matrix build feeds both consumers. This replaces the cold-path pattern of racing a fire-and-forget
+     * cache build against an in-band stream of the same data, which fetched the vectors, thawed the platforms
+     * and read the annotations twice per cold request. The two sides fail independently: a caller that goes
+     * away mid-stream does not abort the cache build, and a cache-file write error does not abort the stream.
+     * When another writer already holds the cache file, this degrades to a plain stream, exactly like
+     * {@link #writeProcessedExpressionData(ExpressionExperiment, boolean, ScaleType, boolean, boolean, boolean, Writer, boolean)};
+     * when the cache file turns out to be fresh by the time the lock is acquired, its content is streamed
+     * instead of being rebuilt.
+     *
+     * @param forceWrite rebuild the cache file even if it exists and is up to date
+     */
+    void streamAndWriteProcessedExpressionData( ExpressionExperiment ee, boolean filtered, boolean forceWrite, Writer writer, boolean autoFlush ) throws FilteringException, IOException;
+
+    /**
+     * Raw sibling of
+     * {@link #streamAndWriteProcessedExpressionData(ExpressionExperiment, boolean, boolean, Writer, boolean)}.
+     */
+    void streamAndWriteRawExpressionData( ExpressionExperiment ee, QuantitationType qt, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
+     * Tabular single-cell sibling of
+     * {@link #streamAndWriteProcessedExpressionData(ExpressionExperiment, boolean, boolean, Writer, boolean)} —
+     * the payloads here are the largest in the system, so the duplicated cold build this replaces was at
+     * its most expensive on this path: two concurrent full scans of the single-cell vectors per cold
+     * request.
+     */
+    void streamAndWriteTabularSingleCellExpressionData( ExpressionExperiment ee, QuantitationType qt, int fetchSize, boolean useCursorFetchIfSupported, boolean forceWrite, Writer writer, boolean autoFlush ) throws IOException;
+
+    /**
      * Writes out the experimental design for the given experiment.
      * <p>
      * The bioassays (col 0) matches the header row of the data matrix printed out by the {@link MatrixWriter}.
@@ -420,8 +456,10 @@ public interface ExpressionDataFileService {
      * On a cache hit, returns the existing path with a shared lock (no DB hit). On a cache miss, materializes
      * the result set + contrasts + factor values + result-to-genes map via
      * {@code ExpressionAnalysisResultSetService}, writes the TSV via {@code ExpressionAnalysisResultSetFileService},
-     * stores it uncompressed under {@code <dataDir>/resultSets/resultSet_<id>.tsv}, and returns the locked path.
-     * The {@code /resultSets/{id}} REST endpoint re-compresses on the fly through its existing {@code @GZIP} encoder.
+     * stores it gzipped under {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz}, and returns the locked path.
+     * The {@code /resultSets/{id}} REST endpoint sends those bytes verbatim via sendfile under
+     * {@code @GZIP(alreadyCompressed = true)} — it cannot compress on the fly, because sendfile bypasses the
+     * encoder's stream entirely.
      *
      * @param resultSetId  the result-set ID to materialize
      * @param forceWrite   ignore any existing cached file

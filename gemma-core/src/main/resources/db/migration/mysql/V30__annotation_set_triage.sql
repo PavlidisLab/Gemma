@@ -1,0 +1,50 @@
+-- ANNOTATION_SET.TRIAGE -- so a curator's ruling on a whole set has somewhere to live.
+-- Five values: Pending, Fine, WontFix, MightFix, MustFix.
+--
+-- This overrides WORKFLOW_STATE_TRACKS_RECCE.md §4 Q1, which recommended storing nothing
+-- and deriving "flagged" from the existence of an open curator-facing ticket. That answer
+-- is binary, and the question is not: "there is something here and we are deliberately not
+-- acting on it" and "worth doing eventually" are different rulings that a ticket's presence
+-- cannot tell apart. The ticket remains how work is routed; it stops being the record of
+-- the verdict.
+--
+-- It also closes a hole with no other answer today. A curator who reads an agent's audit
+-- and decides against it can currently only DELETE the proposal -- losing the fact that
+-- they considered it -- or leave it, where it reads as pending forever. WontFix is that
+-- record.
+--
+-- 🛑 NOT the per-finding disposition. The curation-agents side already stores
+-- pending|accepted|dismissed|needs_more_info per finding, keyed by target_id, in the local
+-- store's curation_review.body_json (agents/audit/schemas.py:2360). That answers "do I
+-- agree with finding #7". This answers "how much does this whole set matter", and a finding
+-- can be dismissed inside a set triaged MustFix. Both vocabularies contain a "won't fix";
+-- they are not the same field. Nor is it CurationDraftDispositions.Disposition, which is
+-- per-element within one draft and is derived rather than stored.
+--
+-- NULLABLE, with NULL meaning Pending -- the opposite choice from V27's NOT NULL DEFAULT,
+-- and for the opposite reason. There, every pre-existing row genuinely WAS an assertion, so
+-- a default stated a truth. Here, no pre-existing row has been triaged by anyone, so a
+-- default would manufacture a verdict nobody gave. "Not yet ruled on" and "ruled Fine" are
+-- the two states a triage queue most needs to tell apart, and a backfilled default collapses
+-- them. The entity maps NULL -> Pending on read (AnnotationSet.getTriage()) and Pending ->
+-- NULL on write, so the two spellings never both reach the column.
+--
+-- ONE value plus its setter, not a machine column beside a human one. When the agent says
+-- MustFix and a curator says WontFix, the stored value is the curator's and the agent's is
+-- recoverable from the audit note. If the disagreement rate later turns out to be worth
+-- querying directly, that is a second column and not a redesign.
+--
+-- Deliberately NOT indexed. The triage queue query filters by INVESTIGATION_FK or ROLE
+-- first, both already indexed by V20, and TRIAGE is low-cardinality (5 values) -- an index
+-- on it would not be chosen. Add one if a corpus-wide "everything MustFix" query appears.
+--
+-- VARCHAR(16) matches ROLE/SOURCE/KIND's VARCHAR(32) convention on this table scaled to the
+-- longest value ('MightFix', 8 chars); enum name() is what Hibernate persists.
+--
+-- TRIAGED_AT is DATETIME(3) to match CREATED_AT / UPDATED_AT / FINALIZED_AT on this table.
+-- Mixing precisions here would make "was it triaged before or after it was finalized"
+-- answerable only to the second on one side of the comparison.
+ALTER TABLE ANNOTATION_SET
+    ADD COLUMN TRIAGE      VARCHAR(16)  NULL,
+    ADD COLUMN TRIAGED_BY  VARCHAR(255) NULL,
+    ADD COLUMN TRIAGED_AT  DATETIME(3)  NULL;

@@ -16,27 +16,41 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.ontology.providers.ChebiOntologyService;
 import ubic.gemma.core.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.ontology.providers.ObiService;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.CellosaurusOntologyService;
+import org.apache.lucene.queryparser.classic.ParseException;
 import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.simple.OntologyTermSimple;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.ParseSearchException;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.ontology.model.AnnotationProperty;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -105,6 +119,11 @@ public class OntologyServiceTest extends BaseTest5 {
         }
 
         @Bean
+        public CellosaurusOntologyService cellosaurusOntologyService() {
+            return mock( CellosaurusOntologyService.class );
+        }
+
+        @Bean
         @Qualifier("ontologyTaskExecutor")
         public TaskExecutor ontologyTaskExecutor() {
             return mock();
@@ -126,6 +145,12 @@ public class OntologyServiceTest extends BaseTest5 {
     private ObiService obiService;
 
     @Autowired
+    private CellosaurusOntologyService cellosaurusOntologyService;
+
+    @Autowired
+    private GeneOntologyService geneOntologyService;
+
+    @Autowired
     private SearchService searchService;
 
     @Autowired
@@ -136,7 +161,143 @@ public class OntologyServiceTest extends BaseTest5 {
 
     @AfterEach
     public void tearDown() {
-        reset( chebiOntologyService, obiService, searchService );
+        // characteristicReadService belongs here too: it was the one collaborator left holding
+        // invocations across tests, so a `never()` verification against it reported the PREVIOUS
+        // test's call and failed on test order rather than on behaviour.
+        reset( chebiOntologyService, obiService, cellosaurusOntologyService, searchService,
+                characteristicReadService );
+    }
+
+    /**
+     * A supplementary source scores against its own Lucene index and applies a large exact-name boost, so its
+     * raw score dwarfs a conventional ontology's. Ranking must not be decided by that number: every
+     * conventional hit comes first, and the supplementary hit is appended below.
+     */
+    @Test
+    public void testSupplementarySourceRanksBelowConventionalOntologies() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "HeLa", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "http://purl.obolibrary.org/obo/CLO_0003684", "HeLa cell" ), 1.5 ) ) );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "HeLa", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_0030", "HeLa" ), 137.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "HeLa", 100, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 2, results.size() );
+        assertEquals( "http://purl.obolibrary.org/obo/CLO_0003684", results.get( 0 ).getResult().getUri() );
+        assertEquals( "https://www.cellosaurus.org/CVCL_0030", results.get( 1 ).getResult().getUri() );
+    }
+
+    /**
+     * The gap-fill case: when no conventional ontology matches, the supplementary hit is still returned and is
+     * still first. Ranking below must not degrade into suppression.
+     */
+    @Test
+    public void testSupplementarySourceStillSurfacesWhenOntologiesFindNothing() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "KOLF2.1J", 100 ) ).thenReturn( Collections.emptyList() );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "KOLF2.1J", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_B5P3", "KOLF2.1J" ), 137.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "KOLF2.1J", 100, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 1, results.size() );
+        assertEquals( "https://www.cellosaurus.org/CVCL_B5P3", results.get( 0 ).getResult().getUri() );
+    }
+
+    /**
+     * Ranking below must not mean "only if there is room left over". The supplementary tier used to get
+     * {@code maxResults - ranked.size()}, which is exactly zero whenever the conventional ontologies fill
+     * the window — the common case, since a partial-token match on a word like "syndrome" saturates a
+     * default limit of 20 on its own. The catalogues were loaded, searched, and then discarded.
+     */
+    @Test
+    public void testSupplementaryTierIsReachableWhenConventionalHitsFillTheWindow() throws Exception {
+        List<OntologySearchResult<OntologyTerm>> conventional = new ArrayList<>();
+        for ( int i = 0; i < 10; i++ ) {
+            conventional.add( new OntologySearchResult<>(
+                    new OntologyTermSimple( "http://purl.obolibrary.org/obo/MONDO_" + i, "syndrome " + i ), 2.0 ) );
+        }
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "Gorlin Goltz Syndrome", 10 ) ).thenReturn( conventional );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "Gorlin Goltz Syndrome", 10 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_XXXX", "Gorlin Goltz" ), 137.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "Gorlin Goltz Syndrome", 10, 5000, TimeUnit.MILLISECONDS ) );
+
+        // The window is still full, and the supplementary hit is in it rather than starved out.
+        assertEquals( 10, results.size() );
+        assertTrue( results.stream().anyMatch( r -> r.getResult().getUri().startsWith( "https://www.cellosaurus.org/" ) ),
+                "supplementary hit was starved by a full conventional window" );
+        // Still ranked below: every conventional hit that made the cut precedes it.
+        int supplementaryIndex = -1;
+        for ( int i = 0; i < results.size(); i++ ) {
+            if ( results.get( i ).getResult().getUri().startsWith( "https://www.cellosaurus.org/" ) ) {
+                supplementaryIndex = i;
+                break;
+            }
+        }
+        assertEquals( results.size() - 1, supplementaryIndex );
+    }
+
+    /**
+     * Reserving a slice must not cost a result when there is nothing to put in it: with no supplementary
+     * source contributing, the conventional hits still fill the whole window.
+     */
+    @Test
+    public void testReservedSliceIsReturnedToConventionalHitsWhenUnused() throws Exception {
+        List<OntologySearchResult<OntologyTerm>> conventional = new ArrayList<>();
+        for ( int i = 0; i < 10; i++ ) {
+            conventional.add( new OntologySearchResult<>(
+                    new OntologyTermSimple( "http://purl.obolibrary.org/obo/MONDO_" + i, "term " + i ), 2.0 ) );
+        }
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "myelopathy", 10 ) ).thenReturn( conventional );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "myelopathy", 10, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 10, results.size() );
+    }
+
+    /**
+     * GO is consulted only when the other ontologies come up empty. That test must read the conventional
+     * ontologies alone — otherwise enabling a supplementary catalogue would quietly switch the GO fallback off
+     * for every query the catalogue happens to match.
+     */
+    @Test
+    public void testSupplementaryHitDoesNotSuppressTheGeneOntologyFallback() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.findTerm( "pregnancy", 100 ) ).thenReturn( Collections.emptyList() );
+
+        when( cellosaurusOntologyService.isSupplementary() ).thenReturn( true );
+        when( cellosaurusOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( cellosaurusOntologyService.findTerm( "pregnancy", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "https://www.cellosaurus.org/CVCL_9999", "pregnancy" ), 137.0 ) ) );
+
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( geneOntologyService.findTerm( "pregnancy", 100 ) ).thenReturn( Collections.singletonList(
+                new OntologySearchResult<>( new OntologyTermSimple( "http://purl.obolibrary.org/obo/GO_0007565", "female pregnancy" ), 2.0 ) ) );
+
+        List<OntologySearchResult<OntologyTerm>> results =
+                new ArrayList<>( ontologyService.findTerms( "pregnancy", 100, 5000, TimeUnit.MILLISECONDS ) );
+
+        verify( geneOntologyService ).findTerm( "pregnancy", 100 );
+        assertEquals( 2, results.size() );
+        assertEquals( "http://purl.obolibrary.org/obo/GO_0007565", results.get( 0 ).getResult().getUri() );
+        assertEquals( "https://www.cellosaurus.org/CVCL_9999", results.get( 1 ).getResult().getUri() );
     }
 
     @Test
@@ -157,6 +318,76 @@ public class OntologyServiceTest extends BaseTest5 {
         verify( chebiOntologyService ).findTerm( "9-chloro-5-phenyl-3-prop-2-enyl-1,2,4,5-tetrahydro-3-benzazepine-7,8-diol", 5000 );
     }
 
+    /**
+     * A two-character query is a real term name — H1, H7 and H9 are among the most-used human
+     * embryonic stem cell lines, and EFO_0003042 (H1-hESC) carries `H1` as an exact synonym. The
+     * floor used to sit at three and return an empty set with no log line, so those queries were
+     * indistinguishable from an ontology that had not been loaded.
+     */
+    @Test
+    public void testTwoCharacterQueryReachesTheOntologies() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+
+        ontologyService.findExperimentsCharacteristicTags( "H1", 100, false, false, 5000, TimeUnit.MILLISECONDS );
+
+        verify( chebiOntologyService ).findTerm( "H1", 100 );
+    }
+
+    /**
+     * One character stays out: that is where the candidate set stops being a name and becomes a
+     * scan of the index, and nothing we annotate is designated by a single character.
+     */
+    @Test
+    public void testSingleCharacterQueryIsStillRefused() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        assertTrue( ontologyService.findExperimentsCharacteristicTags( "H", 100, false, false, 5000, TimeUnit.MILLISECONDS ).isEmpty() );
+
+        verify( chebiOntologyService, never() ).findTerm( anyString(), anyInt() );
+        verify( characteristicReadService, never() ).findByValueLike( any(), any(), any(), anyBoolean(), anyInt() );
+    }
+
+    /**
+     * The cap has to keep the BEST candidates, not merely the same ones every time.
+     *
+     * <p>`H1 cell line` overflows the candidate cap with chemicals whose labels contain the
+     * substring, and EFO_0003042 -- the stem cell line actually being asked for -- is a poor match
+     * on its LABEL and a strong one on its declared synonym. Cutting alphabetically, or in whatever
+     * order a HashSet iterated, buried it: the term was absent from a hundred rows while scoring
+     * far above everything that displaced it. Relevance has to survive as far as the cut, so the
+     * search score is carried out of the ontology fan-out instead of being dropped at the value
+     * object.</p>
+     */
+    @Test
+    public void testTheCapKeepsTheBestCandidatesNotTheAlphabeticalOnes() throws Exception {
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        // Nine weak matches whose URIs sort FIRST, and the strong one whose URI sorts last.
+        List<OntologySearchResult<OntologyTerm>> hits = new ArrayList<>();
+        for ( int i = 0; i < 9; i++ ) {
+            hits.add( new OntologySearchResult<>( new OntologyTermSimple(
+                    String.format( "http://purl.obolibrary.org/obo/AAA_%04d", i ), "zzz weak " + i ), 0.5 ) );
+        }
+        OntologyTermSimple best = new OntologyTermSimple( "http://purl.obolibrary.org/obo/ZZZ_9999", "zzz best" );
+        hits.add( new OntologySearchResult<>( best, 42.0 ) );
+        when( chebiOntologyService.findTerm( eq( "zzz" ), anyInt() ) ).thenReturn( hits );
+
+        List<CharacteristicValueObject> capped = new ArrayList<>(
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 3, false, false, 5000, TimeUnit.MILLISECONDS ) );
+
+        assertEquals( 3, capped.size() );
+        // The high scorer survives a cap of three despite sorting last alphabetically.
+        assertEquals( "http://purl.obolibrary.org/obo/ZZZ_9999", capped.get( 0 ).getValueUri() );
+        // ...and the cut is still reproducible.
+        List<CharacteristicValueObject> again = new ArrayList<>(
+                ontologyService.findExperimentsCharacteristicTags( "zzz", 3, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        assertEquals( capped.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ),
+                again.stream().map( CharacteristicValueObject::getValueUri ).collect( Collectors.toList() ) );
+    }
+
     @Test
     public void testTermLackingLabelIsIgnored() throws TimeoutException {
         when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
@@ -168,5 +399,548 @@ public class OntologyServiceTest extends BaseTest5 {
         when( obiService.isOntologyLoaded() ).thenReturn( true );
         when( obiService.getTerm( "http://test" ) ).thenReturn( new OntologyTermSimple( "http://test", "this is a test term" ) );
         assertNotNull( ontologyService.getTerm( "http://test", 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    /**
+     * CLO does not use the OBO definition property. It writes what it knows about a cell line into
+     * {@code rdfs:comment} — {@code CLO_0008127} (NCI-H929) carries "disease: plasmacytoma;   myeloma" and no
+     * OBO definition at all — so probing only {@code IAO_0000115} returned null for exactly the terms whose
+     * description is the point. That disease is a property of the line, and nobody should have to curate it
+     * onto an experiment when an ontology already loaded here asserts it.
+     */
+    @Test
+    public void testDefinitionFallsBackToCommentWhenTheOntologyUsesOne() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0008127";
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "NCI-H929 cell" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( null );
+        when( term.getComment() ).thenReturn( "disease: plasmacytoma;   myeloma" );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertEquals( "disease: plasmacytoma;   myeloma",
+                ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    /**
+     * The fallback is a fallback: an ontology that states a definition properly still wins, so a MONDO or
+     * UBERON term never reports an editorial comment as its definition.
+     */
+    @Test
+    public void testOboDefinitionWinsOverComment() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/MONDO_0004975";
+        AnnotationProperty definition = mock();
+        when( definition.getContents() ).thenReturn( "A progressive form of dementia." );
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "Alzheimer disease" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( definition );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertEquals( "A progressive form of dementia.",
+                ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+        verify( term, never() ).getComment();
+    }
+
+    /**
+     * A term with neither still reports nothing, rather than an empty string a caller would render as a
+     * definition that exists and is blank.
+     */
+    @Test
+    public void testDefinitionIsNullWhenTheTermDescribesItselfNowhere() throws TimeoutException {
+        String uri = "http://purl.obolibrary.org/obo/CLO_0000019";
+        OntologyTerm term = mock();
+        when( term.getLabel() ).thenReturn( "immortal cell line cell" );
+        when( term.getAnnotation( OntologyUtils.DEFINITION_URI ) ).thenReturn( null );
+        when( term.getComment() ).thenReturn( "   " );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( uri ) ).thenReturn( term );
+
+        assertNull( ontologyService.getDefinition( uri, 5000, TimeUnit.MILLISECONDS ) );
+    }
+
+    private static final String OBSOLETE_DISEASE = "http://www.ebi.ac.uk/efo/EFO_0000408";
+    private static final String MONDO_DISEASE = "http://purl.obolibrary.org/obo/MONDO_0000001";
+
+    /**
+     * The real shape of the problem: EFO obsoleted {@code EFO_0000408} and named
+     * {@code MONDO_0000001} as its replacement, so the correction is derivable rather than a curator's guess.
+     */
+    @Test
+    public void testObsoleteTermWithAssertedReplacementIsAutoCorrectable() throws TimeoutException {
+        Map<String, String> inUse = new LinkedHashMap<>();
+        inUse.put( OBSOLETE_DISEASE, "disease" );
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( inUse );
+
+        AnnotationProperty replacedBy = mock();
+        // The annotation names a resource: its identity is the URI, and getValue() would hand back the label.
+        when( replacedBy.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( replacedBy );
+
+        OntologyTerm replacement = mock();
+        when( replacement.getLabel() ).thenReturn( "disease" );
+        when( replacement.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 15000L ) );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        ObsoleteTermUsage usage = report.get( 0 );
+        assertEquals( OBSOLETE_DISEASE, usage.getUri() );
+        assertEquals( "obsolete_disease", usage.getLabel() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "disease", usage.getReplacedByLabel() );
+        assertEquals( 15000L, usage.getExperimentCount() );
+        assertTrue( usage.isAutoCorrectable() );
+        assertNull( usage.getBlockedReason() );
+    }
+
+    /**
+     * {@code oboInOwl:consider} is advice to a human, not an assertion of equivalence, so it must never make a term
+     * auto-correctable however many candidates it lists.
+     */
+    @Test
+    public void testConsiderCandidatesDoNotMakeATermAutoCorrectable() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty consider = mock();
+        when( consider.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( null );
+        when( obsolete.getAnnotations( OntologyUtils.CONSIDER_URI ) ).thenReturn( Collections.singletonList( consider ) );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 3L ) );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        ObsoleteTermUsage usage = report.get( 0 );
+        assertFalse( usage.isAutoCorrectable() );
+        assertNull( usage.getReplacedByUri() );
+        assertEquals( Collections.singletonList( MONDO_DISEASE ), usage.getConsiderUris() );
+        assertNotNull( usage.getBlockedReason() );
+    }
+
+    /**
+     * A replacement that is itself obsolete is a chain for a curator to walk, not one to follow automatically.
+     */
+    @Test
+    public void testObsoleteReplacementIsNotAutoCorrectable() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty replacedBy = mock();
+        when( replacedBy.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( replacedBy );
+
+        OntologyTerm alsoObsolete = mock();
+        when( alsoObsolete.getLabel() ).thenReturn( "obsolete_something_else" );
+        when( alsoObsolete.isObsolete() ).thenReturn( true );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( alsoObsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        assertFalse( report.get( 0 ).isAutoCorrectable() );
+        assertTrue( report.get( 0 ).getBlockedReason().contains( "itself obsolete" ) );
+    }
+
+    /**
+     * A term used only as a CATEGORY has to be found too. EFO_0000408 is the "disease" category on a large share of
+     * the corpus and is obsolete; reading only the value/predicate/object slots reported it as unused.
+     */
+    @Test
+    public void testObsoleteTermUsedOnlyAsACategoryIsReported() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyMap() );
+        when( characteristicReadService.findCategoryGroupedByCategoryUri( any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty replacedBy = mock();
+        when( replacedBy.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( replacedBy );
+
+        OntologyTerm replacement = mock();
+        when( replacement.getLabel() ).thenReturn( "disease" );
+        when( replacement.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 15000L ) );
+
+        List<ObsoleteTermUsage> report = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        assertEquals( 1, report.size() );
+        ObsoleteTermUsage usage = report.get( 0 );
+        assertEquals( OBSOLETE_DISEASE, usage.getUri() );
+        assertEquals( 15000L, usage.getExperimentCount() );
+        assertTrue( usage.isUsedAsCategory() );
+        assertFalse( usage.isUsedAsTerm(), "it appears in no value/predicate/object slot" );
+    }
+
+    /**
+     * The count must include the category slot, otherwise a category-only term reports zero experiments and reads
+     * as harmless.
+     */
+    @Test
+    public void testCategoryUsageIsIncludedInTheExperimentCount() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyMap() );
+        when( characteristicReadService.findCategoryGroupedByCategoryUri( any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, 42L ) );
+
+        ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS );
+
+        // the category flag must actually be requested, not just the three term slots
+        verify( characteristicReadService ).countExperimentsByUris( any(), eq( true ), eq( true ), eq( true ), eq( true ), any(), any() );
+    }
+
+    /**
+     * EFO writes {@code IAO:0100001} as a LITERAL whose text is the URI, where MONDO/OBI/CL/CLO write a RESOURCE.
+     * Reading only the resource spelling made all 100 obsolete EFO terms on prod look like they had no successor,
+     * when EFO had named one for each.
+     */
+    @Test
+    public void testReplacementWrittenAsALiteralIsRead() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "obesity" ) );
+
+        AnnotationProperty asLiteral = mock();
+        when( asLiteral.getValueUri() ).thenReturn( null );       // no resource: it is a plain literal
+        when( asLiteral.getContents() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( asLiteral );
+
+        OntologyTerm replacement = mock();
+        when( replacement.getLabel() ).thenReturn( "disease" );
+        when( replacement.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( replacement );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertTrue( usage.isAutoCorrectable() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "IAO:0100001", usage.getResolvedVia() );
+    }
+
+    /**
+     * The literal branch must not turn arbitrary annotation text into a replacement — only something shaped like a
+     * term URI counts.
+     */
+    @Test
+    public void testFreeTextLiteralIsNotMistakenForAReplacement() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty prose = mock();
+        when( prose.getValueUri() ).thenReturn( null );
+        when( prose.getContents() ).thenReturn( "see the release notes" );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( prose );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertFalse( usage.isAutoCorrectable() );
+        assertNull( usage.getReplacedByUri() );
+    }
+
+    /**
+     * A term replaced by a term that was itself replaced is ordinary ontology housekeeping. Following the chain to
+     * a current terminus stays mechanical — every hop is an assertion the ontology made.
+     */
+    @Test
+    public void testReplacedByChainIsFollowedToACurrentTerm() throws TimeoutException {
+        String middle = "http://purl.obolibrary.org/obo/MONDO_1111111";
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty toMiddle = mock();
+        when( toMiddle.getValueUri() ).thenReturn( middle );
+        AnnotationProperty toFinal = mock();
+        when( toFinal.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( toMiddle );
+
+        OntologyTerm middleTerm = mock();
+        when( middleTerm.getLabel() ).thenReturn( "also obsolete" );
+        when( middleTerm.isObsolete() ).thenReturn( true );
+        when( middleTerm.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( toFinal );
+
+        OntologyTerm finalTerm = mock();
+        when( finalTerm.getLabel() ).thenReturn( "disease" );
+        when( finalTerm.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( middle ) ).thenReturn( middleTerm );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( finalTerm );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertTrue( usage.isAutoCorrectable() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "IAO:0100001-chain", usage.getResolvedVia() );
+        assertEquals( 2, usage.getReplacementHops() );
+    }
+
+    /**
+     * A cyclic replaced-by chain must stop rather than spin, and must not be presented as correctable.
+     */
+    @Test
+    public void testCyclicReplacedByChainIsNotAutoCorrectable() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty toOther = mock();
+        when( toOther.getValueUri() ).thenReturn( MONDO_DISEASE );
+        AnnotationProperty back = mock();
+        when( back.getValueUri() ).thenReturn( MONDO_DISEASE );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( toOther );
+
+        OntologyTerm other = mock();
+        when( other.getLabel() ).thenReturn( "still obsolete" );
+        when( other.isObsolete() ).thenReturn( true );
+        when( other.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( back );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.getTerm( MONDO_DISEASE ) ).thenReturn( other );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertFalse( usage.isAutoCorrectable() );
+        assertTrue( usage.getBlockedReason().contains( "cyclic" ) );
+    }
+
+    /**
+     * An ontology that MERGES X into Y frequently writes nothing on X — it records X in Y's hasAlternativeId. The
+     * successor is then found by reverse lookup, which is the same fact read from the other end.
+     */
+    @Test
+    public void testMergedTermIsResolvedByItsAlternativeIdRecord() throws TimeoutException {
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( OBSOLETE_DISEASE, "disease" ) );
+
+        AnnotationProperty oboId = mock();
+        when( oboId.getContents() ).thenReturn( "EFO:0000408" );
+
+        OntologyTerm obsolete = mock();
+        when( obsolete.getLabel() ).thenReturn( "obsolete_disease" );
+        when( obsolete.isObsolete() ).thenReturn( true );
+        when( obsolete.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) ).thenReturn( null );
+        when( obsolete.getAnnotation( "http://www.geneontology.org/formats/oboInOwl#id" ) ).thenReturn( oboId );
+
+        OntologyTerm successor = mock();
+        when( successor.getLabel() ).thenReturn( "disease" );
+        when( successor.getUri() ).thenReturn( MONDO_DISEASE );
+        when( successor.isObsolete() ).thenReturn( false );
+
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( OBSOLETE_DISEASE ) ).thenReturn( obsolete );
+        when( chebiOntologyService.findUsingAlternativeId( "EFO:0000408" ) ).thenReturn( successor );
+        when( characteristicReadService.countExperimentsByUris( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), any(), any() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        ObsoleteTermUsage usage = ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).get( 0 );
+        assertTrue( usage.isAutoCorrectable() );
+        assertEquals( MONDO_DISEASE, usage.getReplacedByUri() );
+        assertEquals( "hasAlternativeId", usage.getResolvedVia() );
+    }
+
+    /**
+     * GO annotations are gene annotations; their obsolescence is a separate problem and the CLI skipped them, so
+     * the report must not start reporting them just because it changed how it enumerates URIs.
+     */
+    @Test
+    public void testGeneOntologyTermsAreSkipped() throws TimeoutException {
+        String goUri = "http://purl.obolibrary.org/obo/GO_0005575";
+        when( characteristicReadService.findValueGroupedByValueUri( any(), anyBoolean(), anyBoolean(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.singletonMap( goUri, "cellular_component" ) );
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        assertTrue( ontologyService.findObsoleteTermsInUse( 5, TimeUnit.SECONDS ).isEmpty() );
+        verify( chebiOntologyService, never() ).getTerm( goUri );
+    }
+
+    /**
+     * A query Lucene cannot parse is caller input, so it must surface as a {@link ParseSearchException}
+     * — the type every search endpoint already maps to 400. It used to arrive as a plain
+     * {@link SearchException}, which {@code AnnotationsWebService} maps to 500, so `cell OR` answered
+     * 500: character escaping in the retry cannot neutralize a bare AND/OR/NOT keyword, so the
+     * reattempt fails identically. Asserts the exact type, not `instanceof SearchException` — the
+     * supertype passes against the unfixed code.
+     */
+    @Test
+    public void testUnparseableQuerySurfacesAsParseSearchException() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( chebiOntologyService.findTerm( anyString(), anyInt() ) )
+                .thenThrow( new OntologySearchException( "Lucene query failure for ontology index.", "cell OR",
+                        new ParseException( "Encountered \"<EOF>\" at line 1, column 7." ) ) );
+
+        ParseSearchException e = assertThrows( ParseSearchException.class,
+                () -> ontologyService.findExperimentsCharacteristicTags( "cell OR", 100, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        // Echoed back to the caller in the 400 body, so it must be what they sent rather than any
+        // internally rewritten form.
+        assertEquals( "cell OR", e.getQuery() );
+    }
+
+    /**
+     * The converse: a failure with no parse error in the chain is a server fault and must stay a
+     * {@link SearchException}, so a broken index keeps answering 500 rather than blaming the query.
+     */
+    @Test
+    public void testNonParseOntologyFailureStaysAServerError() throws Exception {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( characteristicReadService.findByValueLike( any(), any(), any(), anyBoolean(), anyInt() ) )
+                .thenReturn( Collections.emptyList() );
+        when( chebiOntologyService.findTerm( anyString(), anyInt() ) )
+                .thenThrow( new OntologySearchException( "index is closed", "cell", new java.io.IOException( "boom" ) ) );
+
+        SearchException e = assertThrows( SearchException.class,
+                () -> ontologyService.findExperimentsCharacteristicTags( "cell", 100, false, false, 5000, TimeUnit.MILLISECONDS ) );
+        assertFalse( e instanceof ParseSearchException );
+    }
+
+    /**
+     * A GO URI resolves through {@code getTerm}, even though GO stays out of the search fan-out.
+     * <p>
+     * GO is removed from {@code ontologyServices} at startup, which took it out of URI resolution as well as
+     * search. {@code /annotations/term?uri=…/GO_0007610} therefore answered "no such term" while
+     * {@code /admin/ontologies} reported GO {@code loaded: true} — reported by cab (eval) 2026-09-07, reached
+     * as the parent of {@code EFO_0002756 fasting}.
+     */
+    @Test
+    public void testGetTermResolvesAGeneOntologyUri() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/GO_0007610";
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( geneOntologyService.getTerm( uri ) ).thenReturn( new OntologyTermSimple( uri, "behavior" ) );
+
+        OntologyTerm term = ontologyService.getTerm( uri, 5000, TimeUnit.MILLISECONDS );
+
+        assertNotNull( term );
+        assertEquals( "behavior", term.getLabel() );
+    }
+
+    /** The same URI through the batch path, which is what fills in a cross-vocabulary parent's label. */
+    @Test
+    public void testGetTermsResolvesAGeneOntologyUri() throws Exception {
+        String uri = "http://purl.obolibrary.org/obo/GO_0007610";
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( geneOntologyService.getTerm( uri ) ).thenReturn( new OntologyTermSimple( uri, "behavior" ) );
+
+        assertEquals( Collections.singleton( uri ),
+                ontologyService.getTerms( Collections.singleton( uri ), 5000, TimeUnit.MILLISECONDS )
+                        .stream().map( OntologyTerm::getUri ).collect( Collectors.toSet() ) );
+    }
+
+    /**
+     * 🛑 The parent/child walk is deliberately NOT extended to GO. A transitive ancestor walk into GO's DAG is
+     * a real cost, and since cross-vocabulary parents started being reported an ordinary term can reach a GO
+     * URI — so the walk must not follow it into GO's hierarchy just because the URI now resolves.
+     */
+    @Test
+    public void testTheParentWalkStillDoesNotEnterGeneOntology() throws Exception {
+        when( geneOntologyService.isOntologyLoaded() ).thenReturn( true );
+
+        ontologyService.getParents(
+                Collections.singleton( new OntologyTermSimple( "http://purl.obolibrary.org/obo/GO_0007610", "behavior" ) ),
+                true, false, 5000, TimeUnit.MILLISECONDS );
+
+        verify( geneOntologyService, never() ).getParents( any(), anyBoolean(), anyBoolean() );
+        verify( geneOntologyService, never() ).getParents( any(), anyBoolean(), anyBoolean(), anyBoolean() );
+    }
+
+    /**
+     * A Statement whose value label is corrected but whose object URI resolves to no term: the correction is part
+     * of the returned (printed) corrections, so it must also be saved.
+     */
+    @Test
+    public void testFixOntologyTermLabelsSavesAStatementCorrectionWhenItsObjectUriDoesNotResolve() throws TimeoutException {
+        when( chebiOntologyService.isOntologyLoaded() ).thenReturn( true );
+        when( chebiOntologyService.getTerm( "http://test/subject" ) ).thenReturn( new OntologyTermSimple( "http://test/subject", "correct label" ) );
+        // http://test/object is not a term in any ontology
+        Statement statement = Statement.Factory.newInstance();
+        statement.setValue( "stale label" );
+        statement.setValueUri( "http://test/subject" );
+        statement.setObject( "some object" );
+        statement.setObjectUri( "http://test/object" );
+        // already correct, and after the statement in the same batch
+        Characteristic upToDate = Characteristic.Factory.newInstance();
+        upToDate.setValue( "correct label" );
+        upToDate.setValueUri( "http://test/subject" );
+        when( characteristicReadService.browse( 0, 5000 ) ).thenReturn( Arrays.asList( statement, upToDate ) );
+        when( characteristicReadService.browse( 5000, 5000 ) ).thenReturn( Collections.emptyList() );
+
+        Map<String, OntologyTerm> corrections = ontologyService.fixOntologyTermLabels( false, 5000, TimeUnit.MILLISECONDS );
+
+        assertTrue( corrections.containsKey( "stale label" ) );
+        assertEquals( "correct label", statement.getValue() );
+        verify( characteristicService ).update( same( statement ) );
+        verify( characteristicService, never() ).update( same( upToDate ) );
     }
 }

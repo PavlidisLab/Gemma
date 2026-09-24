@@ -73,6 +73,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
         StopWatch timer = new StopWatch();
         timer.start();
+        if ( expressionExperimentService.getRawDataVectorCount( ee ) == 0 ) {
+            log.warn( ee.getShortName() + " has no raw expression data vectors; skipping post-processing. "
+                    + "This is expected for datasets whose data is not in the GEO SOFT/series matrix "
+                    + "(e.g. RNA-seq, where data is reanalyzed from raw sequence later)." );
+            return;
+        }
         removeInvalidatedData( ee ); // clear out old files
         processForMissingValues( ee ); // only relevant for two-channel arrays
         processVectorCreate( ee, ignoreQuantitationMismatch ); // key step
@@ -103,7 +109,13 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         preprocessorHelperService.processForMeanVarianceRelation( ee );
         preprocessorHelperService.processForPca( ee );
         // FIXME: OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
-        geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
+        try {
+            geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
+        } catch ( RuntimeException e ) {
+            // calculateScore throws when scoring does not finish; report it as a diagnostics failure so that
+            // process(..., ignoreDiagnosticsFailure) treats it like the other diagnostics.
+            throw new PreprocessingException( ee, "GEEQ scoring failed", e );
+        }
     }
 
     private void processVectorCreate( ExpressionExperiment ee, boolean ignoreQuantitationMismatch ) throws PreprocessingException {

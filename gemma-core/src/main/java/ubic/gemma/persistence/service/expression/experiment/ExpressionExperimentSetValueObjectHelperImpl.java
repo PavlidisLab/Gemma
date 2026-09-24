@@ -107,31 +107,30 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
              * Figure out the taxon from the experiments. mustn't be heterogeneous.
              */
             Taxon taxon = null;
+            boolean mixed = false;
             for ( ExpressionExperiment ee : newSet.getExperiments() ) {
                 Taxon eeTaxon = expressionExperimentService.getTaxon( ee );
                 /*
                  * this can be null.
                  */
 
+                if ( eeTaxon == null ) {
+                    continue;
+                }
                 if ( taxon == null ) {
                     taxon = eeTaxon;
-                } else {
-                    assert eeTaxon != null;
-                    if ( !eeTaxon.equals( taxon ) ) {
-                        throw new UnsupportedOperationException( "EESets with mixed taxa are not supported" );
-                    }
+                } else if ( !eeTaxon.equals( taxon ) ) {
+                    mixed = true;
+                    break;
                 }
             }
 
-            if ( taxon == null ) {
-                throw new IllegalStateException( "Could not determine taxon for new EEset" );
-            }
-            newSet.setTaxon( taxon );
-
-        }
-
-        if ( newSet.getTaxon() == null ) {
-            throw new IllegalArgumentException( "Unable to determine the taxon for the EESet" );
+            // A set MAY be scoped to one taxon; it does not have to be. Scoped is what the
+            // per-taxon master sets and the taxon-constrained search leg want, and a set whose
+            // members happen to share a taxon still gets it for free. A set spanning taxa -- a
+            // curation cohort, say -- carries no taxon rather than being refused: the gold
+            // reference set is 179 human, 254 mouse and 16 rat, and there is nothing wrong with it.
+            newSet.setTaxon( mixed ? null : taxon );
         }
 
         ExpressionExperimentSet newEESet = expressionExperimentSetService.create( newSet );
@@ -205,13 +204,20 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
 
         assert newExperiments.size() == eeIds.size();
         Collection<ExpressionExperiment> basColl = new HashSet<>();
+        // Same rule as ExpressionExperimentSetServiceImpl.update: the set's taxon is a constraint
+        // it opted into, so a set that carries none accepts members of any taxon. Enforcing it
+        // unconditionally left a set that spans taxa unable to have its membership replaced at all,
+        // since no member can match a null taxon.
+        Taxon setTaxon = eeSet.getTaxon();
         for ( ExpressionExperiment experiment : newExperiments ) {
-            Taxon eeTaxon = expressionExperimentService.getTaxon( experiment );
+            if ( setTaxon != null ) {
+                Taxon eeTaxon = expressionExperimentService.getTaxon( experiment );
 
-            // make sure experiments being added are from the right taxon
-            if ( eeTaxon == null || !eeTaxon.equals( eeSet.getTaxon() ) ) {
-                throw new IllegalArgumentException(
-                        experiment + " is of the wrong taxon to add to eeset. EESet taxon is " + eeSet.getTaxon() );
+                // make sure experiments being added are from the right taxon
+                if ( eeTaxon == null || !eeTaxon.equals( setTaxon ) ) {
+                    throw new IllegalArgumentException(
+                            experiment + " is of the wrong taxon to add to eeset. EESet taxon is " + setTaxon );
+                }
             }
 
             basColl.add( experiment );

@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.service.ExpressionAnalysisResultSetFileService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.util.locking.LockedPath;
+import ubic.gemma.core.util.math.distribution.Histogram;
 import ubic.gemma.model.analysis.AnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.Baseline;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultSetValueObject;
@@ -88,6 +89,11 @@ import static ubic.gemma.rest.util.Responders.respond;
 public class AnalysisResultSetsWebService {
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 = "text/tab-separated-values; charset=UTF-8; q=0.9";
+    /**
+     * Same media type without the quality parameter, for the {@link GZIP} media-type restriction — that is matched
+     * against the response's {@code Content-Type}, which carries no {@code q}.
+     */
+    private static final String TEXT_TAB_SEPARATED_VALUES_UTF8 = "text/tab-separated-values; charset=UTF-8";
     private static final MediaType TEXT_TAB_SEPARATED_VALUES_Q9_TYPE = withQuality( new MediaType( "text", "tab-separated-values", "UTF-8" ), 0.9 );
 
     @Autowired
@@ -116,6 +122,10 @@ public class AnalysisResultSetsWebService {
      * @param datasets        filter result sets that belong to any of the provided dataset identifiers, or null to ignore
      * @param databaseEntries filter by associated datasets with given external identifiers, or null to ignore
      */
+    // Every row repeats its parent `analysis` and its `experimentalFactors` verbatim; at limit=20 that is 12
+    // distinct analyses and 5 distinct factor sets stretched over 20 rows. Measured on gemma2 (2026-08-31):
+    // 229,515 bytes uncompressed, 5,777 gzipped. The route produces JSON only, so no media-type restriction.
+    @GZIP
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve all result sets matching the provided criteria",
@@ -180,7 +190,19 @@ public class AnalysisResultSetsWebService {
     /**
      * Retrieve a {@link AnalysisResultSet} given its identifier.
      */
-    @GZIP
+    // Two representations, two compression strategies — hence the repeated annotation.
+    //
+    // JSON is generated in-band, so Jersey's GZipEncoder compresses it on the fly (header set BEFORE the encoder
+    // runs, which is what triggers it).
+    //
+    // TSV is served straight off a pre-gzipped cache file through sendfile(), which hands the file to Tomcat's
+    // connector and never writes to the entity stream the encoder would have wrapped. Compressing on the fly is
+    // therefore impossible on that path: declaring plain @GZIP there stamped Content-Encoding: gzip onto a raw
+    // plain-text body, and clients that honour the header failed to inflate it (curl --compressed exited 61).
+    // alreadyCompressed = true appends the header AFTER the encoder instead, so nothing tries to wrap the stream
+    // and the already-gzipped bytes go out as-is.
+    @GZIP(mediaTypes = MediaType.APPLICATION_JSON)
+    @GZIP(mediaTypes = TEXT_TAB_SEPARATED_VALUES_UTF8, alreadyCompressed = true)
     @GET
     @Path("/{resultSet}")
     @Produces({ MediaType.APPLICATION_JSON, TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 })
@@ -263,49 +285,87 @@ public class AnalysisResultSetsWebService {
     /**
      * Histogram-binned p-values for a differential-expression result set.
      * <p>
-     * Computed on the fly with a single {@code GROUP BY FLOOR(p * bins)} aggregation over
-     * {@code DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT} keyed on the result-set FK; rows with a
-     * {@code NULL} p-value are excluded. Replaces UIB's "fetch full TSV + bin client-side" path
-     * for the histogram view — for a ~20K-probe microarray result set this is one indexed
-     * group-by, well under 200ms.
+     * Served straight out of the stored {@code PVALUE_DISTRIBUTION} row hanging off the result set
+     * ({@code ANALYSIS_RESULT_SET.PVALUE_DISTRIBUTION_FK}); nothing is aggregated per request.
+     * {@code DifferentialExpressionAnalyzerServiceImpl#addPvalueDistribution} writes it when the
+     * analysis is run: 100 fixed-width bins over {@code [0, 1]} of {@code result.getPvalue()}, i.e.
+     * the RAW p-values. Measured on production 2026-08-31: {@code PVALUE_DISTRIBUTION} is 0.1 GB and
+     * every one of the 56,616 result sets has a row, whereas the
+     * {@code DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT} table the previous implementation grouped over
+     * is 120.5 GB / ~1,574,396,269 rows.
+     * <p>
+     * Because the stored bins are fixed, {@code bins} can only merge whole stored bins — it has to
+     * divide the stored bin count exactly. Splitting a stored count across two output bins would be
+     * inventing data, so a non-divisor is a 400 rather than an approximation.
      */
     @GET
     @Path("/{resultSet}/pvalueDistribution")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Binned p-value distribution for a differential-expression result set",
-            description = "Returns a histogram with `bins` equal-width bins over [0, 1]. The `column` "
-                    + "parameter selects between raw (PVALUE) and corrected (CORRECTED_PVALUE) p-values; "
-                    + "rows with a null p-value in the chosen column are excluded. Bin i covers "
-                    + "[i/bins, (i+1)/bins); the last bin is closed on the right so a p-value of exactly 1.0 "
-                    + "is counted in the final bin.",
+            description = "Returns the p-value histogram stored with the result set, optionally down-binned by "
+                    + "merging adjacent stored bins. The histogram is written when the differential-expression "
+                    + "analysis is run — 100 fixed-width bins over [0, 1] of the **raw** p-values — and is served "
+                    + "verbatim; nothing is computed per request. "
+                    + "`bins` must therefore divide the stored bin count (100) exactly: 1, 2, 4, 5, 10, 20, 25, 50 "
+                    + "or 100. Any other value is rejected with a 400, because splitting a stored count across two "
+                    + "output bins would be inventing data. "
+                    + "Bin i covers (i/bins, (i+1)/bins]; the first bin also includes 0.0. Note this is the "
+                    + "closed-on-the-right convention of the stored histogram, not the half-open one. "
+                    + "`column` accepts only `raw`: no corrected-p-value histogram is stored anywhere, and building "
+                    + "one would mean scanning the full results table, so `column=corrected` is rejected with a 400 "
+                    + "instead of silently answering with the raw distribution.",
             responses = {
                     @ApiResponse(responseCode = "200",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PvalueDistributionResponseDataObject.class))),
-                    @ApiResponse(responseCode = "204", description = "The result set has no non-null p-values in the requested column."),
-                    @ApiResponse(responseCode = "400", description = "Invalid `bins` (must be 1..1000) or `column` (must be 'raw' or 'corrected').",
+                    @ApiResponse(responseCode = "204", description = "The stored histogram is empty — it has no bins, or every bin is zero (the analysis produced no non-null p-values)."),
+                    @ApiResponse(responseCode = "400", description = "`bins` does not divide the stored bin count, or `column` is not 'raw'.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
-                    @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
+                    @ApiResponse(responseCode = "404", description = "The analysis result set could not be found, or it has no stored p-value distribution.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getPvalueDistribution(
             @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
-            @Parameter(description = "Number of equal-width bins over [0, 1]; must be between 1 and 1000.",
-                    schema = @Schema(defaultValue = "20", minimum = "1", maximum = "1000"))
+            @Parameter(description = "Number of bins. Must divide the stored bin count (100) exactly: 1, 2, 4, 5, 10, 20, 25, 50 or 100.",
+                    schema = @Schema(defaultValue = "20", minimum = "1", maximum = "100"))
             @QueryParam("bins") @DefaultValue("20") int bins,
-            @Parameter(description = "Which p-value column to bin.",
-                    schema = @Schema(defaultValue = "corrected", allowableValues = { "raw", "corrected" }))
-            @QueryParam("column") @DefaultValue("corrected") String column ) {
-        if ( bins < 1 || bins > 1000 ) {
-            throw new BadRequestException( "The 'bins' parameter must be between 1 and 1000 (got " + bins + ")." );
+            @Parameter(description = "Which p-value column to serve. Only the raw distribution is stored; 'corrected' is rejected with a 400.",
+                    schema = @Schema(defaultValue = "raw", allowableValues = { "raw" }))
+            @QueryParam("column") @DefaultValue("raw") String column ) {
+        if ( "corrected".equals( column ) ) {
+            throw new BadRequestException( "Only the raw p-value distribution is stored; there is no corrected one to serve, "
+                    + "and computing it would mean scanning the whole results table. Pass column=raw or omit the parameter." );
         }
-        if ( !"raw".equals( column ) && !"corrected".equals( column ) ) {
-            throw new BadRequestException( "The 'column' parameter must be 'raw' or 'corrected' (got '" + column + "')." );
+        if ( !"raw".equals( column ) ) {
+            throw new BadRequestException( "The 'column' parameter must be 'raw' (got '" + column + "')." );
+        }
+        if ( bins < 1 ) {
+            throw new BadRequestException( "The 'bins' parameter must be at least 1 (got " + bins + ")." );
         }
         // resolves through the AbstractEntityArgService.getEntity path which 404s if missing and
         // enforces ACL on the loaded result set.
         ExpressionAnalysisResultSet ears = expressionAnalysisResultSetArgService.getEntity( analysisResultSet );
-        long[] counts = expressionAnalysisResultSetService.binPvalues( ears.getId(), column, bins );
+        Histogram stored = expressionAnalysisResultSetService.loadPvalueDistribution( ears );
+        if ( stored == null ) {
+            // Distinct from 204: there is no PVALUE_DISTRIBUTION row at all. Zero result sets are in
+            // this state on production, so a 404 here is a data-integrity signal, not a normal answer.
+            throw new NotFoundException( "ExpressionAnalysisResultSet " + ears.getId() + " has no stored p-value distribution." );
+        }
+        double[] storedCounts = stored.getArray();
+        if ( storedCounts.length == 0 ) {
+            return Response.noContent().build();
+        }
+        if ( storedCounts.length % bins != 0 ) {
+            throw new BadRequestException( "The 'bins' parameter must divide the stored bin count (" + storedCounts.length
+                    + ") exactly, so that output bins are whole numbers of stored bins; accepted values are "
+                    + divisorsOf( storedCounts.length ) + " (got " + bins + ")." );
+        }
+        int storedBinsPerOutputBin = storedCounts.length / bins;
+        long[] counts = new long[bins];
         long total = 0;
-        for ( long c : counts ) {
+        for ( int i = 0; i < storedCounts.length; i++ ) {
+            // bin counts are whole numbers (Histogram increments by 1); round rather than truncate
+            // so a stored value that drifted to 4.999999 is not silently read as 4.
+            long c = Math.round( storedCounts[i] );
+            counts[i / storedBinsPerOutputBin] += c;
             total += c;
         }
         if ( total == 0 ) {
@@ -315,10 +375,28 @@ public class AnalysisResultSetsWebService {
     }
 
     /**
+     * Ascending divisors of {@code n}, for the {@code bins} rejection message.
+     */
+    private static String divisorsOf( int n ) {
+        StringBuilder sb = new StringBuilder();
+        for ( int d = 1; d <= n; d++ ) {
+            if ( n % d == 0 ) {
+                if ( sb.length() > 0 ) {
+                    sb.append( ", " );
+                }
+                sb.append( d );
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
      * Disk-cache + sendfile path for the TSV representation of a result set.
      * <p>
      * Result sets are immutable post-creation; the cached gzipped TSV under
-     * {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz} stays valid forever. The cold-build path materializes the
+     * {@code <dataDir>/resultSets/resultSet_<id>.tsv.gz} stays valid forever. Its bytes are what goes on the wire —
+     * see the {@code @GZIP} declarations on {@link #getResultSet} for why it is cached pre-compressed. The
+     * cold-build path materializes the
      * full result set (50k results + thawed probe + contrasts + factor values + result-to-genes map = hundreds of
      * batched DB round-trips) once on first request; subsequent requests skip the DB entirely.
      */

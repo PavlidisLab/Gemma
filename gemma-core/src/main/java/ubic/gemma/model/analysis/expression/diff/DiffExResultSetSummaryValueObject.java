@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.lang.Nullable;
-import ubic.gemma.model.annotations.GemmaWebOnly;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -80,12 +79,6 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
     private Integer numberOfGenesAnalyzed;
 
     private Integer numberOfProbesAnalyzed;
-
-    /**
-     * This is used once in the frontend, but never filled, so please ignore.
-     */
-    @GemmaWebOnly
-    private Double qValue;
 
     /**
      * Threshold applied to the hitlist.
@@ -239,13 +232,5 @@ public class DiffExResultSetSummaryValueObject implements Serializable {
 
     public Integer getNumberOfDownregulatedProbes() {
         return downregulatedCount;
-    }
-
-    /**
-     * Alias for {@link #getId()} kept for backward-compatibility in the Gemma Web frontend.
-     */
-    @GemmaWebOnly
-    public Long getResultSetId() {
-        return id;
     }
 }

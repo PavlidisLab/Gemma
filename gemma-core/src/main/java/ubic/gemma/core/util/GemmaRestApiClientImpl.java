@@ -68,12 +68,17 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
 
     @Override
     public Response perform( String endpoint ) throws IOException {
-        return performInternal( endpoint, null );
+        return performInternal( "GET", endpoint, null );
     }
 
     @Override
     public Response perform( String endpoint, MultiValueMap<String, Object> params ) throws IOException {
-        return performInternal( endpoint, params );
+        return performInternal( "GET", endpoint, params );
+    }
+
+    @Override
+    public Response delete( String endpoint ) throws IOException {
+        return performInternal( "DELETE", endpoint, null );
     }
 
     public Response perform( String endpoint, String firstParamName, Object firstParamValue, Object... otherParams ) throws IOException {
@@ -86,16 +91,20 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
             Assert.isTrue( StringUtils.isNotBlank( ( String ) otherParams[i] ), "Parameter names must not be blank." );
             params.add( ( String ) otherParams[i], otherParams[i + 1] );
         }
-        return performInternal( endpoint, params );
+        return performInternal( "GET", endpoint, params );
     }
 
-    private Response performInternal( String endpoint, @Nullable MultiValueMap<String, Object> params ) throws IOException {
+    private Response performInternal( String method, String endpoint, @Nullable MultiValueMap<String, Object> params ) throws IOException {
         Assert.isTrue( endpoint.startsWith( "/" ), "Endpoint must start with a '/' character." );
         URLConnection connection = null;
         try {
             int status;
             URL url = new URL( hostUrl + "/rest/v2" + endpoint + ( params != null ? "?" + encodeQueryParams( params ) : "" ) );
             connection = url.openConnection();
+            if ( connection instanceof HttpURLConnection ) {
+                // Must be set before the response code is read, or the connection is already sent.
+                ( ( HttpURLConnection ) connection ).setRequestMethod( method );
+            }
             connection.setRequestProperty( "Accept", "application/json" );
             connection.setRequestProperty( "Accept-Encoding", "gzip" );
             if ( authentication instanceof UsernamePasswordAuthenticationToken ) {

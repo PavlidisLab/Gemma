@@ -6,13 +6,14 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import ubic.gemma.core.ontology.FactorValueOntologyServiceImpl;
 import ubic.gemma.core.ontology.FactorValueOntologyUtils;
 import ubic.gemma.model.expression.experiment.AbstractFactorValueValueObject;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.expression.experiment.StatementValueObject;
 
 import java.io.IOException;
 import java.util.Collection;
 
 import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitCharacteristics;
-import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitStatements;
+import static ubic.gemma.core.ontology.FactorValueOntologyUtils.visitAllStatements;
 
 /**
  * Base serializer for {@link ubic.gemma.model.expression.experiment.FactorValue} VOs.
@@ -40,8 +41,23 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         }
         serializeInternal( factorValueValueObject, jsonGenerator, serializerProvider );
         jsonGenerator.writeBooleanField( "isMeasurement", factorValueValueObject.isMeasurement() );
+        // Absent rather than false when unset, matching the field's own @JsonInclude(NON_NULL): the flag is
+        // three-valued on write, where null means "no change", so a rendered false has to mean "explicitly
+        // not the baseline" and nothing else. This serializer replaces the bean path for every factor value
+        // the API returns, so until it wrote the flag no endpoint did -- 665 factor values were marked
+        // baseline in the database and none of them said so on the wire, which is also what made a design
+        // GET -> PUT round-trip unable to carry the designation back.
+        if ( factorValueValueObject.getBaseline() != null ) {
+            jsonGenerator.writeBooleanField( "isBaseline", factorValueValueObject.getBaseline() );
+        }
         if ( factorValueValueObject.getMeasurementObject() != null ) {
             jsonGenerator.writeObjectField( "measurement", factorValueValueObject.getMeasurementObject() );
+        }
+        // A factor value carries evidence of its own, declared on AbstractFactorValueValueObject and inherited by
+        // both concrete VOs -- distinct from the evidence on its statements. Absent rather than null when unset,
+        // for the same reason as the statement-level field: an empty send ERASES on the write path.
+        if ( factorValueValueObject.getSupportingEvidence() != null ) {
+            jsonGenerator.writeObjectField( "supportingEvidence", factorValueValueObject.getSupportingEvidence() );
         }
         writeCharacteristics( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
         writeStatements( factorValueValueObject.getId(), factorValueValueObject.getStatements(), jsonGenerator );
@@ -59,14 +75,32 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeEndArray();
     }
 
+    /**
+     * Every statement, including the ones with nothing said about them.
+     * <p>
+     * 🛑 This array used to hold only the statements carrying an OBJECT, which made a plain
+     * {@code organism part: chorionic villus} — the commonest annotation there is — arrive as
+     * {@code statements: []} with the row visible only under {@code characteristics}. Three teams
+     * read that as "this factor value has no statement" in a single day (2026-08-28): a write-back
+     * was diagnosed against the wrong cause, and a grounded UBERON term rendered as free text on
+     * every organism-part value of one dataset.
+     * <p>
+     * A grounded value with no predicate is not a different kind of annotation from one with a
+     * predicate; it is the same annotation with less said about it, so it belongs in the same list
+     * with {@code predicate} and {@code object} simply absent. {@code characteristics} still carries
+     * the same rows for clients that read it.
+     */
     private void writeStatements( Long factorValueId, Collection<StatementValueObject> svos, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeArrayFieldStart( "statements" );
-        visitStatements( factorValueId, svos, ( svo, assignedIds ) -> {
+        visitAllStatements( factorValueId, svos, ( svo, assignedIds ) -> {
             if ( assignedIds.getObjectId() != null ) {
-                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), jsonGenerator );
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getPredicate(), svo.getPredicateUri(), assignedIds.getObjectId(), svo.getObject(), svo.getObjectUri(), svo, jsonGenerator );
             }
             if ( assignedIds.getSecondObjectId() != null ) {
-                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), jsonGenerator );
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), svo.getSecondPredicate(), svo.getSecondPredicateUri(), assignedIds.getSecondObjectId(), svo.getSecondObject(), svo.getSecondObjectUri(), svo, jsonGenerator );
+            }
+            if ( assignedIds.getObjectId() == null && assignedIds.getSecondObjectId() == null ) {
+                writeStatement( svo.getId(), svo.getCategory(), svo.getCategoryUri(), assignedIds.getSubjectId(), svo.getSubject(), svo.getSubjectUri(), null, null, null, null, null, svo, jsonGenerator );
             }
         } );
         jsonGenerator.writeEndArray();
@@ -83,7 +117,7 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeEndObject();
     }
 
-    private void writeStatement( Long id, String category, String categoryUri, String subjectId, String subject, String subjectUri, String predicate, String predicateUri, String objectId, String object, String objectUri, JsonGenerator jsonGenerator ) throws IOException {
+    private void writeStatement( Long id, String category, String categoryUri, String subjectId, String subject, String subjectUri, @Nullable String predicate, @Nullable String predicateUri, @Nullable String objectId, @Nullable String object, @Nullable String objectUri, StatementValueObject source, JsonGenerator jsonGenerator ) throws IOException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeObjectField( "id", id );
         jsonGenerator.writeStringField( "category", category );
@@ -91,11 +125,31 @@ public abstract class AbstractFactorValueValueObjectSerializer<T extends Abstrac
         jsonGenerator.writeStringField( "subjectId", subjectId );
         jsonGenerator.writeStringField( "subject", subject );
         jsonGenerator.writeStringField( "subjectUri", subjectUri );
-        jsonGenerator.writeStringField( "predicate", predicate );
-        jsonGenerator.writeStringField( "predicateUri", predicateUri );
-        jsonGenerator.writeStringField( "objectId", objectId );
-        jsonGenerator.writeStringField( "object", object );
-        jsonGenerator.writeStringField( "objectUri", objectUri );
+        // Absent rather than null when there is no predicate: null reads as "this was cleared", and a
+        // subject-only statement has nothing to clear. The subject half is always written, including
+        // its nulls, because those describe a term that IS there.
+        if ( predicate != null ) {
+            jsonGenerator.writeStringField( "predicate", predicate );
+            jsonGenerator.writeStringField( "predicateUri", predicateUri );
+        }
+        if ( objectId != null ) {
+            jsonGenerator.writeStringField( "objectId", objectId );
+            jsonGenerator.writeStringField( "object", object );
+            jsonGenerator.writeStringField( "objectUri", objectUri );
+        }
+        // Evidence describes the ROW, so a compound statement carries the same values on both of the entries
+        // it is flattened into; `unflattenStatements` re-joins them by id on the way back in.
+        //
+        // 🛑 Absent rather than null when unset, and for a sharper reason than tidiness: on the write path
+        // `supportingEvidence: []` is a SEND that ERASES. A client that could not read the current value had
+        // no safe way to merge into it -- it either omitted the key and lost nothing, or guessed. Writing an
+        // explicit null here would hand that same ambiguity back on the read side.
+        if ( source.getSupportingEvidence() != null ) {
+            jsonGenerator.writeObjectField( "supportingEvidence", source.getSupportingEvidence() );
+        }
+        if ( source.getEvidenceCode() != null ) {
+            jsonGenerator.writeStringField( "evidenceCode", source.getEvidenceCode() );
+        }
         jsonGenerator.writeEndObject();
     }
 }

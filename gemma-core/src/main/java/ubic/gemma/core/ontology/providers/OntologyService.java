@@ -3,15 +3,30 @@ package ubic.gemma.core.ontology.providers;
 import ubic.gemma.core.ontology.model.OntologyIndividual;
 import ubic.gemma.core.ontology.model.OntologyResource;
 import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.model.OntologyXref;
 import ubic.gemma.core.ontology.search.OntologySearchException;
 import ubic.gemma.core.ontology.search.OntologySearchResult;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 public interface OntologyService extends AutoCloseable {
+
+    /**
+     * Obtain a stable identifier for this ontology, suitable for a URL path segment, a CLI argument or
+     * a configuration key.
+     * <p>
+     * Unlike {@link #getName()}, which reads {@code dc:title} out of the loaded model, this is always
+     * available: it does not require the ontology to be loaded, it is never {@code null}, and it never
+     * contains whitespace. It is normally the ontology's cache name (e.g. {@code cellLineOntology}).
+     * <p>
+     * Use {@link OntologyServiceResolver} to match user-supplied text against this and the ontology's
+     * other accepted spellings (well-known abbreviation, class name, {@code dc:title}).
+     */
+    String getIdentifier();
 
     /**
      * Obtain the name of this ontology if available.
@@ -154,6 +169,23 @@ public interface OntologyService extends AutoCloseable {
     void setSearchEnabled( boolean searchEnabled );
 
     /**
+     * Check if this source supplements the conventional ontologies rather than standing beside them as a peer.
+     * <p>
+     * A supplementary source exists to fill coverage gaps — Cellosaurus for cell lines CLO does not list, MGI
+     * for mouse strains missing from EFO/TGEMO. Its hits are still returned, but they are ranked below every
+     * conventional-ontology hit instead of being merged with them by score. Score-merging is not an option
+     * across these sources: each one scores against its own Lucene index, so the numbers are not on a common
+     * scale, and a flat catalogue that applies an exact-name boost would otherwise displace ontology terms
+     * wholesale. Ranking below is also what keeps a gap-fill useful — when the ontologies return nothing, the
+     * supplementary hit is still first.
+     * <p>
+     * Sources are peers by default.
+     */
+    default boolean isSupplementary() {
+        return false;
+    }
+
+    /**
      * Obtain the words that should be excluded from stemming.
      * <p>
      * By default, all words are subject to stemming. The exact implementation of stemming depends on the actual search
@@ -266,6 +298,42 @@ public interface OntologyService extends AutoCloseable {
      * Obtain all the resource URIs in this ontology.
      */
     Set<String> getAllURIs();
+
+    /**
+     * Every class-level cross-reference this ontology declares, with the mapping qualifier kept.
+     *
+     * <p>Read in bulk rather than per-term, because the thing built from it is a whole reverse index —
+     * see {@link ubic.gemma.core.ontology.relation.OntologyXrefIndex}. Asking 25,000 MONDO classes one
+     * at a time would pay the lookup 25,000 times to assemble the same map.</p>
+     *
+     * <p>🛑 The qualifier is the reason this exists rather than the flat list of strings the API already
+     * serves. MONDO marks many cross-references narrow or broad; a narrow one resolved as though it were
+     * exact is a wrong disease reported with full confidence.</p>
+     *
+     * <p>Empty for a source with no cross-references to state (a flat lexical catalogue) and for an
+     * ontology that is not loaded.</p>
+     */
+    /**
+     * Cross-references read from the ontology's SOURCE artifact on disk, rather than from whatever
+     * model happens to be loaded.
+     *
+     * <p>🛑 These differ, and the difference is not cosmetic. A corpus-seeded slim contains the terms
+     * Gemma already annotates — which is exactly the wrong set for translating a foreign identifier,
+     * whose whole job is to reach terms we do <b>not</b> yet annotate. Measured on 2026-08-18:
+     * inverting MONDO's xrefs from the loaded slim gave 32,594 (DOID 3,111) against 145,917
+     * (DOID 12,091) from the full artifact, and the relation producer lost ~970 CLO relations to
+     * untranslatable targets as a direct result.</p>
+     *
+     * <p>Defaults to {@link #getCrossReferences()}, so an implementation with no separate source is
+     * unaffected.</p>
+     */
+    default Collection<OntologyXref> getCrossReferencesFromSource() {
+        return getCrossReferences();
+    }
+
+    default Collection<OntologyXref> getCrossReferences() {
+        return Collections.emptyList();
+    }
 
     /**
      * Looks through both Terms and Individuals for a OntologyResource that has a uri matching the uri given. If no

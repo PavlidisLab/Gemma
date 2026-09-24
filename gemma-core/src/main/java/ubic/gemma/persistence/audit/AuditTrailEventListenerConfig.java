@@ -20,6 +20,7 @@ import org.hibernate.event.spi.EventType;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import ubic.gemma.core.security.authentication.UserManager;
 
 /**
@@ -38,7 +39,7 @@ import ubic.gemma.core.security.authentication.UserManager;
  * machinery — the AuditTrail has to be non-null on the parent before cascade
  * walks into it.
  *
- * <h3>Audit Phase C-2: PostInsert / PreDelete wired</h3>
+ * <h2>Audit Phase C-2: PostInsert / PreDelete wired</h2>
  * The listener implements {@code PostInsertEventListener} +
  * {@code PreDeleteEventListener} to drive auto-CREATE / auto-DELETE emission
  * (see {@code AUDIT_MIGRATION_PHASE_C_RECCE.md} §2.1). Phase C-2 cuts those
@@ -47,8 +48,18 @@ import ubic.gemma.core.security.authentication.UserManager;
  * {@code PRE_DELETE}. The {@code AuditAdvice.doCreateAdvice} +
  * {@code doDeleteAdvice} @Before advices are deleted in the same commit so
  * the two emitters never both fire on the same lifecycle event.
+ *
+ * <h2>Why {@code @Lazy(false)}</h2>
+ * This configuration exists purely for the side effect in {@link #afterPropertiesSet()}; nothing
+ * injects it. In CLI contexts {@link ubic.gemma.core.context.LazyInitByDefaultPostProcessor} marks
+ * every non-infrastructure bean definition lazy-init, so without this annotation the bean is
+ * defined but never instantiated and none of the listeners below are registered — silently. Since
+ * the {@code AuditAdvice} create/delete advices were deleted in the C-2 commit, that means CLI-run
+ * work emitted no CREATE or DELETE audit events at all. Same trap, same fix, as
+ * {@link ubic.gemma.core.security.acl.AclEventListenerConfig}.
  */
 @Configuration
+@Lazy(false)
 public class AuditTrailEventListenerConfig implements InitializingBean {
 
     private static final Log log = LogFactory.getLog( AuditTrailEventListenerConfig.class );

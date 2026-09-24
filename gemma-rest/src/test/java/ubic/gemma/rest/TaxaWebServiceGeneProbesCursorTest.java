@@ -60,7 +60,7 @@ import static org.mockito.Mockito.when;
  * the same endpoint). Differences:
  * <ul>
  *   <li>This endpoint takes both a {@code {taxon}} path arg and a {@code {gene}} path arg; the
- *       taxon is resolved by the WebService via {@link TaxonArgService#getEntity(TaxonArg)} and
+ *       taxon is resolved by the WebService via {@code TaxonArgService#getEntity(TaxonArg)} and
  *       then passed to {@link GeneArgService#getGeneProbesInTaxonByCursor(GeneArg, Taxon, Cursor, int)},
  *       which itself resolves the gene with-taxon at the same time so the path-derived taxon
  *       scope is enforced identically in both modes.

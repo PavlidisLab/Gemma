@@ -120,8 +120,15 @@ class ChebiOntologyServiceSlimTest {
         File meta = tempDir.resolve( "chebiOntology-slim.meta.json" ).toFile();
         OntologySlimExtractor.ExtractResult result = new OntologySlimExtractor()
                 .extract( source.toFile(), List.copyOf( seeds ), slim );
-        OntologySlimMeta.create( "http://chebi.test.invalid/chebi.owl", seeds,
-                        slim.length(), result.getClassCount(), result.getAxiomCount() )
+        // Stage the meta under the SAME seed policy the service demands. The 5-arg create()
+        // defaults to SEED_POLICY_CORPUS, but ChebiOntologyService seeds role bearers too and
+        // isSlimFresh rejects a corpus-only slim on exactly that check -- correctly, since a slim
+        // built before the role policy is genuinely stale. Staging the old policy made this test
+        // fall through to the (deliberately unreachable) URL and fail, which looked like the slim
+        // path being broken when it was the fixture that was out of date.
+        OntologySlimMeta.create( "http://chebi.test.invalid/chebi.owl",
+                        OntologySlimMeta.seedPolicyWithRoles( ChebiOntologyService.SLIM_SEED_ROLES ),
+                        seeds, slim.length(), result.getClassCount(), result.getAxiomCount() )
                 .writeTo( meta );
     }
 }

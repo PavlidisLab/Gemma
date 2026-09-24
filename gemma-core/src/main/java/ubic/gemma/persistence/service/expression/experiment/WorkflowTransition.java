@@ -22,7 +22,7 @@ import java.util.Date;
 
 /**
  * Return value of
- * {@link WorkflowService#advance(Long, WorkflowState, String, Long)}. Carries
+ * {@link WorkflowService#advance}. Carries
  * enough for the caller (and the REST layer) to round-trip a 200 response
  * without re-fetching the dataset.
  *

@@ -9,6 +9,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
@@ -22,9 +26,11 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDaoImpl;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ContextConfiguration
 public class UserManagerTest extends BaseDatabaseTest5 {
@@ -76,6 +82,79 @@ public class UserManagerTest extends BaseDatabaseTest5 {
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Test
+    public void testChangePasswordRejectsWrongCurrentPassword() {
+        try {
+            User user = createUser();
+            user.setPassword( "STORED_HASH" );
+            sessionFactory.getCurrentSession().flush();
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken( "foo", "x", Collections.emptyList() ) );
+            // mocked encoder.matches(...) defaults to false → the supplied current password is wrong
+            assertThatThrownBy( () -> userManager.changePassword( "wrong-current", "a-fine-new-password" ) )
+                    .isInstanceOf( BadCredentialsException.class );
+            // password must be untouched
+            sessionFactory.getCurrentSession().flush();
+            sessionFactory.getCurrentSession().evict( user );
+            User reloaded = ( User ) sessionFactory.getCurrentSession().get( User.class, user.getId() );
+            assertThat( reloaded.getPassword() ).isEqualTo( "STORED_HASH" );
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    public void testChangePasswordRejectsTooShortNewPassword() {
+        try {
+            User user = createUser();
+            user.setPassword( "STORED_HASH" );
+            sessionFactory.getCurrentSession().flush();
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken( "foo", "x", Collections.emptyList() ) );
+            // correct current password, but the new one is below the minimum length
+            when( passwordEncoder.matches( "right-current", "STORED_HASH" ) ).thenReturn( true );
+            assertThatThrownBy( () -> userManager.changePassword( "right-current", "short" ) )
+                    .isInstanceOf( IllegalArgumentException.class );
+            sessionFactory.getCurrentSession().flush();
+            sessionFactory.getCurrentSession().evict( user );
+            User reloaded = ( User ) sessionFactory.getCurrentSession().get( User.class, user.getId() );
+            assertThat( reloaded.getPassword() ).isEqualTo( "STORED_HASH" );
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    public void testAdminChangePasswordEncodesAndStores() {
+        User user = createUser();
+        user.setPassword( "OLD_HASH" );
+        sessionFactory.getCurrentSession().flush();
+        when( passwordEncoder.encode( "a-brand-new-password" ) ).thenReturn( "NEW_ENCODED_HASH" );
+
+        userManager.adminChangePassword( "foo", "a-brand-new-password" );
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().evict( user );
+        User reloaded = ( User ) sessionFactory.getCurrentSession().get( User.class, user.getId() );
+        assertThat( reloaded.getPassword() ).isEqualTo( "NEW_ENCODED_HASH" );
+    }
+
+    @Test
+    public void testAdminChangePasswordRejectsTooShortPassword() {
+        createUser();
+        assertThatThrownBy( () -> userManager.adminChangePassword( "foo", "short" ) )
+                .isInstanceOf( IllegalArgumentException.class );
+    }
+
+    @Test
+    public void testAdminChangePasswordUnknownUser() {
+        assertThatThrownBy( () -> userManager.adminChangePassword( "nobody", "a-fine-new-password" ) )
+                .isInstanceOf( UsernameNotFoundException.class );
+    }
 
     @Test
     public void testUpdateUser() {

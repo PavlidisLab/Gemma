@@ -32,6 +32,19 @@ public enum TicketType {
     /** General quality-review request (geeq follow-up, suspect outliers, etc.). */
     QUALITY_REVIEW,
     /**
+     * Pre-import triage: a curator decides include / exclude on a candidate GEO
+     * accession before it is loaded into Gemma at all. Distinct from {@link #PRELOAD},
+     * which populates metadata for a candidate that has already been preboarded — a
+     * SCREENING ticket is finalized first, and only an "include" decision leads to the
+     * dataset being imported.
+     * <p>
+     * Targets may therefore name accessions Gemma has not imported. The curation store
+     * models those with a synthetic {@code GEO_ACCESSION} target type that Gemma
+     * deliberately does not have; a screening ticket reaching Gemma carries targets it
+     * can actually address.
+     */
+    SCREENING,
+    /**
      * GEO deep-fetch / metadata pre-population work. Filed by the scrape pipeline
      * or by a curator before manual annotation begins; targets are typically
      * preboarded EE candidates whose sample-level metadata still needs to be
@@ -42,6 +55,11 @@ public enum TicketType {
      * Manual curation of one or more EEs — annotate factor values, write factor
      * descriptions, tag baseline relevance, etc. The default work-item type for
      * curator-assigned tickets that don't fit a more specific category.
+     * <p>
+     * The curation store's own {@code REVIEW} type maps here (Paul, 2026-08-29). The
+     * store classifies a review ticket as curation work and drives the edit-vs-review
+     * affordance from a separate {@code flow} field, so {@code REVIEW} and this value
+     * denote the same category and only one of the two names is kept.
      */
     CURATION,
     /**
@@ -58,6 +76,26 @@ public enum TicketType {
      * event log.
      */
     PIPELINE_FAILED,
+    /**
+     * An agent audit run — a batch check of existing curation (dispositions, groundings,
+     * publication links, …) that opens a ticket to carry its findings. The curation store
+     * files these; Gemma carries the value so an audit ticket can be raised against a
+     * dataset here rather than only in the store (Paul, 2026-08-29).
+     */
+    AUDIT,
     /** Catch-all for tickets that don't fit a more specific category. */
-    GENERIC
+    GENERIC,
+    /**
+     * A curator's personal scratchpad: a ticket kept open indefinitely, holding whatever they are
+     * currently looking at.
+     * <p>
+     * 🛑 Finishing with a dataset means REMOVING it from the scratchpad, not resolving the ticket
+     * (Paul, 2026-08-31) — which is why removing a target matters as much as adding one here. One per
+     * curator, identified by its reporter, provisioned on first use rather than by a backfill.
+     * <p>
+     * It always has {@code acceptsTargets} set, and it should be excluded from anything counting open
+     * curation work: a scratchpad is never "done", so counting it as an open ticket would make every
+     * curator permanently behind.
+     */
+    SCRATCHPAD
 }

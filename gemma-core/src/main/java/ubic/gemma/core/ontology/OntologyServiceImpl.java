@@ -24,6 +24,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,6 +52,7 @@ import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
 import ubic.gemma.core.search.SearchException;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.search.SearchTimeoutException;
+import ubic.gemma.core.search.lucene.LuceneParseSearchException;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -179,6 +181,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         initializeRelationTerms();
     }
 
+    /**
+     * Share of a result window held for the supplementary tier when it has anything to contribute.
+     * A fifth is enough for a gap-filling catalogue hit to be seen without displacing the
+     * conventional ontologies that should normally answer.
+     */
+    private static final double SUPPLEMENTARY_RESERVED_SHARE = 0.2;
+
     private void countOccurrences( Map<String, CharacteristicValueObject> results ) {
         StopWatch watch = new StopWatch();
         watch.start();
@@ -214,9 +223,18 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentsCharacteristicTags( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
+            boolean useNeuroCartaOntology, boolean forceGeneOntology, long timeout, TimeUnit timeUnit ) throws SearchException {
 
-        if ( searchQuery.trim().length() < 3 ) {
+        // Two characters is a real term name -- H1, H7 and H9 are among the most-used human
+        // embryonic stem cell lines, and EFO_0003042 (H1-hESC, 18 uses in the corpus) carries `H1`
+        // as an exact synonym. The floor sat at 3 and returned an empty set with no log line, so
+        // every such query looked like an ontology-coverage gap rather than a guard: CAB filed
+        // H1/H7 as "in the source index but not served" on 2026-08-11, and bare H9 failed
+        // identically, which is what showed the variable was length rather than coverage.
+        //
+        // One character stays out. That is where the candidate set stops being a name and becomes
+        // a scan of the index, and no designation we annotate is one character.
+        if ( searchQuery.trim().length() < 2 ) {
             return new HashSet<>();
         }
 
@@ -243,7 +261,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         // search the ontology for the given searchTerm, but if already found in the database dont add it again
         Collection<CharacteristicValueObject> characteristicsFromOntology = this
-                .findCharacteristicsFromOntology( searchQuery, maxResults, useNeuroCartaOntology,
+                .findCharacteristicsFromOntology( searchQuery, maxResults, useNeuroCartaOntology, forceGeneOntology,
                         characteristicFromDatabaseWithValueUri, timeUnit.toMillis( timeout ) );
 
         // order to show the the term: 1-exactMatch, 2-startWith, 3-substring and 4- no rule
@@ -254,27 +272,47 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         Collection<CharacteristicValueObject> characteristicsSubstring = new ArrayList<>();
         Collection<CharacteristicValueObject> characteristicsNoRuleFound = new ArrayList<>();
 
-        // from the database with a uri
-        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseWithValueUri.values(),
+        // from the database with a uri -- values() of a HashMap, so ordered here or not at all
+        List<CharacteristicValueObject> dbWithUri = new ArrayList<>( characteristicFromDatabaseWithValueUri.values() );
+        dbWithUri.sort( Comparator.comparing( CharacteristicValueObject::getValueUri, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        this.putCharacteristicsIntoSpecificList( searchQuery, dbWithUri,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
         // from the ontology
         this.putCharacteristicsIntoSpecificList( searchQuery, characteristicsFromOntology,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
-        // from the database with no uri
-        this.putCharacteristicsIntoSpecificList( searchQuery, characteristicFromDatabaseFreeText,
+        // from the database with no uri -- a HashSet, same reasoning as above
+        List<CharacteristicValueObject> dbFreeText = new ArrayList<>( characteristicFromDatabaseFreeText );
+        dbFreeText.sort( Comparator.comparing( CharacteristicValueObject::getValue, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        this.putCharacteristicsIntoSpecificList( searchQuery, dbFreeText,
                 characteristicsWithExactMatch, characteristicsStartWithQuery, characteristicsSubstring,
                 characteristicsNoRuleFound );
 
+        // Within a bucket the order is the order the three sources were added — database-with-URI,
+        // then ontology, then database free-text — and each source is now internally ordered before
+        // it gets here: the ontology block by search score (best first), the database collections
+        // below by URI, since a HashMap's values and a HashSet iterate in an order nobody chose.
+        //
+        // Deliberately NOT re-sorted by URI here. An earlier pass did exactly that to kill the
+        // nondeterminism and it worked, but it also threw away relevance at the one point that
+        // decides who survives the cap: EFO_0003042 is a poor match for `H1 cell line` on its LABEL
+        // and a strong one on its declared synonym, so alphabetical order buried it under chemicals
+        // that merely contain the substring. Stable and wrong is worse than flaky and wrong -- the
+        // flake at least announces itself.
         List<CharacteristicValueObject> allCharacteristicsFound = new ArrayList<>();
         allCharacteristicsFound.addAll( characteristicsWithExactMatch );
         allCharacteristicsFound.addAll( characteristicsStartWithQuery );
         allCharacteristicsFound.addAll( characteristicsSubstring );
         allCharacteristicsFound.addAll( characteristicsNoRuleFound );
 
-        // limit the size of the returned phenotypes to 100 terms
+        // Never silently: a truncated tail is indistinguishable from "the ontology does not have
+        // it", which is the reading that sent us looking for a missing term rather than a dropped
+        // one.
         if ( allCharacteristicsFound.size() > maxResults ) {
+            log.warn( String.format( "Candidate set for '%s' is %d terms, over the %d cap; dropping %d."
+                            + " The cut is relevance-bucketed and stable, but a term below it cannot be ranked or promoted.",
+                    searchQuery, allCharacteristicsFound.size(), maxResults, allCharacteristicsFound.size() - maxResults ) );
             return allCharacteristicsFound.subList( 0, maxResults );
         }
 
@@ -291,8 +329,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
 
         /*
          * URI input: just retrieve the term.
+         *
+         * 🛑 https as well as http, and it is not a tidy-up. Every OBO PURL is http, so this read as a
+         * complete test for years; Cellosaurus is the first source Gemma loads that mints https
+         * (`https://www.cellosaurus.org/CVCL_1234` — the PURL form 404s, so it cannot mint the other).
+         * Under the http-only test not one of its ~169k terms could be fetched by its own URI, and the
+         * query fell through to a lexical search that had nothing to match a bare accession on.
          */
-        if ( search.startsWith( "http://" ) ) {
+        if ( search.startsWith( "http://" ) || search.startsWith( "https://" ) ) {
             try {
                 OntologyTerm foundByUri = findFirst( ontology -> ontology.getTerm( search ), "terms matching " + search, timeUnit.toMillis( timeout ) );
                 if ( foundByUri != null ) {
@@ -303,9 +347,37 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        results = searchInThreads( ontology -> ontologyCache.findTerm( ontology, search, maxResults ), search, 5000 );
+        // Supplementary sources (the flat lexical catalogues) are ranked apart from the conventional
+        // ontologies because their scores are not comparable: every source scores against its own Lucene
+        // index, and the lexical index applies a large exact-name boost, so merging by score would let a
+        // catalogue hit outrank every ontology term. They are appended below instead of merged.
+        //
+        // Both groups are searched in ONE fan-out, tagging each hit with its source tier, rather than in
+        // two. Running them as two sequential searchInThreads calls costs a second barrier on every
+        // query — the lexical fan-out stops overlapping the conventional one — for no benefit, since the
+        // split only matters when the results are ranked.
+        List<SourcedTerm> allHits = searchInThreads( ontology -> {
+            boolean supplementary = ontology.isSupplementary();
+            Collection<OntologySearchResult<OntologyTerm>> hits = ontologyCache.findTerm( ontology, search, maxResults );
+            List<SourcedTerm> tagged = new ArrayList<>( hits.size() );
+            for ( OntologySearchResult<OntologyTerm> hit : hits ) {
+                tagged.add( new SourcedTerm( hit, supplementary ) );
+            }
+            return tagged;
+        }, search, 5000 );
 
-        if ( geneOntologyService.isOntologyLoaded() ) {
+        Collection<OntologySearchResult<OntologyTerm>> supplementaryResults = new HashSet<>();
+        for ( SourcedTerm hit : allHits ) {
+            ( hit.supplementary ? supplementaryResults : results ).add( hit.result );
+        }
+
+        // GO is by far the largest index and the slowest to search, and it is the fallback of last
+        // resort for term search — only consult it when the other ontologies came up empty. Running
+        // it on every query lengthens the search (and, because the whole search runs in a read-only
+        // transaction, the DB connection it holds) enough to starve the pool under load.
+        // Note this tests the conventional ontologies alone: a supplementary catalogue hit must not
+        // suppress the GO fallback, or enabling Cellosaurus would quietly switch GO search off.
+        if ( results.isEmpty() && geneOntologyService.isOntologyLoaded() ) {
             try {
                 results.addAll( ontologyCache.findTerm( geneOntologyService, search, maxResults ) );
             } catch ( OntologySearchException e ) {
@@ -313,10 +385,37 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             }
         }
 
-        return results.stream()
+        // Supplementary hits are ranked below conventional ones, but "below" has to mean "later in
+        // the list", not "only if there is room left over". Giving them the LEFTOVER budget --
+        // maxResults - ranked.size() -- hands them exactly zero whenever the conventional
+        // ontologies fill the limit, which is the common case: `Gorlin Goltz Syndrome` had 20
+        // partial `syndrome` matches saturating a default limit of 20, so the catalogues were
+        // enabled, loaded, searched, and then silently discarded on almost every multi-word query.
+        // Reserving a slice keeps the tier's ordering intact while guaranteeing it can be reached.
+        int reserved = supplementaryResults.isEmpty()
+                ? 0
+                : Math.min( supplementaryResults.size(),
+                        Math.max( 1, ( int ) Math.floor( maxResults * SUPPLEMENTARY_RESERVED_SHARE ) ) );
+        LinkedHashSet<OntologySearchResult<OntologyTerm>> ranked = results.stream()
                 .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
-                .limit( maxResults )
+                .limit( Math.max( maxResults - reserved, 0 ) )
                 .collect( Collectors.toCollection( LinkedHashSet::new ) );
+        // equality is on the term, so a URI already contributed by a conventional ontology is not re-added
+        supplementaryResults.stream()
+                .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
+                .filter( osr -> !ranked.contains( osr ) )
+                .limit( Math.max( maxResults - ranked.size(), 0 ) )
+                .forEach( ranked::add );
+        // Anything the supplementary tier did not claim goes back to the conventional hits, so
+        // reserving a slice never costs a result when there is nothing to put in it.
+        if ( ranked.size() < maxResults ) {
+            results.stream()
+                    .sorted( Comparator.comparingDouble( osr -> -osr.getScore() ) )
+                    .filter( osr -> !ranked.contains( osr ) )
+                    .limit( maxResults - ranked.size() )
+                    .forEach( ranked::add );
+        }
+        return ranked;
     }
 
     @Override
@@ -355,9 +454,13 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             return CharacteristicValueObject.characteristic2CharacteristicVO( this.termsToCharacteristics( results2 ) );
         }, queryString, Math.max( timeUnit.toMillis( timeout ) - watch.getTime(), 0 ) ) );
 
-        // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
+        // Only consult GO when the other ontologies came up empty — implementing the long-standing
+        // intent of the (previously unenforced) "if we don't already have a lot of possibilities"
+        // note. GO is the largest, slowest index and the fallback of last resort; searching it on
+        // every query holds the request's DB connection far longer than needed and is a primary
+        // driver of connection-pool exhaustion under load.
         StopWatch findGoTerms = StopWatch.createStarted();
-        if ( geneOntologyService.isOntologyLoaded() ) {
+        if ( ontologySearchResults.isEmpty() && geneOntologyService.isOntologyLoaded() ) {
             try {
                 ontologySearchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
                         this.termsToCharacteristics( ontologyCache.findTerm( geneOntologyService, queryString, maxResults ) ) ) );
@@ -505,14 +608,22 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @Override
     public String getDefinition( String uri, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         OntologyTerm ot = this.getTerm( uri, timeout, timeUnit );
-        if ( ot != null ) {
-            // FIXME: not clear this will work with all ontologies. UBERON, HP, MP, MONDO does it this way.
-            AnnotationProperty annot = ot.getAnnotation( "http://purl.obolibrary.org/obo/IAO_0000115" );
-            if ( annot != null ) {
-                return annot.getContents();
-            }
+        if ( ot == null ) {
+            return null;
         }
-        return null;
+        // UBERON, HP, MP and MONDO all use the OBO definition property.
+        AnnotationProperty annot = ot.getAnnotation( OntologyUtils.DEFINITION_URI );
+        if ( annot != null && StringUtils.isNotBlank( annot.getContents() ) ) {
+            return annot.getContents();
+        }
+        // CLO does not. It writes what it knows about a cell line into rdfs:comment instead —
+        // CLO_0008127 (NCI-H929) carries "disease: plasmacytoma;   myeloma" and no OBO definition at all —
+        // so reading only the OBO property returned null for the very terms whose description is the point.
+        // That disease is a property of the line, knowable without anyone curating it onto an experiment,
+        // and it was sitting in an ontology already loaded here. OLS resolves the same fallback, and reports
+        // the result as the term's definition, so this agrees with what a caller sees there.
+        String comment = ot.getComment();
+        return StringUtils.isNotBlank( comment ) ? comment : null;
     }
 
     @Override
@@ -523,7 +634,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 return null;
             }
             return term;
-        }, uri, timeUnit.toMillis( timeout ) );
+        }, uriAddressableOntologyServices(), uri, timeUnit.toMillis( timeout ) );
     }
 
     @Override
@@ -537,14 +648,14 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 return null;
             }
             return ontology.getVersion();
-        }, uri, timeUnit.toMillis( timeout ) );
+        }, uriAddressableOntologyServices(), uri, timeUnit.toMillis( timeout ) );
     }
 
     @Override
     public Set<OntologyTerm> getTerms( Collection<String> uris, long timeout, TimeUnit timeUnit ) throws TimeoutException {
         Set<String> distinctUris = uris instanceof Set ? ( Set<String> ) uris : new HashSet<>( uris );
         List<OntologyTerm> results = combineInThreads( os -> distinctUris.stream().map( os::getTerm ).filter( Objects::nonNull ).collect( Collectors.toSet() ),
-                String.format( "terms for %d URIs", uris.size() ), timeUnit.toMillis( timeout ) );
+                uriAddressableOntologyServices(), String.format( "terms for %d URIs", uris.size() ), timeUnit.toMillis( timeout ) );
         results.removeIf( t -> t.getLabel() == null );
         return new HashSet<>( results );
     }
@@ -710,6 +821,204 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return obsoleteTerms;
     }
 
+    @Override
+    public List<ObsoleteTermUsage> findObsoleteTermsInUse( long timeout, TimeUnit timeUnit ) throws TimeoutException {
+        StopWatch timer = StopWatch.createStarted();
+        long timeoutMs = timeUnit.toMillis( timeout );
+
+        // One grouped query across the subject, predicate and object slots rather than a walk over every
+        // characteristic: a URI is obsolete or it is not, so checking it once per distinct URI is the same answer
+        // for a fraction of the work.
+        Map<String, String> termLabelsByUri = characteristicReadService
+                .findValueGroupedByValueUri( null, true, true, true, -1 );
+        // The CATEGORY slot holds ontology terms too and goes stale the same way -- "disease" is EFO_0000408,
+        // which EFO obsoleted. Reading only the term slots reports it as unused rather than as a problem.
+        Map<String, String> categoryLabelsByUri = characteristicReadService
+                .findCategoryGroupedByCategoryUri( null, true, -1 );
+
+        Map<String, String> storedLabelsByUri = new LinkedHashMap<>( categoryLabelsByUri );
+        storedLabelsByUri.putAll( termLabelsByUri );
+
+        Map<String, OntologyTerm> obsolete = new LinkedHashMap<>();
+        for ( Map.Entry<String, String> e : storedLabelsByUri.entrySet() ) {
+            String uri = e.getKey();
+            if ( StringUtils.isBlank( uri ) || uri.startsWith( Gene.NCBI_URI_PREFIX ) ) {
+                // gene annotations are not ontology terms; they would all read as "not found"
+                continue;
+            }
+            if ( uri.startsWith( OntologyUtils.BASE_PURL_URI + "GO_" ) ) {
+                continue;
+            }
+            OntologyTerm term = getTerm( uri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
+            if ( term != null && term.isObsolete() ) {
+                obsolete.put( uri, term );
+            }
+        }
+
+        log.info( "Checked " + storedLabelsByUri.size() + " distinct term URIs in " + timer.getTime()
+                + " ms, " + obsolete.size() + " are obsolete." );
+
+        if ( obsolete.isEmpty() ) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Long> experimentCounts = characteristicReadService
+                .countExperimentsByUris( obsolete.keySet(), true, true, true, true, null, Collections.emptyList() );
+
+        List<ObsoleteTermUsage> report = new ArrayList<>( obsolete.size() );
+        for ( Map.Entry<String, OntologyTerm> e : obsolete.entrySet() ) {
+            ObsoleteTermUsage usage = describeObsolete( e.getKey(), e.getValue(), storedLabelsByUri.get( e.getKey() ),
+                    experimentCounts.getOrDefault( e.getKey(), 0L ),
+                    Math.max( timeoutMs - timer.getTime(), 0 ) );
+            usage.setUsedAsCategory( categoryLabelsByUri.containsKey( e.getKey() ) );
+            usage.setUsedAsTerm( termLabelsByUri.containsKey( e.getKey() ) );
+            report.add( usage );
+        }
+        report.sort( Comparator.comparingLong( ObsoleteTermUsage::getExperimentCount ).reversed() );
+        return report;
+    }
+
+    /**
+     * Resolve what an ontology says should replace one obsolete term.
+     * <p>
+     * A replacement is only usable without a curator when the ontology asserts it via {@code IAO:0100001} AND that
+     * replacement itself resolves and is not obsolete — an obsolete term replaced by another obsolete term is a
+     * chain someone has to look at, not one to follow blindly.
+     */
+    private ObsoleteTermUsage describeObsolete( String uri, OntologyTerm term, @Nullable String storedValue,
+            long experimentCount, long timeoutMs ) throws TimeoutException {
+        ObsoleteTermUsage usage = new ObsoleteTermUsage();
+        usage.setUri( uri );
+        usage.setLabel( term.getLabel() );
+        usage.setStoredValue( storedValue );
+        usage.setExperimentCount( experimentCount );
+
+        for ( AnnotationProperty consider : term.getAnnotations( OntologyUtils.CONSIDER_URI ) ) {
+            String considerUri = referencedTermUri( consider );
+            if ( considerUri != null ) {
+                usage.getConsiderUris().add( considerUri );
+            }
+        }
+
+        // Rung 1/2: what the ontology asserts, followed through obsolete intermediates.
+        if ( applyAssertedReplacement( usage, term, timeoutMs ) ) {
+            return usage;
+        }
+        // Rung 3: the merge record. An ontology that merges X into Y often does not write a replaced-by on X; it
+        // writes X into Y's hasAlternativeId instead. Same fact recorded from the other end, so a reverse lookup
+        // finds it, and it is every bit as mechanical.
+        if ( applyMergeRecord( usage, term, timeoutMs ) ) {
+            return usage;
+        }
+        if ( usage.getBlockedReason() == null ) {
+            usage.setBlockedReason( usage.getConsiderUris().isEmpty()
+                    ? "the ontology obsoleted this term without naming a replacement, and no term claims it as an alternative ID"
+                    : "the ontology offers oboInOwl:consider candidates but asserts no replacement; a curator has to choose" );
+        }
+        return usage;
+    }
+
+    /**
+     * Cap on how far {@code IAO:0100001} chains are followed. A term replaced by a term that was itself replaced is
+     * ordinary ontology housekeeping; a chain longer than this is a sign of something odd and is left to a human.
+     */
+    private static final int MAX_REPLACEMENT_HOPS = 5;
+
+    /**
+     * Read the term URI an annotation points at, whichever of the two ways the ontology wrote it.
+     * <p>
+     * 🛑 Ontologies disagree here, and reading only one spelling silently loses the other. MONDO, OBI, CL and CLO
+     * write {@code IAO:0100001} as a RESOURCE, so {@link AnnotationProperty#getValueUri()} is the accessor and
+     * {@code getContents()} would return the target's label instead. EFO writes it as a LITERAL whose text IS the
+     * URI:
+     * <pre>{@code <obo:IAO_0100001>http://purl.obolibrary.org/obo/MONDO_0011122</obo:IAO_0100001>}</pre>
+     * so {@code getValueUri()} is null and the URI is in the contents. Reading resources only made every EFO term
+     * look like it had been obsoleted with no successor named — 100 of them, when EFO had said what to use.
+     * <p>
+     * The literal branch is gated on {@link OntologyUtils#isTermUri}, which keeps free-text annotation values from
+     * being mistaken for a replacement.
+     */
+    @Nullable
+    private static String referencedTermUri( @Nullable AnnotationProperty annotation ) {
+        if ( annotation == null ) {
+            return null;
+        }
+        String uri = annotation.getValueUri();
+        if ( StringUtils.isNotBlank( uri ) ) {
+            return uri;
+        }
+        String contents = StringUtils.strip( annotation.getContents() );
+        return StringUtils.isNotBlank( contents ) && OntologyUtils.isTermUri( contents ) ? contents : null;
+    }
+
+    /**
+     * Follow {@code IAO:0100001} to a term that is not itself obsolete.
+     *
+     * @return true if the usage was resolved or definitively blocked by this rule
+     */
+    private boolean applyAssertedReplacement( ObsoleteTermUsage usage, OntologyTerm term, long timeoutMs ) throws TimeoutException {
+        Set<String> visited = new HashSet<>();
+        OntologyTerm current = term;
+        for ( int hop = 1; hop <= MAX_REPLACEMENT_HOPS; hop++ ) {
+            String replacementUri = referencedTermUri( current.getAnnotation( OntologyUtils.TERM_REPLACED_BY_URI ) );
+            if ( replacementUri == null ) {
+                if ( hop > 1 ) {
+                    // We did follow an assertion; it just landed on an obsolete term that names no successor. Say
+                    // that, because "obsoleted without naming a replacement" would describe the wrong term. Still
+                    // fall through to the next rung, which may find the successor from the other end.
+                    usage.setBlockedReason( "the asserted replacement " + usage.getReplacedByUri()
+                            + " is itself obsolete and names no further replacement" );
+                }
+                return false; // nothing asserted here; let the next rung try
+            }
+            if ( !visited.add( replacementUri ) ) {
+                usage.setBlockedReason( "the replaced-by chain from this term is cyclic at " + replacementUri );
+                return true;
+            }
+            usage.setReplacedByUri( replacementUri );
+            OntologyTerm replacement = getTerm( replacementUri, timeoutMs, TimeUnit.MILLISECONDS );
+            if ( replacement == null ) {
+                usage.setBlockedReason( "the asserted replacement " + replacementUri + " is not in any ontology Gemma has loaded" );
+                return true;
+            }
+            usage.setReplacedByLabel( replacement.getLabel() );
+            if ( !replacement.isObsolete() ) {
+                usage.setAutoCorrectable( true );
+                usage.setResolvedVia( hop == 1 ? "IAO:0100001" : "IAO:0100001-chain" );
+                usage.setReplacementHops( hop );
+                return true;
+            }
+            current = replacement;
+        }
+        usage.setBlockedReason( "the replaced-by chain from this term is still obsolete after " + MAX_REPLACEMENT_HOPS + " hops" );
+        return true;
+    }
+
+    /**
+     * Look for a current term that claims this obsolete one as an alternative ID, which is how an OBO merge is
+     * recorded on the surviving term.
+     *
+     * @return true if the usage was resolved by this rule
+     */
+    private boolean applyMergeRecord( ObsoleteTermUsage usage, OntologyTerm term, long timeoutMs ) throws TimeoutException {
+        String termId = OntologyUtils.getTermId( term );
+        if ( StringUtils.isBlank( termId ) ) {
+            return false;
+        }
+        OntologyTerm successor = findFirst( ontology -> ontology.findUsingAlternativeId( termId ), termId, timeoutMs );
+        if ( successor == null || successor.isObsolete() || StringUtils.isBlank( successor.getUri() ) ) {
+            return false;
+        }
+        usage.setReplacedByUri( successor.getUri() );
+        usage.setReplacedByLabel( successor.getLabel() );
+        usage.setAutoCorrectable( true );
+        usage.setResolvedVia( "hasAlternativeId" );
+        usage.setReplacementHops( 1 );
+        // A dead-ended replaced-by chain may have left a reason behind; this rung resolved it, so it is not blocked.
+        usage.setBlockedReason( null );
+        return true;
+    }
+
     private void checkForObsolete( Map<OntologyTerm, Long> obsoleteTerms, String uri, String label, long timeoutMs ) throws TimeoutException {
         if ( StringUtils.isNotBlank( uri ) ) {
             OntologyTerm term = this.getTerm( uri, timeoutMs, TimeUnit.MILLISECONDS );
@@ -751,8 +1060,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 break;
             }
 
-            boolean needsUpdate = false;
             for ( Characteristic ch : chars ) {
+                boolean needsUpdate = false;
                 String valueUri = ch.getValueUri();
                 if ( StringUtils.isNotBlank( valueUri ) ) {
                     OntologyTerm term = this.getTerm( valueUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
@@ -782,15 +1091,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     if ( StringUtils.isNotBlank( objectUri ) ) {
                         OntologyTerm term = this.getTerm( objectUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
-
+                        // an unresolved object URI only skips this field: a correction already made to the value (or
+                        // to be made to the second object) must still be saved below
                         if ( term == null ) {
                             if ( log.isDebugEnabled() )
                                 log.debug( "No term for " + objectUri + " (In Gemma: " + statement.getObject() + ")" );
-                            checked++;
-                            continue;
-                        }
-
-                        if ( term.getLabel() != null && !term.getLabel().equals( statement.getObject() ) ) {
+                        } else if ( term.getLabel() != null && !term.getLabel().equals( statement.getObject() ) ) {
                             lastFixedLabel = statement.getObject();
                             mismatchedTerms.put( statement.getObject(), term );
                             statement.setObject( term.getLabel() );
@@ -806,11 +1112,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         if ( term == null ) {
                             if ( log.isDebugEnabled() )
                                 log.debug( "No term for " + secondObjectUri + " (In Gemma: " + statement.getSecondObject() + ")" );
-                            checked++;
-                            continue;
-                        }
-
-                        if ( term.getLabel() != null && !term.getLabel().equals( statement.getSecondObject() ) ) {
+                        } else if ( term.getLabel() != null && !term.getLabel().equals( statement.getSecondObject() ) ) {
                             lastFixedLabel = statement.getSecondObject();
                             mismatchedTerms.put( statement.getSecondObject(), term );
                             statement.setSecondObject( term.getLabel() );
@@ -895,8 +1197,22 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     /**
      * given a collection of characteristics add them to the correct List
      */
+    /**
+     * A candidate plus the search score that produced it, so relevance survives the trip from the
+     * ontology index to the point where the candidate set is capped.
+     */
+    private static final class ScoredCandidate {
+        private final CharacteristicValueObject vo;
+        private final double score;
+
+        private ScoredCandidate( CharacteristicValueObject vo, double score ) {
+            this.vo = vo;
+            this.score = score;
+        }
+    }
+
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery, int maxResults,
-            boolean useNeuroCartaOntology,
+            boolean useNeuroCartaOntology, boolean forceGeneOntology,
             Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri, long timeoutMs ) throws SearchException {
 
         // in neurocarta we don't need to search all Ontologies
@@ -910,9 +1226,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
             ontologyServicesToUse = this.ontologyServices;
         }
 
-        Collection<CharacteristicValueObject> fromOntologies = searchInThreads( ontologyService -> {
+        // The search score is carried out of the fan-out rather than discarded at the VO boundary,
+        // because the cap downstream has to choose WHICH candidates to keep. Lucene already knows
+        // that a term matching `h1` as a declared synonym is a far better answer than a chemical
+        // whose label merely contains the substring; throwing that away left the cut to break ties
+        // on whatever order a HashSet iterated in.
+        List<ScoredCandidate> scored = searchInThreads( ontologyService -> {
+            // Whether this source is a flat lexical catalogue rather than a conventional ontology.
+            // The sibling findTermsInexact() consumes the same flag to append these hits after the
+            // merged ontology results; this path merges by score, so it carries the flag onto the
+            // value object instead and lets the ranking layer decide. Dropping it here is what let
+            // an exact-name catalogue hit climb back over every ontology term downstream.
+            boolean supplementary = ontologyService.isSupplementary();
             Collection<OntologySearchResult<OntologyTerm>> ontologyTerms = ontologyCache.findTerm( ontologyService, searchQuery, maxResults );
-            Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
+            Collection<ScoredCandidate> characteristicsFromOntology = new ArrayList<>();
             for ( OntologySearchResult<OntologyTerm> ontologyTerm : ontologyTerms ) {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getResult().getUri() ) == null ) {
@@ -921,18 +1248,30 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         continue;
                     }
                     CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getResult().getLabel().toLowerCase(), ontologyTerm.getResult().getUri() );
-                    characteristicsFromOntology.add( phenotype );
+                    phenotype.setSupplementary( supplementary );
+                    characteristicsFromOntology.add( new ScoredCandidate( phenotype, ontologyTerm.getScore() ) );
                 }
             }
             return characteristicsFromOntology;
-        }, ontologyServicesToUse, "terms matching " + searchQuery, timeoutMs );
+        }, ontologyServicesToUse, searchQuery, timeoutMs );
+
+        // Best first, across every ontology, before anything downstream cuts. URI breaks ties so
+        // the order is total: equal scores are common and must not fall back on arrival order.
+        Collection<CharacteristicValueObject> fromOntologies = scored.stream()
+                .sorted( Comparator.comparingDouble( ( ScoredCandidate sc ) -> -sc.score )
+                        .thenComparing( sc -> sc.vo.getValueUri(), Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .map( sc -> sc.vo )
+                .distinct()
+                .collect( Collectors.toList() );
 
         // GeneOntologyServiceImpl isn't part of the autowired ontologyServices list (it's a
         // delegating-bean wrapper around basecode's GO service); the sibling findTerms() method
-        // adds it explicitly. Mirror that so /annotations/search?prefixes=GO_ actually returns
-        // GO terms — without this, the Visualize tab's GO-term picker returns 0 hits for any
-        // query because findExperimentsCharacteristicTags never asked GO.
-        if ( !useNeuroCartaOntology && geneOntologyService.isOntologyLoaded() ) {
+        // adds it explicitly. Consult GO only when the other ontologies came up empty: it is the
+        // largest, slowest index and the fallback of last resort, and searching it on every query
+        // holds the request's read-only DB connection long enough to starve the pool under load.
+        // A caller that explicitly wants GO (e.g. the Visualize picker filtering to the GO_ prefix)
+        // passes forceGeneOntology=true to consult GO regardless of what the other ontologies returned.
+        if ( ( fromOntologies.isEmpty() || forceGeneOntology ) && !useNeuroCartaOntology && geneOntologyService.isOntologyLoaded() ) {
             try {
                 Collection<OntologySearchResult<OntologyTerm>> goTerms = ontologyCache.findTerm( geneOntologyService, searchQuery, maxResults );
                 List<CharacteristicValueObject> combined = new ArrayList<>( fromOntologies );
@@ -1093,15 +1432,48 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     }
 
     /**
+     * The ontologies a URI-addressed lookup may consult: the fan-out list plus Gene Ontology.
+     * <p>
+     * GO is removed from {@code ontologyServices} in {@link #afterPropertiesSet()}, which took it out of
+     * <em>every</em> fan-out at once — search, the parent/child walk, and plain URI resolution alike. The
+     * documented reason to hold GO back is the cost of SEARCHING it: it is the largest and slowest index, and
+     * sweeping it on every query holds the request's read-only DB connection long enough to starve the pool
+     * (see {@code findTermsInOntologies}, where it stays a zero-hits fallback). Resolving a URI carries none
+     * of that — it is a lookup against a model already in memory.
+     * <p>
+     * The effect of not separating the two was that {@code /annotations/term} answered "no such term" for a
+     * GO URI while {@code /admin/ontologies} reported GO {@code loaded: true} — reported for
+     * {@code GO_0007610}, reached as the parent of {@code EFO_0002756 fasting}. A cross-vocabulary parent
+     * that resolves to no label is also dropped by {@link #getTerms}, so the walk returned a bare URI.
+     * <p>
+     * 🛑 Deliberately NOT extended to the parent/child walk: a transitive ancestor walk into GO's DAG is a
+     * real cost, and cross-vocabulary edges can now reach GO from ordinary terms.
+     */
+    private List<ubic.gemma.core.ontology.providers.OntologyService> uriAddressableOntologyServices() {
+        if ( geneOntologyService == null || !geneOntologyService.isOntologyLoaded() ) {
+            return ontologyServices;
+        }
+        List<ubic.gemma.core.ontology.providers.OntologyService> services = new ArrayList<>( ontologyServices.size() + 1 );
+        services.addAll( ontologyServices );
+        services.add( geneOntologyService );
+        return services;
+    }
+
+    /**
      * Find the first non-null result among loaded ontology services.
      */
     @Nullable
     private <T> T findFirst( Function<ubic.gemma.core.ontology.providers.OntologyService, T> function, String query, long timeoutMs ) throws TimeoutException {
+        return findFirst( function, ontologyServices, query, timeoutMs );
+    }
+
+    @Nullable
+    private <T> T findFirst( Function<ubic.gemma.core.ontology.providers.OntologyService, T> function, List<ubic.gemma.core.ontology.providers.OntologyService> services, String query, long timeoutMs ) throws TimeoutException {
         StopWatch timer = StopWatch.createStarted();
-        List<Future<T>> futures = new ArrayList<>( ontologyServices.size() );
-        List<Object> objects = new ArrayList<>( ontologyServices.size() );
+        List<Future<T>> futures = new ArrayList<>( services.size() );
+        List<Object> objects = new ArrayList<>( services.size() );
         ExecutorCompletionService<T> completionService = new ExecutorCompletionService<>( taskExecutor );
-        for ( ubic.gemma.core.ontology.providers.OntologyService service : ontologyServices ) {
+        for ( ubic.gemma.core.ontology.providers.OntologyService service : services ) {
             if ( service.isOntologyLoaded() ) {
                 futures.add( completionService.submit( () -> function.apply( service ) ) );
                 objects.add( service );
@@ -1160,6 +1532,20 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
     @FunctionalInterface
     private interface CallableWithOntologyService<T> {
         T call( ubic.gemma.core.ontology.providers.OntologyService service ) throws Exception;
+    }
+
+    /**
+     * A hit plus the tier of the source that produced it, so one parallel fan-out can serve both
+     * groups and the split is applied when ranking rather than by searching twice.
+     */
+    private static final class SourcedTerm {
+        final OntologySearchResult<OntologyTerm> result;
+        final boolean supplementary;
+
+        SourcedTerm( OntologySearchResult<OntologyTerm> result, boolean supplementary ) {
+            this.result = result;
+            this.supplementary = supplementary;
+        }
     }
 
     private <T> List<T> combineInThreads( CallableWithOntologyService<Collection<T>> work, String query, long timeoutMs ) throws TimeoutException {
@@ -1245,8 +1631,27 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
         return future.get();
     }
 
+    /**
+     * Convert a basecode ontology search failure into the search-layer exception.
+     * <p>
+     * A Lucene {@link ParseException} anywhere in the cause chain means the query itself could not be
+     * parsed, which is caller input rather than a server fault. Reporting that as a plain
+     * {@link SearchException} is what made {@code /annotations/search} answer 500 for a query carrying a
+     * bare boolean keyword, while the callers' existing {@code catch ( ParseSearchException )} -> 400
+     * sat unused. The retry in {@code LuceneOntologySearchIndex} escapes reserved CHARACTERS, which
+     * cannot neutralize the AND/OR/NOT keywords, so the reattempt re-throws the same ParseException.
+     *
+     * @param query the query as the caller supplied it -- it is echoed back on a 400, so callers must
+     *              pass the original rather than an internally rewritten form
+     */
     private SearchException convertBaseCodeOntologySearchExceptionToSearchException( OntologySearchException e, String query ) {
-        return new SearchException( "Ontology search failed for query: " + query, e );
+        String message = "Ontology search failed for query: " + query;
+        for ( Throwable t : ExceptionUtils.getThrowableList( e ) ) {
+            if ( t instanceof ParseException ) {
+                return new LuceneParseSearchException( query, message, ( ParseException ) t );
+            }
+        }
+        return new SearchException( message, e );
     }
 
     @Nullable

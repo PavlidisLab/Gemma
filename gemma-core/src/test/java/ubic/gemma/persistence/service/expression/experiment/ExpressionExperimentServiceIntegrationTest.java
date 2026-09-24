@@ -23,7 +23,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import ubic.gemma.core.security.SecurityService;
 import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -31,11 +30,19 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -60,7 +67,9 @@ import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
  * @author kkeshav
@@ -85,7 +94,15 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
+    private FactorValueService factorValueService;
+    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+    @Autowired
+    private SessionFactory sessionFactory;
+    @Autowired
     private SecurityService securityService;
+    @Autowired
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService ticketService;
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 
@@ -123,7 +140,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testFindByFactor() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -135,7 +152,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testFindByFactorValue() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -148,7 +165,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testFindByFactorValueId() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         ExperimentalDesign design = ee.getExperimentalDesign();
         assertNotNull( design.getExperimentalFactors() );
         ExperimentalFactor ef = design.getExperimentalFactors().iterator().next();
@@ -162,7 +179,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadAllValueObjects() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
         assertThat( vos )
                 .extracting( ExpressionExperimentValueObject::getId )
@@ -171,7 +188,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testGetByTaxon() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Taxon taxon = taxonService.findByCommonName( "mouse" );
         Collection<ExpressionExperiment> list = expressionExperimentService.findByTaxon( taxon );
         assertNotNull( list );
@@ -182,7 +199,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public final void testGetDesignElementDataVectorsByQt() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<QuantitationType> quantitationTypes = new HashSet<>();
         quantitationTypes.add( quantitationType );
@@ -204,14 +221,14 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public final void testGetQuantitationTypes() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( ee );
         assertEquals( 2, types.size() );
     }
 
     @Test
     public void testGetPreferredQuantitationType() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         QuantitationType qt = expressionExperimentService.getPreferredQuantitationType( ee ).orElse( null );
         assertNotNull( qt );
         assertTrue( qt.getIsPreferred() );
@@ -219,27 +236,26 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testGetBioMaterialCount() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         assertEquals( 8, expressionExperimentService.getBioMaterialCount( ee ) );
     }
 
     @Test
     public void testGetQuantitationTypeCount() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Map<QuantitationType, Long> qts = expressionExperimentService.getQuantitationTypeCount( ee );
         assertEquals( 2, qts.size() );
     }
 
     @Test
     public void testGetRawDataVectorCount() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         assertEquals( 24, expressionExperimentService.getRawDataVectorCount( ee ) );
     }
 
     @Test
     public final void testGetRawExpressionDataVectors() {
-        ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( false );
-        ees.add( eel );
+        ExpressionExperiment eel = readOnlyExpressionExperiment();
         Collection<CompositeSequence> designElements = new HashSet<>();
         QuantitationType quantitationType = eel.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<RawExpressionDataVector> allv = eel.getRawExpressionDataVectors();
@@ -327,7 +343,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public final void testLoadValueObjectsByIds() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Collection<Long> ids = new HashSet<>();
         Long id = ee.getId();
         ids.add( id );
@@ -388,7 +404,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadValueObjectsByCharacteristic() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         Characteristic c = ee.getCharacteristics().stream().findFirst().orElse( null );
         assertThat( c ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "characteristics.id", Filter.Operator.eq, c.getId().toString() );
@@ -461,7 +477,7 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
 
     @Test
     public void testLoadValueObjectsByBioAssay() {
-        ExpressionExperiment ee = createExpressionExperiment();
+        ExpressionExperiment ee = readOnlyExpressionExperiment();
         BioAssay ba = ee.getBioAssays().stream().findFirst().orElse( null );
         assertThat( ba ).isNotNull();
         Filter of = expressionExperimentService.getFilter( "bioAssays.id", Filter.Operator.eq, ba.getId().toString() );
@@ -507,23 +523,6 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
                 .hasFieldOrPropertyWithValue( "requiredValue", 0.9 )
                 .hasFieldOrPropertyWithValue( "originalProperty", "geeq.publicQualityScore" );
         expressionExperimentService.load( Filters.by( f ), null );
-    }
-
-    @Test
-    public void testFilterBySuitabilityScoreAsAdmin() {
-        expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
-    }
-
-    @Test
-    public void testFilterBySuitabilityScoreAsNonAdmin() {
-        assertThrows( AccessDeniedException.class, () -> {
-            try {
-                runAsAnonymous();
-                expressionExperimentService.getFilter( "geeq.publicSuitabilityScore", Filter.Operator.greaterOrEq, "0.9" );
-            } finally {
-                runAsAdmin(); // for cleanups
-            }
-        } );
     }
 
     @Test
@@ -683,9 +682,407 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertNull( eeSet );
     }
 
+    @Test
+    public void testGetAnnotationsIncludeFreeText() {
+        ExpressionExperiment ee = createExpressionExperiment();
+
+        // A mapped tag and a free-text one, committed exactly as the curation-commit path accepts
+        // them: the second carries a category and a value but no URIs.
+        Characteristic mapped = Characteristic.Factory.newInstance();
+        mapped.setCategory( "treatment" );
+        mapped.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000727" );
+        mapped.setValue( "dimethyl sulfoxide" );
+        mapped.setValueUri( "http://purl.obolibrary.org/obo/CHEBI_28262" );
+
+        Characteristic freeText = Characteristic.Factory.newInstance();
+        freeText.setCategory( "treatment" );
+        freeText.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000727" );
+        freeText.setValue( "HDP-101" );
+
+        ee.getCharacteristics().add( mapped );
+        ee.getCharacteristics().add( freeText );
+        expressionExperimentService.update( ee );
+
+        // 🛑 The default SHOWS the unmapped tag. It used to hide it, and this assertion used to say so;
+        // e849dfe347 flipped it on Paul's ruling that "annotations should ALWAYS show ALL the
+        // annotations, including ungrounded EEtags", because a caller could not tell an incomplete list
+        // from a complete one — it hid a real strain tag on GSE256180 and silently truncated a corpus
+        // snapshot. That commit updated ExpressionExperimentReadServiceAnnotationsTest and missed this
+        // test, which then asserted the behaviour the fix had just removed.
+        assertThat( expressionExperimentService.getAnnotations( ee ) )
+                .as( "the default read shows everything that was written, mapped or not" )
+                .extracting( AnnotationValueObject::getValue )
+                .contains( "dimethyl sulfoxide", "HDP-101" );
+
+        assertThat( expressionExperimentService.getAnnotations( ee, true ) )
+                .as( "curation read-back must show what was actually written" )
+                .extracting( AnnotationValueObject::getValue )
+                .contains( "dimethyl sulfoxide", "HDP-101" );
+
+        // The filter itself still has to work when a caller asks for it explicitly — otherwise flipping
+        // the default would have quietly retired the parameter rather than changed what it defaults to.
+        assertThat( expressionExperimentService.getAnnotations( ee, false ) )
+                .as( "an explicit includeFreeText=false still drops the unmapped tag" )
+                .extracting( AnnotationValueObject::getValue )
+                .contains( "dimethyl sulfoxide" )
+                .doesNotContain( "HDP-101" );
+    }
+
+    /**
+     * One commit is all-or-none across sections: when the tags section throws, the design section that applied
+     * before it is rolled back with it. cab's one-click executor relies on this (2026-09-13).
+     * <p>
+     * The tag add duplicates a tag the experiment already carries, which {@code addAnnotation} refuses by throwing,
+     * after the factor rename has been applied in the same transaction.
+     */
+    @Test
+    public void commitCuration_aTagSectionThatThrowsRollsBackTheDesignSection() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        Characteristic existing = Characteristic.Factory.newInstance();
+        existing.setCategory( "organism part" );
+        existing.setValue( "brain" );
+        expressionExperimentService.addAnnotation( ee, existing );
+
+        ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = design.getExperimentalFactors().get( 0 );
+        Long factorId = factor.getId();
+        String originalName = factor.getName();
+        factor.setName( originalName + " renamed" );
+
+        Characteristic duplicate = Characteristic.Factory.newInstance();
+        duplicate.setCategory( "organism part" );
+        duplicate.setValue( "brain" );
+
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setDesignPresent( true );
+        req.setProposedDesign( design );
+        req.setDesignPlan( new DesignCommitPlan() );
+        req.setTagsPresent( true );
+        req.setTagsToAdd( java.util.Collections.singletonList( new CurationCommitRequest.TagAdd( "T1", duplicate ) ) );
+
+        org.junit.jupiter.api.Assertions.assertThrows( IllegalArgumentException.class,
+                () -> expressionExperimentService.commitCuration( ee, req, false ) );
+
+        ExperimentalDesignValueObject after = expressionExperimentService.getExperimentalDesignValueObject(
+                expressionExperimentService.load( ee.getId() ) );
+        assertThat( after.getExperimentalFactors() )
+                .filteredOn( f -> factorId.equals( f.getId() ) )
+                .singleElement()
+                .satisfies( f -> assertEquals( originalName, f.getName(),
+                        "the rename applied before the tag section threw must be rolled back with it" ) );
+    }
+
+    /**
+     * Echoing {@code isBaseline: false} on a value whose stored flag is null is NOT an edit.
+     * <p>
+     * null and FALSE both mean "not the baseline", and the stored flag is null on every value that has never
+     * been one — so comparing them with equals made a client that renders a checkbox per value mark all of
+     * them edited, and write false over null on each. Paul renamed one factor on GSE7866 and the audit note
+     * read "factor values +0 / -0 / ~2" for the two values he never touched.
+     */
+    @Test
+    public void commitCuration_echoingIsBaselineFalseOnANullFlagIsNotAnEdit() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = design.getExperimentalFactors().get( 0 );
+        FactorValueBasicValueObject value = factor.getValues().get( 0 );
+        assumeThat( value.getBaseline() ).as( "fixture value starts with no baseline flag" ).isNull();
+
+        // exactly what a checkbox-backed client sends: the flag it is rendering, unchanged
+        value.setBaseline( false );
+        factor.setValues( java.util.Collections.singletonList( value ) );
+        design.setExperimentalFactors( java.util.Collections.singletonList( factor ) );
+
+        DesignPreflightReport report = expressionExperimentService.previewDesignChange( ee, design );
+        assertEquals( 0, report.getSummary().getFactorValuesToUpdate(),
+                "echoing the current baseline state is not a change" );
+    }
+
+    @Test
+    public void commitCuration_advancesAndResolvesTheLinkedCurationTicket() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget target =
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget.Factory.newInstance(
+                        ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket ticket = ticketService.openTicket(
+                getTestPersistentContact(),
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketType.CURATION,
+                "curate me", java.util.Collections.singleton( target ) );
+        Long ticketId = ticket.getId();
+
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setAdvanceLinkedTickets( true );
+        req.setCurationDetailsPresent( true );
+        req.setCurationDetailsNote( "reviewed and annotated" );
+        expressionExperimentService.commitCuration( ee, req, false );
+
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject reloaded =
+                ticketService.loadValueObject( ticketId, false );
+        // 🛑 UNDERWAY, not DONE. A commit is evidence somebody STARTED the ask, never that they finished
+        // it -- the edit may be unrelated to what was asked, partial, or a test edit. Paul, 2026-09-05:
+        // DONE means "whatever was asked was done/decided/finished", and activity gets a "started flag".
+        // This used to assert DONE, and that assertion is what made the auto-close look intended.
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.UNDERWAY,
+                reloaded.getTargets().get( 0 ).getStatus(),
+                "a commit marks the target started, not finished" );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN,
+                reloaded.getState(),
+                "and the ticket stays open: nobody has decided the ask is finished" );
+    }
+
+    /**
+     * A second commit does not drag a target backwards. A curator who marked their target DONE has
+     * decided the ask is finished; a later edit to the dataset -- someone else's, or a revert -- must not
+     * reopen that decision, which is the mirror of why a commit cannot close it in the first place.
+     */
+    @Test
+    public void commitCuration_leavesATargetTheCuratorAlreadyFinished() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget target =
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget.Factory.newInstance(
+                        ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket ticket = ticketService.openTicket(
+                getTestPersistentContact(),
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketType.CURATION,
+                "curate me", java.util.Collections.singleton( target ) );
+        Long ticketId = ticket.getId();
+        Long rowId = ticketService.loadValueObject( ticketId, false ).getTargets().get( 0 ).getId();
+
+        // the curator decides it is finished
+        ticketService.updateTargetStatus( ticket, rowId,
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.DONE,
+                getTestPersistentContact() );
+
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setAdvanceLinkedTickets( true );
+        req.setCurationDetailsPresent( true );
+        req.setCurationDetailsNote( "a later edit" );
+        expressionExperimentService.commitCuration( ee, req, false );
+
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.DONE,
+                ticketService.loadValueObject( ticketId, false ).getTargets().get( 0 ).getStatus(),
+                "a commit must not pull a finished target back to UNDERWAY" );
+    }
+
+    @Test
+    public void commitCuration_withoutAdvanceFlag_leavesTheTicketOpen() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget target =
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget.Factory.newInstance(
+                        ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+        ubic.gemma.model.common.auditAndSecurity.curation.Ticket ticket = ticketService.openTicket(
+                getTestPersistentContact(),
+                ubic.gemma.model.common.auditAndSecurity.curation.TicketType.CURATION,
+                "curate me", java.util.Collections.singleton( target ) );
+        Long ticketId = ticket.getId();
+
+        // restore / preflight leave the flag false: a revert must not close the ticket
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setAdvanceLinkedTickets( false );
+        req.setCurationDetailsPresent( true );
+        req.setCurationDetailsNote( "reverted" );
+        expressionExperimentService.commitCuration( ee, req, false );
+
+        ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject reloaded =
+                ticketService.loadValueObject( ticketId, false );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.NOT_DONE,
+                reloaded.getTargets().get( 0 ).getStatus() );
+        assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN, reloaded.getState() );
+    }
+
+    /**
+     * The baseline is compared with the database row, not with the second-level cache.
+     * <p>
+     * CURATION_DETAILS is cached, and a write from another process does not reach that cache. GSE90654, 2026-09-15: a
+     * gemma-cli DEA run moved LAST_UPDATED to 19:12:35 UTC. gemma-rest then refused a commit whose baseline was
+     * 19:12:35, reporting 15:59:09 as current, and two minutes later accepted one whose baseline was 15:59:09.
+     */
+    @Test
+    public void testTheBaselineIsComparedWithTheRowNotTheCachedCopy() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        Long curationDetailsId = ee.getCurationDetails().getId();
+        Date cached = new Date( 1_767_225_600_000L ); // 2026-01-01T00:00:00Z
+        Date written = new Date( cached.getTime() + 60_000L );
+
+        setCurationLastUpdated( curationDetailsId, cached );
+        sessionFactory.getCache().evictEntityData(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails.class, curationDetailsId );
+        assertEquals( cached.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime(),
+                "the cache holds the first value" );
+        // another process writes the row
+        setCurationLastUpdated( curationDetailsId, written );
+        assertEquals( cached.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime(),
+                "a plain load still reads the cached value, or this test proves nothing" );
+
+        CurationCommitRequest stale = new CurationCommitRequest();
+        stale.setExpectedLastUpdated( cached );
+        assertThrows( org.springframework.dao.OptimisticLockingFailureException.class,
+                () -> expressionExperimentService.commitCuration( ee, stale, true ),
+                "a baseline from before the other process's write is stale" );
+
+        CurationCommitRequest current = new CurationCommitRequest();
+        current.setExpectedLastUpdated( written );
+        assertEquals( written.getTime(),
+                expressionExperimentService.commitCuration( ee, current, true ).getNewLastUpdated().getTime() );
+    }
+
+    /**
+     * {@code GET /datasets/{id}/refresh} loads the experiment this way, and it is how a gemma-cli run tells gemma-rest
+     * that the database changed. On GSE90654 the DEA run's refresh succeeded at 19:12:35.973 UTC, and a commit five
+     * minutes later still saw the curation details from before the run.
+     */
+    @Test
+    public void testRefreshingTheExperimentRefreshesItsCurationDetails() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        Long curationDetailsId = ee.getCurationDetails().getId();
+        Date cached = new Date( 1_767_225_600_000L ); // 2026-01-01T00:00:00Z
+        Date written = new Date( cached.getTime() + 60_000L );
+
+        setCurationLastUpdated( curationDetailsId, cached );
+        sessionFactory.getCache().evictEntityData(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails.class, curationDetailsId );
+        expressionExperimentService.load( ee.getId() ); // caches the first value
+        setCurationLastUpdated( curationDetailsId, written );
+        assertEquals( cached.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime(),
+                "a plain load still reads the cached value, or this test proves nothing" );
+
+        expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( ee.getId() );
+
+        assertEquals( written.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime() );
+    }
+
+    private void setCurationLastUpdated( Long curationDetailsId, Date lastUpdated ) {
+        getJdbcTemplate().update( "update CURATION_DETAILS set LAST_UPDATED = ? where ID = ?",
+                new java.sql.Timestamp( lastUpdated.getTime() ), curationDetailsId );
+    }
+
+    /**
+     * A complete experiment — two platforms, 8 samples, 16 assays, 2 quantitation types, 24 raw
+     * vectors — but with no probe sequences. Nothing in this class reads a probe's biological
+     * characteristic, and filling the sequences in built a BioSequence + Gene + GeneProduct + BLAT
+     * result graph per probe.
+     */
+    /**
+     * Editing a factor value's statements must not duplicate its BIO_MATERIAL_FACTOR_VALUES row.
+     * <p>
+     * {@link FactorValue#hashCode()} used to hash the factor value's statements, so adding one moved the
+     * object to a different bucket of the {@link java.util.HashSet} {@link BioMaterial} keeps its factor
+     * values in. Hibernate's load-time snapshot of that @ManyToMany still recorded the old position, so the
+     * next flush emitted an INSERT for a join row that was already there. 19 datasets of a 500-dataset
+     * curation run died on {@code Duplicate entry '520917-172185'} (cab, 2026-09-01).
+     * <p>
+     * It needs both halves, which is why neither alone was ever reported: the statement edit moves the hash,
+     * and a second, unrelated factor value being attached to the same sample is what dirties the collection
+     * and forces it to flush.
+     */
+    @Test
+    // One session must span load -> mutate the statements -> attach the second factor value -> flush, because
+    // the bug is Hibernate's load-time snapshot of that collection disagreeing with where the element now
+    // hashes. Service-managed transactions would open a session per call and there would be no snapshot to
+    // disagree with -- the same shape the real commit runs in, inside applyDesignChange's transaction.
+    @org.springframework.transaction.annotation.Transactional
+    public void testEditingAStatementDoesNotDuplicateTheSampleFactorValueRow() {
+        ExpressionExperiment ee = createExpressionExperiment();
+        BioMaterial bm = ee.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .filter( b -> b != null && !b.getFactorValues().isEmpty() )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "fixture has no sample carrying a factor value" ) );
+        FactorValue existing = bm.getFactorValues().iterator().next();
+        ExperimentalFactor factor = existing.getExperimentalFactor();
+
+        // The second factor value has to come from a DIFFERENT factor: a sample carrying two values of one
+        // factor is refused as an invalid design, which is also why cab only ever hit this with a NEW factor
+        // in the same document.
+        ExperimentalFactor other = ExperimentalFactor.Factory.newInstance();
+        other.setName( "reproduction factor " + RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
+        other.setType( FactorType.CATEGORICAL );
+        other.setExperimentalDesign( factor.getExperimentalDesign() );
+        other.setSecurityOwner( ee );
+        other = experimentalFactorService.create( other );
+
+        FactorValue extra = FactorValue.Factory.newInstance();
+        extra.setExperimentalFactor( other );
+        extra.setSecurityOwner( ee );
+        Statement s = Statement.Factory.newInstance();
+        s.setCategory( "treatment" );
+        s.setSubject( "reproduction guard " + RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
+        extra.getCharacteristics().add( s );
+        extra = factorValueService.create( extra );
+
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        BioMaterial reloaded = bioMaterialService.thaw(
+                requireNonNull( bioMaterialService.load( bm.getId() ) ) );
+        FactorValue toEdit = reloaded.getFactorValues().stream()
+                .filter( f -> f.getId().equals( existing.getId() ) )
+                .findFirst()
+                .orElseThrow( () -> new AssertionError( "the sample lost its factor value across the reload" ) );
+
+        // 1. move the factor value's hash by editing its statements
+        Statement added = Statement.Factory.newInstance();
+        added.setCategory( "treatment" );
+        added.setSubject( "moves the hash " + RandomStringUtils.insecure().nextAlphanumeric( 8 ) );
+        toEdit.getCharacteristics().add( added );
+
+        // 2. dirty the join collection the moved element lives in
+        reloaded.getFactorValues().add( requireNonNull( factorValueService.load( extra.getId() ) ) );
+        bioMaterialService.update( reloaded );
+
+        // Before the fix this threw on the duplicate join row rather than reaching the assertions.
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        BioMaterial after = bioMaterialService.thaw(
+                requireNonNull( bioMaterialService.load( bm.getId() ) ) );
+        assertThat( after.getFactorValues() ).extracting( FactorValue::getId )
+                .as( "the edited factor value is still attached, exactly once" )
+                .contains( existing.getId() )
+                .doesNotHaveDuplicates();
+    }
+
+    private ExpressionExperiment newCompleteExperiment() {
+        return testHelper.getTestExpressionExperimentWithAllDependencies( false );
+    }
+
+    /**
+     * The one experiment shared by every test here that only reads it.
+     * <p>
+     * Building one costs ~2.4 s — 1.65 s inside the persister, 0.78 s to delete it again — which
+     * every one of this class's 36 methods used to pay. It is deliberately not added to
+     * {@link #ees}, so it outlives the class rather than being deleted between methods.
+     * <strong>Do not modify it</strong>: a test that changes the experiment, its design, its
+     * samples or its ACLs must build its own with {@link #createExpressionExperiment()}.
+     */
+    private static ExpressionExperiment readOnlyEe;
+
+    private ExpressionExperiment readOnlyExpressionExperiment() {
+        if ( readOnlyEe == null ) {
+            readOnlyEe = prepareExpressionExperiment( newCompleteExperiment() );
+        }
+        return readOnlyEe;
+    }
+
     private ExpressionExperiment createExpressionExperiment() {
-        ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
+        ExpressionExperiment ee = newCompleteExperiment();
         ees.add( ee );
+        return prepareExpressionExperiment( ee );
+    }
+
+    private ExpressionExperiment prepareExpressionExperiment( ExpressionExperiment ee ) {
         ee.setName( ExpressionExperimentServiceIntegrationTest.EE_NAME );
 
         Contact c = this.getTestPersistentContact();

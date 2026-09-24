@@ -65,6 +65,11 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
 
     /**
+     * @see CharacteristicDao#countExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, Collection)
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
+
+    /**
      * Find characteristics that have a particular parent class or lack thereof.
      *
      * @throws IllegalArgumentException if parentClasses is
@@ -81,6 +86,14 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      */
     @Nullable
     Characteristic findBestByUri( String uri );
+
+    /**
+     * For each value URI, return one representative ACL-visible usage (or omit it when none is accessible), so
+     * a search hit can be shown in the context it has actually been applied.
+     *
+     * @see CharacteristicDao#findRepresentativeUsageByValueUris(Collection)
+     */
+    Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
 
     /**
      * Returns a collection of characteristics that have a value starting with the given string.
@@ -111,6 +124,21 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
      * @see CharacteristicDao#findEeCountsByUriGroupedByCategory(Collection)
      */
     Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris );
+
+    /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue );
+
+    /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String, Collection)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds );
+
+    /**
+     * @see CharacteristicDao#findPriorCurationByOriginalValue(String, int, Collection)
+     */
+    List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds );
 
     /**
      * @see CharacteristicDao#findValueGroupedByValueUri(Collection, boolean, boolean, boolean, int)

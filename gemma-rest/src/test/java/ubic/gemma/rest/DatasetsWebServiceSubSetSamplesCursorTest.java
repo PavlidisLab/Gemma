@@ -34,16 +34,18 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the cursor-pagination branch added to
- * {@link DatasetsWebService#getDatasetSubSetSamples(DatasetArg, Long, CursorArg, LimitArg)}
+ * {@code DatasetsWebService#getDatasetSubSetSamples(DatasetArg, Long, CursorArg, LimitArg)}
  * as step 1u of {@code CURSOR_PAGINATION_STEP1_PLAN.md}. Pure Mockito — the goal is to
  * verify the WebService routes cursor vs legacy modes to the right helper and emits the
  * right response wrapper, not to retest the DAO (covered by the broader DAO-cursor
@@ -88,9 +90,10 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
     @Test
     public void legacyModeWithoutCursorReturnsUnpaginatedResponseDataObject() {
         List<BioAssayValueObject> all = Arrays.asList( ba1, ba2 );
-        when( datasetArgService.getSubSetSamples( any( DatasetArg.class ), eq( SUBSET_ID ) ) ).thenReturn( all );
+        when( datasetArgService.getSubSetSamples( any( DatasetArg.class ), eq( SUBSET_ID ), anyBoolean() ) ).thenReturn( all );
 
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "20" ) );
+        // No limit: legacy mode is only reachable when the caller asked for no page size at all.
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, null, false );
 
         assertThat( response ).isInstanceOf( ResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -98,7 +101,7 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
         assertThat( r.getData() ).containsExactly( ba1, ba2 );
 
         // Cursor helper must not be touched in legacy mode.
-        verify( datasetArgService, never() ).getSubSetSamplesByCursor( any( DatasetArg.class ), anyLong(), any(), anyInt() );
+        verify( datasetArgService, never() ).getSubSetSamplesByCursor( any( DatasetArg.class ), anyLong(), any(), anyInt(), anyBoolean() );
     }
 
     @Test
@@ -111,10 +114,10 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
                 /* nextCursor */ "next-cursor-token",
                 /* prevCursor */ "prev-cursor-token",
                 /* totalElements */ null );
-        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() ) ).thenReturn( cp );
 
         CursorArg arg = CursorArg.valueOf( c.encode() );
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, arg, limit( "20" ) );
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, arg, limit( "20" ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")
@@ -128,7 +131,7 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
         assertThat( page.getLimit() ).isEqualTo( 20 );
 
         // Legacy helper must not be touched in cursor mode.
-        verify( datasetArgService, never() ).getSubSetSamples( any( DatasetArg.class ), anyLong() );
+        verify( datasetArgService, never() ).getSubSetSamples( any( DatasetArg.class ), anyLong(), anyBoolean() );
     }
 
     @Test
@@ -139,12 +142,60 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
         Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
         CursorPage<BioAssayValueObject> cp = new CursorPage<>(
                 Collections.singletonList( ba2 ), null, 5, null, "prev", null );
-        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ) ) ).thenReturn( cp );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ), anyBoolean() ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "5" ) );
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "5" ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
-        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ) );
+        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 5 ), anyBoolean() );
+    }
+
+    /**
+     * Same rule as the parent {@code /datasets/{id}/samples} listing: a {@code limit} with no {@code cursor}
+     * starts a cursor walk at the first page. Treated identically because the two routes have the same
+     * shape — a client that learned the parent's behaviour must not find the sibling silently different.
+     */
+    @Test
+    public void limitWithoutCursorStartsACursorWalkAtTheFirstPage() {
+        CursorPage<BioAssayValueObject> cp = new CursorPage<>(
+                Collections.singletonList( ba1 ),
+                Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
+                1,
+                /* nextCursor */ "next-cursor-token",
+                /* prevCursor */ null,
+                /* totalElements */ null );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), isNull(), eq( 1 ), anyBoolean() ) ).thenReturn( cp );
+
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "1" ), false );
+
+        assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
+        @SuppressWarnings("unchecked")
+        CursorPaginatedResponseDataObject<BioAssayValueObject> page =
+                ( CursorPaginatedResponseDataObject<BioAssayValueObject> ) response;
+        assertThat( page.getData() ).containsExactly( ba1 );
+        assertThat( page.getLimit() ).isEqualTo( 1 );
+        assertThat( page.getNextCursor() ).isEqualTo( "next-cursor-token" );
+
+        // A null cursor is what tells the DAO to start at the first page.
+        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), isNull(), eq( 1 ), anyBoolean() );
+        verify( datasetArgService, never() ).getSubSetSamples( any( DatasetArg.class ), anyLong(), anyBoolean() );
+    }
+
+    /**
+     * Cursor mode still has a page size when the caller sends none — dropping {@code @DefaultValue("20")}
+     * from the parameter moved that default into the method, and it has to still be there.
+     */
+    @Test
+    public void cursorModeWithoutLimitUsesTheDefaultPageSize() {
+        Cursor c = new Cursor( "+id", new Object[] { 1L }, Cursor.Direction.FORWARD );
+        CursorPage<BioAssayValueObject> cp = new CursorPage<>(
+                Collections.singletonList( ba1 ), null, 20, null, null, null );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() ) ).thenReturn( cp );
+
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), null, false );
+
+        assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
+        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() );
     }
 
     @Test
@@ -157,9 +208,9 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
                 Collections.emptyList(),
                 Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
                 20, null, null, null );
-        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ) ) ).thenReturn( cp );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), eq( c ), eq( 20 ), anyBoolean() ) ).thenReturn( cp );
 
-        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "20" ) );
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, CursorArg.valueOf( c.encode() ), limit( "20" ), false );
 
         assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
         @SuppressWarnings("unchecked")

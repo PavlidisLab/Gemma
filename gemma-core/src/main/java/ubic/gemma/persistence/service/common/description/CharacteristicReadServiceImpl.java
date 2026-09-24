@@ -79,6 +79,18 @@ public class CharacteristicReadServiceImpl implements CharacteristicReadService 
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        return this.characteristicDao.countExperimentsByUris( uris, includeSubjects, includePredicates, includeObjects, taxon, excludedExperimentIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, boolean includeCategories, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds ) {
+        return this.characteristicDao.countExperimentsByUris( uris, includeSubjects, includePredicates, includeObjects, includeCategories, taxon, excludedExperimentIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults ) {
         return this.characteristicDao.findByParentClasses( parentClasses, includeNoParents, category, maxResults );
     }
@@ -94,6 +106,12 @@ public class CharacteristicReadServiceImpl implements CharacteristicReadService 
     @Transactional(readOnly = true)
     public Characteristic findBestByUri( String uri ) {
         return this.characteristicDao.findBestByUri( uri );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris ) {
+        return this.characteristicDao.findRepresentativeUsageByValueUris( valueUris );
     }
 
     @Override
@@ -132,8 +150,44 @@ public class CharacteristicReadServiceImpl implements CharacteristicReadService 
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue ) {
+        return this.characteristicDao.findEeCountsByUriForOriginalValue( uris, originalValue );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds ) {
+        return this.characteristicDao.findEeCountsByUriForOriginalValue( uris, originalValue, excludedExperimentIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds ) {
+        return this.characteristicDao.findPriorCurationByOriginalValue( originalValue, maxResults, excludedExperimentIds );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults ) {
         return this.characteristicDao.findValueGroupedByValueUri( parentClasses, includeNoParents, includePredicates, includeObjects, maxResults );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, String> findCategoryGroupedByCategoryUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, int maxResults ) {
+        return this.characteristicDao.findCategoryGroupedByCategoryUri( parentClasses, includeNoParents, maxResults );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Characteristic> findByUriInAnySlot( String uri ) {
+        return this.characteristicDao.findByUriInAnySlot( uri );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> findExperimentIdsByUriInAnySlot( String uri ) {
+        return this.characteristicDao.findExperimentIdsByUriInAnySlot( uri );
     }
 
     @Override

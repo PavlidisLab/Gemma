@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceReadService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
@@ -58,6 +59,8 @@ public class MergeDuplicateBibRefsCli extends AbstractAuthenticatedCLI {
     private BibliographicReferenceReadService bibliographicReferenceReadService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
 
     private String[] pubMedIds;
     private boolean commit = false;
@@ -158,6 +161,13 @@ public class MergeDuplicateBibRefsCli extends AbstractAuthenticatedCLI {
                     log.info( "  would delete duplicate bibref id=" + dup.getId() + " (after repointing its experiments)." );
                     continue;
                 }
+                // Assertions about the duplicate move with the links. The FK from
+                // PUBLICATION_ASSOCIATION does not cascade -- deliberately, so a reference cannot be
+                // deleted out from under a live assertion -- which means skipping this does not lose
+                // data but does turn the delete below into a caught constraint violation, and the
+                // merge silently stops merging.
+                publicationAssociationService.rebindPublication( dup, canonical );
+
                 // Only delete once nothing on the experiment surface still points at the duplicate.
                 Collection<ExpressionExperiment> remaining = expressionExperimentService.findByBibliographicReference( dup );
                 if ( !remaining.isEmpty() ) {

@@ -129,6 +129,10 @@ public class AdminWebServiceTest {
     @Mock
     private ubic.gemma.core.search.indexer.IndexerService indexerService;
     @Mock
+    private ubic.gemma.rest.util.args.PlatformArgService platformArgService;
+    @Mock
+    private ubic.gemma.core.analysis.report.ArrayDesignReportService arrayDesignReportService;
+    @Mock
     private ubic.gemma.core.ontology.OntologyService ontologyFacade;
 
     private AdminWebService webService;
@@ -146,7 +150,7 @@ public class AdminWebServiceTest {
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
-                indexerService );
+                indexerService, platformArgService, arrayDesignReportService );
     }
 
     /* ===== /admin/caches ===== */
@@ -703,6 +707,40 @@ public class AdminWebServiceTest {
         verify( userManager, never() ).softDeleteUser( anyString(), anyString() );
     }
 
+    @Test
+    public void resetUserPassword_returnsTempPassword_andCallsManager() {
+        when( userManager.findByUserName( "alice" ) ).thenReturn( gemmaUser( "alice", true, null ) );
+
+        ResponseDataObject<AdminWebService.ResetPasswordResponse> resp = webService.resetUserPassword( "alice" );
+
+        AdminWebService.ResetPasswordResponse body = resp.getData();
+        assertThat( body.temporaryPassword ).isNotNull();
+        assertThat( body.temporaryPassword ).hasSize( 16 );
+        assertThat( body.temporaryPassword ).matches( "[A-Za-z0-9]+" );
+
+        // The generated temp password is what gets handed to the service for encoding.
+        verify( userManager ).adminChangePassword( "alice", body.temporaryPassword );
+    }
+
+    @Test
+    public void resetUserPassword_returns404_whenUserNotFound() {
+        when( userManager.findByUserName( "ghost" ) ).thenReturn( null );
+
+        assertThatThrownBy( () -> webService.resetUserPassword( "ghost" ) )
+                .isInstanceOf( NotFoundException.class );
+        verify( userManager, never() ).adminChangePassword( anyString(), anyString() );
+    }
+
+    @Test
+    public void resetUserPassword_returns409_whenUserSoftDeleted() {
+        when( userManager.findByUserName( "bob" ) ).thenReturn( gemmaUser( "bob", false, new Date() ) );
+
+        assertThatThrownBy( () -> webService.resetUserPassword( "bob" ) )
+                .isInstanceOf( ClientErrorException.class )
+                .matches( ex -> ( ( ClientErrorException ) ex ).getResponse().getStatus() == 409 );
+        verify( userManager, never() ).adminChangePassword( anyString(), anyString() );
+    }
+
     /* ===== /admin/tasks/import-geo ===== */
 
     @Test
@@ -932,7 +970,9 @@ public class AdminWebServiceTest {
         c.proposalCount = 0L;
         c.matchedCriteria = Arrays.asList( "brain" );
         when( geoScrapeService.scrapeDryRun( org.mockito.ArgumentMatchers.any() ) )
-                .thenReturn( Arrays.asList( c ) );
+                .thenReturn( new GeoScrapeService.DryRunResult( Arrays.asList( c ), "GSE99999",
+                        new java.util.GregorianCalendar( 2026, java.util.Calendar.AUGUST, 1 ).getTime(),
+                        Arrays.asList( "GSE304614" ), 142 ) );
 
         AdminWebService.GeoScrapeRequest req = new AdminWebService.GeoScrapeRequest();
         req.maxRecords = 25;
@@ -942,14 +982,21 @@ public class AdminWebServiceTest {
         Response resp = webService.submitGeoScrape( req );
 
         assertThat( resp.getStatus() ).isEqualTo( 200 );
-        @SuppressWarnings("unchecked")
-        ResponseDataObject<List<GeoScrapeDryRunCandidate>> dataObj =
-                ( ResponseDataObject<List<GeoScrapeDryRunCandidate>> ) resp.getEntity();
-        assertThat( dataObj.getData() ).hasSize( 1 );
-        GeoScrapeDryRunCandidate got = dataObj.getData().get( 0 );
+        AdminWebService.GeoScrapeDryRunResponse dataObj =
+                ( AdminWebService.GeoScrapeDryRunResponse ) resp.getEntity();
+        // `data` must stay the candidate array it has always been -- existing clients parse it.
+        assertThat( dataObj.data ).hasSize( 1 );
+        GeoScrapeDryRunCandidate got = dataObj.data.get( 0 );
         assertThat( got.accession ).isEqualTo( "GSE12345" );
         assertThat( got.preboardedId ).isNull();
         assertThat( got.matchedCriteria ).containsExactly( "brain" );
+        // and the two new fields ride alongside it
+        assertThat( dataObj.lastScannedAccession ).isEqualTo( "GSE99999" );
+        assertThat( dataObj.lastScannedDate ).isNotNull();
+        assertThat( dataObj.incompleteRecords ).containsExactly( "GSE304614" );
+        assertThat( dataObj.nextOffset )
+                .as( "record-level resumption: handed straight back as `skip`" )
+                .isEqualTo( 142 );
 
         ArgumentCaptor<GeoScrapeService.ScrapeRequest> captor =
                 ArgumentCaptor.forClass( GeoScrapeService.ScrapeRequest.class );
@@ -958,6 +1005,7 @@ public class AdminWebServiceTest {
         assertThat( sr.getMaxRecords() ).isEqualTo( 25 );
         assertThat( sr.getCriteria() ).containsExactly( "brain" );
         assertThat( sr.isDryRun() ).isTrue();
+        assertThat( sr.getSkip() ).isNull();
         verify( taskRunningService, org.mockito.Mockito.never() )
                 .submitTaskCommand( org.mockito.ArgumentMatchers.any( GeoScrapeTaskCommand.class ) );
     }

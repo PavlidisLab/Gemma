@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,6 +50,16 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
     private String action;
     private String note;
     private String detail;
+    /**
+     * The curator an agent acted for, when the credential that authenticated the write is not the person who
+     * asked for it.
+     * <p>
+     * {@link #performer} is the authenticated principal, so an agent commit is stamped with the agent's own
+     * account whoever requested it. This names the requester beside it. Null on any event written directly by
+     * the account that performed it, which is every event before 2026-09-05.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String onBehalfOf;
     @JsonIgnore
     private Class<? extends AuditEventType> eventType;
 
@@ -77,6 +88,7 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> {
         note = ae.getNote();
         date = ae.getDate();
         detail = ae.getDetail();
+        onBehalfOf = ae.getOnBehalfOf();
     }
 
     /**

@@ -44,6 +44,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.ExtractedMolecule;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -66,7 +67,6 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY;
 import static ubic.gemma.core.loader.expression.geo.model.GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING;
-import static ubic.gemma.core.ontology.ValueStringToOntologyMapping.lookup;
 
 /**
  * Convert GEO domain objects into Gemma objects.
@@ -605,9 +605,11 @@ public class GeoConverterImpl implements GeoConverter {
             // bulk RNA-Seq
             if ( Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC ) ) {
                 // have to drill down.
-                if ( Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.RNA_SEQ )
-                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.SSRNA_SEQ )
-                        || Objects.equals( sample.getLibStrategy(), GeoLibraryStrategy.OTHER ) ) {
+                GeoLibraryStrategy effective = GeoConverterImpl.effectiveLibStrategy( sample );
+                if ( Objects.equals( effective, GeoLibraryStrategy.RNA_SEQ )
+                        || Objects.equals( effective, GeoLibraryStrategy.SSRNA_SEQ )
+                        || Objects.equals( effective, GeoLibraryStrategy.RIBO_SEQ )
+                        || Objects.equals( effective, GeoLibraryStrategy.OTHER ) ) {
                     // check if there is data in SRA or MPSS
                     // FIXME: are we really seeing MPSS out there?
                     // some MPSS might not have libSource filled in. Other possibilities we know about for type are 'other', 'SAGE' and 'mixed';
@@ -784,18 +786,181 @@ public class GeoConverterImpl implements GeoConverter {
             bioMaterial.getCharacteristics().add( c );
         }
 
-        if ( StringUtils.isNotBlank( channel.getLabel() ) ) {
-            String characteristic = this.trimString( channel.getLabel() );
-            // This is typically something like "biotin-labeled nucleotides", which we can convert later.
-            Characteristic labelChar = Characteristic.Factory.newInstance();
-            labelChar.setDescription( "GEO Sample label" );
-            labelChar.setCategory( "labelling" ); /* used to be LabelCompound */
-            labelChar.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0000562" );
-            labelChar.setValue( characteristic );
-            labelChar.setOriginalValue( characteristic );
-            labelChar.setEvidenceCode( GOEvidenceCode.IIA );
-            bioMaterial.getCharacteristics().add( labelChar );
+        // 🛑 The GEO channel label is NOT imported as a sample characteristic. It is the fluorophore or hapten
+        // the sample was tagged with for detection -- a property of the ASSAY, not of the material -- and every
+        // consumer discards it:
+        //
+        //   * the curation agent's snapshot has to look at every characteristic on a biomaterial and decide
+        //     against it, so a constant non-biological column is pure noise in that decision;
+        //   * the curation UI has filtered `labelling` out of its tag bar for some time, added independently
+        //     because the chips were noise in the panel (uib, 2026-09-05).
+        //
+        // Measured on production the same day, after Paul deleted the 313,088 `biotin` rows: 102,443 rows on
+        // 79,452 biomaterials, 433 distinct values -- Cy3 61,687, Cy5 24,790, then a tail that is overwhelmingly
+        // spellings of those two (`Cy-3`, `Cyanine-3`, `Cy3-CTP`, `Cy3, Cy5`), which is itself the sign that
+        // nothing reads them. Paul: "we gotta get rid of labelling."
+        //
+        // A DELETE would not hold: these arrive from GEO on every import and the category refills. This is the
+        // import path, so it stays empty.
+        //
+        // ⚠️ Only the automatic import. A curator attaching `labelling` deliberately is an explicit choice and
+        // nothing here touches it; the same distinction the UI's carve-out keeps.
+    }
+
+    /**
+     * GEO's channel molecule as the persisted enum. Null when GEO did not say.
+     * <p>
+     * A one-to-one mapping onto GEO's own vocabulary rather than an interpretation, so an unmapped value stays
+     * {@link ExtractedMolecule#other} instead of becoming a guess.
+     */
+    /**
+     * Ribosome profiling submitted as {@code OTHER}, recognized from how the submitter named the sample.
+     * <p>
+     * 🛑 GEO is not consistent here and the declared strategy cannot be trusted on its own. GSE288755's
+     * samples are titled {@code siControl HEK293T Ribo-seq replicate #1} while their
+     * {@code !Sample_library_strategy} reads {@code OTHER}; SRA has a {@code Ribo-Seq} value and submitters
+     * often do not reach for it. Reading only the declared field files every such series under {@code OTHER},
+     * which is the same bucket as spatial and APEX-seq and says nothing about what was measured.
+     * <p>
+     * {@code RIBO_SEQ} means ALL ribosome-associated profiling here — footprinting, TRAP / RiboTag and
+     * polysome purification alike — not footprinting alone. Paul's ruling, 2026-09-16, WIDENING what an
+     * earlier version of this comment said. Three things decided it: the column is already majority Gemma
+     * vocabulary ({@code MICROARRAY_*} is in no SRA CV), the broad sense is already in the corpus and GEO's
+     * own declarations put it there (40 TRAP/IP and 32 polysome samples carried {@code RIBO_SEQ} before this
+     * regex could match any of them), and widening is monotone — every row already labelled stays true, so
+     * nothing is re-labelled and nothing has to be revisited.
+     * <p>
+     * Still gated on transcriptomic-and-{@code OTHER}: a series that DECLARES its strategy is believed. That
+     * leaves two shapes this cannot reach, both real — GSE arms that declare {@code RNA_SEQ} outright
+     * (eid 57963 has both shapes in one curator-defined arm) and samples with no declared strategy at all
+     * (eid 50185, titled {@code RiboTag, CA1, Control, IP, …}). Reaching those means overriding or
+     * substituting for GEO's declaration, which is a different decision and not this one.
+     * <p>
+     * ⚠️ This CHANGES THE LABEL, NOT WHAT IS IMPORTED. {@code RIBO_SEQ} is admitted by the eligibility gate
+     * alongside {@code RNA_SEQ} / {@code SSRNA_SEQ} / {@code OTHER}, so the samples that used to come in as
+     * {@code OTHER} still come in. Dropping it from that list would silently stop importing ribosome
+     * profiling, which is a different decision and not this one.
+     */
+    private static final Pattern RIBO_SEQ_NAMING = Pattern.compile(
+            "ribo[\\s._-]?seq|ribosome[\\s._-]?profil|ribosome[\\s._-]?footprint"
+                    + "|ribosome[\\s._-]?protected[\\s._-]?fragment|\\bRPF\\b"
+                    // ribosome-associated, per the 2026-09-16 ruling: affinity pulldown and fraction purification
+                    + "|\\btrap\\b|ribo[\\s._-]?tag|\\brpl10a\\b|pulldown|pull[\\s._-]down"
+                    // (?!y) keeps the karyotype words out: polysomy / monosomy / uniparental disomy are
+                    // chromosome counts, not ribosome fractions. The lookahead still admits polysome,
+                    // polysomal, polysomes.
+                    + "|polysom(?!y)|monosom(?!y)|disom(?!y)|tcp[\\s._-]?seq|immunoprecipit",
+            Pattern.CASE_INSENSITIVE );
+
+    /**
+     * The strategy to treat a sample as, which is the declared one unless GEO under-declared it.
+     *
+     * @return the effective strategy, or {@code null} when GEO stated none
+     * @see #RIBO_SEQ_NAMING
+     */
+    @Nullable
+    static GeoLibraryStrategy effectiveLibStrategy( GeoSample sample ) {
+        GeoLibraryStrategy declared = sample.getLibStrategy();
+        if ( !Objects.equals( declared, GeoLibraryStrategy.OTHER )
+                || !Objects.equals( sample.getLibSource(), GeoLibrarySource.TRANSCRIPTOMIC ) ) {
+            return declared;
         }
+        String haystack = StringUtils.joinWith( " ", sample.getTitle(), sample.getDescription() );
+        if ( StringUtils.isNotBlank( haystack ) && RIBO_SEQ_NAMING.matcher( haystack ).find() ) {
+            return GeoLibraryStrategy.RIBO_SEQ;
+        }
+        return declared;
+    }
+
+    /**
+     * What {@code BIO_ASSAY.LIBRARY_STRATEGY} records for a sample.
+     * <ul>
+     *     <li>A sequencing sample: its {@linkplain #effectiveLibStrategy effective strategy}, as the constant name
+     *         ({@code RNA_SEQ}) rather than GEO's spelling ({@code RNA-Seq}). Paul's ruling, 2026-09-13: production
+     *         rows were already in that form, because the 2026-09-05 backfill copied them from
+     *         {@code SOURCE_METADATA}, which {@code GeoSourceMetadataBuilder} writes with {@code toString()}.</li>
+     *     <li>A microarray sample, which GEO types {@link GeoSampleType#RNA} (the same test the eligibility gate
+     *         uses): how many channels it was hybridized in, {@link BioAssay#LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR} or
+     *         {@link BioAssay#LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR} (Paul, 2026-09-13). The sample's channel count,
+     *         not the platform's technology type — Paul, 2026-09-13: "dualmode is the technology, not the
+     *         application. library strategy is the application."</li>
+     * </ul>
+     *
+     * @return null for a sample that is neither, or a microarray sample reporting other than one or two channels
+     */
+    @Nullable
+    static String libraryStrategy( GeoSample sample ) {
+        GeoLibraryStrategy effective = effectiveLibStrategy( sample );
+        if ( effective != null ) {
+            return effective.name();
+        }
+        if ( !Objects.equals( sample.getType(), GeoSampleType.RNA ) ) {
+            return null;
+        }
+        switch ( sample.getChannels().size() ) {
+            case 1:
+                return BioAssay.LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR;
+            case 2:
+                return BioAssay.LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR;
+            default:
+                return null;
+        }
+    }
+
+    @Nullable
+    static ExtractedMolecule convertMolecule( @Nullable GeoChannel.ChannelMolecule molecule ) {
+        if ( molecule == null ) {
+            return null;
+        }
+        switch ( molecule ) {
+            case totalRNA:
+                return ExtractedMolecule.totalRNA;
+            case polyARNA:
+                return ExtractedMolecule.polyARNA;
+            case cytoplasmicRNA:
+                return ExtractedMolecule.cytoplasmicRNA;
+            case nuclearRNA:
+                return ExtractedMolecule.nuclearRNA;
+            case genomicDNA:
+                return ExtractedMolecule.genomicDNA;
+            case protein:
+                return ExtractedMolecule.protein;
+            default:
+                return ExtractedMolecule.other;
+        }
+    }
+
+    /**
+     * Pick the molecule that describes the SAMPLE, given what each of a GEO sample's channels reported.
+     * <p>
+     * Separated from the conversion so the rule can be tested without building a {@code GeoSample}: the
+     * surrounding method needs a whole series to run, so a test of this decision through it would be
+     * asserting on everything else at the same time.
+     *
+     * @param molecules distinct, non-null molecules across the sample's channels, in channel order
+     * @return the sample's molecule, or {@code null} when the channels disagree and nothing distinguishes them
+     */
+    @Nullable
+    static ExtractedMolecule resolveMolecule( Set<ExtractedMolecule> molecules ) {
+        if ( molecules.isEmpty() ) {
+            return null;
+        }
+        if ( molecules.size() == 1 ) {
+            return molecules.iterator().next();
+        }
+        // The classic two-colour design co-hybridizes the sample against a genomic-DNA REFERENCE, so the
+        // channels disagree by construction and only one of them is the sample. Taking channel 1 by position
+        // labelled every such sample `genomicDNA` -- GSE9164's 14 assays say so on prod while their own
+        // descriptions read "Total RNA ... RNeasy Mini Kit", and GEO's GSM230264 spells it out: ch1
+        // `genomic DNA` (Cy3, the reference), ch2 `total RNA` (Cy5, the sample).
+        if ( molecules.size() == 2 && molecules.contains( ExtractedMolecule.genomicDNA ) ) {
+            return molecules.stream()
+                    .filter( m -> m != ExtractedMolecule.genomicDNA )
+                    .findFirst()
+                    .orElseThrow( IllegalStateException::new );
+        }
+        // Two disagreeing RNA flavours name no reference, so there is nothing to prefer between them.
+        return null;
     }
 
     /**
@@ -825,12 +990,29 @@ public class GeoConverterImpl implements GeoConverter {
     void parseGEOSampleCharacteristicString( String rawGEOString, BioMaterial bioMaterial ) {
         /*
          * Sometimes strings are like Age :8 weeks; Sex: M so we should first split on ";" - sometimes "," is used.
-         * However, "," or ";" can occur in other situations. So we first have to check whether there are multiple ":".
-         * Checking for "=" here is not going to work, as the example I have is "lithium use (non-user=0, user = 1):0", so there is still a rare possibility of parsing errors.
+         * However, "," or ";" can occur in other situations.
+         *
+         * 🛑 The test used to be "more than one colon", and that is the bug uib traced on 2026-09-11.
+         * A SINGLE pair whose value contains a colon also has more than one, so the line was shattered
+         * on its commas into fragments that were never pairs. GSE290074 (imported 2026-04-01) stores 34
+         * rows from exactly this:
+         *
+         *   group: 10-20 granulosa cells, preantral follicle, adult human ovary, Hs9, age36,
+         *          cervical cancer (post chemotherapy: TP 2cycle)
+         *
+         * Two colons, so it split on commas, and the fragment "cervical cancer (post chemotherapy: TP
+         * 2cycle)" then reached the colon split and became the CATEGORY "cervical cancer (post
+         * chemotherapy" -- the value frinkbro measured. The raw GEO line is well formed; the damage is ours.
+         *
+         * So the test is now whether the pieces actually LOOK like pairs. A real multi-pair line gives
+         * fragments that each carry a separating colon; a single pair with a comma in its value gives
+         * fragments like "preantral follicle" that carry none, and those are the tell that the line was
+         * one characteristic all along.
          */
+        String[] candidates = rawGEOString.split( "[;,]" );
         String[] topFields;
-        if ( StringUtils.countMatches( rawGEOString, ":" ) > 1 ) {
-            topFields = rawGEOString.split( "[;,]" );
+        if ( candidates.length > 1 && allLookLikeKeyValuePairs( candidates ) ) {
+            topFields = candidates;
         } else {
             topFields = new String[] { rawGEOString };
         }
@@ -840,7 +1022,7 @@ public class GeoConverterImpl implements GeoConverter {
             /*
              * Sometimes values are like Age:8 weeks, so we can try to convert them.
              */
-            String[] fields = field.split( ":", 2 ); // sometimes it is '=' ,but not allowed any more see https://www.ncbi.nlm.nih.gov/geo/info/soft.html#guidelines_tabs
+            String[] fields = GeoCharacteristicKey.split( field );
             if ( fields.length != 2 ) {
                 fields = field.split( "=", 2 ); // this shouldn't occur, but is present in some old GEO records apparently
             }
@@ -851,6 +1033,18 @@ public class GeoConverterImpl implements GeoConverter {
                 String value = fields[1].trim().replaceAll( "\t", " " ).replaceAll( "_", " " );
                 value = value.replaceFirst( "^(human|mouse|rat|murine|mus musculus|homo sapiens)\\s", "" );
 
+                // A submitter writing "Strain:" with nothing after the colon parses to a category with no
+                // value. That is ABSENCE, and the column spells absence NULL -- an empty string is a value
+                // that happens to be empty. The corpus said it both ways until 8,141 rows were normalized to
+                // NULL on 2026-09-10 (cab), lopsided enough that `WHERE VALUE IS NULL` had been missing 99.7%
+                // of them. Emit the same spelling here so the import stops reintroducing the other one.
+                // ORIGINAL_VALUE still carries the submitter's unsplit line, so nothing is lost.
+                // stripToNull, not isEmpty(): the underscore substitution two lines up turns a
+                // "Strain: _" into a single space, which is non-empty and would store the blank
+                // this is here to stop -- one that WHERE VALUE IS NULL misses, and that a
+                // VALUE <> TRIM(VALUE) sweep misses too when the value is all whitespace.
+                String valueOrNull = StringUtils.stripToNull( value );
+
                 Characteristic gemmaChar = Characteristic.Factory.newInstance();
                 gemmaChar.setOriginalValue( field ); // always retain the original thing, unsplit.
                 gemmaChar.setEvidenceCode( GOEvidenceCode.IIA );
@@ -860,7 +1054,7 @@ public class GeoConverterImpl implements GeoConverter {
                 if ( vartype == null || vartype.equals( VariableType.other ) ) {
                     log.debug( "Could not parse into VariableType: " + category + " (in: " + rawGEOString + ")" );
                     gemmaChar.setCategory( category ); // This is not one of our "standard" categories, but it's okay
-                    gemmaChar.setValue( value );
+                    gemmaChar.setValue( valueOrNull );
                     gemmaChar.setDescription( defaultDescription );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                     continue;
@@ -869,22 +1063,25 @@ public class GeoConverterImpl implements GeoConverter {
                 assert !vartype.equals( VariableType.other );
                 this.convertVariableType( gemmaChar, vartype );
 
-                Characteristic mappedValueTerm = lookup( value, gemmaChar.getCategory() );
-
+                // 🛑 The valueString -> ontology preset mapping is DISABLED on GEO import (Paul,
+                // 2026-09-04): we are not doing this any more. It used to consult
+                // valueStringToOntologyTermMappings.txt and, on a hit, OVERWRITE all four fields --
+                // value, valueUri, category and categoryUri -- with the preset. The submitter's own
+                // text now survives import unchanged, and grounding is a curation decision rather
+                // than something the loader guesses from a 1,386-row lookup table.
+                //
+                // The category still comes from convertVariableType() above; that is GEO's own
+                // variable type and not part of what is being switched off here.
+                //
+                // Deliberately NOT deleted: ValueStringToOntologyMapping and its resource file are
+                // still used by LoadSimpleExpressionDataCli, which is a different (non-GEO) loader.
                 try {
-                    if ( mappedValueTerm != null ) {
-                        gemmaChar.setValue( mappedValueTerm.getValue() );
-                        gemmaChar.setValueUri( StringUtils.stripToNull( mappedValueTerm.getValueUri() ) );
-                        gemmaChar.setCategory( mappedValueTerm.getCategory() );
-                        gemmaChar.setCategoryUri( StringUtils.stripToNull( mappedValueTerm.getCategoryUri() ) );
-                    } else {
-                        gemmaChar.setValue( value );
-                    }
+                    gemmaChar.setValue( valueOrNull );
                     bioMaterial.getCharacteristics().add( gemmaChar );
                 } catch ( Exception e ) {
                     // conversion didn't work, fall back. (not sure why this would happen so adding logging)
                     log.warn( "Could not convert " + field + " to rawGEOString ", e );
-                    this.doFallback( bioMaterial, value, defaultDescription );
+                    this.doFallback( bioMaterial, valueOrNull, defaultDescription );
                 }
 
             } else {
@@ -892,6 +1089,28 @@ public class GeoConverterImpl implements GeoConverter {
                 this.doFallback( bioMaterial, field, defaultDescription );
             }
         }
+    }
+
+
+
+    /**
+     * Whether every piece of a {@code ;} / {@code ,} split carries its own separating colon, which is
+     * what distinguishes "several key: value pairs on one line" from "one pair whose value has commas
+     * in it".
+     * <p>
+     * Deliberately ALL rather than any: one keyless fragment means the delimiter belonged to a value,
+     * and splitting on it invents characteristics the submitter never wrote.
+     */
+    private static boolean allLookLikeKeyValuePairs( String[] candidates ) {
+        for ( String candidate : candidates ) {
+            if ( StringUtils.isBlank( candidate ) ) {
+                return false;
+            }
+            if ( GeoCharacteristicKey.split( candidate.trim() ).length != 2 ) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -1692,6 +1911,47 @@ public class GeoConverterImpl implements GeoConverter {
             bioAssay.setSampleUsed( bioMaterial );
         }
 
+        // What was extracted, and how the library was made. GEO gives all three per sample and none of them
+        // used to be persisted anywhere: the molecule became a `molecular entity` characteristic on the
+        // BIOMATERIAL and the two library fields were dropped after feeding the verbatim source-metadata blob.
+        //
+        // On the assay because that is what they describe -- Paul, 2026-09-05: "the biomaterial is the
+        // cells/tissue we got the RNA from, not the RNA", and "the assay is 'we took that sample and did
+        // something to it to get expression measurements'".
+        //
+        // 🛑 The molecule is per CHANNEL and a two-colour sample has two. Agreeing channels give their shared
+        // answer; disagreeing ones are left OUT rather than silently overwriting -- `other` would claim GEO said
+        // something it did not, and picking a channel by position would be arbitrary.
+        //
+        // 🛑 With ONE exception, because position is exactly what the old rule got wrong. In the classic
+        // two-colour design the sample is co-hybridized against a genomic-DNA REFERENCE, so the channels
+        // disagree by construction and only one of them is the sample. Taking channel 1 labelled every such
+        // sample `genomicDNA`: GSE9164's 14 assays say so on prod while their own descriptions read "Total RNA
+        // ... RNeasy Mini Kit", and GEO's GSM230264 spells it out -- ch1 `genomic DNA` (Cy3, the reference),
+        // ch2 `total RNA` (Cy5, the sample). Leaving it unset would merely stop asserting the wrong thing; the
+        // sample's molecule is knowable, and it is the channel that is not the DNA reference.
+        //
+        // Only genomicDNA is treated this way. Two disagreeing RNA flavours name no reference, so there is
+        // nothing to prefer between them and they still go unset.
+        Set<ExtractedMolecule> molecules = new LinkedHashSet<>();
+        for ( GeoChannel channel : sample.getChannels() ) {
+            ExtractedMolecule m = GeoConverterImpl.convertMolecule( channel.getMolecule() );
+            if ( m != null ) {
+                molecules.add( m );
+            }
+        }
+        ExtractedMolecule molecule = GeoConverterImpl.resolveMolecule( molecules );
+        if ( molecule == null && molecules.size() > 1 ) {
+            GeoConverterImpl.log.warn( "Sample " + sample.getGeoAccession() + " reports different molecules per"
+                    + " channel (" + molecules + "); leaving extractedMolecule unset rather than picking one." );
+        } else if ( molecules.size() > 1 ) {
+            GeoConverterImpl.log.info( "Sample " + sample.getGeoAccession() + " co-hybridizes against a genomic-DNA"
+                    + " reference channel; taking " + molecule + " as the sample's molecule." );
+        }
+        bioAssay.setExtractedMolecule( molecule );
+        bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
+        bioAssay.setLibraryStrategy( GeoConverterImpl.libraryStrategy( sample ) );
+
         // Taxon lastTaxon = null;
 
         //    if ( !this.skipDataVectors ) { // this is commented out to allow updating of the originalPlatform via GeoService.
@@ -1998,6 +2258,8 @@ public class GeoConverterImpl implements GeoConverter {
                 .filter( this::isSeriesTypeSupported )
                 .map( st -> convertSeriesType( series, st ) )
                 .filter( Objects::nonNull )
+                // experiment tags are statements; a bare one carries no predicate or object
+                .map( CharacteristicUtils::asStatement )
                 .collect( Collectors.toSet() );
         if ( !assayTypes.isEmpty() ) {
             log.info( String.format( "%s will be tagged with the following assay types: %s.", expExp,
@@ -2099,7 +2361,8 @@ public class GeoConverterImpl implements GeoConverter {
     private void convertAdditionalTags( GeoSeries series, ExpressionExperiment expressionExperiment ) {
         if ( isFacSorted( series ) ) {
             GeoConverterImpl.log.info( String.format( "%s will be tagged as FACS-sorted due to presence of keywords in its GEO series.", expressionExperiment ) );
-            expressionExperiment.getCharacteristics().add( Characteristic.Factory.newInstance( Categories.ASSAY, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) );
+            expressionExperiment.getCharacteristics().add( CharacteristicUtils.asStatement(
+                    Characteristic.Factory.newInstance( Categories.ASSAY, Values.FLUORESCENCE_ACTIVATED_CELL_SORTING ) ) );
         }
     }
 
@@ -2699,7 +2962,7 @@ public class GeoConverterImpl implements GeoConverter {
         return null;
     }
 
-    private void doFallback( BioMaterial bioMaterial, String value, String defaultDescription ) {
+    private void doFallback( BioMaterial bioMaterial, @Nullable String value, String defaultDescription ) {
         Characteristic gemmaChar = Characteristic.Factory.newInstance();
         gemmaChar.setValue( value );
         gemmaChar.setOriginalValue( value );
@@ -2719,7 +2982,10 @@ public class GeoConverterImpl implements GeoConverter {
         for ( ExperimentalFactor factor : experimentalFactors ) {
             for ( FactorValue fv : factor.getFactorValues() ) {
                 for ( Characteristic m : fv.getCharacteristics() ) {
-                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && m.getValue().equals( c.getValue() ) ) {
+                    // Objects.equals on the value too: a characteristic parsed from a "key:" line with an empty
+                    // right-hand side now carries a NULL value rather than an empty string, and this was the one
+                    // bare dereference on the import path that a null would reach.
+                    if ( Objects.equals( m.getCategory(), c.getCategory() ) && Objects.equals( m.getValue(), c.getValue() ) ) {
                         matchingFactorValue = fv;
                         break factors;
                     }

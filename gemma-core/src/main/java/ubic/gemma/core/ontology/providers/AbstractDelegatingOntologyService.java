@@ -19,6 +19,11 @@ public class AbstractDelegatingOntologyService implements OntologyService {
     }
 
     @Override
+    public String getIdentifier() {
+        return delegate.getIdentifier();
+    }
+
+    @Override
     public String getName() {
         return delegate.getName();
     }
@@ -136,6 +141,16 @@ public class AbstractDelegatingOntologyService implements OntologyService {
     @Override
     public Set<String> getAllURIs() {
         return delegate.getAllURIs();
+    }
+
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferences() {
+        return delegate.getCrossReferences();
+    }
+
+    @Override
+    public Collection<ubic.gemma.core.ontology.model.OntologyXref> getCrossReferencesFromSource() {
+        return delegate.getCrossReferencesFromSource();
     }
 
     @Override

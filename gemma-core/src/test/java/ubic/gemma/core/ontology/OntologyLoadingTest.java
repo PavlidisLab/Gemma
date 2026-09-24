@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * This test does not use the test profile as it aims to verify that all the ontologies we use in production are working
@@ -59,6 +60,25 @@ public class OntologyLoadingTest {
                     "gemma.ontology.unified.tdb.tempDir=",
                     "gemma.ontology.loader.corePoolSize=4"
             );
+        }
+
+        /**
+         * {@code OntologyConfig} declares {@code ontologyRelationProducer}, whose two required
+         * collaborators live in the persistence layer this context does not stand up. Importing the
+         * configuration means taking every bean in it, so without these the context fails to build and
+         * all three tests below error out on wiring rather than on anything they assert.
+         *
+         * <p>Mocks rather than real beans on purpose: nothing here produces a relation. The producer's
+         * own behaviour is covered by {@code OntologyRelationProducerImplTest}.</p>
+         */
+        @Bean
+        public ubic.gemma.persistence.service.common.description.AnnotationRelationDao annotationRelationDao() {
+            return mock( ubic.gemma.persistence.service.common.description.AnnotationRelationDao.class );
+        }
+
+        @Bean
+        public org.springframework.transaction.PlatformTransactionManager transactionManager() {
+            return mock( org.springframework.transaction.PlatformTransactionManager.class );
         }
 
         @Bean

@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.annotation.DirtiesContext;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
@@ -130,8 +129,16 @@ public class GeneSetServiceTest extends BaseSpringContextTest5 {
         assertTrue( foundSets.size() > 0 );
     }
 
+    /**
+     * No @DirtiesContext, deliberately. This loads a test ontology into the shared
+     * GeneOntologyService singleton, and rebuilding the context afterwards cost ~29.5 s — the
+     * single largest item in the integration suite, in which all 95 classes otherwise share one
+     * context. Nothing can observe the dirtied singleton: the only other test using the shared
+     * bean is GeneMultifunctionalityPopulationServiceTest, which calls initialize() itself before
+     * reading it and already dirties the context after its own class. Every other GO test either
+     * mocks the service or builds its own GeneOntologyServiceImpl in a local context.
+     */
     @Test
-    @DirtiesContext
     public void testFindByGoId() throws IOException {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/ontology/molecular-function.test.owl.gz" ).getInputStream() );

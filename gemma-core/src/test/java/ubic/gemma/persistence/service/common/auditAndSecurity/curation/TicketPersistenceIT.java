@@ -12,6 +12,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
 import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,14 +20,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.hibernate.LazyInitializationException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.curation.ScreeningResult;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventValueObject;
+import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketEventType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketMode;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketPriority;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSearchHitValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketSummaryForTargetValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketState;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTarget;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus;
@@ -42,15 +52,20 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TicketTargetStatusChan
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 
 import javax.sql.DataSource;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -104,10 +119,20 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
     @Autowired
     private SessionFactory sessionFactory;
 
+    private static final com.fasterxml.jackson.databind.ObjectMapper PAYLOAD_TEST_MAPPER =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+
     private Contact reporter;
 
     @BeforeEach
     public void seedReporter() {
+        // @Nested classes inherit this @BeforeEach. ListPathDetachedRegression deliberately runs
+        // with the test-managed transaction suspended (@Transactional(NOT_SUPPORTED)), where a bare
+        // DAO write fails with "could not obtain transaction-synchronized Session" — it seeds its
+        // own committed fixture instead and never reads this field.
+        if ( !TransactionSynchronizationManager.isActualTransactionActive() ) {
+            return;
+        }
         Contact c = new Contact();
         c.setName( "ticket-it-reporter-" + UUID.randomUUID() );
         reporter = contactDao.create( c );
@@ -149,6 +174,156 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
                 "default target status should round-trip as NOT_DONE" );
         assertEquals( TicketTargetType.EXPRESSION_EXPERIMENT, t0.getTargetType() );
         assertEquals( 12345L, t0.getTargetId() );
+    }
+
+    @Test
+    @DisplayName("payload written through updateMetadata survives -- the reattach copy list used to drop it")
+    public void payload_survivesUpdateMetadata() throws Exception {
+        // 🛑 The regression. updateMetadata() reattaches the ticket and, when the reattached instance
+        // differs from the caller's (which is ALWAYS the case on the POST /tickets path, because the
+        // ticket was created in an earlier transaction), copies a hand-listed set of fields across.
+        // payload and payloadSchemaVersion were not on that list, so they were dropped -- while the
+        // 201 response, built from the caller's own mutated instance, echoed them back as if stored.
+        // Reported from the field: "POST returns 201 and echoes both fields back, a GET right after
+        // comes back null; every other field on the same request persists."
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.CURATION, "payload-roundtrip",
+                Collections.singleton( TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 4242L ) ) );
+        Long id = created.getId();
+        assertNotNull( id );
+        flushAndClear();
+
+        // Re-load to get a DETACHED instance, mutate it, and go through the same call the REST layer
+        // makes. Mutating `created` directly would leave it managed and hide the bug.
+        Ticket detached = ticketDao.load( id );
+        assertNotNull( detached );
+        flushAndClear();
+        detached.setPayload( "{\"question\":\"which strain?\"}" );
+        detached.setPayloadSchemaVersion( 3 );
+        detached.setTitle( "payload-roundtrip-edited" );
+        ticketService.updateMetadata( detached, "payload, payloadSchemaVersion, title" );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertNotNull( reloaded );
+        // 🛑 Compared as PARSED JSON, not as bytes. PAYLOAD is a MySQL `json` column, so the server
+        // parses and re-serializes what it is given: `{"question":"which strain?"}` comes back as
+        // `{"question": "which strain?"}`. The payload is preserved as a DOCUMENT and NOT byte for
+        // byte, so nothing downstream may hash or diff the raw string and expect stability.
+        assertNotNull( reloaded.getPayload(), "payload must survive updateMetadata, not just be echoed back" );
+        assertEquals(
+                PAYLOAD_TEST_MAPPER.readTree( "{\"question\":\"which strain?\"}" ),
+                PAYLOAD_TEST_MAPPER.readTree( reloaded.getPayload() ),
+                "payload must survive updateMetadata as an equivalent document" );
+        assertEquals( Integer.valueOf( 3 ), reloaded.getPayloadSchemaVersion(),
+                "payloadSchemaVersion must survive too" );
+        assertEquals( "payload-roundtrip-edited", reloaded.getTitle(),
+                "title was already on the copy list and is the control -- if this fails the test is wrong, not the fix" );
+    }
+
+    @Test
+    @DisplayName("acceptsTargets written through updateMetadata survives, and the ticket then takes an added target")
+    public void acceptsTargets_survivesUpdateMetadata() {
+        // 🛑 The same copy-list regression as payload above, one field later. Reported from the field
+        // (frinkbro, 2026-09-11): "PATCH with {\"acceptsTargets\":true} returns 200 and has no effect,
+        // and the subsequent add still 409s with 'Its targets were fixed when it was opened'".
+        // openTicket() opens every ticket with the flag false, so until the copy list carried it the
+        // flag could not be set through the API at all -- not at create, not after.
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.CURATION, "accepts-targets-roundtrip",
+                Collections.singleton( TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 5151L ) ) );
+        Long id = created.getId();
+        assertNotNull( id );
+        assertFalse( created.isAcceptsTargets(), "openTicket opens with the flag false -- the starting state" );
+        flushAndClear();
+
+        // Detached, as on the REST path: the handler mutates an instance loaded in an earlier transaction.
+        Ticket detached = ticketDao.load( id );
+        assertNotNull( detached );
+        flushAndClear();
+        detached.setAcceptsTargets( true );
+        detached.setTitle( "accepts-targets-roundtrip-edited" );
+        ticketService.updateMetadata( detached, "acceptsTargets, title" );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertNotNull( reloaded );
+        assertTrue( reloaded.isAcceptsTargets(), "acceptsTargets must survive updateMetadata, not just be echoed back" );
+        assertEquals( "accepts-targets-roundtrip-edited", reloaded.getTitle(),
+                "title was already on the copy list and is the control -- if this fails the test is wrong, not the fix" );
+
+        // The refusal the flag governs: the addition that answered 409 now goes through.
+        TicketService.TargetAddition addition = ticketService.addTarget( reloaded,
+                TicketTargetType.EXPRESSION_EXPERIMENT, 5252L, reporter );
+        assertTrue( addition.isAdded(), "a ticket that accepts targets must take one" );
+        flushAndClear();
+
+        Ticket afterAdd = ticketDao.load( id );
+        assertNotNull( afterAdd );
+        assertEquals( 2, afterAdd.getTargets().size() );
+    }
+
+    @Test
+    @DisplayName("a target carries its own task: per-target payload round-trips, and a re-add does not overwrite it")
+    public void perTargetPayload_roundTripsAndSurvivesAReAdd() throws Exception {
+        // The ticket's own body and payload are one per ticket, so a thousand-target ticket cannot say
+        // what is true of only one of them (frinkbro, 2026-09-11). Written with the target, in the same
+        // insert, which is what keeps a bulk open to one call.
+        String hypoxia = "{\"fv\":307136,\"task\":\"EFO_0009444 means hypoxia; drop the URI\"}";
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 273007L );
+        target.setPayload( hypoxia );
+        target.setPayloadSchemaVersion( 1 );
+        Ticket created = ticketService.openTicket( reporter, TicketType.CURATION, "per-target-task",
+                Collections.singleton( target ) );
+        Long id = created.getId();
+        assertNotNull( id );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        assertNotNull( reloaded );
+        TicketTarget storedTarget = reloaded.getTargets().iterator().next();
+        // 🛑 Compared as a parsed document, not as bytes: PAYLOAD is a MySQL `json` column, so the server
+        // normalises whitespace and key order on write. Same rule as TICKET.PAYLOAD above.
+        assertEquals( PAYLOAD_TEST_MAPPER.readTree( hypoxia ),
+                PAYLOAD_TEST_MAPPER.readTree( storedTarget.getPayload() ),
+                "the target's own task must round-trip as an equivalent document" );
+        assertEquals( Integer.valueOf( 1 ), storedTarget.getPayloadSchemaVersion() );
+
+        // Grown after opening: the add-target path carries the task too.
+        reloaded.setAcceptsTargets( true );
+        ticketService.updateMetadata( reloaded, "acceptsTargets" );
+        flushAndClear();
+        String mesenchymal = "{\"fv\":187891,\"task\":\"CL_0000134 means mesenchymal stem cell\"}";
+        Ticket afterAdd = ticketService.addTarget( ticketDao.load( id ), TicketTargetType.EXPRESSION_EXPERIMENT,
+                167051L, reporter, mesenchymal, 1 ).getTicket();
+        flushAndClear();
+
+        TicketTarget added = targetFor( ticketDao.load( id ), 167051L );
+        assertEquals( PAYLOAD_TEST_MAPPER.readTree( mesenchymal ),
+                PAYLOAD_TEST_MAPPER.readTree( added.getPayload() ) );
+
+        // Re-adding is idempotent on (targetType, targetId), and that has to include the payload: a
+        // second bulk call with a stale task must not rewrite what a curator is working from.
+        TicketService.TargetAddition again = ticketService.addTarget( afterAdd,
+                TicketTargetType.EXPRESSION_EXPERIMENT, 167051L, reporter, "{\"task\":\"stale\"}", 9 );
+        assertFalse( again.isAdded(), "the target was already there" );
+        flushAndClear();
+        TicketTarget unchanged = targetFor( ticketDao.load( id ), 167051L );
+        assertEquals( PAYLOAD_TEST_MAPPER.readTree( mesenchymal ),
+                PAYLOAD_TEST_MAPPER.readTree( unchanged.getPayload() ),
+                "a re-add must leave the existing target's task alone" );
+        assertEquals( Integer.valueOf( 1 ), unchanged.getPayloadSchemaVersion() );
+    }
+
+    /** The one target on {@code t} whose {@code targetId} is {@code targetId}. */
+    private static TicketTarget targetFor( Ticket t, long targetId ) {
+        assertNotNull( t );
+        for ( TicketTarget tgt : t.getTargets() ) {
+            if ( tgt.getTargetId() == targetId ) {
+                return tgt;
+            }
+        }
+        throw new AssertionError( "no target " + targetId + " on ticket " + t.getId() );
     }
 
     @Test
@@ -269,6 +444,114 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         String statusStr = jdbc.queryForObject(
                 "SELECT STATUS FROM TICKET_TARGET WHERE TICKET_FK = ?", String.class, id );
         assertEquals( "DONE", statusStr );
+    }
+
+    @Test
+    @DisplayName("SCREENING round-trips and lands in TYPE as its own name, not truncated")
+    public void screeningType_roundTripsAsName() {
+        // The TicketType docblock claims new values need no migration because TYPE is
+        // VARCHAR(64). SCREENING is the first value added since that claim was written;
+        // this pins both halves of it — the value survives the round trip, and the column
+        // holds the constant name rather than an ordinal or a truncated string.
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 11L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.SCREENING, "screening-roundtrip",
+                Collections.singleton( target ) );
+        Long id = created.getId();
+        flushAndClear();
+
+        assertEquals( TicketType.SCREENING, ticketDao.load( id ).getType() );
+        assertEquals( "SCREENING", new JdbcTemplate( dataSource )
+                .queryForObject( "SELECT TYPE FROM TICKET WHERE ID = ?", String.class, id ) );
+
+        // AUDIT is the other value added with no migration; same pin.
+        TicketTarget at = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 12L );
+        Long aid = ticketService.openTicket( reporter, TicketType.AUDIT, "audit-roundtrip",
+                Collections.singleton( at ) ).getId();
+        flushAndClear();
+        assertEquals( TicketType.AUDIT, ticketDao.load( aid ).getType() );
+        assertEquals( "AUDIT", new JdbcTemplate( dataSource )
+                .queryForObject( "SELECT TYPE FROM TICKET WHERE ID = ?", String.class, aid ) );
+    }
+
+    @Test
+    @DisplayName("screeningResult round-trips, is uncoupled from status, and logs its own event")
+    public void screeningResult_roundTripsUncoupledAndLogged() {
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 21L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.SCREENING, "screening-result", Collections.singleton( target ) );
+        Long id = created.getId();
+        Long targetRowId = created.getTargets().iterator().next().getId();
+        flushAndClear();
+
+        // fresh target: no decision recorded
+        Ticket loaded = ticketDao.load( id );
+        assertNull( loaded.getTargets().iterator().next().getScreeningResult() );
+        assertEquals( TicketTargetStatus.NOT_DONE, loaded.getTargets().iterator().next().getStatus() );
+
+        ticketService.updateTargetScreeningResult( loaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", true, reporter );
+        flushAndClear();
+
+        Ticket reloaded = ticketDao.load( id );
+        TicketTarget rt = reloaded.getTargets().iterator().next();
+        // decision + reason stored...
+        assertEquals( ScreeningResult.REJECT, rt.getScreeningResult() );
+        assertEquals( "superseded by GSE99999", rt.getScreeningResultReason() );
+        // ...as its enum-name string in the column...
+        assertEquals( "REJECT", new JdbcTemplate( dataSource )
+                .queryForObject( "SELECT SCREENING_RESULT FROM TICKET_TARGET WHERE ID = ?", String.class, targetRowId ) );
+        // ...and status is untouched (uncoupled): a REJECT did not force DONE.
+        assertEquals( TicketTargetStatus.NOT_DONE, rt.getStatus() );
+        // the change is in the ticket event log
+        assertTrue( reloaded.getEvents().stream()
+                .anyMatch( e -> e.getType() == TicketEventType.SCREENING_RESULT_CHANGED ),
+                "expected a SCREENING_RESULT_CHANGED event" );
+
+        // no-op re-set does not append a second event
+        int before = reloaded.getEvents().size();
+        ticketService.updateTargetScreeningResult( reloaded, targetRowId, ScreeningResult.REJECT, "superseded by GSE99999", true, reporter );
+        flushAndClear();
+        assertEquals( before, ticketDao.load( id ).getEvents().size(), "no-op re-set should log nothing" );
+    }
+
+    @Test
+    @DisplayName("screeningResult reason is independent: an absent reason key never wipes the note")
+    public void screeningResultReason_absentKeyLeavesReasonUntouched() {
+        TicketTarget target = TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, 22L );
+        Ticket created = ticketService.openTicket(
+                reporter, TicketType.SCREENING, "reason-independence", Collections.singleton( target ) );
+        Long id = created.getId();
+        Long rid = created.getTargets().iterator().next().getId();
+
+        // seed a decision + reason
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.UNDECIDED, "needs the paper", true, reporter );
+        flushAndClear();
+        int eventsAfterSeed = ticketDao.load( id ).getEvents().size();
+
+        // re-send the SAME decision with NO reason key (reasonProvided=false) -> true no-op:
+        // reason preserved, no event appended (the pre-fix bug cleared it and logged a change)
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.UNDECIDED, null, false, reporter );
+        flushAndClear();
+        TicketTarget t = ticketDao.load( id ).getTargets().iterator().next();
+        assertEquals( ScreeningResult.UNDECIDED, t.getScreeningResult() );
+        assertEquals( "needs the paper", t.getScreeningResultReason() );
+        assertEquals( eventsAfterSeed, ticketDao.load( id ).getEvents().size(), "no-op must log nothing" );
+
+        // change the decision with NO reason key -> reason survives (client clears it explicitly if wanted)
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.REJECT, null, false, reporter );
+        flushAndClear();
+        t = ticketDao.load( id ).getTargets().iterator().next();
+        assertEquals( ScreeningResult.REJECT, t.getScreeningResult() );
+        assertEquals( "needs the paper", t.getScreeningResultReason() );
+
+        // explicit null reason clears it
+        ticketService.updateTargetScreeningResult( ticketDao.load( id ), rid,
+                ScreeningResult.REJECT, null, true, reporter );
+        flushAndClear();
+        assertNull( ticketDao.load( id ).getTargets().iterator().next().getScreeningResultReason() );
     }
 
     @Test
@@ -464,6 +747,327 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
         assertTrue( sawEE && sawFV, "both target types should round-trip" );
     }
 
+    // ---------------------------------------------------------------------
+    // GET /tickets/search — the HQL behind the ticket picker, against real MySQL
+    // ---------------------------------------------------------------------
+
+    /** Open a ticket with {@code n} distinct EE targets and a title unique to this test run. */
+
+    /**
+     * {@code POST /tickets {"type":"SCRATCHPAD"}} answered 500 with the schema in the body —
+     * {@code Duplicate entry '1' for key 'TICKET_ONE_SCRATCHPAD_PER_CURATOR'} (cab, 2026-09-01, on
+     * gemma2). The rule is right and V40 enforces it; what was missing is a refusal in front of it,
+     * so a caller could not tell "you may not do this" from "Gemma is broken" and would retry.
+     * <p>
+     * The refusal names the ticket that already holds the role, because the caller's next move is to
+     * open that one rather than to try again.
+     */
+    @Test
+    @DisplayName("opening a second SCRATCHPAD is refused by the service, not by the constraint")
+    public void openTicket_secondScratchpadIsRefusedWithTheExistingId() {
+        Ticket pad = ticketService.getOrCreateScratchpad( reporter );
+        assertNotNull( pad.getId() );
+
+        Set<TicketTarget> targets = Collections.singleton(
+                TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, freshTargetBase() ) );
+        IllegalStateException e = assertThrows( IllegalStateException.class,
+                () -> ticketService.openTicket( reporter, TicketType.SCRATCHPAD,
+                        "second scratchpad " + UUID.randomUUID(), targets ),
+                "the service refuses before the insert, so the caller never sees the constraint" );
+        assertTrue( e.getMessage().contains( String.valueOf( pad.getId() ) ),
+                "the refusal must name the scratchpad that already exists: " + e.getMessage() );
+
+        // an ordinary ticket for the same reporter is unaffected -- the rule is SCRATCHPAD-only
+        assertNotNull( ticketService.openTicket( reporter, TicketType.CURATION,
+                "ordinary " + UUID.randomUUID(), targets ).getId() );
+    }
+
+    private Ticket openWithTargets( TicketType type, String title, int n ) {
+        Set<TicketTarget> targets = new HashSet<>();
+        for ( int i = 0; i < n; i++ ) {
+            targets.add( TicketTarget.Factory.newInstance(
+                    TicketTargetType.EXPRESSION_EXPERIMENT, ( long ) ( 1_000_000 + i ) ) );
+        }
+        return ticketService.openTicket( reporter, type, title, targets );
+    }
+
+    @Test
+    @DisplayName("search: targetCount is counted by the database, and matches the real target count")
+    public void search_targetCountIsCountedNotLoaded() {
+        String tag = "searchcount-" + UUID.randomUUID();
+        Ticket three = openWithTargets( TicketType.CURATION, tag + " three", 3 );
+        Ticket one = openWithTargets( TicketType.CURATION, tag + " one", 1 );
+        flushAndClear();
+
+        List<TicketSearchHitValueObject> hits = ticketDao.findSearchHitsByTitle( tag, true, null, 20 );
+
+        assertEquals( 2, hits.size() );
+        for ( TicketSearchHitValueObject h : hits ) {
+            if ( h.getId().equals( three.getId() ) ) {
+                assertEquals( 3L, h.getTargetCount() );
+            } else if ( h.getId().equals( one.getId() ) ) {
+                assertEquals( 1L, h.getTargetCount() );
+            } else {
+                throw new AssertionError( "unexpected hit " + h.getId() );
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("search: the title matches as a case-insensitive substring")
+    public void search_titleMatchesCaseInsensitiveSubstring() {
+        String tag = "SearchCase" + UUID.randomUUID().toString().replace( "-", "" );
+        Ticket t = openWithTargets( TicketType.CURATION, "Reference 500 — " + tag + " review", 2 );
+        flushAndClear();
+
+        // typed in the middle of the title, and in the wrong case
+        List<TicketSearchHitValueObject> hits =
+                ticketDao.findSearchHitsByTitle( tag.toLowerCase(), true, null, 20 );
+
+        assertEquals( 1, hits.size() );
+        assertEquals( t.getId(), hits.get( 0 ).getId() );
+    }
+
+    @Test
+    @DisplayName("search: an id lookup finds the ticket, and an id naming no ticket is simply null")
+    public void search_byIdFindsTheTicketOrNothing() {
+        Ticket t = openWithTargets( TicketType.CURATION, "search-by-id-" + UUID.randomUUID(), 4 );
+        flushAndClear();
+
+        TicketSearchHitValueObject hit = ticketDao.findSearchHitById( t.getId(), true, null );
+        assertNotNull( hit );
+        assertEquals( 4L, hit.getTargetCount() );
+        assertEquals( TicketState.OPEN, hit.getState() );
+
+        assertNull( ticketDao.findSearchHitById( 987_654_321L, true, null ),
+                "an id that names no ticket is a non-hit, not an error" );
+    }
+
+    @Test
+    @DisplayName("search: openOnly excludes a resolved ticket, and dropping it lets the ticket back in")
+    public void search_openOnlyExcludesResolvedTickets() {
+        String tag = "searchopen-" + UUID.randomUUID();
+        Ticket t = openWithTargets( TicketType.CURATION, tag, 1 );
+        ticketService.transition( t, TicketState.RESOLVED, reporter, "done" );
+        flushAndClear();
+
+        assertTrue( ticketDao.findSearchHitsByTitle( tag, true, null, 20 ).isEmpty() );
+        assertEquals( 1, ticketDao.findSearchHitsByTitle( tag, false, null, 20 ).size() );
+        assertNull( ticketDao.findSearchHitById( t.getId(), true, null ) );
+        assertNotNull( ticketDao.findSearchHitById( t.getId(), false, null ) );
+    }
+
+    @Test
+    @DisplayName("search: a scratchpad is offered to its own reporter and to nobody else")
+    public void search_scratchpadIsScopedToItsReporter() {
+        String tag = "searchpad-" + UUID.randomUUID();
+        Contact other = new Contact();
+        other.setName( "ticket-it-other-" + UUID.randomUUID() );
+        other = contactDao.create( other );
+
+        Ticket pad = openWithTargets( TicketType.SCRATCHPAD, tag, 2 );
+        flushAndClear();
+
+        assertEquals( 1, ticketDao.findSearchHitsByTitle( tag, true, reporter.getId(), 20 ).size(),
+                "a curator's own scratchpad is a reasonable place to file work" );
+        assertTrue( ticketDao.findSearchHitsByTitle( tag, true, other.getId(), 20 ).isEmpty(),
+                "another curator's scratchpad is not" );
+        assertTrue( ticketDao.findSearchHitsByTitle( tag, true, null, 20 ).isEmpty(),
+                "and an anonymous caller is offered nobody's" );
+        assertNotNull( ticketDao.findSearchHitById( pad.getId(), true, reporter.getId() ) );
+        assertNull( ticketDao.findSearchHitById( pad.getId(), true, other.getId() ) );
+    }
+
+    @Test
+    @DisplayName("search: a wildcard typed into the box is matched literally, not as a wildcard")
+    public void search_wildcardsInTheQueryAreEscaped() {
+        String tag = UUID.randomUUID().toString().replace( "-", "" );
+        Ticket literal = openWithTargets( TicketType.CURATION, tag + " 50% complete", 1 );
+        openWithTargets( TicketType.CURATION, tag + " 50 percent complete", 1 );
+        flushAndClear();
+
+        // scoped by the tag so the assertion counts only this test's two tickets. Unescaped, the
+        // '%' would make this match the "50 percent" title too.
+        List<TicketSearchHitValueObject> hits =
+                ticketDao.findSearchHitsByTitle( tag + " 50% comp", true, null, 20 );
+
+        assertEquals( 1, hits.size(), "'50% comp' is a literal fragment, not '50' + anything + ' comp'" );
+        assertEquals( literal.getId(), hits.get( 0 ).getId() );
+    }
+
+    @Test
+    @DisplayName("search: title hits come back most-recently-updated first")
+    public void search_titleHitsAreOrderedByUpdatedAtDesc() {
+        String tag = "searchorder-" + UUID.randomUUID();
+        Ticket older = openWithTargets( TicketType.CURATION, tag + " older", 1 );
+        Ticket newer = openWithTargets( TicketType.CURATION, tag + " newer", 1 );
+        older.setUpdatedAt( new Date( 1_600_000_000_000L ) );
+        newer.setUpdatedAt( new Date( 1_700_000_000_000L ) );
+        flushAndClear();
+
+        List<TicketSearchHitValueObject> hits = ticketDao.findSearchHitsByTitle( tag, true, null, 20 );
+
+        assertEquals( 2, hits.size() );
+        assertEquals( newer.getId(), hits.get( 0 ).getId() );
+        assertEquals( older.getId(), hits.get( 1 ).getId() );
+    }
+
+    /**
+     * A target-id range of this test's own, so a bulk assertion counts only its own fixtures:
+     * {@link #openWithTargets} seeds every other test's tickets at 1_000_000+, and those tickets
+     * stay visible to a query that asks by target id rather than by title.
+     */
+    private long freshTargetBase() {
+        return 5_000_000L + Math.floorMod( UUID.randomUUID().getMostSignificantBits(), 1_000_000L ) * 10L;
+    }
+
+    private Ticket openTargeting( TicketType type, String title, Long... targetIds ) {
+        Set<TicketTarget> targets = new HashSet<>();
+        for ( Long id : targetIds ) {
+            targets.add( TicketTarget.Factory.newInstance( TicketTargetType.EXPRESSION_EXPERIMENT, id ) );
+        }
+        return ticketService.openTicket( reporter, type, title, targets );
+    }
+
+    @Test
+    @DisplayName("bulk: each row reports ITS OWN target's status, which is what the queue gates on")
+    public void bulkSummaries_carryThePerTargetStatus() {
+        long base = freshTargetBase();
+        Long done = base, notDone = base + 1;
+        Ticket t = openTargeting( TicketType.CURATION, "bulk-status-" + UUID.randomUUID(), done, notDone );
+        Long doneRowId = t.getTargets().stream()
+                .filter( tt -> tt.getTargetId().equals( done ) )
+                .findFirst().orElseThrow().getId();
+        flushAndClear();
+
+        ticketService.updateTargetStatus( ticketDao.load( t.getId() ), doneRowId, TicketTargetStatus.DONE, reporter );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( done, notDone ) );
+
+        // One ticket, two targets, two different answers -- the whole point of the column. Reading the
+        // ticket cannot give this: both rows are the same ticket, so anything per-TICKET is identical
+        // here and only the per-target status separates them.
+        assertEquals( TicketTargetStatus.DONE, byDataset.get( done ).get( 0 ).getTargetStatus(),
+                "the summary row for the finished dataset must say DONE" );
+        assertEquals( TicketTargetStatus.NOT_DONE, byDataset.get( notDone ).get( 0 ).getTargetStatus(),
+                "its sibling on the SAME ticket must still say NOT_DONE" );
+    }
+
+    @Test
+    @DisplayName("bulk: a row carries the ticket's priority, so the caller need not refetch the ticket")
+    public void bulkSummaries_carryTheTicketPriority() {
+        long base = freshTargetBase();
+        Long ee = base;
+        Ticket t = openTargeting( TicketType.CURATION, "bulk-priority-" + UUID.randomUUID(), ee );
+        t.setPriority( TicketPriority.URGENT );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Collections.singletonList( ee ) );
+
+        assertEquals( TicketPriority.URGENT, byDataset.get( ee ).get( 0 ).getPriority() );
+    }
+
+    @Test
+    @DisplayName("bulk: a dataset on no open ticket gets NO key, so an absence means something")
+    public void bulkSummaries_quietDatasetIsAbsentNotEmpty() {
+        long base = freshTargetBase();
+        Long onATicket = base, quiet = base + 1;
+        openTargeting( TicketType.CURATION, "bulk-presence-" + UUID.randomUUID(), onATicket );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( onATicket, quiet ) );
+
+        assertEquals( 1, byDataset.size() );
+        assertTrue( byDataset.containsKey( onATicket ) );
+        assertFalse( byDataset.containsKey( quiet ),
+                "an id with no open ticket must be ABSENT — an empty list would cost a page of them" );
+    }
+
+    @Test
+    @DisplayName("bulk: each dataset gets its OWN tickets, and a resolved one is not among them")
+    public void bulkSummaries_groupsByTargetAndExcludesResolved() {
+        long base = freshTargetBase();
+        Long a = base, b = base + 1;
+        Ticket both = openTargeting( TicketType.CURATION, "bulk-both-" + UUID.randomUUID(), a, b );
+        Ticket onlyA = openTargeting( TicketType.PRELOAD, "bulk-onlya-" + UUID.randomUUID(), a );
+        Ticket resolved = openTargeting( TicketType.GENERIC, "bulk-done-" + UUID.randomUUID(), b );
+        ticketService.transition( resolved, TicketState.RESOLVED, reporter, "done" );
+        flushAndClear();
+
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( a, b ) );
+
+        Set<Long> forA = new HashSet<>();
+        for ( TicketSummaryForTargetValueObject h : byDataset.get( a ) ) {
+            forA.add( h.getId() );
+        }
+        assertEquals( new HashSet<>( Arrays.asList( both.getId(), onlyA.getId() ) ), forA,
+                "a dataset on two open tickets gets both, and only its own" );
+
+        assertEquals( Collections.singletonList( both.getId() ),
+                byDataset.get( b ).stream().map( TicketSearchHitValueObject::getId )
+                        .collect( java.util.stream.Collectors.toList() ),
+                "the RESOLVED ticket targeting b is not an open ticket" );
+    }
+
+    @Test
+    @DisplayName("bulk: the batched answer is the per-dataset answer, ticket for ticket")
+    public void bulkSummaries_agreeWithFindOpenForTarget() {
+        long base = freshTargetBase();
+        Long a = base, b = base + 1, quiet = base + 2;
+        openTargeting( TicketType.CURATION, "bulk-agree-1-" + UUID.randomUUID(), a, b );
+        openTargeting( TicketType.SCRATCHPAD, "bulk-agree-pad-" + UUID.randomUUID(), a );
+        flushAndClear();
+
+        // The glyph on the experiment list and the drawer behind it come from these two routes.
+        // A dataset that reads "on a ticket" in one and not the other is the bug this pins.
+        Map<Long, List<TicketSummaryForTargetValueObject>> bulk =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Arrays.asList( a, b, quiet ) );
+        for ( Long id : Arrays.asList( a, b, quiet ) ) {
+            Set<Long> single = new HashSet<>();
+            for ( Ticket t : ticketDao.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, id ) ) {
+                single.add( t.getId() );
+            }
+            Set<Long> batched = new HashSet<>();
+            for ( TicketSummaryForTargetValueObject h : bulk.getOrDefault( id, Collections.emptyList() ) ) {
+                batched.add( h.getId() );
+            }
+            assertEquals( single, batched, "the two routes disagree about dataset " + id );
+        }
+    }
+
+    @Test
+    @DisplayName("bulk: targetCount is the ticket's whole size, not the slice on this page")
+    public void bulkSummaries_targetCountIsTheWholeTicket() {
+        long base = freshTargetBase();
+        Long a = base, b = base + 1, c = base + 2;
+        openTargeting( TicketType.CURATION, "bulk-count-" + UUID.randomUUID(), a, b, c );
+        flushAndClear();
+
+        // Asked about ONE of the three members: the count still reports three.
+        Map<Long, List<TicketSummaryForTargetValueObject>> byDataset =
+                ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                        Collections.singletonList( a ) );
+
+        assertEquals( 3L, byDataset.get( a ).get( 0 ).getTargetCount() );
+    }
+
+    @Test
+    @DisplayName("bulk: no ids is an empty map, not an invalid `in ()`")
+    public void bulkSummaries_emptyIdsIsAnEmptyMap() {
+        assertTrue( ticketDao.findOpenSummariesForTargets( TicketTargetType.EXPRESSION_EXPERIMENT,
+                Collections.emptyList() ).isEmpty() );
+    }
+
     /**
      * Regression coverage for the JAX-RS "detached entity / lazy-init" footgun surfaced
      * by the 2026-05-27 frink smoke test:
@@ -555,6 +1159,179 @@ public class TicketPersistenceIT extends BaseIntegrationTest5 {
             // The COMMENTED event payload is the JSON-encoded form of "Looks fine to me"
             assertTrue( vo.getEvents().stream().anyMatch( e -> e.getType() == TicketEventType.COMMENTED ),
                     "COMMENTED event should be on the log" );
+        }
+
+    }
+
+    /**
+     * The LIST paths hand entities back to the web layer, which projects them to VOs AFTER the
+     * service transaction closes — the same boundary {@code loadValueObject} was fixed for, but
+     * {@code findTickets} / {@code findOpenForTarget} were left behind. On frink that surfaced as a
+     * 500 on an unfiltered {@code GET /tickets}: "Could not initialize proxy [Contact#1] - no
+     * session". The reporter is a LAZY {@code @ManyToOne}, so the list only survived while every
+     * row on the page happened to have no reporter and no assignee.
+     *
+     * <p>🛑 This class must NOT inherit the outer class's {@code @Transactional} — that is the whole
+     * point. A test-managed transaction keeps one session open for the entire method, so entities
+     * never actually detach and the projection succeeds whether or not the service initialized
+     * anything. {@code @Nested} inherits the enclosing class's annotations, and a
+     * {@link TransactionTemplate} inside an ambient transaction merely JOINS it (PROPAGATION_REQUIRED)
+     * rather than committing — which is why {@link DetachedEntityRegression} above does not, in fact,
+     * reproduce a detached entity. {@code NOT_SUPPORTED} suspends the ambient transaction so the
+     * service call opens and CLOSES its own, exactly like a JAX-RS request. Rows committed here are
+     * therefore real, so they are torn down explicitly in {@link #cleanup()}.</p>
+     */
+    @Nested
+    @DisplayName("List-path lazy-init regression (genuinely detached: no ambient test transaction)")
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    class ListPathDetachedRegression {
+
+        @Autowired
+        private PlatformTransactionManager txManager;
+
+        private Long ticketId;
+        private Long reporterId;
+        private Long scratchpadId;
+
+        @BeforeEach
+        public void seedCommitted() {
+            new TransactionTemplate( txManager ).execute( status -> {
+                Contact c = new Contact();
+                c.setName( "list-detach-reporter-" + UUID.randomUUID() );
+                Contact savedReporter = contactDao.create( c );
+                reporterId = savedReporter.getId();
+                TicketTarget target = TicketTarget.Factory.newInstance(
+                        TicketTargetType.EXPRESSION_EXPERIMENT, 1L );
+                Ticket created = ticketService.openTicket( savedReporter, TicketType.CURATION,
+                        "list-vo-after-detach-" + UUID.randomUUID(), Collections.singleton( target ) );
+                ticketId = created.getId();
+                return null;
+            } );
+        }
+
+        @AfterEach
+        public void cleanup() {
+            new TransactionTemplate( txManager ).execute( status -> {
+                if ( scratchpadId != null ) {
+                    Ticket p = ticketDao.load( scratchpadId );
+                    if ( p != null ) ticketDao.remove( p );
+                }
+                if ( ticketId != null ) {
+                    Ticket t = ticketDao.load( ticketId );
+                    if ( t != null ) ticketDao.remove( t );
+                }
+                if ( reporterId != null ) {
+                    Contact c = contactDao.load( reporterId );
+                    if ( c != null ) contactDao.remove( c );
+                }
+                return null;
+            } );
+        }
+
+
+        /**
+         * {@code POST /tickets/{id}/targets} 500d on every call, for any target, new or previously
+         * removed (cab, 2026-09-01). The handler counted {@code ticket.getTargets()} before and after
+         * the add to decide whether to report the id as added — on the ticket it holds DETACHED, whose
+         * targets are LAZY. It threw before {@code addTarget} was reached, so the one verb that grows
+         * a queue never worked while its mocked test stayed green.
+         * <p>
+         * 🛑 This must live in the NOT_SUPPORTED class. Under the outer class's {@code @Transactional}
+         * the session stays open, the ticket never detaches, and the count succeeds — the assertion
+         * below cannot fail there, which is exactly how this shipped.
+         */
+        @Test
+        @DisplayName("addTarget says whether it added, on a ticket the caller holds detached")
+        public void addTarget_reportsWhatItDidWithoutReadingTheLazyCollection() {
+            Contact curator = new TransactionTemplate( txManager ).execute( status ->
+                    contactDao.load( reporterId ) );
+            assertNotNull( curator );
+            Ticket pad = new TransactionTemplate( txManager ).execute( status ->
+                    ticketService.getOrCreateScratchpad( curator ) );
+            assertNotNull( pad );
+            scratchpadId = pad.getId();
+
+            // exactly what the handler holds: loaded through the service, outside any transaction
+            Ticket detached = ticketService.load( scratchpadId );
+            assertNotNull( detached );
+            assertThrows( LazyInitializationException.class, () -> detached.getTargets().size(),
+                    "the targets of a detached ticket cannot be counted by the caller -- "
+                            + "the handler that tried is what produced the 500" );
+
+            long targetId = freshTargetBase();
+            TicketService.TargetAddition first = ticketService.addTarget( detached,
+                    TicketTargetType.EXPRESSION_EXPERIMENT, targetId, curator );
+            assertTrue( first.isAdded(), "a target new to the ticket is reported as added" );
+
+            TicketService.TargetAddition again = ticketService.addTarget( first.getTicket(),
+                    TicketTargetType.EXPRESSION_EXPERIMENT, targetId, curator );
+            assertFalse( again.isAdded(), "re-adding is idempotent and says so rather than erroring" );
+        }
+
+
+        /**
+         * {@code GET /tickets/{id}/events} answered 500 "Could not initialize proxy [Contact#1] - no
+         * session" in BOTH of its modes (found on gemma2, 2026-09-01). Cursor mode called
+         * {@code findEventsByCursor} and mapped to VOs afterwards; legacy mode built the VO from a
+         * detached entity. Each event's actor is a LAZY {@code @ManyToOne}, and
+         * {@code TicketEventValueObject.from} reads it for every row, so any ticket whose events have
+         * an actor -- every ticket, since events record who acted -- failed.
+         * <p>
+         * The sibling one line above it, {@code findOpenForTargetByCursor}, was already initializing.
+         * This one was left behind.
+         */
+        @Test
+        @DisplayName("the event log projects outside the transaction, in both cursor and VO form")
+        public void eventProjectionSurvivesDetachment() {
+            // cursor mode: the page is mapped to VOs after the service transaction closes
+            Ticket loaded = ticketService.load( ticketId );
+            assertNotNull( loaded );
+            CursorPage<TicketEvent> page = ticketService.findEventsByCursor( loaded, null, 20 );
+            assertFalse( page.isEmpty(), "the seeded ticket has at least its OPENED event" );
+            List<TicketEventValueObject> vos = page.map( TicketEventValueObject::from );
+            for ( TicketEventValueObject vo : vos ) {
+                assertNotNull( vo.getActorName(),
+                        "each event's actor must be initialized by the service, not read here" );
+            }
+
+            // legacy mode reads the same log off the VO the service projects
+            TicketValueObject full = ticketService.loadValueObject( ticketId, true );
+            assertNotNull( full );
+            assertFalse( full.getEvents().isEmpty(), "the event log must survive the projection" );
+            assertNotNull( full.getEvents().get( 0 ).getActorName(), "actor must be initialized" );
+        }
+
+        /**
+         * Project exactly the way {@code TicketsWebService} does — outside any transaction.
+         */
+        private void assertProjectable( List<Ticket> tickets ) {
+            assertFalse( tickets.isEmpty(), "the committed ticket should be listed" );
+            boolean sawSeeded = false;
+            for ( Ticket t : tickets ) {
+                TicketValueObject vo = TicketValueObject.from( t );
+                assertNotNull( vo.getTargets(), "targets must be initialized" );
+                if ( ticketId.equals( t.getId() ) ) {
+                    sawSeeded = true;
+                    assertEquals( reporterId, vo.getReporterId(), "reporter must be initialized" );
+                    assertNotNull( vo.getReporterName(), "reporter name must be initialized" );
+                    assertFalse( vo.getTargets().isEmpty(), "targets must be initialized" );
+                }
+            }
+            assertTrue( sawSeeded, "the seeded ticket should be among the listed tickets" );
+        }
+
+        @Test
+        @DisplayName("findTickets: VO projection after the service txn closes initializes reporter + targets")
+        public void findTickets_projectedAfterDetach_works() {
+            assertProjectable( ticketService.findTickets(
+                    false, null, null, null, null, null, null, 0, 100 ) );
+        }
+
+        @Test
+        @DisplayName("findOpenForTarget: VO projection after the service txn closes initializes reporter + targets")
+        public void findOpenForTarget_projectedAfterDetach_works() {
+            assertProjectable( ticketService.findOpenForTarget(
+                    TicketTargetType.EXPRESSION_EXPERIMENT, 1L ) );
         }
     }
 

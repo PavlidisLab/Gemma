@@ -23,7 +23,7 @@ import ubic.gemma.core.context.TestComponent;
  * {@code applicationContext-component-scan.xml}.
  * <p>
  * Scans {@code ubic.gemma.rest} for stereotype-annotated beans (@Component, @Service, @Repository,
- * @Controller, @Configuration, etc.) using Gemma's custom {@link BeanNameGenerator} (which strips
+ * {@code @Controller}, {@code @Configuration}, etc.) using Gemma's custom {@link BeanNameGenerator} (which strips
  * the "Impl" suffix from bean names) and excludes classes annotated with {@link TestComponent}
  * so the production context never picks up test-only beans.
  * <p>

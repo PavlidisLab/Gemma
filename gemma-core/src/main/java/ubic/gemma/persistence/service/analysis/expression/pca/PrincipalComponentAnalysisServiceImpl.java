@@ -133,6 +133,15 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
 
     @Override
     @Transactional
+    public PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
+            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad, int numComponentsToStore,
+            int numLoadingsToStore ) {
+        removeForExperiment( ee );
+        return create( ee, u, eigenvalues, v, bad, numComponentsToStore, numLoadingsToStore );
+    }
+
+    @Override
+    @Transactional
     public void removeForExperiment( ExpressionExperiment ee ) {
         this.principalComponentAnalysisDao.removeForExperiment(ee);
     }

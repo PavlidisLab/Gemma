@@ -43,6 +43,13 @@ public class BaselineSelection {
 
     /**
      * Values we treat as baseline.
+     * <p>
+     * The second block is the set the curation guide ("Curating Baseline Factor Values") tells curators
+     * NOT to use, on the grounds that Gemma won't auto-assign them. Detection is deliberately wider than
+     * the curation guide: a factor value that plainly says it is the control should be picked up as the
+     * baseline rather than losing out to an arbitrary pick, whether or not the curator used the
+     * preferred term. The guide's advice still stands for new curation — it keeps annotation consistent
+     * — it just isn't what decides the DEA baseline.
      */
     private static final Set<String> controlGroupTerms = createTermSet(
             "baseline participant role",
@@ -60,7 +67,14 @@ public class BaselineSelection {
             "wild type control",
             "wild type genotype",
             "wild type",
-            "female" // alphabetically before male.
+            "female", // alphabetically before male.
+            // discouraged by the curation guide, honoured here. Free text only — these have no URI in
+            // any ontology Gemma loads.
+            "control role",
+            "negative control role",
+            "normal control group",
+            "normal littermate",
+            "normal littermates"
     );
     /**
      * Ontology terms we treat as baseline. Checked: 2024-08-12
@@ -80,6 +94,10 @@ public class BaselineSelection {
             "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001", // normal control_group (retired)
             "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201", // control_group, new version (retired)
             "http://purl.obolibrary.org/obo/PATO_0000383" // female
+            // The terms the curation guide discourages (control role, negative control role, normal
+            // control group, normal littermates) are free text — the ontologies that define them (SIO,
+            // MSIO, NCIT) are not loaded by Gemma, so there is no URI to recognise. They are matched by
+            // controlGroupTerms above.
     );
 
     /**
@@ -92,14 +110,39 @@ public class BaselineSelection {
     }
 
     /**
+     * The control-group terms and URIs themselves, for callers that have to recognise a baseline in
+     * SQL rather than over loaded entities.
+     *
+     * <p>Exposed rather than copied so there is one list. The relation harvest needs it because a
+     * curated statement whose object is a control-arm marker is not a relation between two concepts
+     * — {@code OBI_0000220 reference subject role} left in makes every disease that ever had a
+     * control arm look implied by it.</p>
+     *
+     * <p>Both sets are already unmodifiable.</p>
+     */
+    public static Set<String> getControlGroupTerms() {
+        return controlGroupTerms;
+    }
+
+    /**
+     * @see #getControlGroupTerms()
+     */
+    public static Set<String> getControlGroupUris() {
+        return controlGroupUris;
+    }
+
+    /**
      * Check if a given factor value indicates a baseline condition.
      */
     public static boolean isBaselineCondition( FactorValue factorValue ) {
-        if ( factorValue.getMeasurement() != null ) {
-            return false;
-        }
+        // an explicit isBaseline always decides, before anything else is considered. A saved continuous
+        // factor value can't carry the flag (FactorValueDaoImpl rejects it), so this only overtakes the
+        // measurement check for values that haven't been through that validation.
         if ( factorValue.getIsBaseline() != null ) {
             return factorValue.getIsBaseline();
+        }
+        if ( factorValue.getMeasurement() != null ) {
+            return false;
         }
         //noinspection deprecation
         return factorValue.getCharacteristics().stream().anyMatch( BaselineSelection::isBaselineCondition )
@@ -144,11 +187,12 @@ public class BaselineSelection {
      * that the baseline was explicitly forced.
      */
     public static boolean isForcedBaseline( FactorValue fv ) {
-        if ( fv.getMeasurement() != null ) {
-            return false;
-        }
+        // as in isBaselineCondition, the explicit flag decides first
         if ( fv.getIsBaseline() != null ) {
             return fv.getIsBaseline();
+        }
+        if ( fv.getMeasurement() != null ) {
+            return false;
         }
         return fv.getCharacteristics().stream().anyMatch( BaselineSelection::isForcedBaseline );
     }
@@ -219,30 +263,52 @@ public class BaselineSelection {
 
             } else {
 
+                /*
+                 * A factor value the curator explicitly marked as the baseline wins outright, ahead of any
+                 * term- or URI-based match. Checked in its own pass because the term/URI matches below stop
+                 * at the first hit, which would otherwise beat a marked value that comes later in iteration
+                 * order.
+                 */
+                FactorValue markedBaseline = null;
                 for ( FactorValue fv : factor.getFactorValues() ) {
-
-                    /*
-                     * Check that this factor value is used by at least one of the given samples. Only matters if this
-                     * is a subset of the full data set.
-                     */
                     if ( samplesUsed != null && !BaselineSelection.used( fv, samplesUsed ) ) {
-                        // this factorValue cannot be a candidate baseline for this subset.
                         continue;
                     }
-
-                    if ( isForcedBaseline( fv ) ) {
-                        BaselineSelection.log.debug( "Baseline chosen: " + fv );
-                        result.put( factor, fv );
+                    if ( Boolean.TRUE.equals( fv.getIsBaseline() ) ) {
+                        markedBaseline = fv;
                         break;
                     }
+                }
 
-                    if ( isBaselineCondition( fv ) ) {
-                        if ( result.containsKey( factor ) ) {
-                            BaselineSelection.log.warn( "A second potential baseline was found for " + factor + ": " + fv );
+                if ( markedBaseline != null ) {
+                    BaselineSelection.log.debug( "Baseline chosen (explicitly marked): " + markedBaseline );
+                    result.put( factor, markedBaseline );
+                } else {
+                    for ( FactorValue fv : factor.getFactorValues() ) {
+
+                        /*
+                         * Check that this factor value is used by at least one of the given samples. Only matters if this
+                         * is a subset of the full data set.
+                         */
+                        if ( samplesUsed != null && !BaselineSelection.used( fv, samplesUsed ) ) {
+                            // this factorValue cannot be a candidate baseline for this subset.
                             continue;
                         }
-                        BaselineSelection.log.debug( "Baseline chosen: " + fv );
-                        result.put( factor, fv );
+
+                        if ( isForcedBaseline( fv ) ) {
+                            BaselineSelection.log.debug( "Baseline chosen: " + fv );
+                            result.put( factor, fv );
+                            break;
+                        }
+
+                        if ( isBaselineCondition( fv ) ) {
+                            if ( result.containsKey( factor ) ) {
+                                BaselineSelection.log.warn( "A second potential baseline was found for " + factor + ": " + fv );
+                                continue;
+                            }
+                            BaselineSelection.log.debug( "Baseline chosen: " + fv );
+                            result.put( factor, fv );
+                        }
                     }
                 }
 
@@ -300,6 +366,34 @@ public class BaselineSelection {
      */
     public static Map<ExperimentalFactor, FactorValue> getBaselineLevels( Collection<ExperimentalFactor> factors ) {
         return getBaselineLevels( factors, null );
+    }
+
+    /**
+     * The factor values a curator has EXPLICITLY marked as baseline on this factor, restricted to those the given
+     * samples actually use.
+     * <p>
+     * More than one is legitimate: a dataset holding two experiments has a reference level per experiment. It does
+     * mean the factor cannot be analyzed as a single contrast, which is why
+     * {@link LinearModelAnalyzer} refuses such a factor unless a subset factor was configured.
+     * <p>
+     * 🛑 Deliberately counts only the explicit flag, NOT {@link #isBaselineCondition(FactorValue)}. The inference
+     * finds two candidates on a great many factors — any design with, say, both "control" and "untreated" levels —
+     * and that is ambiguity to be resolved by picking one, not a curator saying "this design has two reference
+     * levels". Treating inferred pairs as an error would fail analyses that run correctly today.
+     *
+     * @param samplesUsed restrict to values used by these samples, or null to consider every value of the factor
+     */
+    public static List<FactorValue> getExplicitBaselines( ExperimentalFactor factor, @Nullable Collection<BioMaterial> samplesUsed ) {
+        List<FactorValue> marked = new ArrayList<>( 1 );
+        for ( FactorValue fv : factor.getFactorValues() ) {
+            if ( samplesUsed != null && !used( fv, samplesUsed ) ) {
+                continue;
+            }
+            if ( Boolean.TRUE.equals( fv.getIsBaseline() ) ) {
+                marked.add( fv );
+            }
+        }
+        return marked;
     }
 
     public static Map<ExperimentalFactor, FactorValue> getBaselineConditions( Collection<BioMaterial> samplesUsed,

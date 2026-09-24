@@ -29,6 +29,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -213,10 +214,18 @@ public class CompletionsWebService {
         characteristicService.findValueGroupedByValueUri( null, true, false, true, -1 )
                 .forEach( ( uri, label ) -> {
                     if ( b.full() ) return;
-                    b.add( uri, label );
-                    if ( OntologyUtils.isTermUri( uri ) ) {
+                    // Offer the term the read path will serve, not the one the corpus happens to
+                    // store. Suggesting a retired URI is how the corpus kept growing rows that the
+                    // canonicaliser then rewrites on the way out: the curator picks it here, it is
+                    // written verbatim, and the design tab renders the other spelling back.
+                    // The typed prefix is still matched against the stored spelling, so looking up
+                    // a retired id finds the term rather than nothing.
+                    String canonicalUri = CharacteristicUtils.canonicalUri( uri );
+                    String canonicalLabel = CharacteristicUtils.canonicalLabel( uri, label );
+                    b.add( canonicalUri, uri, canonicalLabel );
+                    if ( OntologyUtils.isTermUri( canonicalUri ) ) {
                         try {
-                            b.add( OntologyUtils.uriToTermId( uri ), label );
+                            b.add( OntologyUtils.uriToTermId( canonicalUri ), shortIdOrNull( uri ), canonicalLabel );
                         } catch ( IllegalArgumentException e ) {
                             // Skip malformed URIs silently; the CLI logs them.
                         }
@@ -248,6 +257,22 @@ public class CompletionsWebService {
      * Local accumulator: prefix-matches, dedup-by-value, hard-caps at {@code limit}.
      * Case-insensitive matching uses the default JVM locale folding via {@link Locale#ROOT}.
      */
+    /**
+     * The OBO short id of a URI, or null when it does not have one; used only to keep a typed
+     * prefix matching against the stored spelling.
+     */
+    @Nullable
+    private static String shortIdOrNull( String uri ) {
+        if ( !OntologyUtils.isTermUri( uri ) ) {
+            return null;
+        }
+        try {
+            return OntologyUtils.uriToTermId( uri );
+        } catch ( IllegalArgumentException e ) {
+            return null;
+        }
+    }
+
     private static final class Builder {
         private final String lowerPrefix;
         private final int limit;
@@ -261,10 +286,24 @@ public class CompletionsWebService {
         }
 
         void add( @Nullable String value, @Nullable String description ) {
+            add( value, null, description );
+        }
+
+        /**
+         * Suggest {@code value}, matching the prefix against {@code alsoMatches} as well.
+         * <p>
+         * The two differ when a term has been canonicalized: what is suggested is the term the API
+         * serves, while what the curator typed may be the spelling the corpus stores.
+         */
+        void add( @Nullable String value, @Nullable String alsoMatches, @Nullable String description ) {
             if ( value == null || full() ) return;
-            if ( !lowerPrefix.isEmpty() && !value.toLowerCase( Locale.ROOT ).startsWith( lowerPrefix ) ) return;
+            if ( !lowerPrefix.isEmpty() && !startsWithPrefix( value ) && !startsWithPrefix( alsoMatches ) ) return;
             if ( !seen.add( value ) ) return;
             out.add( new CompletionValueObject( value, description ) );
+        }
+
+        private boolean startsWithPrefix( @Nullable String candidate ) {
+            return candidate != null && candidate.toLowerCase( Locale.ROOT ).startsWith( lowerPrefix );
         }
 
         boolean full() {

@@ -18,6 +18,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import java.util.Collections;
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,22 @@ public class CurationCommitResult {
     private boolean curationNoteChanged;
     /** The dataset's {@code lastUpdated} after the commit — the client's baseline for the next draft. */
     private Date newLastUpdated;
+
+    /**
+     * Id of the {@code COMMIT} AnnotationSet minted for this commit's run, or null when the commit named no run.
+     * <p>
+     * A no-op commit that named a run still gets a row: absence has to mean "no run was named", not "the run did
+     * nothing", or the two facts become indistinguishable — which is the ambiguity provenance exists to remove.
+     */
+    @Nullable
+    private Long commitAnnotationSetId;
+
+    /**
+     * Id of the {@code SNAPSHOT} AnnotationSet holding the curation this commit displaced, or null when the commit
+     * changed nothing (nothing was displaced) or was a dry run (nothing was written).
+     */
+    @Nullable
+    private Long snapshotAnnotationSetId;
 
     public boolean isBasicsChanged() {
         return basicsChanged;
@@ -216,4 +233,22 @@ public class CurationCommitResult {
     public void setNewLastUpdated( Date newLastUpdated ) {
         this.newLastUpdated = newLastUpdated;
     }
+    @Nullable
+    public Long getCommitAnnotationSetId() {
+        return commitAnnotationSetId;
+    }
+
+    public void setCommitAnnotationSetId( @Nullable Long commitAnnotationSetId ) {
+        this.commitAnnotationSetId = commitAnnotationSetId;
+    }
+
+    @Nullable
+    public Long getSnapshotAnnotationSetId() {
+        return snapshotAnnotationSetId;
+    }
+
+    public void setSnapshotAnnotationSetId( @Nullable Long snapshotAnnotationSetId ) {
+        this.snapshotAnnotationSetId = snapshotAnnotationSetId;
+    }
+
 }

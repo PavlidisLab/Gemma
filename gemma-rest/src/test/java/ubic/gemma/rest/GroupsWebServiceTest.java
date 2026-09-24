@@ -130,7 +130,7 @@ public class GroupsWebServiceTest {
     public void testGetGroup_summariesOff() {
         when( userReadService.listAvailableGroups() ).thenReturn( Collections.singletonList( group ) );
 
-        ResponseDataObject<? extends GroupValueObject> resp = webService.getGroup( 100L, false );
+        ResponseDataObject<? extends GroupValueObject> resp = webService.getGroup( 100L, false, false );
 
         assertThat( resp.getData() ).isInstanceOf( GroupValueObject.class );
         assertThat( resp.getData() ).isNotInstanceOf( GroupWithMembersValueObject.class );
@@ -142,7 +142,7 @@ public class GroupsWebServiceTest {
     public void testGetGroup_summariesOn_includesMembers() {
         when( userReadService.listAvailableGroups() ).thenReturn( Collections.singletonList( group ) );
 
-        ResponseDataObject<? extends GroupValueObject> resp = webService.getGroup( 100L, true );
+        ResponseDataObject<? extends GroupValueObject> resp = webService.getGroup( 100L, true, false );
 
         assertThat( resp.getData() ).isInstanceOf( GroupWithMembersValueObject.class );
         GroupWithMembersValueObject withMembers = ( GroupWithMembersValueObject ) resp.getData();
@@ -154,7 +154,7 @@ public class GroupsWebServiceTest {
     @Test
     public void testGetGroup_notFound() {
         when( userReadService.listAvailableGroups() ).thenReturn( Collections.singletonList( group ) );
-        assertThatThrownBy( () -> webService.getGroup( 999L, false ) )
+        assertThatThrownBy( () -> webService.getGroup( 999L, false, false ) )
                 .isInstanceOf( NotFoundException.class );
     }
 
@@ -393,7 +393,7 @@ public class GroupsWebServiceTest {
         assertPreAuthorizeIsAuthenticated( GroupsWebService.class.getMethod( "getGroups",
                 String.class, OffsetArg.class, LimitArg.class ) );
         assertPreAuthorizeIsAuthenticated( GroupsWebService.class.getMethod( "getGroup",
-                Long.class, boolean.class ) );
+                Long.class, boolean.class, boolean.class ) );
         assertPreAuthorizeIsAuthenticated( GroupsWebService.class.getMethod( "createGroup",
                 GroupCreateRequest.class ) );
         assertPreAuthorizeIsAuthenticated( GroupsWebService.class.getMethod( "updateGroup",

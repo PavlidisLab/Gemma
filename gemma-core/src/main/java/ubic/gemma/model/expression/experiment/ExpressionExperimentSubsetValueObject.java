@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
-import ubic.gemma.model.annotations.GemmaWebOnly;
+import ubic.gemma.model.annotations.WithheldFromApi;
+import ubic.gemma.model.annotations.WithheldFromApi.Reason;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
@@ -34,12 +35,6 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
 
     private String name;
     private String description;
-    /**
-     * @deprecated Do not use, there's never been an accession field in the data model.
-     */
-    @Deprecated
-    @GemmaWebOnly
-    private String accession;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer numberOfBioAssays;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -59,7 +54,8 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
     private boolean userOwned = false;
 
     @Nullable
-    @GemmaWebOnly
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "nothing populates it: no constructor assigns it, no setter call site exists, there is no MIN_PVALUE column, and no HQL projection or alias transformer reaches it — so it would serialize a permanent null")
     private Double minPvalue;
 
     public ExpressionExperimentSubsetValueObject() {
@@ -100,12 +96,22 @@ public class ExpressionExperimentSubsetValueObject extends IdentifiableValueObje
     }
 
     /**
-     * @deprecated use {@link #getSourceExperimentId()} instead
+     * Always {@code null}: a subset has no accession, and never has had one.
+     * <p>
+     * Present only because {@link BioAssaySetValueObject#getAccession()} declares it. The backing
+     * field was removed once it was established that nothing had ever written it — no constructor
+     * sets it, and no call site anywhere in the reactor invokes the setter — so the field could only
+     * ever have serialized a permanent {@code null}. To get a subset's accession, read
+     * {@link #getSourceExperimentId()} and fetch the source experiment.
+     *
+     * @deprecated Do not use, there's never been an accession field in the data model.
      */
     @Deprecated
-    @GemmaWebOnly
-    public Long getSourceExperiment() {
-        return sourceExperimentId;
+    @Override
+    @WithheldFromApi(value = Reason.INTERNAL_ONLY,
+            comment = "nothing ever populated it; a subset has no accession in the data model, so publishing it would serialize a permanent null that reads as data")
+    public String getAccession() {
+        return null;
     }
 
     @Override

@@ -28,7 +28,9 @@ import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.gene.GeneSet;
 
 import org.springframework.lang.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static ubic.gemma.cli.util.OptionsUtils.*;
 
@@ -68,9 +70,15 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
 
     private Class<? extends Securable> clazz;
 
-    private Long identifier;
+    private List<Long> identifiers = new ArrayList<>();
 
     private boolean lintPermissions;
+
+    private boolean lintDanglingIdentities;
+    private boolean lintMissingIdentities;
+    private boolean lintChildWithoutParent;
+    private boolean lintChildWithIncorrectParent;
+    private boolean lintNotChildWithParent;
 
     /**
      * Indicate if fixes should be applied.
@@ -80,9 +88,22 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         OptionsUtils.addEnumOption( options, "type", "type", "Type of securable entities to lint.", SecurableType.class );
-        options.addOption( Option.builder( "identifier" ).longOpt( "identifier" ).hasArg().type( Long.class )
-                .desc( "Identifier of the securable entity to lint. Requires the -type,--type option to be set." ).get() );
+        options.addOption( Option.builder( "identifier" ).longOpt( "identifier" ).hasArgs().valueSeparator( ',' ).type( Long.class )
+                .desc( "One or more identifiers (comma-separated) of securable entities to lint. Requires the -type,--type option to be set." ).get() );
         options.addOption( "lintPermissions", "lint-permissions", false, "Lint permissions." );
+        // Selecting a single check is not just convenience. lintAcls is @Transactional, so every
+        // check named here runs in ONE transaction, and the parent-linking repair commits its
+        // batches in nested REQUIRES_NEW transactions. Run it alongside the checks that create or
+        // delete ACL identities and the outer transaction holds row locks on identities the
+        // batches then try to update — the inner transaction waits for a lock the outer cannot
+        // release until the inner returns, and MySQL ends it with "Lock wait timeout exceeded".
+        // Naming only --lint-child-without-parent leaves the outer transaction read-only, which is
+        // what makes a large repair possible.
+        options.addOption( "lintDanglingIdentities", "lint-dangling-identities", false, "Lint ACL identities with no entity." );
+        options.addOption( "lintMissingIdentities", "lint-missing-identities", false, "Lint entities with no ACL identity." );
+        options.addOption( "lintChildWithoutParent", "lint-child-without-parent", false, "Lint secured children with no parent ACL identity." );
+        options.addOption( "lintChildWithIncorrectParent", "lint-child-with-incorrect-parent", false, "Lint secured children whose parent ACL identity is wrong." );
+        options.addOption( "lintNotChildWithParent", "lint-not-child-with-parent", false, "Lint top-level securables that have a parent ACL identity." );
         options.addOption( "applyFixes", "apply-fixes", false, "Apply fixes to ACLs" );
     }
 
@@ -90,39 +111,117 @@ public class AclLinterCli extends AbstractAuthenticatedCLI {
     protected void processOptions( CommandLine commandLine ) throws ParseException {
         SecurableType st = OptionsUtils.getEnumOptionValue( commandLine, "type" );
         this.clazz = st != null ? st.getClazz() : null;
-        this.identifier = getParsedOptionValue( commandLine, "identifier",
-                requires( toBeSet( "type" ) ) );
+        this.identifiers = new ArrayList<>();
+        String[] rawIds = commandLine.getOptionValues( "identifier" );
+        if ( rawIds != null && rawIds.length > 0 ) {
+            if ( clazz == null ) {
+                throw new ParseException( "The -type,--type option is required when -identifier,--identifier is set." );
+            }
+            for ( String raw : rawIds ) {
+                try {
+                    this.identifiers.add( Long.parseLong( raw.trim() ) );
+                } catch ( NumberFormatException e ) {
+                    // processOptions turns a ParseException into a usage error naming the option;
+                    // an unchecked NumberFormatException escapes as a stack trace that does not.
+                    throw new ParseException( "The -identifier,--identifier option takes numeric ids, got '" + raw.trim() + "'." );
+                }
+            }
+        }
         this.lintPermissions = commandLine.hasOption( "lintPermissions" );
         this.applyFixes = commandLine.hasOption( "applyFixes" );
+        this.lintDanglingIdentities = commandLine.hasOption( "lintDanglingIdentities" );
+        this.lintMissingIdentities = commandLine.hasOption( "lintMissingIdentities" );
+        this.lintChildWithoutParent = commandLine.hasOption( "lintChildWithoutParent" );
+        this.lintChildWithIncorrectParent = commandLine.hasOption( "lintChildWithIncorrectParent" );
+        this.lintNotChildWithParent = commandLine.hasOption( "lintNotChildWithParent" );
+        // Naming none of them keeps the previous behaviour: run all five. lint-permissions stays
+        // an independent opt-in, as it always was, and does not count as a selection.
+        if ( !( lintDanglingIdentities || lintMissingIdentities || lintChildWithoutParent
+                || lintChildWithIncorrectParent || lintNotChildWithParent ) ) {
+            this.lintDanglingIdentities = true;
+            this.lintMissingIdentities = true;
+            this.lintChildWithoutParent = true;
+            this.lintChildWithIncorrectParent = true;
+            this.lintNotChildWithParent = true;
+        }
     }
 
     @Override
     protected void doAuthenticatedWork() throws Exception {
         AclLinterConfig config = AclLinterConfig.builder()
-                .lintDanglingIdentities( true )
-                .lintSecurablesLackingIdentities( true )
-                .lintChildWithoutParent( true )
-                .lintChildWithIncorrectParent( true )
-                .lintNotChildWithParent( true )
+                .lintDanglingIdentities( lintDanglingIdentities )
+                .lintSecurablesLackingIdentities( lintMissingIdentities )
+                .lintChildWithoutParent( lintChildWithoutParent )
+                .lintChildWithIncorrectParent( lintChildWithIncorrectParent )
+                .lintNotChildWithParent( lintNotChildWithParent )
                 .lintPermissions( lintPermissions )
                 .applyFixes( applyFixes )
                 .build();
         Collection<AclLinterService.LintResult> results;
-        if ( identifier != null ) {
-            results = aclLinterService.lintAcls( clazz, identifier, config );
+        if ( !identifiers.isEmpty() ) {
+            List<AclLinterService.LintResult> acc = new ArrayList<>();
+            for ( Long id : identifiers ) {
+                acc.addAll( aclLinterService.lintAcls( clazz, id, config ) );
+            }
+            results = acc;
         } else if ( clazz != null ) {
             results = aclLinterService.lintAcls( clazz, config );
         } else {
             results = aclLinterService.lintAcls( config );
         }
+        // Per-type tally of what happened, so a long run ends with a legible summary instead of only
+        // the scrolled-past per-row lines. Bucketed by an action derived from the message
+        // (created / deleted / missing / dangling / other) and by whether a fix was applied.
+        java.util.Map<String, java.util.Map<String, Integer>> tally = new java.util.TreeMap<>();
+        int fixes = 0, findings = 0;
         for ( AclLinterService.LintResult result : results ) {
             String o = result.getType().getSimpleName() + " Id=" + result.getIdentifier();
             if ( result.isFixed() ) {
                 addSuccessObject( o, result.getMessage() );
+                fixes++;
             } else {
                 addWarningObject( o, result.getMessage() );
+                findings++;
+            }
+            String action = classifyLintAction( result.getMessage() );
+            tally.computeIfAbsent( result.getType().getSimpleName(), k -> new java.util.TreeMap<>() )
+                    .merge( action, 1, Integer::sum );
+        }
+
+        log.info( "===== lintAcls summary =====" );
+        if ( tally.isEmpty() ) {
+            log.info( "Nothing to report: every linted type was clean." );
+        } else {
+            for ( java.util.Map.Entry<String, java.util.Map<String, Integer>> e : tally.entrySet() ) {
+                StringBuilder line = new StringBuilder( e.getKey() ).append( ": " );
+                boolean first = true;
+                for ( java.util.Map.Entry<String, Integer> a : e.getValue().entrySet() ) {
+                    if ( !first ) line.append( ", " );
+                    line.append( a.getValue() ).append( ' ' ).append( a.getKey() );
+                    first = false;
+                }
+                log.info( line.toString() );
             }
         }
+        log.info( applyFixes
+                ? ( fixes + " fix(es) applied, " + findings + " left unfixed" )
+                : ( findings + " finding(s); re-run with --apply-fixes to act on them" ) );
+    }
+
+    /**
+     * Coarse action bucket for the summary, read from the {@link AclLinterService.LintResult} message
+     * (which may carry a row id, so a substring match rather than equality). Keeps the tally readable
+     * without the service having to expose an enum.
+     */
+    private static String classifyLintAction( String message ) {
+        if ( message == null ) return "other";
+        String m = message.toLowerCase();
+        if ( m.contains( "created" ) ) return "created";
+        if ( m.contains( "deleted" ) ) return "deleted";
+        if ( m.contains( "lacks an acl identity" ) || m.contains( "lacking" ) ) return "missing";
+        if ( m.contains( "no corresponding entity" ) || m.contains( "dangling" ) ) return "dangling";
+        if ( m.contains( "parent" ) ) return "parent";
+        return "other";
     }
 
     @Nullable

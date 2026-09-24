@@ -69,15 +69,13 @@ public class TokenCoverageRankingStrategy implements AnnotationSearchRankingStra
         return NAME;
     }
 
+    /**
+     * Content tokens, shared with the relevance tiers via {@link QueryTokens}. Was a bare
+     * whitespace split; since coverage is scored by substring containment, an unstripped
+     * {@code the} scored against <em>theca cell</em>.
+     */
     private static Set<String> tokenise( String query ) {
-        String[] parts = query.toLowerCase( Locale.ROOT ).trim().split( "\\s+" );
-        if ( parts.length == 0 ) {
-            return Collections.emptySet();
-        }
-        Set<String> out = new LinkedHashSet<>( parts.length );
-        out.addAll( Arrays.asList( parts ) );
-        out.removeIf( String::isEmpty );
-        return out;
+        return new LinkedHashSet<>( QueryTokens.contentTokens( query ) );
     }
 
     private static double coverage( CharacteristicValueObject hit, Set<String> tokens ) {

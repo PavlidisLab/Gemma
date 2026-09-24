@@ -1,0 +1,33 @@
+{
+ "report_general_stats_data": {
+  "star": {
+   "GSM8030687": {"total_reads": 4525602.0, "uniquely_mapped_percent": 49.82, "mismatch_rate": 1.43},
+   "GSM8030688": {"total_reads": 3998179.0, "uniquely_mapped_percent": 51.07, "mismatch_rate": 1.44}
+  },
+  "rsem": {
+   "GSM8030687": {"alignable_percent": 14.15, "uniquely_mapped_percent": 99.99},
+   "GSM8030688": {"alignable_percent": 10.28}
+  },
+  "fastqc": {
+   "GSM8030687_1": {"percent_gc": 39.0, "percent_duplicates": 32.04},
+   "GSM8030687_2": {"percent_gc": 41.0, "percent_duplicates": 35.11},
+   "GSM8030688_SRR13191146_1": {"percent_gc": 38.0, "percent_duplicates": 30.5},
+   "SRR13191147": {"percent_gc": 44.0, "percent_duplicates": 28.0}
+  },
+  "cutadapt": {
+   "GSM8030687": {"cutadapt_version": "4.4", "bp_processed": 380000000.0}
+  }
+ },
+ "report_general_stats_headers": {
+  "star": {
+   "uniquely_mapped_percent": {"title": "% Aligned", "description": "% Uniquely mapped reads",
+     "min": 0, "max": 100, "suffix": "%", "namespace": "STAR", "hidden": false}
+  },
+  "fastqc": {
+   "percent_duplicates": {"title": "% Dups", "description": "% Duplicate reads",
+     "min": 0, "max": 100, "suffix": "%", "namespace": "FastQC", "hidden": true}
+  }
+ },
+ "report_plot_data": {"a_plot": {"datasets": [[1, 2, 3]]}},
+ "config_version": "1.14"
+}

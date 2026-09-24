@@ -177,8 +177,9 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         Map<BioMaterial, String> headers = assignRawHeadersToSamples( ee, rawHeaders );
 
-        // Create batch factor.
-        this.removeExistingBatchFactor( ee );
+        // Create batch factor. Build the replacement BEFORE removing what is there: if the build fails, the
+        // experiment keeps the batch factor it already had rather than being left with none.
+        List<ExperimentalFactor> existing = existingBatchFactors( ee );
 
         ExperimentalFactor bf;
         try {
@@ -195,6 +196,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
             log.info( "At least one singleton batch: " + ee + " " + e.getMessage() );
             return;
         }
+
+        removeBatchFactors( ee, existing );
 
         if ( bf != null ) {
             if ( bf.getId() == null ) { // hack to signal a single batch
@@ -227,9 +230,12 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
         }
         Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
 
-        this.removeExistingBatchFactor( ee );
+        // as above: build first, so a failure leaves the existing batch factor in place
+        List<ExperimentalFactor> existing = existingBatchFactors( ee );
 
         ExperimentalFactor factor = batchInfoPopulationHelperService.createBatchFactor( ee, dates );
+
+        removeBatchFactors( ee, existing );
 
         // we don't make a batch factor if there is just one batch.
         int numberOfBatches = factor == null || factor.getFactorValues().isEmpty() ? 1 : factor.getFactorValues().size();
@@ -400,38 +406,56 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * Remove an existing batch factor, if it exists. This is really only relevant in a 'force' situation.
+     * Remove every existing batch factor, if any. This is really only relevant in a 'force' situation.
+     * <p>
+     * All of them are removed, not just the first: a design that already carries more than one batch
+     * factor would otherwise keep the extras and end up with two after the fresh one is created. As of
+     * 2026-08-22 prod holds 24 such designs (18 with two batch factors, 6 with three), so the
+     * more-than-one case is real rather than defensive.
      *
      * @param ee ee
      */
-    private void removeExistingBatchFactor( ExpressionExperiment ee ) {
+    /**
+     * The batch factors an experiment carries right now.
+     * <p>
+     * Snapshot these BEFORE building a replacement and hand the list to
+     * {@link #removeBatchFactors(ExpressionExperiment, List)} afterwards. Removing by "is a batch factor" after the
+     * build would take the new one out along with the old.
+     */
+    private List<ExperimentalFactor> existingBatchFactors( ExpressionExperiment ee ) {
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
         if ( ed == null ) {
             log.warn( ee + " does not have an experimental design, cannot remove batch factor." );
-            return;
+            return Collections.emptyList();
         }
 
-        ExperimentalFactor toRemove = null;
+        // collect first, mutate after: remove() takes the factor out of ed.getExperimentalFactors(),
+        // which is the collection being walked here.
+        List<ExperimentalFactor> existing = new ArrayList<>();
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
 
             if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
-                toRemove = ef;
-                break;
-                /*
-                 * FIXME handle the case where we somehow have two or more.
-                 */
+                existing.add( ef );
             }
         }
 
-        if ( toRemove == null ) {
-            return;
+        if ( existing.size() > 1 ) {
+            BatchInfoPopulationServiceImpl.log.warn( ee + " has " + existing.size()
+                    + " batch factors; removing all of them." );
         }
 
-        BatchInfoPopulationServiceImpl.log.info( "Removing existing batch factor: " + toRemove );
+        return existing;
+    }
+
+    private void removeBatchFactors( ExpressionExperiment ee, List<ExperimentalFactor> toRemove ) {
+        if ( toRemove.isEmpty() ) {
+            return;
+        }
+        BatchInfoPopulationServiceImpl.log.info( "Removing existing batch factor(s): " + toRemove );
         experimentalFactorService.remove( toRemove );
-        ee.getExperimentalDesign().getExperimentalFactors().remove( toRemove );
+        ee.getExperimentalDesign().getExperimentalFactors().removeAll( toRemove );
         this.expressionExperimentService.update( ee );
     }
 

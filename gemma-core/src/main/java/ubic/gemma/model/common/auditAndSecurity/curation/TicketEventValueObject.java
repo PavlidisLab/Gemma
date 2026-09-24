@@ -13,6 +13,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import lombok.Data;
 import org.springframework.lang.Nullable;
+import ubic.gemma.model.common.auditAndSecurity.ContactUtils;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -55,7 +56,7 @@ public class TicketEventValueObject implements Serializable {
         vo.occurredAt = e.getOccurredAt();
         if ( e.getActor() != null ) {
             vo.actorId = e.getActor().getId();
-            vo.actorName = e.getActor().getName();
+            vo.actorName = ContactUtils.displayName( e.getActor() );
         }
         vo.payload = e.getPayload();
         return vo;

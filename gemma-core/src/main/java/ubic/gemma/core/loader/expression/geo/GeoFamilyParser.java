@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
+import ubic.gemma.core.util.SymbolFontPua;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -89,6 +90,7 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
     private int platformLines = 0;
     private int sampleDataLines = 0;
     private boolean processPlatformsOnly;
+    private boolean metadataOnly;
     private int numWarnings = 0;
 
     @Override
@@ -175,6 +177,19 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
 
     public void setProcessPlatformsOnly( boolean b ) {
         this.processPlatformsOnly = b;
+    }
+
+    /**
+     * Parse records that carry no data and no platform, as GEO's {@code view=brief} series and
+     * sample records do.
+     * <p>
+     * Only the data-table bookkeeping is skipped, because there is nothing for it to describe: a
+     * sample's quantitation types are keyed by its platform, and a platform is only attached to a
+     * sample when a {@code ^PLATFORM} record was parsed. Without one, initializing them walks off
+     * the end of an empty collection.
+     */
+    public void setMetadataOnly( boolean b ) {
+        this.metadataOnly = b;
     }
 
     /**
@@ -456,16 +471,23 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         String key = tokens[0];
         String value = tokens[1];
         key = StringUtils.strip( key );
-        value = StringUtils.strip( value );
+        value = repairSymbolFont( StringUtils.strip( value ) );
         result.put( key, value );
         return result;
     }
 
     /**
      * Extract a value from a line in the format xxxx=value.
+     * <p>
+     * Every {@code key=value} metadata line in a SOFT file comes through here, which is why the
+     * Symbol-font repair is applied at this point and nowhere else: descriptions, titles,
+     * characteristics and protocols are all the same kind of submitter prose and all reach us the
+     * same way. Repairing at the individual {@code setDescription} callsites instead would be one
+     * band-aid per field, and the field someone forgets is the one that keeps storing tofu.
      *
      * @param line line
      * @return String following the first occurrence of '=', or null if there is no '=' in the String.
+     * @see SymbolFontPua
      */
     private String extractValue( String line ) {
         int eqIndex = line.indexOf( '=' );
@@ -473,7 +495,26 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             return null; // that's okay, there are lines that just indicate the end of sections.
         }
 
-        return StringUtils.strip( line.substring( eqIndex + 1 ) );
+        return repairSymbolFont( StringUtils.strip( line.substring( eqIndex + 1 ) ) );
+    }
+
+    /**
+     * Repair Symbol-font private-use codepoints, and report the ones that cannot be repaired.
+     * <p>
+     * The warning names the codepoints rather than guessing at them: a private-use character that
+     * Adobe Symbol has no standard equivalent for can only be settled by reading it in context.
+     */
+    private String repairSymbolFont( String value ) {
+        java.util.Set<Integer> unmappable = SymbolFontPua.unmappable( value );
+        if ( !unmappable.isEmpty() ) {
+            StringBuilder codes = new StringBuilder();
+            for ( Integer c : unmappable ) {
+                codes.append( codes.length() > 0 ? ", " : "" ).append( String.format( "U+%04X", c ) );
+            }
+            GeoFamilyParser.log.warn( "Private-use codepoints with no known replacement (" + codes
+                    + ") in: " + StringUtils.abbreviate( value, 120 ) );
+        }
+        return SymbolFontPua.repair( value );
     }
 
     /**
@@ -1364,9 +1405,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
         } else if ( this.startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             this.sampleSet( currentSampleAccession, GeoSample::setLastUpdateDate, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
-            if ( value.equals( "0" ) ) {
+            if ( value.equals( "0" ) && !metadataOnly ) {
                 /*
                  * Empty sample, we won't get any data and this messes things up later.
+                 *
+                 * Not in metadataOnly mode: there we deliberately fetched no platform, so the sample
+                 * has none to key quantitation types by, and this line is where a series of RNA-seq
+                 * samples -- which GEO reports with a row count of 0 -- would otherwise fail the
+                 * whole parse.
                  */
                 GeoFamilyParser.log.debug( "No data for sample " + currentSampleAccession );
                 this.initializeQuantitationTypes();
@@ -1390,9 +1436,13 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
                 GeoFamilyParser.log.warn( "Unexpected sample relation format: " + line );
             }
         } else if ( this.startsWithIgnoreCase( line, "!Sample_instrument_model" ) ) {
-            // e.g. Illumina HiSeq 2000
+            // e.g. Illumina HiSeq 2000. Kept verbatim for the source-metadata payload; Gemma's own
+            // conversion does not use it.
+            this.sampleSet( currentSampleAccession, GeoSample::setInstrumentModel, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_library_selection" ) ) {
-            // e.g. 'cDNA', 'other'
+            // e.g. 'cDNA', 'other'. Verbatim, for the same reason — unlike library_source and
+            // library_strategy below, which are normalized into enums for conversion.
+            this.sampleSet( currentSampleAccession, GeoSample::setLibrarySelection, value );
         } else if ( this.startsWithIgnoreCase( line, "!Sample_library_source" ) ) {
             // see http://www.ncbi.nlm.nih.gov/geo/info/soft-seq.html
             // e.g. 'transcriptomic' - if not skip? GENOMIC, OTHER
@@ -1437,48 +1487,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
      */
     private void sampleSetLibStrategy( String accession, String string ) {
         GeoSample sample = results.getSampleMap().get( accession );
-        if ( string.equalsIgnoreCase( "RNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.RNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "scRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.SCRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "snRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.SNRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "Bisulfite-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.BISULFITE_SEQ );
-        } else if ( string.equalsIgnoreCase( "DNase-Hypersensitivity" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.DNASE_HYPERSENSITIVITY );
-        } else if ( string.equalsIgnoreCase( "ATAC-seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.ATAC_SEQ );
-        } else if ( string.equalsIgnoreCase( "ChIP-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.CHIP_SEQ );
-        } else if ( string.equalsIgnoreCase( "OTHER" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.OTHER );
-        } else if ( string.equalsIgnoreCase( "MRE-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MRE_SEQ );
-        } else if ( string.equalsIgnoreCase( "miRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MIRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "RIP-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.RIP_SEQ );
-        } else if ( string.equalsIgnoreCase( "Hi-C" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.HI_C );
-        } else if ( string.equalsIgnoreCase( "ssRNA-seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.SSRNA_SEQ );
-        } else if ( string.equalsIgnoreCase( "MBD-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MDB_SEQ );
-        } else if ( string.equalsIgnoreCase( "FAIRE-seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.FAIRE_SEQ );
-        } else if ( string.equalsIgnoreCase( "MeDIP-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MEDIP_SEQ );
-        } else if ( string.equalsIgnoreCase( "MNase-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.MNASE_SEQ );
-        } else if ( string.equalsIgnoreCase( "ChIA-PET" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.CHIA_PET );
-        } else if ( string.equalsIgnoreCase( "ncRNA-Seq" ) ) {
-            sample.setLibStrategy( GeoLibraryStrategy.NCRNA_SEQ );
-        } else {
+        GeoLibraryStrategy strategy = GeoLibraryStrategy.fromGeoString( string );
+        if ( strategy == null ) {
+            // 🛑 Fatal on purpose, and NOT to be softened into OTHER: `OTHER` is one of the three strategies
+            // GeoConverterImpl admits as expression data, so folding an unrecognized assay into it would
+            // import chromatin or genomic samples as if they were RNA. Add the value to GeoLibraryStrategy.
             throw new IllegalArgumentException( "Unknown library strategy: " + string );
         }
-
+        sample.setLibStrategy( strategy );
     }
 
     /**
@@ -1618,6 +1634,14 @@ public class GeoFamilyParser implements Parser<GeoParseResult> {
             // no-op for now
         } else if ( this.startsWithIgnoreCase( line, "!Series_sample_taxid" ) ) {
             // no-op for now.
+        } else if ( this.startsWithIgnoreCase( line, "!Series_platform_organism" )
+                || this.startsWithIgnoreCase( line, "!Series_sample_organism" ) ) {
+            // The species named by the platforms and the samples. acc.cgi emits these summary
+            // lines and the family SOFT file does not, so they were unknown until the
+            // metadata-only fetch started reading acc.cgi -- one ERROR per series, and with the
+            // Slack appender bound to ERROR, a failed Slack post behind each one. The species the
+            // document reports comes from the samples' own channels, so there is nothing to take
+            // from here; they are the organism siblings of the taxid lines above.
         } else {
             GeoFamilyParser.log.error( "Unknown flag in series: " + line );
         }

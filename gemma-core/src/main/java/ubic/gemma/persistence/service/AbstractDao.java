@@ -332,7 +332,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
     @Override
     public Stream<T> streamAll( boolean createNewSession ) {
         return QueryUtils.createStream( getSessionFactory(),
-                session -> {
+                session -> HibernateUtils.streamWithoutStatementTimeout( session, () -> {
                     CriteriaBuilder cb = session.getCriteriaBuilder();
                     //noinspection unchecked
                     CriteriaQuery<T> cq = ( CriteriaQuery<T> ) cb.createQuery( elementClass );
@@ -344,7 +344,7 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
                             batchSize,
                             useCursorFetchIfSupported,
                             isQueryStateless );
-                }, createNewSession );
+                } ), createNewSession );
     }
 
     /**
@@ -354,14 +354,17 @@ public abstract class AbstractDao<T extends Identifiable> implements BaseDao<T> 
         if ( createNewSession ) {
             Session session = openSession();
             try {
-                return QueryUtils.stream( queryCreator.apply( session ), resultType, fetchSize, useCursorFetchIfSupported, isStateless )
+                return HibernateUtils.streamWithoutStatementTimeout( session,
+                                () -> QueryUtils.stream( queryCreator.apply( session ), resultType, fetchSize, useCursorFetchIfSupported, isStateless ) )
                         .onClose( session::close );
             } catch ( Exception e ) {
                 session.close();
                 throw e;
             }
         } else {
-            return QueryUtils.stream( queryCreator.apply( sessionFactory.getCurrentSession() ), resultType, fetchSize, useCursorFetchIfSupported, isStateless );
+            Session session = sessionFactory.getCurrentSession();
+            return HibernateUtils.streamWithoutStatementTimeout( session,
+                    () -> QueryUtils.stream( queryCreator.apply( session ), resultType, fetchSize, useCursorFetchIfSupported, isStateless ) );
         }
     }
 

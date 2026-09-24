@@ -130,6 +130,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private boolean makeArchiveFiles = true;
 
+    /**
+     * Delete the experiment's other analyses once the new ones are saved.
+     */
+    private boolean deleteOthers = false;
+
     private boolean ignoreFailingSubsets = false;
 
     @Nullable
@@ -226,6 +231,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + "Try to base analysis on previous analysis's choice of statistical model. "
                         + "Multiple subsets can be provided using comma-delimited IDs or by passing the option multiple times." )
                 .get() );
+
+        options.addOption( "deleteOthers", "delete-others", false,
+                "After the new analyses are saved, delete the experiment's other analyses on the same subset factor: "
+                        + "without " + formatOption( options, "subset" ) + ", every other analysis that is not a subset analysis; "
+                        + "with it, every other analysis of that factor's subsets. "
+                        + "Nothing is deleted if the analysis fails or produces no result. "
+                        + "This is incompatible with " + formatOption( options, "nodb" ) + ", -redo,--redo, -redoAnalysis,--redo-analysis and -redoSubset,--redo-subset." );
 
         // filter options
         options.addOption( Option.builder( "filterMinNumberOfCellsPerSample" )
@@ -351,6 +363,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.moderateStatistics = !commandLine.hasOption( "nobayes" );
         this.persist = !commandLine.hasOption( "nodb" );
         this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
+        this.deleteOthers = hasOption( commandLine, "deleteOthers",
+                requires( allOf( toBeUnset( "nodb" ), toBeUnset( "redo" ), toBeUnset( "redoAnalysis" ), toBeUnset( "redoSubset" ) ) ) );
         this.destination = getDataFileOptionValue( commandLine, false, false, true );
         this.filterMinNumberOfCellsPerSample = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerSample" );
         this.filterMinNumberOfCellsPerGene = commandLine.getParsedOptionValue( "filterMinNumberOfCellsPerGene" );
@@ -387,6 +401,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             } else {
                 addWarningObject( ee, "No analysis found to be deleted." );
             }
+            return;
+        }
+
+        // -mdate: skip datasets analysed after the limiting date; noNeedToRun records why
+        if ( getLimitingDate() != null && noNeedToRun( ee, DifferentialExpressionAnalysisEvent.class ) ) {
             return;
         }
 
@@ -435,6 +454,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         config.setAnalysisType( this.type );
         config.setModerateStatistics( this.moderateStatistics );
         config.setPersist( this.persist );
+        config.setDeleteOtherAnalyses( this.deleteOthers );
         config.setMakeArchiveFile( this.persist && this.makeArchiveFiles );
         config.setIgnoreFailingSubsets( this.ignoreFailingSubsets );
         config.setUseWeights( super.eeService.isRNASeq( ee ) );
@@ -465,6 +485,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( this.ignoreBatch ) {
                 factorsToUse.removeIf( ExperimentFactorUtils::isBatchFactor );
             }
+
+            // the DE_Include/DE_Exclude marker selects which samples take part; it is not a biological factor and
+            // must not be counted as one, or a design with two real factors reads as three and is refused below
+            factorsToUse.removeIf( ExperimentFactorUtils::isDeIncludeExcludeFactor );
 
             if ( factorsToUse.isEmpty() ) {
                 throw new RuntimeException( "No suitable factors to analyze found." );
@@ -528,13 +552,26 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         }
 
         Collection<DifferentialExpressionAnalysis> results;
+        String performed;
         if ( factorSelectionMode == FactorSelectionMode.REDO ) {
             results = redoDifferentialExpressionAnalyses( ee, config );
-            addSuccessObject( ee, "Performed " + results.size() + " differential expression analyses based on a previous analyses." );
+            performed = " differential expression analyses based on a previous analyses.";
         } else {
             results = runDifferentialExpressionAnalyses( ee, config );
-            addSuccessObject( ee, "Performed " + results.size() + " differential expression analyses." );
+            performed = " differential expression analyses.";
         }
+
+        // An experiment that produced nothing is not a success to report. The analyzer raises
+        // AllSubSetAnalysesFailedException when no subset yields an analysis, so nothing should reach here empty;
+        // this is the guard at the reporting site, which is where the damage was done. GSE74400 (eid 12822) had
+        // both its subsets skipped, and "Performed 0 differential expression analyses." went out through
+        // addSuccessObject with exit status 0, so a batch runner testing the exit status believed it for hours.
+        if ( results.isEmpty() ) {
+            throw new RuntimeException( "No differential expression analysis was performed for " + ee.getShortName()
+                    + "; see the preceding log for the subsets that were skipped or failed." );
+        }
+
+        addSuccessObject( ee, "Performed " + results.size() + performed );
 
         if ( config.isPersist() ) {
             refreshDeaFromGemmaWeb( ee );

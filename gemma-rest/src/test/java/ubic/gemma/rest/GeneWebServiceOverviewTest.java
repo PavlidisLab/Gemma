@@ -11,6 +11,8 @@
  */
 package ubic.gemma.rest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,9 +22,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
+import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.GeneArg;
 import ubic.gemma.rest.util.args.GeneArgService;
@@ -144,5 +148,63 @@ public class GeneWebServiceOverviewTest {
 
         assertThatThrownBy( () -> webService.getGeneHomologues( geneArg ) )
                 .isInstanceOf( NotFoundException.class );
+    }
+
+    /* ===== serialized payload =====
+     *
+     * The tests above assert on the value object the resource method returns, which is why the
+     * overview endpoint could advertise composite-sequence count, platform count, gene sets,
+     * homologues and GO-term count in its OpenAPI description while @JsonIgnore kept all five off
+     * the wire. These serialize the response with the production ObjectMapper instead. */
+
+    private static final ObjectMapper MAPPER = new JacksonConfig().objectMapper();
+
+    @Test
+    public void overviewPayloadCarriesTheFieldsItAdvertises() throws Exception {
+        GeneValueObject gvo = new GeneValueObject();
+        gvo.setId( 7L );
+        gvo.setOfficialSymbol( "BRCA1" );
+        // what GeneServiceImpl.loadFullyPopulatedValueObject fills in
+        gvo.setCompositeSequenceCount( 42 );
+        gvo.setPlatformCount( 5 );
+        GeneSetValueObject geneSet = new GeneSetValueObject();
+        geneSet.setName( "DNA repair" );
+        gvo.setGeneSets( Collections.singletonList( geneSet ) );
+        GeneValueObject mouseHomolog = new GeneValueObject();
+        mouseHomolog.setOfficialSymbol( "Brca1" );
+        gvo.setHomologues( Collections.singletonList( mouseHomolog ) );
+
+        when( geneArgService.getEntity( any( GeneArg.class ) ) ).thenReturn( gene );
+        when( geneService.loadFullyPopulatedValueObject( 7L ) ).thenReturn( gvo );
+        when( geneService.findGOTerms( 7L ) )
+                .thenReturn( Arrays.asList( new AnnotationValueObject(), new AnnotationValueObject() ) );
+
+        JsonNode data = MAPPER.readTree( MAPPER.writeValueAsString( webService.getGeneOverview( geneArg ) ) )
+                .path( "data" );
+
+        assertThat( data.path( "compositeSequenceCount" ).asInt() ).isEqualTo( 42 );
+        assertThat( data.path( "platformCount" ).asInt() ).isEqualTo( 5 );
+        assertThat( data.path( "numGoTerms" ).asInt() ).isEqualTo( 2 );
+        assertThat( data.path( "geneSets" ).size() ).isEqualTo( 1 );
+        assertThat( data.path( "homologues" ).size() ).isEqualTo( 1 );
+        assertThat( data.path( "homologues" ).get( 0 ).path( "officialSymbol" ).asText() ).isEqualTo( "Brca1" );
+        // homologues is self-referential; serialization only terminates because the nested value
+        // objects carry none of their own. Populating them recursively would loop forever.
+        assertThat( data.path( "homologues" ).get( 0 ).has( "homologues" ) ).isFalse();
+    }
+
+    @Test
+    public void plainGeneValueObjectOmitsTheOverviewOnlyFields() throws Exception {
+        // Every other gene-serving endpoint builds value objects this way. The five fields are
+        // null-initialised and NON_NULL so they stay absent there rather than serializing a
+        // permanent 0 / null that reads as data.
+        JsonNode node = MAPPER.readTree( MAPPER.writeValueAsString( new GeneValueObject( gene ) ) );
+
+        assertThat( node.has( "compositeSequenceCount" ) ).isFalse();
+        assertThat( node.has( "platformCount" ) ).isFalse();
+        assertThat( node.has( "numGoTerms" ) ).isFalse();
+        assertThat( node.has( "geneSets" ) ).isFalse();
+        assertThat( node.has( "homologues" ) ).isFalse();
+        assertThat( node.path( "officialSymbol" ).asText() ).isEqualTo( "BRCA1" );
     }
 }

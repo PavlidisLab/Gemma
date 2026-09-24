@@ -152,6 +152,25 @@ public class HeatmapDataValueObject {
         private Boolean validated;
 
         /**
+         * Stored expression-level rank of this probe's vector, by mean and by max, in [0, 1].
+         * <p>
+         * 🛑 <b>Experiment-scoped, not request-scoped.</b> Both are computed over the whole
+         * experiment when the vectors are processed, and are reported unchanged when a subset
+         * narrows the column axis — so on a subset request the rank describes the full experiment
+         * while the matrix beside it does not. That makes them the right input for "is this probe
+         * generally expressed in this study" and the wrong one for ordering the rows actually
+         * returned; a client wanting the latter should compute it over the columns it received.
+         * <p>
+         * {@code null} on paths that do not carry processed vectors.
+         */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private Double rankByMean;
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private Double rankByMax;
+
+        /**
          * Free-form, gene-shaped annotation bag. Keys are short, client-visible labels; values are
          * primitives the client will display alongside the row: {@link Number} for numeric stats
          * (e.g. {@code logFC}, {@code FDR}, {@code rank}), {@link String} for categorical labels
@@ -196,9 +215,10 @@ public class HeatmapDataValueObject {
     }
 
     /**
-     * Compact gene reference: official symbol + full name + ID. The ID is what the client
-     * uses to build a link to the gene page (e.g. {@code /gene/{geneId}}). Every field is
-     * individually optional — producers ship whatever they have.
+     * Compact gene reference: official symbol + full name + Gemma ID + NCBI gene ID. The Gemma ID
+     * is what the client uses to build a link to the gene page (e.g. {@code /gene/{geneId}}); the
+     * NCBI ID is what it uses to link out (e.g. NCBI Gene, or any external resource keyed by
+     * Entrez ID). Every field is individually optional — producers ship whatever they have.
      */
     @Getter
     @Setter
@@ -215,14 +235,20 @@ public class HeatmapDataValueObject {
         @Nullable
         @JsonInclude(JsonInclude.Include.NON_NULL)
         private String name;
+        /** NCBI (Entrez) gene ID. Null for the genes Gemma tracks without one. */
+        @Nullable
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private Integer ncbiId;
 
         public GeneRef() {
         }
 
-        public GeneRef( @Nullable Long id, @Nullable String officialSymbol, @Nullable String name ) {
+        public GeneRef( @Nullable Long id, @Nullable String officialSymbol, @Nullable String name,
+                @Nullable Integer ncbiId ) {
             this.id = id;
             this.officialSymbol = officialSymbol;
             this.name = name;
+            this.ncbiId = ncbiId;
         }
     }
 
