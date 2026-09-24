@@ -141,6 +141,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private Integer numberOfCellsByDesignElements;
 
     // if it was removed as an outlier
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean outlier = false;
     /**
      * Whether the median-correlation algorithm flags this assay as a possible outlier.
@@ -156,6 +157,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     @Schema(description = "The median-correlation algorithm's guess at whether the sample is an outlier, which is not the same as a curator having flagged it. Null unless the request asked for it with `includePredictedOutliers=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
     private Boolean predictedOutlier;
     // to hold state change, initialized as this.outlier
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean userFlaggedOutlier = false;
 
     /**

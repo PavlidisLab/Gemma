@@ -20,6 +20,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Setter;
 import lombok.ToString;
 import ubic.gemma.model.annotations.WithheldFromApi;
@@ -40,6 +41,8 @@ import java.util.Date;
 @ToString
 public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+
     private double publicQualityScore;
 
     /*
@@ -47,31 +50,45 @@ public class GeeqValueObject extends IdentifiableValueObject<Geeq> {
      */
 
     @JsonProperty("qScoreOutliers")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScoreOutliers;
     @JsonProperty("qScoreSampleMeanCorrelation")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScoreSampleMeanCorrelation;
     @JsonProperty("qScoreSampleMedianCorrelation")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScoreSampleMedianCorrelation;
     @JsonProperty("qScoreSampleCorrelationVariance")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScoreSampleCorrelationVariance;
     @JsonProperty("qScorePlatformsTech")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScorePlatformsTech;
     @JsonProperty("qScoreReplicates")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScoreReplicates;
     @JsonProperty("qScoreBatchInfo")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScoreBatchInfo;
     @JsonProperty("qScorePublicBatchEffect")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScorePublicBatchEffect;
     @JsonProperty("qScorePublicBatchConfound")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private double qScorePublicBatchConfound;
 
     /*
      * Problem/info flags
      */
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+
     private boolean noVectors;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private byte corrMatIssues;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private byte replicatesIssues;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean batchCorrected;
 
     /**

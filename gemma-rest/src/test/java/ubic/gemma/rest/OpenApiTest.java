@@ -1428,4 +1428,46 @@ public class OpenApiTest extends BaseTest5 implements InitializingBean {
                         + " x-internal tag covers them: %s", unmarked )
                 .isEmpty();
     }
+
+    /**
+     * A property cannot be both required and nullable without saying nothing.
+     *
+     * <p>{@code required} means the key is always present; {@code nullable} means its value may be
+     * null. Both together is legal OpenAPI and occasionally meaningful, but in this specification it
+     * is almost always a mistake — a field marked required because it "is always set" while also
+     * carrying {@code @Nullable} means one of the two annotations is wrong about the wire.
+     *
+     * <p>The required declarations here are the ones that can be proved rather than judged: a Java
+     * primitive cannot be null and Jackson always serializes it, so the key is always present. That
+     * rule is deliberately not applied wholesale — {@code required} is direction-agnostic in OpenAPI
+     * 3.0, and {@code ExperimentalDesignValueObject} and everything under it is accepted as a request
+     * body by {@code PUT /datasets/{dataset}/design}, where marking a field required would start
+     * demanding it from clients.
+     */
+    @Test
+    public void testNothingIsBothRequiredAndNullable() {
+        List<String> offenders = new ArrayList<>();
+        int inspected = 0;
+        for ( Map.Entry<String, Schema> entry : spec.getComponents().getSchemas().entrySet() ) {
+            Schema<?> schema = entry.getValue();
+            if ( schema.getRequired() == null || schema.getProperties() == null ) {
+                continue;
+            }
+            for ( String name : schema.getRequired() ) {
+                inspected++;
+                Schema<?> property = ( Schema<?> ) schema.getProperties().get( name );
+                if ( property != null && Boolean.TRUE.equals( property.getNullable() ) ) {
+                    offenders.add( entry.getKey() + "." + name );
+                }
+            }
+        }
+
+        assertThat( inspected )
+                .withFailMessage( "expected many required properties; inspected only %d", inspected )
+                .isGreaterThan( 100 );
+        assertThat( offenders )
+                .withFailMessage( "properties declared both required and nullable — one of the two is wrong"
+                        + " about the wire: %s", offenders )
+                .isEmpty();
+    }
 }
