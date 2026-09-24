@@ -22,9 +22,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.*;
@@ -51,6 +53,8 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
     private ArrayDesignService arrayDesignService;
     @Autowired
     private BioMaterialService bioMaterialService;
+    @Autowired
+    private BioSequenceService bioSequenceService;
     @Autowired
     private SessionFactory sessionFactory;
 
@@ -147,6 +151,27 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
                 .satisfies( v -> assertThat( v.getDataAsDoubles() ).containsOnly( Double.NaN ) );
     }
 
+    /**
+     * The sample-correlation matrix is built from what {@code readProcessedDataInputs} returns, with no
+     * transaction open, and {@code AffyProbeNameFilter} then reads each design element's sequence name. The
+     * sequences must leave the read initialized: GSE96826 (ee 15112) failed with a
+     * {@code LazyInitializationException} on a {@link BioSequence} proxy at exactly that point.
+     */
+    @Test
+    public void testReadProcessedDataInputsInitializesDesignElementSequences() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        setSeed( 123L );
+        double[][] matrix = randomExpressionMatrix( NUM_PROBES, 4, new LogNormalDistribution( 9, 1 ) );
+        ExpressionExperiment ee = getTestExpressionExperimentForRawExpressionMatrix( matrix, ScaleType.LINEAR, false, true );
+        ComputedProcessedData computed = processedExpressionDataVectorCreationHelperService
+                .readProcessedDataInputs( ee, false, new ProcessedExpressionDataVectorCreationSummary(), false );
+        assertThat( computed.getData().keySet() )
+                .hasSize( NUM_PROBES )
+                .allSatisfy( cs -> {
+                    assertThat( Hibernate.isInitialized( cs.getBiologicalCharacteristic() ) ).isTrue();
+                    assertThat( cs.getBiologicalCharacteristic().getName() ).startsWith( "seq" );
+                } );
+    }
+
     @Test
     public void testThaw() throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
         setSeed( 123L );
@@ -237,6 +262,10 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
 
 
     private ExpressionExperiment getTestExpressionExperimentForRawExpressionMatrix( double[][] matrix, ScaleType scaleType, boolean isRatio ) {
+        return getTestExpressionExperimentForRawExpressionMatrix( matrix, scaleType, isRatio, false );
+    }
+
+    private ExpressionExperiment getTestExpressionExperimentForRawExpressionMatrix( double[][] matrix, ScaleType scaleType, boolean isRatio, boolean withSequences ) {
         ExpressionExperiment ee = new ExpressionExperiment();
 
         Taxon taxon = new Taxon();
@@ -251,6 +280,12 @@ public class ProcessedExpressionDataVectorCreationHelperServiceTest extends Base
             CompositeSequence cs = new CompositeSequence();
             cs.setName( "cs" + i );
             cs.setArrayDesign( ad );
+            if ( withSequences ) {
+                BioSequence bs = new BioSequence();
+                bs.setName( "seq" + i );
+                bs.setTaxon( taxon );
+                cs.setBiologicalCharacteristic( bioSequenceService.create( bs ) );
+            }
             ad.getCompositeSequences().add( cs );
             probes.add( cs );
         }

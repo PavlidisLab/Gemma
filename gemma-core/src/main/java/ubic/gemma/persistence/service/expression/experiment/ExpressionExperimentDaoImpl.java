@@ -5238,9 +5238,15 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment ee ) {
+        // Same fetches as getProcessedDataVectors. The unmasked matrix built from these vectors is filtered with
+        // no transaction open, and AffyProbeNameFilter reads each design element's sequence name: GSE96826
+        // (ee 15112) failed there with a LazyInitializationException on the BioSequence proxy.
         //noinspection unchecked
         return getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from RawExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "left join fetch cs.biologicalCharacteristic "
                                 + "join dedv.quantitationType q "
                                 + "where q.isPreferred = true and dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
