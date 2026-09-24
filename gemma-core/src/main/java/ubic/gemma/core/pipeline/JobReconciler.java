@@ -79,8 +79,15 @@ public class JobReconciler {
             return;
         }
         try {
-            JobSnapshot snap = scheduler.poll(
+            JobSnapshot snap = scheduler.poll( job.getId(),
                     new SchedulerHandle( job.getSchedulerKind(), job.getSchedulerHandle() ) );
+            if ( job.getState() == JobState.CANCELLING
+                    && ( snap == null || snap.getState() == JobState.FAILED || snap.getState() == JobState.CANCELLED ) ) {
+                // We asked for this: a cancelled run exits non-zero or vanishes from Slurm. Only a run that
+                // managed to finish first (DONE) keeps its own outcome.
+                pipelineJobBatchService.recordEvent( job.getId(), "killed", null );
+                return;
+            }
             if ( snap == null ) {
                 log.info( "scheduler doesn't recognize job {} (handle {}); marking FAILED",
                         job.getId(), job.getSchedulerHandle() );
@@ -90,9 +97,13 @@ public class JobReconciler {
             }
             JobState observed = snap.getState();
             if ( observed == job.getState() ) {
-                // No drift — the job is simply quiet. Bump lastEventAt so we
-                // don't re-poll on the next tick.
-                pipelineJobBatchService.recordEvent( job.getId(), "heartbeat", null );
+                // No drift. Record the scheduler's progress if it reported any (snapshot only, no event
+                // row), else a heartbeat; either bumps lastEventAt so we don't re-poll on the next tick.
+                if ( snap.getMessage() != null ) {
+                    pipelineJobBatchService.recordEvent( job.getId(), "progress", snap.getMessage() );
+                } else {
+                    pipelineJobBatchService.recordEvent( job.getId(), "heartbeat", null );
+                }
                 return;
             }
             // Map the observed state to a synthetic event the service understands.

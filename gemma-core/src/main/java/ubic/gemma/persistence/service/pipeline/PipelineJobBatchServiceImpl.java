@@ -90,6 +90,11 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    /** Event kinds that end a job — see {@link #recordEvent(PipelineJob, String, String)}. */
+    private static final java.util.Set<String> TERMINAL_KINDS = java.util.Set.of( "completed", "error", "killed" );
+
+    private static final EnumSet<JobState> TERMINAL_STATES = EnumSet.of( JobState.DONE, JobState.FAILED, JobState.CANCELLED );
+
     @Autowired
     private PipelineJobBatchDao batchDao;
 
@@ -299,6 +304,18 @@ public class PipelineJobBatchServiceImpl implements PipelineJobBatchService {
     }
 
     private PipelineJobEvent recordEvent( PipelineJob job, String kind, @Nullable String payloadJson ) {
+        if ( TERMINAL_KINDS.contains( kind ) && TERMINAL_STATES.contains( job.getState() ) ) {
+            // Two reporters can see the same ending (the reconciler polling the work-dir, an opt-in weblog,
+            // a retried callback). The first one wins; repeating it would write a second audit event on
+            // the experiment and could open a second failure ticket.
+            log.info( "job {} is already {}; ignoring a later '{}' event", job.getId(), job.getState(), kind );
+            PipelineJobEvent ignored = new PipelineJobEvent();
+            ignored.setJob( job );
+            ignored.setOccurredAt( new Date() );
+            ignored.setKind( kind );
+            ignored.setPayloadJson( payloadJson );
+            return ignored;
+        }
         Date now = new Date();
         PipelineJobEvent event = new PipelineJobEvent();
         event.setJob( job );

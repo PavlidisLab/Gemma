@@ -22,6 +22,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.curation.Ticket;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetType;
 import ubic.gemma.model.common.auditAndSecurity.curation.TicketType;
+import ubic.gemma.model.common.auditAndSecurity.curation.TicketValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.BatchRollup;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
@@ -92,6 +93,29 @@ class PipelineJobAnonymousCallbackIT extends BaseSpringContextTest5 {
                 .as( "the failure ticket must open even though the callback carried no user" )
                 .extracting( Ticket::getType )
                 .containsExactly( TicketType.PIPELINE_FAILED );
+    }
+
+    @Test
+    void repeatedTerminalEvent_isIgnored() {
+        // The reconciler and a retried or opt-in callback can both report the same ending. Only the first
+        // may act: a second would add another comment to the failure ticket (and another audit event).
+        User submitter = userManager.getCurrentUser();
+        ExpressionExperiment ee = getTestPersistentBasicExpressionExperiment();
+        control.setScenario( ee.getId(), silent() );
+        PipelineJobBatch batch = pipelineJobBatchService.submit(
+                "sc-annotation", Collections.singletonList( ee ), submitter, null, "duplicate terminal IT" );
+        Long jobId = batch.getJobs().iterator().next().getId();
+
+        pipelineJobBatchService.recordEvent( jobId, "error", "{\"failureClass\":\"PERMANENT\",\"message\":\"first report\"}" );
+        pipelineJobBatchService.recordEvent( jobId, "error", "{\"failureClass\":\"PERMANENT\",\"message\":\"second report\"}" );
+        pipelineJobBatchService.recordEvent( jobId, "completed", null );
+
+        assertThat( pipelineJobBatchService.computeRollup( batch.getId() ).failed ).isEqualTo( 1 );
+        List<Ticket> open = ticketService.findOpenForTarget( TicketTargetType.EXPRESSION_EXPERIMENT, ee.getId() );
+        assertThat( open ).hasSize( 1 );
+        TicketValueObject vo = ticketService.loadValueObject( open.get( 0 ).getId(), true );
+        assertThat( vo.getEvents() ).anySatisfy( e -> assertThat( e.getPayload() ).contains( "first report" ) );
+        assertThat( vo.getEvents() ).noneSatisfy( e -> assertThat( e.getPayload() ).contains( "second report" ) );
     }
 
     /** POLL + STALL: the mock emits nothing by itself, so every event comes from the test's callback. */

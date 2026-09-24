@@ -86,17 +86,17 @@ class ScriptedMockSchedulerTest {
         SchedulerHandle h = scheduler.submit( req( 300L, 3L ) );
 
         // Before the stage is due: QUEUED.
-        assertThat( scheduler.poll( h ).getState() ).isEqualTo( JobState.QUEUED );
+        assertThat( scheduler.poll( 1L, h ).getState() ).isEqualTo( JobState.QUEUED );
 
         // A POLL scenario is surfaced through poll(), never pushed.
         scheduler.advance( 1000 );
         verify( service, never() ).recordEvent( any(), any(), any() );
-        assertThat( scheduler.poll( h ).getState() ).isEqualTo( JobState.RUNNING );
+        assertThat( scheduler.poll( 1L, h ).getState() ).isEqualTo( JobState.RUNNING );
     }
 
     @Test
     void poll_unknownHandleIsNull() {
-        assertThat( scheduler.poll( new SchedulerHandle( ubic.gemma.model.pipeline.SchedulerKind.MOCK, "nope" ) ) )
+        assertThat( scheduler.poll( 1L, new SchedulerHandle( ubic.gemma.model.pipeline.SchedulerKind.MOCK, "nope" ) ) )
                 .isNull();
     }
 
@@ -124,7 +124,7 @@ class ScriptedMockSchedulerTest {
         SchedulerHandle h = scheduler.submit( req( 600L, 6L ) );
         scheduler.reset();
         assertThat( scheduler.listScenarios() ).isEmpty();
-        assertThat( scheduler.poll( h ) ).isNull();
+        assertThat( scheduler.poll( 1L, h ) ).isNull();
     }
 
     @Test

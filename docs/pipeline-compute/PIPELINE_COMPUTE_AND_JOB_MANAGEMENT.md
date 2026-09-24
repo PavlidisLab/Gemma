@@ -1088,7 +1088,11 @@ build, which existing code to extend, and its acceptance signal.
   pages `head.out` (Nextflow's console + error report); `readArtifact` serves those four files only,
   whole, up to 50 MB. The SPI's `readLog`/`readArtifact` now take the Gemma job id, since the work-dir
   is keyed by it and the Slurm handle can't recover it.
-  **Remaining:** a poll fallback past `scontrol`'s ~300 s window, and the end-to-end run (blocked on the frink firewall for dev ports). Cluster/Rachel
+  **Work-dir as source of truth BUILT (2026-09-23):** the wrapper writes `exitcode`; `poll` reads it,
+  `trace.txt` progress, and Slurm only once files go quiet; the weblog is opt-in and never decides the
+  ending; duplicate terminal events are ignored. The dev run no longer needs a firewall change. See
+  `NEXTFLOW_DISPATCH_RESOLUTIONS.md` §Job state from the work-dir.
+  **Remaining:** the end-to-end run (blocked on the frink firewall for dev ports). Cluster/Rachel
   items: canonical checkout path (O5, point at the cached `PREPARE_CACHE`
   version), a partition/QOS for long-lived head jobs (O4). *(O9 reference-sharing
   resolved 2026-07-16 with Rachel — a cached `PREPARE_CACHE` means per-EE runs

@@ -134,7 +134,7 @@ public class ScriptedMockScheduler implements PipelineScheduler, MockSchedulerCo
     }
 
     @Override
-    public JobSnapshot poll( SchedulerHandle handle ) {
+    public JobSnapshot poll( Long gemmaJobId, SchedulerHandle handle ) {
         MockJob j = jobs.get( handle.getId() );
         if ( j == null ) {
             return null;

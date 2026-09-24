@@ -121,13 +121,13 @@ public class InternalPipelineWebServiceTest extends BaseJerseyTest5 {
     @Test
     public void jobTokenInPath_isAcceptedWithoutAHeader() {
         // What a real run sends: -with-weblog can't set headers, so the only credential is the path.
-        when( pipelineJobBatchService.recordEvent( eq( 7L ), eq( "completed" ), any() ) )
+        when( pipelineJobBatchService.recordEvent( eq( 7L ), eq( "progress" ), any() ) )
                 .thenReturn( new PipelineJobEvent() );
-        String body = "{\"event\":\"completed\",\"runName\":\"x\","
-                + "\"metadata\":{\"workflow\":{\"success\":true,\"duration\":123}}}";
+        String body = "{\"event\":\"process_completed\",\"trace\":{\"process\":\"RUN\",\"tag\":\"beta\","
+                + "\"status\":\"COMPLETED\",\"exit\":0}}";
         assertThat( postWeblogWithJobToken( 7L, PipelineCallbackTokens.forJob( TOKEN, 7L ), body ) )
                 .hasStatus( Response.Status.OK );
-        verify( pipelineJobBatchService ).recordEvent( eq( 7L ), eq( "completed" ), any() );
+        verify( pipelineJobBatchService ).recordEvent( eq( 7L ), eq( "progress" ), any() );
     }
 
     @Test
@@ -146,13 +146,15 @@ public class InternalPipelineWebServiceTest extends BaseJerseyTest5 {
     }
 
     @Test
-    public void completedSuccess_recordsCompletedEvent() {
-        when( pipelineJobBatchService.recordEvent( eq( 7L ), eq( "completed" ), any() ) )
-                .thenReturn( new PipelineJobEvent() );
-        String body = "{\"event\":\"completed\",\"runName\":\"x\","
-                + "\"metadata\":{\"workflow\":{\"success\":true,\"duration\":123}}}";
-        assertThat( postWeblog( 7L, "Bearer " + TOKEN, body ) ).hasStatus( Response.Status.OK );
-        verify( pipelineJobBatchService ).recordEvent( eq( 7L ), eq( "completed" ), any() );
+    public void workflowCompleted_isAcknowledgedButNotRecorded() {
+        // How a run ended comes from its work-dir (exitcode, via the reconciler), not the weblog, so the
+        // two can't disagree about it.
+        for ( String success : new String[] { "true", "false" } ) {
+            String body = "{\"event\":\"completed\",\"runName\":\"x\","
+                    + "\"metadata\":{\"workflow\":{\"success\":" + success + ",\"duration\":123,\"errorReport\":\"boom\"}}}";
+            assertThat( postWeblog( 7L, "Bearer " + TOKEN, body ) ).hasStatus( Response.Status.NO_CONTENT );
+        }
+        verify( pipelineJobBatchService, never() ).recordEvent( any(), any(), any() );
     }
 
     @Test

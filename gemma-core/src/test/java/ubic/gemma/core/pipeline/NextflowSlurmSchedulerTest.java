@@ -24,10 +24,12 @@ import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,7 +39,7 @@ import static org.mockito.Mockito.when;
 /**
  * Unit test for {@link NextflowSlurmScheduler} with a fake {@link SshCommandRunner} (no cluster) and a
  * mocked EE lookup. Work-dir files are written to a real {@link TempDir}. Covers submit (files + sbatch
- * + handle), poll (squeue → sacct fallback → unknown), cancel, and the error paths.
+ * + handle), poll (work-dir files first, Slurm when they go quiet), logs/artifacts, cancel, and the error paths.
  */
 class NextflowSlurmSchedulerTest {
 
@@ -80,16 +82,16 @@ class NextflowSlurmSchedulerTest {
         eeService = mock( ExpressionExperimentService.class );
         ssh = new FakeSsh();
         scheduler = new NextflowSlurmScheduler( eeService, ssh,
-                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/", SECRET );
+                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/", SECRET, 10 );
         ExpressionExperiment ee = mock( ExpressionExperiment.class );
         when( ee.getShortName() ).thenReturn( "GSE124952" );
         when( eeService.load( 55L ) ).thenReturn( ee );
     }
 
     @Test
-    void submit_withoutCallbackSecret_throwsBeforeSubmitting() {
+    void submit_withWeblogButNoCallbackSecret_throwsBeforeSubmitting() {
         NextflowSlurmScheduler unconfigured = new NextflowSlurmScheduler( eeService, ssh,
-                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/", "" );
+                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "http://gemma:8080/", "", 10 );
         assertThatThrownBy( () -> unconfigured.submit( req( "{\"organism\":\"hs\"}" ) ) )
                 .isInstanceOf( PipelineSchedulerException.class )
                 .hasMessageContaining( "gemma.pipeline.callback.token" );
@@ -227,28 +229,116 @@ class NextflowSlurmSchedulerTest {
                 .contains( "-params-file /pipe/sc-annotation/params.mm.json" );
     }
 
-    @Test
-    void poll_runningFromSqueue() throws Exception {
-        ssh.on( "squeue", 0, "RUNNING\n", "" );
-        JobSnapshot snap = scheduler.poll( new SchedulerHandle( SchedulerKind.NEXTFLOW, "42" ) );
-        assertThat( snap ).isNotNull();
-        assertThat( snap.getState() ).isEqualTo( JobState.RUNNING );
+    private static final SchedulerHandle HEAD = new SchedulerHandle( SchedulerKind.NEXTFLOW, "42" );
+
+    private Path jobDir() throws Exception {
+        return Files.createDirectories( workDirBase.resolve( "7" ) );
+    }
+
+    /** Backdate every file in the job's work-dir, so poll treats the run as quiet. */
+    private void quiet( Path dir ) throws Exception {
+        FileTime old = FileTime.fromMillis( System.currentTimeMillis() - TimeUnit.MINUTES.toMillis( 30 ) );
+        try ( var files = Files.list( dir ) ) {
+            for ( Path f : files.toList() ) {
+                Files.setLastModifiedTime( f, old );
+            }
+        }
+    }
+
+    private long sshCalls( String verb ) {
+        return ssh.calls.stream().filter( c -> c.get( 0 ).equals( verb ) ).count();
     }
 
     @Test
-    void poll_fallsBackToScontrolWhenSqueueEmpty() throws Exception {
-        ssh.on( "squeue", 0, "", "" );        // gone from the queue
-        ssh.on( "scontrol", 0, "JobId=42 JobState=COMPLETED Reason=None", "" );
-        JobSnapshot snap = scheduler.poll( new SchedulerHandle( SchedulerKind.NEXTFLOW, "42" ) );
-        assertThat( snap ).isNotNull();
+    void poll_exitCodeZero_isDoneWithoutAskingSlurm() throws Exception {
+        Files.writeString( jobDir().resolve( "exitcode" ), "0\n" );
+        JobSnapshot snap = scheduler.poll( 7L, HEAD );
         assertThat( snap.getState() ).isEqualTo( JobState.DONE );
+        assertThat( ssh.calls ).isEmpty();
     }
 
     @Test
-    void poll_unknownToBothReturnsNull() throws Exception {
+    void poll_nonZeroExitCode_isFailedWithTheEndOfHeadOutput() throws Exception {
+        Path dir = jobDir();
+        Files.writeString( dir.resolve( "head.out" ), "executor > slurm\nERROR ~ Error executing process > 'CLASSIFY (GSE1)'\n" );
+        Files.writeString( dir.resolve( "exitcode" ), "1\n" );
+        JobSnapshot snap = scheduler.poll( 7L, HEAD );
+        assertThat( snap.getState() ).isEqualTo( JobState.FAILED );
+        assertThat( snap.getMessage() )
+                .contains( "\"failureClass\":\"UNKNOWN\"" )
+                .contains( "\"exitCode\":1" )
+                .contains( "Error executing process > 'CLASSIFY (GSE1)'" );
+        assertThat( ssh.calls ).isEmpty();
+    }
+
+    @Test
+    void poll_activeRun_isRunningWithTraceProgressAndNoSsh() throws Exception {
+        Path dir = jobDir();
+        Files.writeString( dir.resolve( "head.out" ), "N E X T F L O W\n" );
+        Files.writeString( dir.resolve( "trace.txt" ), "task_id\tname\tstatus\n1\tLOAD_CTA (GSE1)\tCOMPLETED\n" );
+        JobSnapshot snap = scheduler.poll( 7L, HEAD );
+        assertThat( snap.getState() ).isEqualTo( JobState.RUNNING );
+        assertThat( snap.getMessage() ).contains( "\"stage\":\"LOAD_CTA (GSE1)\"" ).contains( "\"tasksCompleted\":1" );
+        assertThat( ssh.calls ).isEmpty();
+    }
+
+    @Test
+    void poll_submittedButNotStarted_isQueued() throws Exception {
+        Files.writeString( jobDir().resolve( "launch.sh" ), "#!/bin/bash\n" ); // written at submit, just now
+        assertThat( scheduler.poll( 7L, HEAD ).getState() ).isEqualTo( JobState.QUEUED );
+        assertThat( ssh.calls ).isEmpty();
+    }
+
+    @Test
+    void poll_quietRun_asksSlurmOncePerIdleWindow() throws Exception {
+        Path dir = jobDir();
+        Files.writeString( dir.resolve( "head.out" ), "N E X T F L O W\n" );
+        quiet( dir );
+        ssh.on( "squeue", 0, "RUNNING\n", "" );
+
+        assertThat( scheduler.poll( 7L, HEAD ).getState() ).isEqualTo( JobState.RUNNING );
+        assertThat( scheduler.poll( 7L, HEAD ).getState() ).isEqualTo( JobState.RUNNING );
+        assertThat( sshCalls( "squeue" ) ).as( "the second poll, inside the window, uses the files" ).isEqualTo( 1 );
+    }
+
+    @Test
+    void poll_slurmSaysEndedButNoExitCodeYet_keepsWaiting() throws Exception {
+        // NFS may not show a just-written exitcode for up to a minute: don't call it failed yet.
+        Path dir = jobDir();
+        Files.writeString( dir.resolve( "head.out" ), "N E X T F L O W\n" );
+        quiet( dir );
+        ssh.on( "squeue", 0, "", "" );
+        ssh.on( "scontrol", 0, "JobId=42 JobState=COMPLETED Reason=None", "" );
+        assertThat( scheduler.poll( 7L, HEAD ).getState() ).isEqualTo( JobState.RUNNING );
+    }
+
+    @Test
+    void poll_cancelledWhilePending_isCancelled() throws Exception {
+        Path dir = jobDir();
+        Files.writeString( dir.resolve( "launch.sh" ), "#!/bin/bash\n" );
+        quiet( dir );
+        ssh.on( "squeue", 0, "", "" );
+        ssh.on( "scontrol", 0, "JobId=42 JobState=CANCELLED Reason=None", "" );
+        assertThat( scheduler.poll( 7L, HEAD ).getState() ).isEqualTo( JobState.CANCELLED );
+    }
+
+    @Test
+    void poll_noExitCodeAndUnknownToSlurm_isNull() throws Exception {
+        Path dir = jobDir();
+        Files.writeString( dir.resolve( "head.out" ), "N E X T F L O W\n" );
+        quiet( dir );
         ssh.on( "squeue", 0, "", "" );
         ssh.on( "scontrol", 1, "", "slurm_load_jobs error: Invalid job id specified" );
-        assertThat( scheduler.poll( new SchedulerHandle( SchedulerKind.NEXTFLOW, "42" ) ) ).isNull();
+        assertThat( scheduler.poll( 7L, HEAD ) ).isNull();
+    }
+
+    @Test
+    void submit_withoutAWeblogUrl_needsNoSecretAndOmitsTheFlag() throws Exception {
+        NextflowSlurmScheduler noWeblog = new NextflowSlurmScheduler( eeService, ssh,
+                "/pipe/sc-annotation", workDirBase.toString(), "conda", "nextflow", "", "", 10 );
+        ssh.on( "sbatch", 0, "98765\n", "" );
+        noWeblog.submit( req( "{\"organism\":\"hs\"}" ) );
+        assertThat( Files.readString( workDirBase.resolve( "7" ).resolve( "launch.sh" ) ) ).doesNotContain( "-with-weblog" );
     }
 
     @Test

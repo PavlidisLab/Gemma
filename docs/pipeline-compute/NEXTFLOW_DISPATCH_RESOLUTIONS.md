@@ -169,6 +169,30 @@ off the mount (later), and the end-to-end cluster run.
 
 ---
 
+## Job state from the work-dir; weblog optional (2026-09-23)
+
+**The work-dir is the source of truth.** The wrapper writes `exitcode` (via a temp file + rename) when
+`nextflow run` exits; a `TERM` trap keeps it alive through `scancel` so the code is still written.
+`NextflowSlurmScheduler.poll` reads, in order: `exitcode` (0 → DONE, else FAILED with the tail of
+`head.out`, `failureClass` UNKNOWN); while files are changing, QUEUED before Slurm creates `head.out` and
+RUNNING after, with progress from `trace.txt`; once the files have been quiet for
+`slurmCheckIdleMinutes` (10), `squeue`/`scontrol` over SSH, at most once per window per job. Slurm
+reporting an ended job with no `exitcode` visible is treated as still running (NFS can hide a new file
+for up to a minute); a head job killed outright becomes terminal-unknown once `scontrol` forgets it,
+~300 s later. The reconciler now polls every minute (`staleMinutes` 1) and records `trace.txt` progress
+as snapshot-only `progress` events. This also closes the gap where a lost final weblog event left the
+job unresolved.
+
+**Weblog is opt-in.** Gemma adds `-with-weblog` only when `gemma.pipeline.nextflow.weblogBaseUrl` is
+set (the pipeline itself configures none). When on, it contributes live progress only: its terminal
+events are acknowledged and dropped, so the ending always comes from `exitcode`. `recordEvent` also
+ignores a terminal event for a job that has already ended, so no reporter can double-write the EE
+audit event or the failure ticket. Firewall access from compute nodes is therefore no longer needed
+for a dev run.
+
+**Cancel.** A `CANCELLING` job whose poll comes back FAILED, CANCELLED or unknown is recorded as
+`killed`; one that finished first (DONE) keeps its result.
+
 ## Callback authentication & dev configuration (2026-09-23)
 
 **Weblog auth.** `-with-weblog <url>` cannot send an `Authorization` header, so the header-checked
@@ -189,14 +213,14 @@ before this, a terminal event failed with `AccessDenied` writing the EE audit ev
 
 ```properties
 # plus the Spring profiles scheduler-nextflow and scheduler
-gemma.pipeline.callback.token=<long random string; keep it out of the repo>
 gemma.pipeline.registry=sc-annotation
 gemma.pipeline.nextflow.submitHost=scratchy.msl.ubc.ca
 gemma.pipeline.nextflow.submitUser=<your account until O1 is settled>
 gemma.pipeline.nextflow.checkoutDir=/space/grp/Pipelines/sc-annotation-pipeline
 gemma.pipeline.nextflow.executable=/space/opt/bin/nextflow
-# must be reachable from compute nodes: frink's firewall only admits 8080 (R1)
-gemma.pipeline.nextflow.weblogBaseUrl=http://frink.msl.ubc.ca:8080
+# optional live feed; must be reachable from compute nodes (frink admits only 8080, R1)
+#gemma.pipeline.nextflow.weblogBaseUrl=http://frink.msl.ubc.ca:8080
+#gemma.pipeline.callback.token=<long random string; keep it out of the repo>
 ```
 
 `gemma.appdata.home` must resolve to the same path on frink and the cluster (dev frink:

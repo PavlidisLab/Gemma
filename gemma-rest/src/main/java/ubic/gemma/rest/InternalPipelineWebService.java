@@ -75,6 +75,9 @@ public class InternalPipelineWebService {
     @Value("${gemma.pipeline.callback.token:}")
     private String expectedToken;
 
+    /** Terminal kinds the weblog doesn't get to decide — see {@link #postWeblog}. */
+    private static final java.util.Set<String> WEBLOG_IGNORED_KINDS = java.util.Set.of( "completed", "error", "killed" );
+
     /** Stateless; a vanilla-mapper translator is fine (no configured (de)serializers needed). */
     private final NextflowWeblogTranslator weblogTranslator = new NextflowWeblogTranslator();
 
@@ -142,6 +145,12 @@ public class InternalPipelineWebService {
             return Response.noContent().build();
         }
         TranslatedEvent ev = translated.get();
+        // The weblog is an opt-in live feed; how a run ended is read from its work-dir (the wrapper's
+        // exitcode file, via the reconciler), which survives Gemma being down mid-run. Taking the ending
+        // from here as well would give one job two competing outcomes.
+        if ( WEBLOG_IGNORED_KINDS.contains( ev.getKind() ) ) {
+            return Response.noContent().build();
+        }
         PipelineJobEvent event = pipelineJobBatchService.recordEvent( jobId, ev.getKind(), ev.getPayloadJson() );
         return Response.ok( respond( event ) ).build();
     }
