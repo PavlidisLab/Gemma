@@ -35,6 +35,17 @@ public class NextflowSlurmCommandBuilder {
     /** nf-core samplesheet header (assets/schema_input.json): {@code sample,study_name,study_path}. */
     private static final String SAMPLESHEET_HEADER = "sample,study_name,study_path";
 
+    /**
+     * Files a run leaves at the top of its work-dir. The head job runs with the work-dir as its working
+     * directory ({@link #sbatchCommand}), so Nextflow's own {@code .nextflow.log} (and the
+     * {@code .nextflow/} cache {@code -resume} reads) land there too, instead of in the SSH account's
+     * home. Gemma serves them off the shared mount ({@link NextflowSlurmScheduler#readLog}).
+     */
+    public static final String HEAD_OUTPUT = "head.out";
+    public static final String NEXTFLOW_LOG = ".nextflow.log";
+    public static final String TRACE = "trace.txt";
+    public static final String REPORT = "report.html";
+
     /** Extracts {@code JobState=<STATE>} from {@code scontrol show job} output. */
     private static final Pattern JOB_STATE = Pattern.compile( "JobState=([A-Z_]+)" );
 
@@ -87,16 +98,24 @@ public class NextflowSlurmCommandBuilder {
                 + " --input " + samplesheetPath
                 + " -process.executor slurm"
                 + " -with-weblog " + weblogUrl
-                + " -with-trace"
+                + " -with-trace " + TRACE
+                + " -with-report " + REPORT
                 + " -resume"
                 + " -work-dir " + workDir
                 + "\n";
     }
 
-    /** {@code sbatch --parsable <script>} — {@code --parsable} makes stdout just the head-job id. */
-    public List<String> sbatchCommand( String scriptPath ) {
+    /**
+     * {@code sbatch --parsable --chdir <workDir> --output <workDir>/head.out <script>}. {@code --parsable}
+     * makes stdout just the head-job id; {@code --chdir} makes the work-dir Nextflow's launch directory;
+     * {@code --output} puts the head job's stdout/stderr (Nextflow's console, including its error
+     * report) next to them. Without the last two, Slurm writes to the directory {@code sbatch} was
+     * called from — the SSH account's home.
+     */
+    public List<String> sbatchCommand( String scriptPath, String workDir ) {
         require( scriptPath, "scriptPath" );
-        return List.of( "sbatch", "--parsable", scriptPath );
+        require( workDir, "workDir" );
+        return List.of( "sbatch", "--parsable", "--chdir", workDir, "--output", workDir + "/" + HEAD_OUTPUT, scriptPath );
     }
 
     /** {@code squeue -j <id> -h -o %T} — prints the long state name, or nothing once the job leaves the queue. */
