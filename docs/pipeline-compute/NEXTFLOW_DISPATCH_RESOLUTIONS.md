@@ -169,6 +169,41 @@ off the mount (later), and the end-to-end cluster run.
 
 ---
 
+## Callback authentication & dev configuration (2026-09-23)
+
+**Weblog auth.** `-with-weblog <url>` cannot send an `Authorization` header, so the header-checked
+`…/weblog` route would have rejected every event from a real run. Runs now post to
+`/rest/v2/internal/pipeline/jobs/{jobId}/weblog/{token}`, where the token is
+`HMAC-SHA256(gemma.pipeline.callback.token, jobId)` (`PipelineCallbackTokens`). It sits in the path,
+not a query string, so it doesn't depend on Nextflow preserving the query. The URL ends up in
+`launch.sh` and `.nextflow.log`, which the `pavlab` group can read, so a token only authorizes events
+for its own job; the shared secret stays in Gemma. `submit` refuses to launch while the secret is
+blank. Tokens also appear in Tomcat access logs, with the same one-job scope.
+
+**Who the event runs as.** Callbacks carry no Gemma user, and the reconciler runs on a scheduled
+thread. `recordEvent` therefore runs as the batch's submitter when the caller is unauthenticated;
+before this, a terminal event failed with `AccessDenied` writing the EE audit event
+(`PipelineJobAnonymousCallbackIT`).
+
+**Dev `Gemma.properties` for a scratchy run** (every key is documented in `default.properties`):
+
+```properties
+# plus the Spring profiles scheduler-nextflow and scheduler
+gemma.pipeline.callback.token=<long random string; keep it out of the repo>
+gemma.pipeline.registry=sc-annotation
+gemma.pipeline.nextflow.submitHost=scratchy.msl.ubc.ca
+gemma.pipeline.nextflow.submitUser=<your account until O1 is settled>
+gemma.pipeline.nextflow.checkoutDir=/space/grp/Pipelines/sc-annotation-pipeline
+gemma.pipeline.nextflow.executable=/space/opt/bin/nextflow
+# must be reachable from compute nodes: frink's firewall only admits 8080 (R1)
+gemma.pipeline.nextflow.weblogBaseUrl=http://frink.msl.ubc.ca:8080
+```
+
+`gemma.appdata.home` must resolve to the same path on frink and the cluster (dev frink:
+`/space/scratch/Ogdata/gemma_home`, R2), since `workDirBase` defaults under it.
+
+---
+
 ## Appendix — run-granularity comparison (R11 per-EE vs. O2(b) combined run)
 
 The trade study behind R11. **Chosen: one run per EE (R11)**, paired with O9's `storeDir` fix which
