@@ -23,6 +23,7 @@ import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.BuildInfo;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
+import ubic.gemma.core.pipeline.PipelineCallbackTokens;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 import ubic.gemma.rest.analytics.AnalyticsProvider;
@@ -110,6 +111,38 @@ public class InternalPipelineWebServiceTest extends BaseJerseyTest5 {
         return target( "/internal/pipeline/jobs/" + jobId + "/weblog" ).request()
                 .header( "Authorization", bearer )
                 .post( Entity.json( body ) );
+    }
+
+    private Response postWeblogWithJobToken( long jobId, String token, String body ) {
+        return target( "/internal/pipeline/jobs/" + jobId + "/weblog/" + token ).request()
+                .post( Entity.json( body ) );
+    }
+
+    @Test
+    public void jobTokenInPath_isAcceptedWithoutAHeader() {
+        // What a real run sends: -with-weblog can't set headers, so the only credential is the path.
+        when( pipelineJobBatchService.recordEvent( eq( 7L ), eq( "completed" ), any() ) )
+                .thenReturn( new PipelineJobEvent() );
+        String body = "{\"event\":\"completed\",\"runName\":\"x\","
+                + "\"metadata\":{\"workflow\":{\"success\":true,\"duration\":123}}}";
+        assertThat( postWeblogWithJobToken( 7L, PipelineCallbackTokens.forJob( TOKEN, 7L ), body ) )
+                .hasStatus( Response.Status.OK );
+        verify( pipelineJobBatchService ).recordEvent( eq( 7L ), eq( "completed" ), any() );
+    }
+
+    @Test
+    public void jobTokenForAnotherJob_isUnauthorized() {
+        // A URL read out of one job's work-dir must not post events for a different job.
+        assertThat( postWeblogWithJobToken( 8L, PipelineCallbackTokens.forJob( TOKEN, 7L ), "{\"event\":\"started\"}" ) )
+                .hasStatus( Response.Status.UNAUTHORIZED );
+        verify( pipelineJobBatchService, never() ).recordEvent( any(), any(), any() );
+    }
+
+    @Test
+    public void sharedSecretInPath_isUnauthorized() {
+        assertThat( postWeblogWithJobToken( 7L, TOKEN, "{\"event\":\"started\"}" ) )
+                .hasStatus( Response.Status.UNAUTHORIZED );
+        verify( pipelineJobBatchService, never() ).recordEvent( any(), any(), any() );
     }
 
     @Test

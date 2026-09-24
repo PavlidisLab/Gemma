@@ -66,6 +66,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
     private final String workDirBase;
     private final String profile;
     private final String weblogBaseUrl;
+    private final String callbackSecret;
 
     @Autowired
     public NextflowSlurmScheduler(
@@ -78,7 +79,10 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
             // Base URL the compute-node weblog POSTs back to. Defaults to gemma.hosturl, but is a
             // SEPARATE knob because the cluster may reach Gemma at a different address than clients do
             // — e.g. an SSH tunnel endpoint on the submit node when a firewall blocks the direct port.
-            @Value("${gemma.pipeline.nextflow.weblogBaseUrl:${gemma.hosturl:}}") String weblogBaseUrl ) {
+            @Value("${gemma.pipeline.nextflow.weblogBaseUrl:${gemma.hosturl:}}") String weblogBaseUrl,
+            // Keys the per-job token in the weblog URL (PipelineCallbackTokens); the same secret the
+            // callback endpoint verifies against.
+            @Value("${gemma.pipeline.callback.token:}") String callbackSecret ) {
         this.expressionExperimentService = expressionExperimentService;
         this.ssh = ssh;
         this.commands = new NextflowSlurmCommandBuilder( nextflowExecutable );
@@ -86,6 +90,7 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
         this.workDirBase = workDirBase;
         this.profile = profile;
         this.weblogBaseUrl = weblogBaseUrl;
+        this.callbackSecret = callbackSecret;
     }
 
     @Override
@@ -97,6 +102,11 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
     public SchedulerHandle submit( SubmitRequest req ) throws PipelineSchedulerException {
         if ( checkoutDir.isBlank() ) {
             throw new PipelineSchedulerException( "gemma.pipeline.nextflow.checkoutDir is not configured" );
+        }
+        // Without the secret the run could not authenticate its weblog, and would run to completion with
+        // Gemma never hearing from it.
+        if ( callbackSecret.isBlank() ) {
+            throw new PipelineSchedulerException( "gemma.pipeline.callback.token is not configured" );
         }
         ExpressionExperiment ee = expressionExperimentService.load( req.getExperimentId() );
         if ( ee == null ) {
@@ -202,6 +212,9 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
 
     private String weblogUrl( Long jobId ) {
         String base = weblogBaseUrl.endsWith( "/" ) ? weblogBaseUrl.substring( 0, weblogBaseUrl.length() - 1 ) : weblogBaseUrl;
-        return base + "/rest/v2/internal/pipeline/jobs/" + jobId + "/weblog";
+        // The token rides in the path, not a query string or header: -with-weblog can't set headers, and
+        // a path segment doesn't depend on Nextflow preserving the query.
+        return base + "/rest/v2/internal/pipeline/jobs/" + jobId + "/weblog/"
+                + PipelineCallbackTokens.forJob( callbackSecret, jobId );
     }
 }
