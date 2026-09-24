@@ -20,7 +20,7 @@ import org.springframework.lang.Nullable;
  * hides the suspend / log / artifact controls when the active scheduler doesn't support them, rather
  * than showing buttons that 404 or 409.
  *
- * <p>Wire shape is snake_case for the UI (§1.3). {@link #kind} is {@code null} when no scheduler is
+ * <p>Wire names are camelCase, like the rest of the API. {@link #kind} is {@code null} when no scheduler is
  * wired (no {@code scheduler-*} profile active).</p>
  */
 @Value
@@ -31,12 +31,12 @@ public class PipelineCapabilities {
     @JsonProperty("kind")
     String kind;
 
-    @JsonProperty("supports_suspend")
+    @JsonProperty("supportsSuspend")
     boolean supportsSuspend;
 
-    @JsonProperty("supports_log")
+    @JsonProperty("supportsLog")
     boolean supportsLog;
 
-    @JsonProperty("supports_artifacts")
+    @JsonProperty("supportsArtifacts")
     boolean supportsArtifacts;
 }

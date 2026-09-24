@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * supersedes the failure it replaces, so {@code failed} drops automatically while the retry runs —
  * no separate "in flight" clause.</p>
  *
- * <p>Wire shape is snake_case for the curation UI (UIB) — see §1.3.</p>
+ * <p>Wire names are camelCase, like the rest of the API ({@code OpenApiTest} enforces it).</p>
  */
 public class BatchRollup {
 
@@ -42,14 +42,14 @@ public class BatchRollup {
     public int cancelled;
 
     /** FAILED current attempts with {@link FailureClass#TRANSIENT} — auto-eligible for mop-up. */
-    @JsonProperty("failed_retryable")
+    @JsonProperty("failedRetryable")
     public int failedRetryable;
     /** FAILED current attempts that are not transient (PERMANENT / UNKNOWN). */
-    @JsonProperty("failed_permanent")
+    @JsonProperty("failedPermanent")
     public int failedPermanent;
 
     /** {@code state == OPEN && failed > 0} — the batch has current failures a curator should act on. */
-    @JsonProperty("needs_attention")
+    @JsonProperty("needsAttention")
     public boolean needsAttention;
     /** Every current attempt is in a terminal state. */
     @JsonProperty("terminal")

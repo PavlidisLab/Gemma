@@ -19,8 +19,8 @@ import lombok.Value;
  * {@link #nextOffset} cursor lets a caller poll {@code tail -f}-style without re-fetching what it
  * already has; {@link #eof} is true once the slice reaches the end of the log as it stands now.
  *
- * <p>Logs are never persisted in Gemma — this is a pure proxy over the runtime's file. Wire shape is
- * snake_case for the curation UI (§1.3).</p>
+ * <p>Logs are never persisted in Gemma — this is a pure proxy over the runtime's file. Wire names are
+ * camelCase, like the rest of the API.</p>
  */
 @Value
 public class LogChunk {
@@ -29,7 +29,7 @@ public class LogChunk {
     String text;
 
     /** Byte offset to pass as {@code offset} on the next read to continue where this slice ended. */
-    @JsonProperty("next_offset")
+    @JsonProperty("nextOffset")
     long nextOffset;
 
     /** True when this slice reached the current end of the log (no more bytes right now). */
