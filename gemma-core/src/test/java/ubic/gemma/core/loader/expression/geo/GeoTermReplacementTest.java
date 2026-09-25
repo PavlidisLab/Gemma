@@ -81,6 +81,7 @@ public class GeoTermReplacementTest {
         addOntology( new HumanPhenotypeOntologyService(), "http://purl.obolibrary.org/obo/HP_" );
         addOntology( new MammalianPhenotypeOntologyService(), "http://purl.obolibrary.org/obo/MP_" );
         addOntology( new ExperimentalFactorOntologyService(), "http://www.ebi.ac.uk/efo/", "http://purl.obolibrary.org/obo/BTO_", "http://purl.obolibrary.org/obo/ECTO_" );
+        addOntology( new MgiStrainOntologyService(), MgiStrainOntologyService.URI_PREFIX );
         // TODO: addOntology( new ChebiOntologyService(), "http://purl.obolibrary.org/obo/CHEBI_" );
     }
 
