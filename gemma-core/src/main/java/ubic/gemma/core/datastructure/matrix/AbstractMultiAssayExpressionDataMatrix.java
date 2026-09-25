@@ -55,6 +55,8 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
     private final ExpressionExperiment expressionExperiment;
     private final Set<QuantitationType> quantitationTypes = new HashSet<>();
     private final Set<BioAssayDimension> bioAssayDimensions = new HashSet<>();
+    @Nullable
+    private BioAssayDimension lastAddedDimension;
 
     // maps for designElements/sequences/rows
     private final List<CompositeSequence> rowDesignElements = new ArrayList<>();
@@ -358,7 +360,12 @@ abstract public class AbstractMultiAssayExpressionDataMatrix<T> extends Abstract
         rowDesignElements.add( designElement );
         quantitationTypes.add( qt );
         rowElementQuantitationTypeMap.put( designElement, qt );
-        bioAssayDimensions.add( dim );
+        // Vectors of one dimension share one instance; skip re-adding it, since BioAssayDimension.hashCode()
+        // hashes every assay in the dimension and this runs once per row.
+        if ( dim != lastAddedDimension ) {
+            bioAssayDimensions.add( dim );
+            lastAddedDimension = dim;
+        }
         rowElementBioAssayDimensionMap.put( designElement, dim );
     }
 

@@ -676,6 +676,11 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
         mat.fill( Double.NaN );
 
         Map<Integer, CompositeSequence> rowNames = new TreeMap<>();
+        // Column positions are resolved once per dimension rather than once per value. Every lookup hashes a
+        // BioAssay by its lower-cased name, and 92177 (21,400 vectors x 7,275 assays) spent most of its 107 s
+        // matrix build doing exactly that. Keyed by identity because the vectors of a dimension share one
+        // instance, and BioAssayDimension.hashCode() would hash every assay again.
+        Map<BioAssayDimension, int[]> columnsByDimension = new IdentityHashMap<>();
         for ( BulkExpressionDataVector vector : vectors ) {
             BioAssayDimension dimension = vector.getBioAssayDimension();
 
@@ -695,13 +700,13 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
                         "Mismatch: " + vals.length + " values in vector ( " + vector.getData().length + " bytes) for "
                                 + designElement + " got " + bioAssays.size() + " bioassays in the bioAssayDimension" );
 
-            Iterator<BioAssay> it = bioAssays.iterator();
+            int[] columns = columnsByDimension.computeIfAbsent( dimension, this::getColumnIndices );
 
             // Primitive path: no double[] -> Double[] boxing (was ArrayUtils.toObject(vals), which allocated
             // one Double per cell -- ~17.5M for a 175k x 100 matrix, all garbage). vals comes from
             // DataVector.getDataAsDoubles() which returns a fresh double[] decoded from the byte payload,
             // so we may read it directly without copying.
-            this.setMatBioAssayValuesAsDoubles( mat, rowIndex, vals, bioAssays, it );
+            this.setMatBioAssayValuesAsDoubles( mat, rowIndex, vals, columns );
         }
 
         /*
@@ -743,13 +748,20 @@ public class ExpressionDataDoubleMatrix extends AbstractMultiAssayExpressionData
      * end-state by substituting NaN for -Infinity at write time.
      */
     private void setMatBioAssayValuesAsDoubles( DenseDoubleMatrix<CompositeSequence, BioMaterial> mat, int rowIndex,
-            double[] vals, Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
-        for ( int j = 0; j < bioAssays.size(); j++ ) {
-            BioAssay bioAssay = it.next();
-            int column = getColumnIndex( bioAssay );
-            assert column != -1;
+            double[] vals, int[] columns ) {
+        for ( int j = 0; j < columns.length; j++ ) {
             double v = vals[j];
-            mat.set( rowIndex, column, v == Double.NEGATIVE_INFINITY ? Double.NaN : v );
+            mat.set( rowIndex, columns[j], v == Double.NEGATIVE_INFINITY ? Double.NaN : v );
         }
+    }
+
+    private int[] getColumnIndices( BioAssayDimension dimension ) {
+        List<BioAssay> bioAssays = dimension.getBioAssays();
+        int[] columns = new int[bioAssays.size()];
+        for ( int j = 0; j < columns.length; j++ ) {
+            columns[j] = getColumnIndex( bioAssays.get( j ) );
+            assert columns[j] != -1;
+        }
+        return columns;
     }
 }
