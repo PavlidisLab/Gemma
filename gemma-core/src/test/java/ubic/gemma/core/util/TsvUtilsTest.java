@@ -2,6 +2,12 @@ package ubic.gemma.core.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
+import java.util.Random;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.core.util.TsvUtils.*;
 
@@ -30,6 +36,48 @@ public class TsvUtilsTest {
         assertEquals( "inf", format( Double.POSITIVE_INFINITY ) );
         assertEquals( "-inf", format( Double.NEGATIVE_INFINITY ) );
         assertEquals( "", format( ( Object ) Double.NaN ) );
+    }
+
+    /**
+     * The fast path in {@link TsvUtils#format(double)} must produce the same text as the {@link DecimalFormat}s it
+     * bypasses, including on values that sit on or near a half-up rounding tie.
+     */
+    @Test
+    public void testFormatNumberMatchesDecimalFormat() {
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance( Locale.ENGLISH );
+        DecimalFormat mid = new DecimalFormat( "0.0###", symbols );
+        mid.setRoundingMode( RoundingMode.HALF_UP );
+        DecimalFormat large = new DecimalFormat( "0.0", symbols );
+        large.setRoundingMode( RoundingMode.HALF_UP );
+        Random random = new Random( 42 );
+        for ( int i = 0; i < 2_000_000; i++ ) {
+            double d;
+            switch ( i % 5 ) {
+                case 0:
+                    d = random.nextDouble() * 30 - 5;
+                    break;
+                case 1:
+                    d = Math.pow( 10, random.nextDouble() * 7 - 4 ) * ( random.nextBoolean() ? 1 : -1 );
+                    break;
+                case 2:
+                    // four-decimal half-way ties and their neighbours
+                    d = ( random.nextInt( 10_000_000 ) + 0.5 ) / 1e4;
+                    d = random.nextBoolean() ? d : Math.nextUp( d );
+                    break;
+                case 3:
+                    // one-decimal half-way ties above 1e3
+                    d = ( random.nextInt( 1_000_000_000 ) + 10_000 + 0.5 ) / 10.0;
+                    d = random.nextBoolean() ? d : Math.nextDown( d );
+                    break;
+                default:
+                    d = Math.pow( 10, random.nextDouble() * 12 ) * ( random.nextBoolean() ? 1 : -1 );
+            }
+            if ( Math.abs( d ) < 1e-4 ) {
+                continue;
+            }
+            String expected = Math.abs( d ) < 1e3 ? mid.format( d ) : large.format( d );
+            assertEquals( expected, format( d ), "for " + d );
+        }
     }
 
     @Test
