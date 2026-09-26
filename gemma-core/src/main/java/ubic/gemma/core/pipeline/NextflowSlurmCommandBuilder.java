@@ -16,6 +16,7 @@ import ubic.gemma.model.pipeline.JobState;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +52,14 @@ public class NextflowSlurmCommandBuilder {
      * reader never sees a half-written file.
      */
     public static final String EXIT_CODE = "exitcode";
+    /**
+     * Passed as the pipeline's {@code --outdir}. Without it sc-annotation publishes into
+     * {@code ${projectDir}/results/…}, i.e. into the shared pipeline checkout, for every run.
+     */
+    public static final String RESULTS_DIR = "results";
+
+    /** Nextflow parameter names Gemma passes on the command line; also keeps them shell-safe. */
+    private static final Pattern PARAM_NAME = Pattern.compile( "[A-Za-z][A-Za-z0-9_]*" );
 
     /** Extracts {@code JobState=<STATE>} from {@code scontrol show job} output. */
     private static final Pattern JOB_STATE = Pattern.compile( "JobState=([A-Z_]+)" );
@@ -92,10 +101,12 @@ public class NextflowSlurmCommandBuilder {
      * killed outright — out of memory, over its time limit — writes nothing; the scheduler's poll covers
      * that case from Slurm.
      *
-     * @param weblogUrl where Nextflow posts live events, or null to run without the weblog
+     * @param weblogUrl    where Nextflow posts live events, or null to run without the weblog
+     * @param pipelineFlags boolean pipeline parameters to set, e.g. {@code upload_cta=false}; they
+     *                      override the params file. Empty leaves the pipeline's defaults.
      */
     public String launchScript( String checkoutDir, String profile, String paramsFile,
-            String samplesheetPath, @Nullable String weblogUrl, String workDir ) {
+            String samplesheetPath, @Nullable String weblogUrl, String workDir, Map<String, Boolean> pipelineFlags ) {
         require( checkoutDir, "checkoutDir" );
         require( profile, "profile" );
         require( paramsFile, "paramsFile" );
@@ -104,6 +115,13 @@ public class NextflowSlurmCommandBuilder {
         String main = checkoutDir + "/main.nf";
         String params = checkoutDir + "/" + paramsFile;
         String exitCode = workDir + "/" + EXIT_CODE;
+        StringBuilder flags = new StringBuilder();
+        for ( Map.Entry<String, Boolean> flag : pipelineFlags.entrySet() ) {
+            if ( !PARAM_NAME.matcher( flag.getKey() ).matches() ) {
+                throw new IllegalArgumentException( "not a pipeline parameter name: " + flag.getKey() );
+            }
+            flags.append( " --" ).append( flag.getKey() ).append( ' ' ).append( flag.getValue() );
+        }
         return "#!/bin/bash\n"
                 + "set -uo pipefail\n"
                 + "trap 'true' TERM\n"
@@ -111,6 +129,8 @@ public class NextflowSlurmCommandBuilder {
                 + " -profile " + profile
                 + " -params-file " + params
                 + " --input " + samplesheetPath
+                + " --outdir " + workDir + "/" + RESULTS_DIR
+                + flags
                 + " -process.executor slurm"
                 + ( weblogUrl != null ? " -with-weblog " + weblogUrl : "" )
                 + " -with-trace " + TRACE

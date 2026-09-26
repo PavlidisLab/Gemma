@@ -87,6 +87,9 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
     /** How much of the end of {@code head.out} a failure carries: enough for Nextflow's error report. */
     static final int FAILURE_TAIL_BYTES = 4096;
 
+    /** sc-annotation's upload switches, each a pipeline parameter {@code upload_<kind>}. */
+    private static final java.util.List<String> UPLOAD_KINDS = java.util.List.of( "cta", "clc", "mask", "multiqc" );
+
     private final ExpressionExperimentService expressionExperimentService;
     private final SshCommandRunner ssh;
     private final NextflowSlurmCommandBuilder commands;
@@ -155,7 +158,9 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
         if ( studyName == null || studyName.isBlank() ) {
             throw new PipelineSchedulerException( "experiment " + req.getExperimentId() + " has no shortName to use as study name" );
         }
-        String paramsFile = resolveParamsFile( req.getParamsJson() );
+        JsonNode params = parseParams( req.getParamsJson() );
+        String paramsFile = resolveParamsFile( params );
+        Map<String, Boolean> uploadFlags = uploadFlags( params );
         Long jobId = req.getGemmaJobId();
 
         // Write the samplesheet + wrapper to the per-job work-dir on the shared /space mount (R10) —
@@ -168,7 +173,8 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
             Files.createDirectories( workDir );
             Files.writeString( samplesheet, commands.samplesheetCsv( studyName ), StandardCharsets.UTF_8 );
             Files.writeString( script, commands.launchScript( checkoutDir, profile, paramsFile,
-                    samplesheet.toString(), weblogBaseUrl != null ? weblogUrl( jobId ) : null, workDir.toString() ), StandardCharsets.UTF_8 );
+                    samplesheet.toString(), weblogBaseUrl != null ? weblogUrl( jobId ) : null, workDir.toString(), uploadFlags ),
+                    StandardCharsets.UTF_8 );
         } catch ( IOException e ) {
             throw new PipelineSchedulerException( "failed to write work-dir files under " + workDir + ": " + e.getMessage(), e );
         }
@@ -422,40 +428,85 @@ public class NextflowSlurmScheduler implements PipelineScheduler {
         return len;
     }
 
+    /** The batch's {@code paramsJson} as a JSON object; an empty one when there is none. */
+    private JsonNode parseParams( @Nullable String paramsJson ) throws PipelineSchedulerException {
+        if ( paramsJson == null || paramsJson.isBlank() ) {
+            return objectMapper.createObjectNode();
+        }
+        try {
+            JsonNode node = objectMapper.readTree( paramsJson );
+            if ( !node.isObject() ) {
+                throw new PipelineSchedulerException( "paramsJson must be a JSON object, got: " + paramsJson );
+            }
+            return node;
+        } catch ( IOException e ) {
+            throw new PipelineSchedulerException( "could not parse paramsJson: " + e.getMessage(), e );
+        }
+    }
+
     /**
      * Pick the organism params-file from the batch's {@code paramsJson}: an explicit {@code paramsFile},
      * or an {@code organism} of {@code hs/human} → {@code params.hs.json}, {@code mm/mouse} →
      * {@code params.mm.json}. The organism decision stays with the caller (matches how the pipeline is
      * launched per-organism today) rather than being inferred from the EE taxon here.
      */
-    private String resolveParamsFile( @Nullable String paramsJson ) throws PipelineSchedulerException {
-        if ( paramsJson != null && !paramsJson.isBlank() ) {
-            try {
-                JsonNode node = objectMapper.readTree( paramsJson );
-                JsonNode explicit = node.get( "paramsFile" );
-                if ( explicit != null && explicit.isTextual() && !explicit.asText().isBlank() ) {
-                    return explicit.asText();
-                }
-                JsonNode organism = node.get( "organism" );
-                if ( organism != null && organism.isTextual() ) {
-                    switch ( organism.asText().trim().toLowerCase( Locale.ROOT ) ) {
-                        case "hs":
-                        case "human":
-                        case "homo sapiens":
-                            return "params.hs.json";
-                        case "mm":
-                        case "mouse":
-                        case "mus musculus":
-                            return "params.mm.json";
-                        default:
-                            break;
-                    }
-                }
-            } catch ( IOException e ) {
-                throw new PipelineSchedulerException( "could not parse paramsJson for organism/params-file: " + e.getMessage(), e );
+    private String resolveParamsFile( JsonNode params ) throws PipelineSchedulerException {
+        JsonNode explicit = params.get( "paramsFile" );
+        if ( explicit != null && explicit.isTextual() && !explicit.asText().isBlank() ) {
+            return explicit.asText();
+        }
+        JsonNode organism = params.get( "organism" );
+        if ( organism != null && organism.isTextual() ) {
+            switch ( organism.asText().trim().toLowerCase( Locale.ROOT ) ) {
+                case "hs":
+                case "human":
+                case "homo sapiens":
+                    return "params.hs.json";
+                case "mm":
+                case "mouse":
+                case "mus musculus":
+                    return "params.mm.json";
+                default:
+                    break;
             }
         }
         throw new PipelineSchedulerException( "paramsJson must specify 'paramsFile' or a recognized 'organism' (hs/mm)" );
+    }
+
+    /**
+     * sc-annotation's {@code GEMMA_UPLOAD} switches from the batch's {@code paramsJson} {@code upload}:
+     * {@code false}/{@code true} sets all four, an object such as {@code {"cta": false}} sets the named
+     * ones. Absent leaves the pipeline's defaults (all on). The pipeline uploads to Gemma staging, which
+     * shares the production database, so turning them off is how a test run avoids writing real data.
+     *
+     * @return pipeline parameter → value, in a stable order; empty when {@code upload} is absent
+     */
+    private static Map<String, Boolean> uploadFlags( JsonNode params ) throws PipelineSchedulerException {
+        JsonNode upload = params.get( "upload" );
+        Map<String, Boolean> flags = new LinkedHashMap<>();
+        if ( upload == null || upload.isNull() ) {
+            return flags;
+        }
+        if ( upload.isBoolean() ) {
+            for ( String kind : UPLOAD_KINDS ) {
+                flags.put( "upload_" + kind, upload.booleanValue() );
+            }
+            return flags;
+        }
+        if ( !upload.isObject() ) {
+            throw new PipelineSchedulerException( "paramsJson 'upload' must be true, false or an object of " + UPLOAD_KINDS + " → boolean" );
+        }
+        for ( java.util.Iterator<Map.Entry<String, JsonNode>> it = upload.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> e = it.next();
+            if ( !UPLOAD_KINDS.contains( e.getKey() ) ) {
+                throw new PipelineSchedulerException( "unknown upload '" + e.getKey() + "'; expected one of " + UPLOAD_KINDS );
+            }
+            if ( !e.getValue().isBoolean() ) {
+                throw new PipelineSchedulerException( "upload '" + e.getKey() + "' must be true or false, got: " + e.getValue() );
+            }
+            flags.put( "upload_" + e.getKey(), e.getValue().booleanValue() );
+        }
+        return flags;
     }
 
     private String weblogUrl( Long jobId ) {
