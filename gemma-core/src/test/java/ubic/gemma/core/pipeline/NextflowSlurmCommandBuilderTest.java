@@ -14,7 +14,9 @@ package ubic.gemma.core.pipeline;
 import org.junit.jupiter.api.Test;
 import ubic.gemma.model.pipeline.JobState;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,7 +30,7 @@ class NextflowSlurmCommandBuilderTest {
 
     @Test
     void launchScript_recordsTheExitCodeAndSurvivesScancel() {
-        String s = b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w" );
+        String s = b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w", Map.of() );
         assertThat( s ).doesNotContain( "set -e" ); // would exit before the exit code is written
         assertThat( s ).contains( "trap 'true' TERM" );
         assertThat( s ).contains( "rc=$?" );
@@ -37,8 +39,31 @@ class NextflowSlurmCommandBuilderTest {
     }
 
     @Test
+    void launchScript_publishesResultsIntoTheWorkDir() {
+        assertThat( b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w", Map.of() ) )
+                .contains( " --outdir /w/results " );
+    }
+
+    @Test
+    void launchScript_passesPipelineFlagsInOrder() {
+        Map<String, Boolean> flags = new LinkedHashMap<>();
+        flags.put( "upload_cta", false );
+        flags.put( "upload_multiqc", true );
+        assertThat( b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w", flags ) )
+                .contains( " --upload_cta false --upload_multiqc true " );
+    }
+
+    @Test
+    void launchScript_rejectsAFlagNameThatIsNotAParameter() {
+        // The name goes into a shell script unquoted.
+        assertThatThrownBy( () -> b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w",
+                Map.of( "x; rm -rf /", true ) ) )
+                .isInstanceOf( IllegalArgumentException.class );
+    }
+
+    @Test
     void launchScript_withoutAWeblogUrl_omitsTheFlag() {
-        assertThat( b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w" ) )
+        assertThat( b.launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", null, "/w", Map.of() ) )
                 .doesNotContain( "-with-weblog" );
     }
 
@@ -83,7 +108,7 @@ class NextflowSlurmCommandBuilderTest {
         String s = b.launchScript( "/pipe/sc-annotation", "conda", "params.hs.json",
                 "/space/gemmaData/pipeline/7/samplesheet.csv",
                 "http://gemma/rest/v2/internal/pipeline/jobs/7/weblog",
-                "/space/gemmaData/pipeline/7" );
+                "/space/gemmaData/pipeline/7", Map.of() );
         assertThat( s ).startsWith( "#!/bin/bash\nset -uo pipefail\ntrap 'true' TERM\n" );
         assertThat( s ).contains( "nextflow run /pipe/sc-annotation/main.nf" );  // default executable
         assertThat( s ).doesNotContain( "\n\n" );
@@ -103,7 +128,7 @@ class NextflowSlurmCommandBuilderTest {
         // Where nextflow isn't on the non-login PATH (e.g. scratchy), the wrapper must call it by
         // absolute path — driven by gemma.pipeline.nextflow.executable.
         String s = new NextflowSlurmCommandBuilder( "/space/opt/bin/nextflow" )
-                .launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", "http://g/weblog", "/w" );
+                .launchScript( "/pipe", "conda", "params.hs.json", "/w/samplesheet.csv", "http://g/weblog", "/w", Map.of() );
         assertThat( s ).contains( "/space/opt/bin/nextflow run /pipe/main.nf" );
         assertThat( s ).doesNotContain( "\nnextflow run" );
     }

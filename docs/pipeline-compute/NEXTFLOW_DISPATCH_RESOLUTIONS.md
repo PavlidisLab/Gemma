@@ -193,6 +193,20 @@ for a dev run.
 **Cancel.** A `CANCELLING` job whose poll comes back FAILED, CANCELLED or unknown is recorded as
 `killed`; one that finished first (DONE) keeps its result.
 
+## Results folder and per-batch upload switches (2026-09-25)
+
+sc-annotation reads its input from and uploads its results to Gemma **staging**, which shares the
+production database (`use_staging = true`; `gemma-cli-staging getSingleCellDataMatrix` in
+`DOWNLOAD_STUDIES`, the `GEMMA_UPLOAD` subworkflow for output). Its `outdir` defaults to
+`${projectDir}/results/…`, i.e. into the shared checkout.
+
+- Every run now gets `--outdir <workDir>/results`, so results stay with the job.
+- A batch's `paramsJson` takes `"upload": false` (all four off), `"upload": true`, or an object naming
+  some of `cta` / `clc` / `mask` / `multiqc`, e.g. `{"organism":"mm","upload":{"cta":false}}`. These
+  become `--upload_<kind> <bool>` on the command line, overriding the params file. Absent leaves the
+  pipeline's defaults (all on). Unknown names and non-boolean values fail the job at dispatch, since
+  guessing could upload when told not to.
+
 ## Callback authentication & dev configuration (2026-09-23)
 
 **Weblog auth.** `-with-weblog <url>` cannot send an `Authorization` header, so the header-checked

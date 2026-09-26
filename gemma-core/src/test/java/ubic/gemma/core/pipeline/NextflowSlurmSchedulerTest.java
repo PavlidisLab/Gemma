@@ -332,6 +332,54 @@ class NextflowSlurmSchedulerTest {
         assertThat( scheduler.poll( 7L, HEAD ) ).isNull();
     }
 
+    private String launchScriptFor( String paramsJson ) throws Exception {
+        ssh.on( "sbatch", 0, "98765\n", "" );
+        scheduler.submit( req( paramsJson ) );
+        return Files.readString( workDirBase.resolve( "7" ).resolve( "launch.sh" ) );
+    }
+
+    @Test
+    void submit_publishesResultsIntoTheJobsWorkDir() throws Exception {
+        assertThat( launchScriptFor( "{\"organism\":\"mm\"}" ) )
+                .contains( " --outdir " + workDirBase.resolve( "7" ).resolve( "results" ) + " " );
+    }
+
+    @Test
+    void submit_withoutUpload_leavesThePipelineDefaults() throws Exception {
+        assertThat( launchScriptFor( "{\"organism\":\"mm\"}" ) ).doesNotContain( "--upload_" );
+    }
+
+    @Test
+    void submit_uploadFalse_turnsOffAllFourUploads() throws Exception {
+        assertThat( launchScriptFor( "{\"organism\":\"mm\",\"upload\":false}" ) )
+                .contains( " --upload_cta false --upload_clc false --upload_mask false --upload_multiqc false " );
+    }
+
+    @Test
+    void submit_uploadObject_setsOnlyTheNamedUploads() throws Exception {
+        String script = launchScriptFor( "{\"organism\":\"mm\",\"upload\":{\"cta\":false,\"multiqc\":true}}" );
+        assertThat( script ).contains( " --upload_cta false --upload_multiqc true " );
+        assertThat( script ).doesNotContain( "--upload_clc" ).doesNotContain( "--upload_mask" );
+    }
+
+    @Test
+    void submit_unknownUpload_isRejectedBeforeSubmitting() {
+        assertThatThrownBy( () -> scheduler.submit( req( "{\"organism\":\"mm\",\"upload\":{\"ctaa\":false}}" ) ) )
+                .isInstanceOf( PipelineSchedulerException.class )
+                .hasMessageContaining( "unknown upload 'ctaa'" );
+        assertThat( ssh.lastCallStartingWith( "sbatch" ) ).isNull();
+    }
+
+    @Test
+    void submit_nonBooleanUpload_isRejected() {
+        // "false" as a string is a typo for false; guessing would risk uploading when told not to.
+        assertThatThrownBy( () -> scheduler.submit( req( "{\"organism\":\"mm\",\"upload\":\"false\"}" ) ) )
+                .isInstanceOf( PipelineSchedulerException.class );
+        assertThatThrownBy( () -> scheduler.submit( req( "{\"organism\":\"mm\",\"upload\":{\"cta\":\"false\"}}" ) ) )
+                .isInstanceOf( PipelineSchedulerException.class )
+                .hasMessageContaining( "must be true or false" );
+    }
+
     @Test
     void submit_withoutAWeblogUrl_needsNoSecretAndOmitsTheFlag() throws Exception {
         NextflowSlurmScheduler noWeblog = new NextflowSlurmScheduler( eeService, ssh,
