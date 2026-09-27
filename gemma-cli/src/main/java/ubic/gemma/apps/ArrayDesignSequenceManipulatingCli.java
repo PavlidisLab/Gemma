@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
@@ -73,9 +74,26 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     private boolean all;
     private Set<String> platformIdentifiers;
 
+    /**
+     * Refuse {@code -all}, so this CLI can never be pointed at every platform in the system; platforms must always
+     * be named with {@code -a} or {@code -f}.
+     */
+    private boolean explicitADsOnly = false;
+
     protected ArrayDesignSequenceManipulatingCli() {
         super( ArrayDesign.class );
         setRequireLogin();
+    }
+
+    /**
+     * Refuse {@code -all}, so this CLI can never be pointed at every platform in the system.
+     * <p>
+     * Intended for destructive CLIs ({@code detachSequences}, {@code deletePlatformElements}) where {@code -all}
+     * wiping every platform's sequences or elements is a mistake with no undo.
+     */
+    protected void setExplicitADsOnly() {
+        Assert.state( !this.explicitADsOnly, "Explicit ADs only is already enabled." );
+        this.explicitADsOnly = true;
     }
 
     @Override
@@ -85,7 +103,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     @Override
     protected final void buildOptions( Options options ) {
-        options.addOption( "all", "all", false, "Process all platforms." );
+        if ( !explicitADsOnly ) {
+            options.addOption( "all", "all", false, "Process all platforms." );
+        }
         addCommaDelimitedPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
         options.addOption( Option.builder( "f" )
                 .hasArg().argName( "File containing platform identifiers" )
@@ -190,7 +210,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
                 processArrayDesigns( arrayDesignsToProcess );
                 return;
             }
-            throw new RuntimeException( "No platforms matched the given options (none named with -a or -f, and -all not given)." );
+            throw new RuntimeException( explicitADsOnly
+                    ? "No platforms matched the given options; name them with -a or -f (this command never operates on all platforms)."
+                    : "No platforms matched the given options (none named with -a or -f, and -all not given)." );
         } else if ( arrayDesignsToProcess.size() == 1 ) {
             setEstimatedMaxTasks( 1 );
             log.info( "Final platform: " + arrayDesignsToProcess.iterator().next() );

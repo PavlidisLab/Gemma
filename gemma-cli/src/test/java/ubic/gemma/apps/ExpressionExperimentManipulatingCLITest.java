@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,8 @@ import java.util.Collections;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
@@ -72,6 +75,11 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
         @Bean
         public DeleteExperimentsCli deleteExperimentsCli() {
             return new DeleteExperimentsCli();
+        }
+
+        @Bean
+        public TestExplicitEEsOnlyCli testExplicitEEsOnlyCli() {
+            return new TestExplicitEEsOnlyCli();
         }
 
         @Bean
@@ -175,6 +183,22 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
         }
     }
 
+    /**
+     * Stand-in for a destructive CLI ({@code deleteExperiments}, {@code deleteRawData}, ...): must never accept
+     * {@code -all}/{@code -eeset}/{@code -f}/{@code -q}, only {@code -e}.
+     */
+    static class TestExplicitEEsOnlyCli extends ExpressionExperimentManipulatingCLI {
+
+        public TestExplicitEEsOnlyCli() {
+            setExplicitEEsOnly();
+        }
+
+        @Override
+        protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+            addSuccessObject( expressionExperiment, "Processed." );
+        }
+    }
+
     @Autowired
     private TestSingleExperimentCli testSingleExperimentCli;
 
@@ -194,10 +218,23 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
     private DeleteExperimentsCli deleteExperimentsCli;
 
     @Autowired
+    private TestExplicitEEsOnlyCli testExplicitEEsOnlyCli;
+
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
     @Autowired
     private EntityLocator entityLocator;
+
+    /**
+     * {@code eeService} and {@code arrayDesignService} are shared, manually-created mocks (not {@code @MockBean}),
+     * so nothing resets their recorded interactions between test methods; without this, one test's real
+     * {@code loadAll()} call could leak into another test's {@code verify(..., never())}.
+     */
+    @BeforeEach
+    public void resetMocks() {
+        reset( eeService, arrayDesignService, entityLocator );
+    }
 
     @Test
     @WithMockUser
@@ -328,6 +365,61 @@ public class ExpressionExperimentManipulatingCLITest extends BaseCliTest5 {
                 .fails()
                 .standardError()
                 .asString( StandardCharsets.UTF_8 )
-                .startsWith( "At least one of -all, -e, -eeset, -f, or -q must be provided." );
+                .startsWith( "-e must be provided; this command never operates on all experiments." );
+    }
+
+    /**
+     * {@code deleteExperiments} deletes data with no undo. Its own {@code -a} (delete platforms instead) takes an
+     * argument, so a removed {@code -all} option is absorbed as {@code -a ll} rather than rejected outright — but
+     * either way it must never reach {@link ExpressionExperimentService#loadAll()}.
+     */
+    @Test
+    @WithMockUser
+    public void testDeleteExperimentsAllNeverLoadsEveryExperiment() {
+        assertThat( deleteExperimentsCli )
+                .withArguments( "-all" )
+                .fails();
+        verify( eeService, never() ).loadAll();
+    }
+
+    /**
+     * {@code -all}, {@code -f} and {@code -q} must not exist as options for a destructive CLI: only {@code -e} is
+     * recognized. ({@code -eeset} is not checked the same way: since {@code -e} takes an argument, Commons CLI's
+     * short-option matching absorbs an unrecognized {@code -eeset} as {@code -e eset}, which is still safe — it
+     * addresses one (nonexistent) experiment named "eset", never every experiment in a set.)
+     */
+    @Test
+    @WithMockUser
+    public void testExplicitEEsOnlyRefusesEveryBulkOption() {
+        for ( String arg : new String[] { "-all", "-f", "-q" } ) {
+            assertThat( testExplicitEEsOnlyCli )
+                    .withArguments( arg, "x" )
+                    .fails()
+                    .standardError()
+                    .asString( StandardCharsets.UTF_8 )
+                    .startsWith( "Unrecognized option: " + arg );
+        }
+    }
+
+    @Test
+    @WithMockUser
+    public void testExplicitEEsOnlyRequiresE() {
+        assertThat( testExplicitEEsOnlyCli )
+                .withArguments()
+                .fails()
+                .standardError()
+                .asString( StandardCharsets.UTF_8 )
+                .startsWith( "-e must be provided; this command never operates on all experiments." );
+    }
+
+    @Test
+    @WithMockUser
+    public void testExplicitEEsOnlySucceedsWithE() {
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        when( entityLocator.locateExpressionExperiment( eq( "test" ), anyBoolean() ) ).thenReturn( ee );
+        assertThat( testExplicitEEsOnlyCli )
+                .withArguments( "-e", "test" )
+                .succeeds();
     }
 }

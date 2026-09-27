@@ -43,6 +43,8 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     public DeleteExperimentsCli() {
         // we delete troubled / unusable items, has to be set prior to processOptions()
         setForce();
+        // deletion is irreversible; -e must always name the experiments to delete, never -all/-eeset/-f/-q
+        setExplicitEEsOnly();
     }
 
     @Override

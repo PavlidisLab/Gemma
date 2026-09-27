@@ -128,6 +128,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     private boolean useReferencesIfPossible = false;
 
     /**
+     * Require {@code -e} and refuse every other way of selecting experiments, so this CLI can never be pointed at
+     * "every experiment" by a bulk selector, whether that's {@code -all} or a broad {@code -eeset}/{@code -f}/
+     * {@code -q}.
+     */
+    private boolean explicitEEsOnly = false;
+
+    /**
      * Abort processing experiments if an error occurs.
      */
     private boolean abortOnError = false;
@@ -299,10 +306,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     protected final void buildOptions( Options options ) {
         addDatasetOption( options, "e", "experiment",
-                "Dataset identifier. Most tools recognize comma-delimited values given on the command line, "
-                        + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." );
+                explicitEEsOnly
+                        ? "Dataset identifier. Comma-delimited values are recognized; this is the only way to select "
+                        + "datasets for this command, which never operates on all experiments."
+                        : "Dataset identifier. Most tools recognize comma-delimited values given on the command line, "
+                                + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." );
 
-        if ( singleExperimentMode ) {
+        if ( singleExperimentMode || explicitEEsOnly ) {
             buildExperimentOptions( options );
             hasForceOption = options.hasOption( FORCE_OPTION );
             return;
@@ -348,9 +358,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     protected final void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
-        // In single-experiment mode, buildOptions() defines -e and none of the other dataset options, so any of their
-        // keys on the command line belongs to the subclass: importDesign's -f is its design file, not a dataset list.
-        boolean datasetSelectionOptionsDefined = !singleExperimentMode;
+        // In single-experiment mode (and in explicit-EEs-only mode), buildOptions() defines -e and none of the other
+        // dataset options, so any of their keys on the command line belongs to the subclass: importDesign's -f is
+        // its design file, not a dataset list.
+        boolean datasetSelectionOptionsDefined = !singleExperimentMode && !explicitEEsOnly;
         boolean hasAnyDatasetOptions = commandLine.hasOption( "e" )
                 || ( datasetSelectionOptionsDefined && (
                 commandLine.hasOption( "all" )
@@ -358,7 +369,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                         || commandLine.hasOption( 'f' )
                         || commandLine.hasOption( 'q' ) ) );
         if ( !hasAnyDatasetOptions && !defaultToAll && !selectsOwnExperiments( commandLine ) ) {
-            throw new MissingOptionException( "At least one of -all, -e, -eeset, -f, or -q must be provided." );
+            throw new MissingOptionException( explicitEEsOnly
+                    ? "-e must be provided; this command never operates on all experiments."
+                    : "At least one of -all, -e, -eeset, -f, or -q must be provided." );
         }
         if ( defaultToAll && !hasAnyDatasetOptions ) {
             this.all = true;
@@ -765,6 +778,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     public void setDefaultToAll() {
         Assert.state( !this.defaultToAll, "Default to all is already enabled." );
         this.defaultToAll = true;
+    }
+
+    /**
+     * Require {@code -e} and refuse {@code -all}, {@code -eeset}, {@code -f} and {@code -q}, so this CLI can never
+     * be pointed at every experiment in the system, whether by omission or by a broad filter.
+     * <p>
+     * Intended for destructive CLIs ({@code deleteExperiments}, {@code deleteRawData}, {@code deleteProcessedData},
+     * {@code deleteSingleCellData}) where a bulk selector deleting the whole database is a mistake with no undo.
+     */
+    protected void setExplicitEEsOnly() {
+        Assert.state( !this.explicitEEsOnly, "Explicit EEs only is already enabled." );
+        Assert.state( !this.defaultToAll, "Explicit EEs only is not compatible with defaultToAll." );
+        Assert.state( !this.allIsLazy, "Explicit EEs only is not compatible with allIsLazy." );
+        this.explicitEEsOnly = true;
     }
 
     /**
