@@ -355,6 +355,11 @@ public class LoadSimpleExpressionDataCli extends AbstractAuthenticatedCLI {
         ScaleType sType = EnumConverter.of( ScaleType.class ).apply( getRequiredRecordField( record, "qt_scale" ) );
         qtMetadata.setScale( sType );
         qtMetadata.setRepresentation( PrimitiveType.DOUBLE );
+        // this loader always creates a brand new experiment with exactly one (raw) quantitation type -
+        // SimpleExpressionExperimentMetadata.quantitationType is singular and "required if data is provided" - so
+        // it is always the preferred one. Without this, SimpleExpressionDataLoaderServiceImpl#create() never
+        // preprocesses the load, and a later makeProcessedData fails outright with "No preferred data vectors".
+        qtMetadata.setIsPreferred( true );
 
         metaData.setQuantitationType( qtMetadata );
     }
