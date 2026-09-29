@@ -19,6 +19,7 @@ import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
 import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.util.SimpleRetryPolicy;
@@ -159,7 +160,10 @@ public class CellXGeneGrabberCli extends AbstractCLI {
             allowedTissues = null;
         }
         CellXGeneFetcher fetcher = new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGeneDownloadPath );
-        getCliContext().getOutputStream().println( "collection_id\tdataset_id\tdataset_name\tgeo_accessions\ttaxa\ttissues\tcell_types\tdevelopment_stages\tdiseases\tassays\tnumber_of_samples\tnumber_of_cells" );
+        // one request for the permanent IDs of every dataset; the per-collection metadata only has version IDs
+        Map<String, String> datasetIdByVersionId = fetcher.fetchAllDatasetVersions().stream()
+                .collect( Collectors.toMap( DatasetVersion::getDatasetVersionId, DatasetVersion::getDatasetId, ( a, b ) -> a ) );
+        getCliContext().getOutputStream().println( "collection_id\tdataset_id\tdataset_version_id\tdataset_name\tgeo_accessions\ttaxa\ttissues\tcell_types\tdevelopment_stages\tdiseases\tassays\tnumber_of_samples\tnumber_of_cells" );
         for ( CollectionMetadata cm : fetcher.fetchAllCollectionMetadata() ) {
             cm = fetcher.fetchCollectionMetadata( cm.getId() );
             assert cm.getDatasets() != null;
@@ -183,8 +187,9 @@ public class CellXGeneGrabberCli extends AbstractCLI {
                     log.debug( dm.getId() + ": Dataset does not use a requested tissue: " + dm.getTissue() + ", skipping." );
                     continue;
                 }
-                getCliContext().getOutputStream().printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
-                        TsvUtils.format( cm.getId() ), TsvUtils.format( dm.getId() ), TsvUtils.format( dm.getName() ),
+                getCliContext().getOutputStream().printf( "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s%n",
+                        TsvUtils.format( cm.getId() ), TsvUtils.format( datasetIdByVersionId.get( dm.getId() ) ),
+                        TsvUtils.format( dm.getId() ), TsvUtils.format( dm.getName() ),
                         TsvUtils.format( geoAccessions ),
                         format( dm.getOrganism() ), format( dm.getTissue() ), format( dm.getCellType() ),
                         format( dm.getDevelopmentStage() ), format( dm.getDisease() ), format( dm.getAssay() ),

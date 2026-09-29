@@ -39,13 +39,17 @@ public class CellXGeneDataLoaderServiceTest extends BaseIntegrationTest5 {
         platform = arrayDesignService.create( platform );
 
         ExpressionExperiment ee = cellXGeneDataLoaderService.fetchAndLoad( "f406a653-c079-4bf9-aab6-85846c27571d",
-                "e6ef2a07-1b8e-49a8-a771-15b81971eac7", null, platform, "Clarence-2024",
+                // selected by title; a revision of the dataset changes its version but not its permanent ID
+                "Postnatal human brain development: RNA", null, platform, "Clarence-2024",
                 false, false, false, false );
 
         assertThat( ee.getAccession() ).isNotNull()
                 .satisfies( accession -> {
                     assertThat( accession.getAccession() )
-                            .isEqualTo( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
+                            .isEqualTo( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd" );
+                    assertThat( accession.getAccessionVersion() )
+                            .isNotNull()
+                            .isNotEqualTo( accession.getAccession() );
                     assertThat( accession.getUri() )
                             .isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
                     assertThat( accession.getExternalDatabase().getName() )

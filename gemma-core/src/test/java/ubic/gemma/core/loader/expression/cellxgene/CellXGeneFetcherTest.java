@@ -15,6 +15,7 @@ import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAssetDownloadMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.NetworkAvailable;
@@ -51,6 +52,26 @@ public class CellXGeneFetcherTest extends BaseTest5 {
     public void testFetchAllCollectionMetadata() throws IOException {
         List<CollectionMetadata> metadata = fetcher.fetchAllCollectionMetadata();
         assertThat( metadata ).isNotEmpty();
+    }
+
+    @Test
+    @Tag("network")
+    public void testResolveDataset() throws IOException {
+        String collectionId = "f406a653-c079-4bf9-aab6-85846c27571d";
+        DatasetVersion byTitle = fetcher.resolveDataset( collectionId, "Postnatal human brain development: RNA" );
+        assertThat( byTitle.getDatasetId() ).isEqualTo( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd" );
+        assertThat( byTitle.getDatasetVersionId() ).isNotEqualTo( byTitle.getDatasetId() );
+        assertThat( fetcher.resolveDataset( collectionId, byTitle.getDatasetVersionId() ) ).isEqualTo( byTitle );
+        assertThat( fetcher.resolveDataset( collectionId, null ) ).isEqualTo( byTitle );
+    }
+
+    @Test
+    @Tag("network")
+    public void testResolveDatasetWithSupersededVersion() throws IOException {
+        // the first published version of 56a4bc14-9407-45fd-8786-f7f6fc87c9dd resolves to its current version
+        DatasetVersion dv = fetcher.resolveDataset( "f406a653-c079-4bf9-aab6-85846c27571d", "ecd5537e-9561-43f2-9bb0-9d0b911084fe" );
+        assertThat( dv.getDatasetId() ).isEqualTo( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd" );
+        assertThat( dv.getDatasetVersionId() ).isNotEqualTo( "ecd5537e-9561-43f2-9bb0-9d0b911084fe" );
     }
 
     @Test

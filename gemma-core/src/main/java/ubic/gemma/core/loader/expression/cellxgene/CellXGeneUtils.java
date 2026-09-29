@@ -3,6 +3,8 @@ package ubic.gemma.core.loader.expression.cellxgene;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.loader.expression.cellxgene.model.Link;
 import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 import ubic.gemma.core.ontology.OntologyUtils;
@@ -14,6 +16,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.StringUtils.urlEncode;
 
@@ -85,6 +88,64 @@ public class CellXGeneUtils {
     @Nullable
     public static String getDatasetUri( String datasetId ) {
         return null;
+    }
+
+    /**
+     * Resolve a dataset in a collection from a user-supplied identifier.
+     * <p>
+     * The identifier is matched, in order, against the permanent dataset ID, the dataset version ID and the dataset
+     * title. Titles are compared exactly first, then ignoring case and surrounding whitespace. Titles are not unique
+     * across CELLxGENE, which is why resolution is always scoped to a collection.
+     *
+     * @param collectionId used in error messages only
+     * @param datasets     the datasets of the collection, as reported by the curation API
+     * @param identifier   a permanent dataset ID, a dataset version ID or a dataset title
+     * @throws IllegalArgumentException if no dataset or more than one dataset matches
+     */
+    public static DatasetVersion resolveDataset( String collectionId, List<DatasetVersion> datasets, String identifier ) {
+        for ( DatasetVersion dv : datasets ) {
+            if ( identifier.equals( dv.getDatasetId() ) || identifier.equals( dv.getDatasetVersionId() ) ) {
+                return dv;
+            }
+        }
+        List<DatasetVersion> matches = datasets.stream()
+                .filter( dv -> identifier.equals( dv.getTitle() ) )
+                .collect( Collectors.toList() );
+        if ( matches.isEmpty() ) {
+            matches = datasets.stream()
+                    .filter( dv -> dv.getTitle() != null && identifier.trim().equalsIgnoreCase( dv.getTitle().trim() ) )
+                    .collect( Collectors.toList() );
+        }
+        if ( matches.size() == 1 ) {
+            return matches.get( 0 );
+        } else if ( matches.isEmpty() ) {
+            throw new IllegalArgumentException( String.format( "No dataset matching '%s' in CELLxGENE collection %s. Choose one among:%n\t%s",
+                    identifier, collectionId, formatDatasets( datasets ) ) );
+        } else {
+            throw new IllegalArgumentException( String.format( "More than one dataset titled '%s' in CELLxGENE collection %s, use a dataset ID instead:%n\t%s",
+                    identifier, collectionId, formatDatasets( matches ) ) );
+        }
+    }
+
+    /**
+     * Select the metadata of a resolved dataset from a collection.
+     *
+     * @throws IllegalStateException if the collection metadata does not list the dataset's current version, which
+     *                               happens if the dataset was revised between the two requests
+     */
+    public static DatasetMetadata getDatasetMetadata( CollectionMetadata cm, DatasetVersion datasetVersion ) {
+        Assert.notNull( cm.getDatasets(), "Cannot select a dataset from a shallow CollectionMetadata." );
+        return cm.getDatasets().stream()
+                .filter( dm -> dm.getId().equals( datasetVersion.getDatasetVersionId() ) )
+                .findFirst()
+                .orElseThrow( () -> new IllegalStateException( String.format( "CELLxGENE dataset %s has version %s, but that version is not in the metadata of collection %s.",
+                        datasetVersion.getDatasetId(), datasetVersion.getDatasetVersionId(), cm.getId() ) ) );
+    }
+
+    private static String formatDatasets( List<DatasetVersion> datasets ) {
+        return datasets.stream()
+                .map( dv -> dv.getDatasetId() + ": " + dv.getTitle() )
+                .collect( Collectors.joining( "\n\t" ) );
     }
 
     /**

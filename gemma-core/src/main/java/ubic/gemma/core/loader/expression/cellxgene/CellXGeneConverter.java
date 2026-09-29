@@ -4,6 +4,7 @@ import ubic.gemma.core.util.SymbolFontPua;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.loader.expression.cellxgene.model.Link;
 import ubic.gemma.core.loader.expression.cellxgene.model.OntologyTerm;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
@@ -20,6 +21,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonReadService;
+import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.util.*;
@@ -56,18 +58,22 @@ public class CellXGeneConverter {
     /**
      *
      * @param datasetMetadata    CELLxGENE dataset metadata to convert
+     * @param datasetVersion     permanent and version identifiers of the dataset, the version must match
+     *                           {@link DatasetMetadata#getId()}
      * @param platform           platform to use for mapping deign elements from the data
      * @param dataLoader         single-cell data loader for loading sample names and data vectors (if requested)
      * @param loadSingleCellData whether to load the single-cell data vectors, this can be done later if needed
      * @return a transient {@link ExpressionExperiment} pre-populated with CELLxGENE metadata
      */
-    public ExpressionExperiment convert( CollectionMetadata collectionMetadata, DatasetMetadata datasetMetadata, ArrayDesign platform, Collection<CompositeSequence> compositeSequences, String datasetShortName, SingleCellDataLoader dataLoader, boolean loadSingleCellData ) throws IOException {
+    public ExpressionExperiment convert( CollectionMetadata collectionMetadata, DatasetMetadata datasetMetadata, DatasetVersion datasetVersion, ArrayDesign platform, Collection<CompositeSequence> compositeSequences, String datasetShortName, SingleCellDataLoader dataLoader, boolean loadSingleCellData ) throws IOException {
+        Assert.isTrue( datasetMetadata.getId().equals( datasetVersion.getDatasetVersionId() ),
+                "Dataset version " + datasetVersion.getDatasetVersionId() + " does not match the dataset metadata " + datasetMetadata.getId() + "." );
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( datasetShortName );
         ee.setName( datasetMetadata.getName() );
         // external metadata we do not control; same repair as the GEO path
         ee.setDescription( SymbolFontPua.repair( collectionMetadata.getDescription() ) );
-        ee.setAccession( convertAccession( datasetMetadata ) );
+        ee.setAccession( convertAccession( datasetMetadata, datasetVersion ) );
         ee.setSource( "Imported from CELLxGENE." );
         List<BibliographicReference> bibrefs = convertPublications( collectionMetadata );
         if ( !bibrefs.isEmpty() ) {
@@ -132,12 +138,15 @@ public class CellXGeneConverter {
         }
     }
 
-    private DatabaseEntry convertAccession( DatasetMetadata datasetMetadata ) {
+    private DatabaseEntry convertAccession( DatasetMetadata datasetMetadata, DatasetVersion datasetVersion ) {
         ExternalDatabase cellxgeneDatabase = externalDatabaseService.findByName( ExternalDatabases.CELLXGENE );
         if ( cellxgeneDatabase == null ) {
             throw new IllegalStateException( "CELLxGENE external database not found in the system. Make sure it is created before importing CELLxGENE datasets.." );
         }
-        DatabaseEntry de = DatabaseEntry.Factory.newInstance( datasetMetadata.getId(), cellxgeneDatabase );
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance( datasetVersion.getDatasetId(), cellxgeneDatabase );
+        // the version is what download links are keyed on, keep it so that the loaded data can be fetched again
+        de.setAccessionVersion( datasetVersion.getDatasetVersionId() );
+        // the collection ID is not recorded anywhere else, so link to the collection rather than to the Explorer
         de.setUri( CellXGeneUtils.getCollectionUri( datasetMetadata.getCollectionId() ) );
         return de;
     }

@@ -17,7 +17,9 @@ public interface CellXGeneDataLoaderService {
     /**
      * Fetch a CELLxGENE dataset and load it into the database.
      *
-     * @param datasetId          CELLxGENE dataset identifier
+     * @param datasetId          CELLxGENE permanent dataset ID, dataset version ID or dataset title, or {@code null} if
+     *                           the collection holds a single dataset. The resulting accession records the permanent
+     *                           ID, with the version ID as its accession version.
      * @param assetId            CELLxGENE dataset asset identifier
      * @param platform           platform to use for mapping design elements from the data, the primary taxon must
      *                           correspond to that of the dataset.
@@ -28,7 +30,7 @@ public interface CellXGeneDataLoaderService {
      * @return a persistent {@link ExpressionExperiment} pre-populated with CELLxGENE metadata and single-cell data (if
      * requested)
      * @throws IllegalArgumentException if a dataset with the given short name already exists in the database, or if the
-     * platform taxon does not match that of the CELLxGENE dataset
+     * platform taxon does not match that of the CELLxGENE dataset, or if the dataset cannot be resolved
      */
     ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId, ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample, boolean dryRun ) throws IOException;
 
