@@ -161,7 +161,7 @@ public class ArrayDesignSequenceManipulatingCliTest extends BaseCliTest5 {
     }
 
     /**
-     * Regression check: a CLI on this base class that does NOT opt into {@link #setExplicitADsOnly()} keeps
+     * Regression check: a CLI on this base class that does NOT opt into {@link ArrayDesignSequenceManipulatingCli#setExplicitADsOnly()} keeps
      * {@code -all}, since that's shared by CLIs that legitimately process every platform (e.g. report regeneration).
      */
     @Test
