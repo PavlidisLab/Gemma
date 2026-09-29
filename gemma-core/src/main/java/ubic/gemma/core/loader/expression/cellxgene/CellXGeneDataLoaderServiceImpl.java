@@ -20,6 +20,11 @@ import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTran
 import ubic.gemma.core.loader.util.mapper.EnsemblIdDesignElementMapper;
 import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -61,13 +66,14 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
     private final Path cellXGeneTransposedPath;
     private final TransactionTemplate transactionTemplate;
+    private final DatabaseEntryService databaseEntryService;
 
     @Autowired
     public CellXGeneDataLoaderServiceImpl(
             Persister persister, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
             SingleCellExpressionExperimentService singleCellExpressionExperimentService,
-            ExternalDatabaseService externalDatabaseService, TaxonReadService taxonReadService,
+            ExternalDatabaseService externalDatabaseService, DatabaseEntryService databaseEntryService, TaxonReadService taxonReadService,
             SingleCellDataTransformationFactory singleCellDataTransformationFactory,
             PlatformTransactionManager transactionManager,
             @Value("${cellxgene.local.singleCellData.basepath}") Path cellXGeneDownloadPath,
@@ -83,6 +89,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         this.singleCellExpressionExperimentService = singleCellExpressionExperimentService;
         this.cellXGeneTransposedPath = cellXGeneTransposedPath;
         this.transactionTemplate = new TransactionTemplate( transactionManager );
+        this.databaseEntryService = databaseEntryService;
     }
 
     @Override
@@ -186,6 +193,29 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
                 }
             }
         }
+    }
+
+    @Override
+    @Transactional
+    @Audited(value = CommentedEvent.class, messageSpel = "'Replaced the CELLxGENE accession ' + #result.accessionVersion + ' (a dataset version ID) by the permanent dataset ID ' + #datasetId + ', keeping ' + #result.accessionVersion + ' as its accession version.'")
+    public DatabaseEntry replaceVersionAccession( ExpressionExperiment ee, String datasetId ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
+        DatabaseEntry previous = ee.getAccession();
+        if ( previous == null || !ExternalDatabases.CELLXGENE.equals( previous.getExternalDatabase().getName() ) ) {
+            throw new IllegalStateException( ee + " does not have a CELLxGENE accession." );
+        }
+        if ( previous.getAccessionVersion() != null ) {
+            throw new IllegalStateException( ee + " already has a versioned CELLxGENE accession: " + previous.getAccession()
+                    + " version " + previous.getAccessionVersion() + "." );
+        }
+        // DatabaseEntry is immutable, so the entry is replaced rather than modified
+        DatabaseEntry replacement = DatabaseEntry.Factory.newInstance( datasetId, previous.getExternalDatabase() );
+        replacement.setAccessionVersion( previous.getAccession() );
+        replacement.setUri( previous.getUri() );
+        ee.setAccession( replacement );
+        expressionExperimentService.update( ee );
+        databaseEntryService.remove( previous );
+        return replacement;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
 import ubic.gemma.core.util.ProgressReporterFactory;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -33,6 +34,20 @@ public interface CellXGeneDataLoaderService {
      * platform taxon does not match that of the CELLxGENE dataset, or if the dataset cannot be resolved
      */
     ExpressionExperiment fetchAndLoad( String collectionId, @Nullable String datasetId, @Nullable String assetId, ArrayDesign platform, String datasetShortName, boolean loadSingleCellData, boolean keepPooledSample, boolean keepUnknownSample, boolean dryRun ) throws IOException;
+
+    /**
+     * Replace a CELLxGENE accession that holds a dataset version ID by one that holds the permanent dataset ID.
+     * <p>
+     * Datasets loaded before permanent IDs were recorded store the version ID as their accession. The new accession
+     * keeps that version ID as its accession version, since it designates the data that was actually loaded, and
+     * keeps the same URI. The previous {@link DatabaseEntry} is removed.
+     *
+     * @param datasetId the permanent CELLxGENE dataset ID that the current accession is a version of
+     * @return the new accession
+     * @throws IllegalStateException if the experiment does not have a CELLxGENE accession, or if that accession
+     *                               already has an accession version
+     */
+    DatabaseEntry replaceVersionAccession( ExpressionExperiment ee, String datasetId );
 
     /**
      * Set the progress reporter factory to use for reporting progress during data downloading.

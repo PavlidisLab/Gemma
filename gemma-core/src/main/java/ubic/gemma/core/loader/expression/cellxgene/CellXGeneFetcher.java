@@ -109,7 +109,7 @@ public class CellXGeneFetcher extends AbstractFetcher {
             return CellXGeneUtils.resolveDataset( collectionId, datasets, identifier );
         } catch ( IllegalArgumentException e ) {
             // the identifier might be a version that has since been superseded, as stored by older Gemma loads
-            DatasetVersion current = findDatasetBySupersededVersion( datasets, identifier );
+            DatasetVersion current = findDatasetByVersion( datasets, identifier );
             if ( current != null ) {
                 // the data portal API only describes the current version, so that is the one we can load
                 log.warn( String.format( "%s is a superseded version of CELLxGENE dataset %s (%s), using its current version %s instead.",
@@ -129,9 +129,22 @@ public class CellXGeneFetcher extends AbstractFetcher {
         return versions.stream().map( DatasetVersion::getDatasetVersionId ).collect( Collectors.toList() );
     }
 
+    /**
+     * Find the dataset that a version ID, current or superseded, belongs to.
+     * <p>
+     * A current version is matched without any request; otherwise, the version history of each dataset is fetched,
+     * one request per dataset, until one lists it.
+     *
+     * @param datasets the datasets of a collection, as returned by {@link #fetchDatasetVersions(String)}
+     * @return the dataset, described by its current version, or {@code null} if no dataset has that version
+     */
     @Nullable
-    private DatasetVersion findDatasetBySupersededVersion( List<DatasetVersion> datasets, String versionId ) throws IOException {
-        // only reached when an identifier did not resolve, so the one request per dataset is paid on the error path
+    public DatasetVersion findDatasetByVersion( List<DatasetVersion> datasets, String versionId ) throws IOException {
+        for ( DatasetVersion dv : datasets ) {
+            if ( versionId.equals( dv.getDatasetVersionId() ) ) {
+                return dv;
+            }
+        }
         for ( DatasetVersion dv : datasets ) {
             if ( fetchDatasetVersionIds( dv.getDatasetId() ).contains( versionId ) ) {
                 return dv;
