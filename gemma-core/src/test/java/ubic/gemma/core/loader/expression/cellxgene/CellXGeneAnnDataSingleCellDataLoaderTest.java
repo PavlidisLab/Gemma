@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 public class CellXGeneAnnDataSingleCellDataLoaderTest {
 
@@ -81,6 +83,35 @@ public class CellXGeneAnnDataSingleCellDataLoaderTest {
      *     <li>dataset id: 87b802cc-73ca-422a-8cc7-6d6d38449b3f</li>
      * </ul>
      */
+    /**
+     * CELLxGENE writes {@code cell_type_ontology_term_id} as CURIEs; the cell type assignment must store full URIs.
+     * <p>The fixture's URI column holds {@code CL:0000115} … {@code CL:0008034}. Before the fix these were stored
+     * verbatim, which is how HBCC_Cohort's 2026-09-29 reload wrote 25 CURIEs into its assignment and cell type
+     * factor.</p>
+     */
+    @Test
+    public void testCellTypeAssignmentStoresFullUris() throws IOException {
+        Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/cellxgene-pooled-sample.h5ad" ).getFile().toPath();
+        try ( CellXGeneAnnDataSingleCellDataLoader loader = new CellXGeneAnnDataSingleCellDataLoader( dataPath, true, false ) ) {
+            List<BioAssay> samples = loader.getSampleNames().stream()
+                    .map( sn -> BioAssay.Factory.newInstance( sn, null, BioMaterial.Factory.newInstance( sn ) ) )
+                    .collect( Collectors.toList() );
+            SingleCellDimension dimension = loader.getSingleCellDimension( samples );
+            assertThat( loader.getCellTypeAssignments( dimension ) )
+                    .singleElement()
+                    .satisfies( cta -> assertThat( cta.getCellTypes() )
+                            .extracting( Characteristic::getValue, Characteristic::getValueUri )
+                            .containsExactlyInAnyOrder(
+                                    tuple( "endothelial cell", "http://purl.obolibrary.org/obo/CL_0000115" ),
+                                    tuple( "astrocyte", "http://purl.obolibrary.org/obo/CL_0000127" ),
+                                    tuple( "oligodendrocyte", "http://purl.obolibrary.org/obo/CL_0000128" ),
+                                    tuple( "microglial cell", "http://purl.obolibrary.org/obo/CL_0000129" ),
+                                    tuple( "neuron", "http://purl.obolibrary.org/obo/CL_0000540" ),
+                                    tuple( "oligodendrocyte precursor cell", "http://purl.obolibrary.org/obo/CL_0002453" ),
+                                    tuple( "mural cell", "http://purl.obolibrary.org/obo/CL_0008034" ) ) );
+        }
+    }
+
     @Test
     public void testKeepPooledSample() throws IOException {
         Path dataPath = new ClassPathResource( "/data/loader/expression/singleCell/cellxgene-pooled-sample.h5ad" ).getFile().toPath();
