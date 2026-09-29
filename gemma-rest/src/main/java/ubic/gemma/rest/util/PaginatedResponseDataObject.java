@@ -14,6 +14,7 @@
  */
 package ubic.gemma.rest.util;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import ubic.gemma.persistence.util.Slice;
 
@@ -28,10 +29,15 @@ import java.util.List;
 @Getter
 public class PaginatedResponseDataObject<T> extends ResponseDataObject<List<T>> {
 
+    @Schema(description = "The properties the results are grouped by.")
     private final String[] groupBy;
+    @Schema(description = "How the results are ordered.")
     private final SortValueObject sort;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "How many results were skipped before this page began.")
     private final Integer offset;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The page size that was applied.")
     private final Integer limit;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "How many results the query matches in total, across every page.")
     private final Long totalElements;
 
     /**

@@ -29,6 +29,8 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
@@ -49,6 +51,7 @@ import java.util.Objects;
 public class BioAssayDimension extends AbstractIdentifiable {
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinTable(name = "BIO_ASSAY_DIMENSIONS2BIO_ASSAYS",
             joinColumns = @JoinColumn(name = "BIO_ASSAY_DIMENSIONS_FK", columnDefinition = "BIGINT"),
             inverseJoinColumns = @JoinColumn(name = "BIO_ASSAYS_FK", columnDefinition = "BIGINT"),

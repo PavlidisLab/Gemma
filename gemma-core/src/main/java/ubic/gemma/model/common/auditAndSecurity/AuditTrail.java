@@ -28,6 +28,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
@@ -46,6 +48,7 @@ import java.util.List;
 public class AuditTrail extends AbstractIdentifiable {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "AUDIT_TRAIL_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "AUDIT_EVENT_AUDIT_TRAIL_FKC"))
     @OrderBy("date")

@@ -10,6 +10,10 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +78,9 @@ public class DiffExGeneWarmupService {
     private GeneService geneService;
 
     @Autowired
+    private ManualAuthenticationService manualAuthenticationService;
+
+    @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
@@ -100,6 +107,16 @@ public class DiffExGeneWarmupService {
             initialDelayString = "${gemma.diffex.warmup.initialDelay:300000}",
             fixedDelayString = "${gemma.diffex.warmup.fixedDelay:21600000}" )
     public void warmTopGenes() {
+        // A @Scheduled thread carries no security context, and the pass reaches secured DAOs
+        // (AbstractCuratableDao.shouldHideTroubled -> SecurityUtil.isUserLoggedIn), which threw
+        // "Null authentication object" on every run on frink (2026-09-12). Run it as an anonymous caller, as
+        // HomeStatsServiceImpl.refresh does: the cache being warmed serves public traffic.
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication( manualAuthenticationService.authenticateAnonymously() );
+        DelegatingSecurityContextRunnable.create( this::doWarmTopGenes, context ).run();
+    }
+
+    private void doWarmTopGenes() {
         if ( !enabled ) {
             log.debug( "DEA gene warm-up disabled (gemma.diffex.warmup.enabled=false)" );
             return;

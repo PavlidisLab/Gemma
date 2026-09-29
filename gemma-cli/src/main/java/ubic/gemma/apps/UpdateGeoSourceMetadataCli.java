@@ -87,12 +87,17 @@ public class UpdateGeoSourceMetadataCli extends ExpressionExperimentManipulating
                 if ( thawed.getAccession() == null
                         || !ExternalDatabases.GEO.equals( thawed.getAccession().getExternalDatabase().getName() ) ) {
                     // Not an error: plenty of experiments did not come from GEO, and there is no
-                    // record for them to store. Counting them as failures would bury the real ones.
-                    addSuccessObject( thawed, "Not a GEO experiment, nothing to store." );
+                    // record for them to store. Counting them as failures would bury the real ones,
+                    // and counting them as successes says a document was stored when none was.
+                    addWarningObject( thawed, "Not a GEO experiment, nothing to store." );
                     return;
                 }
                 if ( !force && expressionExperimentService.hasSourceMetadata( thawed ) ) {
-                    addSuccessObject( thawed, "Already has a source metadata document, skipped." );
+                    // WARNING, not SUCCESS: the summary's whole job is to be aggregated by status,
+                    // and a resumed run is mostly skips. Reported as a success, 8/8 SUCCESS meant
+                    // "nothing changed" and read as "everything worked" -- caught on frink
+                    // 2026-09-17 by re-reading the rows in gemd afterwards.
+                    addWarningObject( thawed, "Already has a source metadata document, skipped." );
                     return;
                 }
                 geoService.updateFromGEO( thawed, GeoService.GeoUpdateConfig.builder()

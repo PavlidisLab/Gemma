@@ -1,10 +1,12 @@
 package ubic.gemma.apps;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.cli.authentication.CLIAuthenticationManager;
 import ubic.gemma.cli.util.EntityLocator;
@@ -20,6 +22,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationRole;
 import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -29,6 +32,13 @@ import ubic.gemma.persistence.service.common.description.PublicationAssociationS
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -118,6 +128,8 @@ public class VerifyPublicationEvidenceCliTest extends BaseCliTest5 {
     private ExpressionExperimentService eeService;
     @Autowired
     private PublicationAssociationService publicationAssociationService;
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
 
     /**
      * 🛑 There is no default mode, deliberately. One half reads GEO and restates a basis; the other
@@ -251,6 +263,129 @@ public class VerifyPublicationEvidenceCliTest extends BaseCliTest5 {
         assertThat( cli ).withArguments( "-e", "GSE123", "--verify", "--paceMillis", "0" ).succeeds();
 
         verify( publicationAssociationService, never() ).assertAccepted( any(), any(), any() );
+    }
+
+    /**
+     * 🛑 A row whose GEO read failed is retried on resume. Every accession in the change log counted as
+     * done, so a dataset GEO could not be read for was never looked at again.
+     * <p>
+     * These resume tests run two experiments because a single-experiment run never opens the change
+     * log. They dirty the context: the CLI bean keeps the change log path and the settled ids in fields,
+     * and the other tests must not inherit them.
+     */
+    @Test
+    @WithMockUser
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    public void testAResumeRetriesADatasetGeoCouldNotBeRead( @TempDir Path dir ) throws Exception {
+        ExpressionExperiment ee = geoExperiment();
+        when( entityLocator.locateExpressionExperiment( eq( "GSE123" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+        PublicationAssociation held = new PublicationAssociation();
+        held.setSource( PublicationAssociationSource.GEO_SUBMITTER_LINK );
+        held.setEvidenceCode( GOEvidenceCode.IIA );
+        when( publicationAssociationService.find( any(), any() ) ).thenReturn( held );
+        ExpressionExperimentBibRefFinder finder = mock( ExpressionExperimentBibRefFinder.class );
+        when( finder.locatePubMedIds( "GSE123" ) ).thenReturn( Collections.singletonList( 38064339 ) );
+        cli.setFinder( finder );
+        secondExperiment();
+        Path changeLog = changeLogWithRow( dir, "1\tGSE123\tGSE123\tgeo_unreadable\t38064339\t\tIIA\tcould not read GSE123 from GEO" );
+
+        assertThat( cli ).withArguments( "-e", "GSE123,GSE456", "--verify", "--paceMillis", "0",
+                "--changeLog", changeLog.toString() ).succeeds();
+
+        verify( publicationAssociationService ).assertAccepted( eq( ee ), any(), eq( PublicationAssociationRole.PRIMARY ) );
+    }
+
+    /** A settled row is still skipped on resume. */
+    @Test
+    @WithMockUser
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    public void testAResumeSkipsASettledDataset( @TempDir Path dir ) throws Exception {
+        ExpressionExperiment ee = geoExperiment();
+        when( entityLocator.locateExpressionExperiment( eq( "GSE123" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+        PublicationAssociation held = new PublicationAssociation();
+        held.setSource( PublicationAssociationSource.GEO_SUBMITTER_LINK );
+        held.setEvidenceCode( GOEvidenceCode.IIA );
+        when( publicationAssociationService.find( any(), any() ) ).thenReturn( held );
+        ExpressionExperimentBibRefFinder finder = mock( ExpressionExperimentBibRefFinder.class );
+        cli.setFinder( finder );
+        secondExperiment();
+        Path changeLog = changeLogWithRow( dir, "1\tGSE123\tGSE123\tpromoted_iia_to_tas\t38064339\t38064339\tTAS\t" );
+
+        assertThat( cli ).withArguments( "-e", "GSE123,GSE456", "--verify", "--paceMillis", "0",
+                "--changeLog", changeLog.toString() ).succeeds();
+
+        verify( finder, never() ).locatePubMedIds( "GSE123" );
+        verify( finder ).locatePubMedIds( "GSE456" );
+    }
+
+    /**
+     * 🛑 A verify-only run leaves no_primary rows telling the reader to run with --fill, and the --fill
+     * rerun on the same change log skipped every one of them.
+     */
+    @Test
+    @WithMockUser
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    public void testAFillResumeRetriesNoPrimaryRows( @TempDir Path dir ) throws Exception {
+        ExpressionExperiment ee = geoExperiment();
+        ee.setPrimaryPublication( null );
+        when( entityLocator.locateExpressionExperiment( eq( "GSE123" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+        ExpressionExperimentBibRefFinder finder = mock( ExpressionExperimentBibRefFinder.class );
+        when( finder.locatePubMedIds( "GSE123" ) ).thenReturn( Collections.singletonList( 38064339 ) );
+        cli.setFinder( finder );
+        when( bibliographicReferenceService.findOrCreateByPubMedId( "38064339" ) ).thenReturn( new BibliographicReference() );
+        secondExperiment();
+        Path changeLog = changeLogWithRow( dir, "1\tGSE123\tGSE123\tno_primary\t\t\t\tGemma has no primary" );
+
+        assertThat( cli ).withArguments( "-e", "GSE123,GSE456", "--fill", "--paceMillis", "0",
+                "--changeLog", changeLog.toString() ).succeeds();
+
+        verify( eeService ).updatePublications( eq( ee ), any(), any(), isNull() );
+    }
+
+    /**
+     * 🛑 A dataset GEO could not be read for was not checked, and the run says so in its exit status.
+     * Recorded as a warning, a run in which every GEO read failed exited 0.
+     */
+    @Test
+    @WithMockUser
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    public void testAnUnreadableGeoFailsTheRun() throws Exception {
+        ExpressionExperiment ee = geoExperiment();
+        when( entityLocator.locateExpressionExperiment( eq( "GSE123" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+        PublicationAssociation held = new PublicationAssociation();
+        held.setSource( PublicationAssociationSource.GEO_SUBMITTER_LINK );
+        held.setEvidenceCode( GOEvidenceCode.IIA );
+        when( publicationAssociationService.find( any(), any() ) ).thenReturn( held );
+        ExpressionExperimentBibRefFinder finder = mock( ExpressionExperimentBibRefFinder.class );
+        when( finder.locatePubMedIds( "GSE123" ) ).thenThrow( new IOException( "reCAPTCHA" ) );
+        cli.setFinder( finder );
+
+        assertThat( cli ).withArguments( "-e", "GSE123", "--verify", "--paceMillis", "0" ).fails();
+
+        verify( publicationAssociationService, never() ).assertAccepted( any(), any(), any() );
+    }
+
+    /** A second dataset with a primary publication, so the run takes the multi-experiment path. */
+    private void secondExperiment() {
+        ExpressionExperiment ee = geoExperiment();
+        ee.setId( 2L );
+        ee.setShortName( "GSE456" );
+        ee.getAccession().setAccession( "GSE456" );
+        when( entityLocator.locateExpressionExperiment( eq( "GSE456" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+    }
+
+    private static Path changeLogWithRow( Path dir, String row ) throws IOException {
+        Path changeLog = dir.resolve( "changes.tsv" );
+        Files.write( changeLog, Arrays.asList(
+                "# command: verifyPublicationEvidence",
+                "ee_id\tshort_name\tgeo_accession\toutcome\tgemma_pubmed_id\tgeo_pubmed_ids\tevidence_code\tnote",
+                row ), StandardCharsets.UTF_8 );
+        return changeLog;
     }
 
     private ExpressionExperiment geoExperiment() {

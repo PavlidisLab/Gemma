@@ -29,6 +29,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
@@ -87,6 +89,7 @@ public class Gene extends ChromosomeFeature {
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<GeneAlias> aliases = new HashSet<>();
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "TAXON_FK", columnDefinition = "BIGINT")
     private Taxon taxon;
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)

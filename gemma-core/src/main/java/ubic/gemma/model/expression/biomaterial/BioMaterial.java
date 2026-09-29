@@ -95,6 +95,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
     private Taxon sourceTaxon;
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinTable(name = "BIO_MATERIAL_FACTOR_VALUES",
             joinColumns = @JoinColumn(name = "BIO_MATERIALS_FK", columnDefinition = "BIGINT"),
             inverseJoinColumns = @JoinColumn(name = "FACTOR_VALUES_FK", columnDefinition = "BIGINT"),
@@ -103,6 +104,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
     private Set<FactorValue> factorValues = new HashSet<>();
 
     @OneToMany(mappedBy = "sampleUsed", fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<BioAssay> bioAssaysUsedIn = new HashSet<>();
 
@@ -113,6 +115,7 @@ public class BioMaterial extends AbstractDescribable implements SecuredChild<Exp
     private Set<Treatment> treatments = new HashSet<>();
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "BIO_MATERIAL_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "CHARACTERISTIC_BIO_MATERIAL_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

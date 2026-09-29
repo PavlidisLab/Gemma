@@ -122,7 +122,9 @@ public class BibRefUpdaterCli extends AbstractAuthenticatedCLI {
                     log.warn( "PMID " + accession + " is now flagged retracted (was not): " + updated );
                 }
             } catch ( Exception e ) {
-                log.info( "Failed to update: " + bibref + " (" + e.getMessage() + ")" );
+                // An error object, not an INFO line: a run in which every refresh failed (a rejected NCBI
+                // key, for one) exited 0.
+                addErrorObject( accession, "Failed to refresh " + bibref, e );
                 failed++;
             }
             Thread.sleep( random.nextInt( 1000 ) );

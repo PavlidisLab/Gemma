@@ -26,6 +26,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -41,6 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends ExpressionAnalysis implements SecuredChild<ExpressionExperiment> {
 
     @ManyToOne(fetch = FetchType.EAGER, targetEntity = BioAssaySet.class)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "EXPERIMENT_ANALYZED_FK", columnDefinition = "BIGINT")
     private T experimentAnalyzed;
 

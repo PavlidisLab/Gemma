@@ -286,7 +286,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
             if ( printMapping ) {
                 try {
-                    writeMapping( clc, cellTypeFactor, c2f, new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) );
+                    writeMapping( clc, cellTypeFactor, c2f, new OutputStreamWriter( openStandardOutput(), StandardCharsets.UTF_8 ) );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }
@@ -315,7 +315,7 @@ public class SingleCellDataAggregatorCli extends ExpressionExperimentVectorsMani
 
             if ( printMapping ) {
                 try {
-                    writeMapping( clc, cellTypeFactor, c2f, new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) );
+                    writeMapping( clc, cellTypeFactor, c2f, new OutputStreamWriter( openStandardOutput(), StandardCharsets.UTF_8 ) );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
                 }

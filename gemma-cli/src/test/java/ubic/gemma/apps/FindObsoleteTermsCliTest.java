@@ -1,6 +1,7 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -22,8 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 @TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
@@ -60,6 +60,11 @@ public class FindObsoleteTermsCliTest extends BaseCliTest5 {
         }
 
         @Bean
+        public ubic.gemma.core.ontology.providers.OntologyService ontology2() {
+            return mock();
+        }
+
+        @Bean
         public ManualAuthenticationService manualAuthenticationService() {
             return mock();
         }
@@ -79,6 +84,15 @@ public class FindObsoleteTermsCliTest extends BaseCliTest5 {
     @Autowired
     private ubic.gemma.core.ontology.providers.OntologyService ontology1;
 
+    @Autowired
+    private ubic.gemma.core.ontology.providers.OntologyService ontology2;
+
+    /** The ontology mocks are context singletons, so a stubbed failure would otherwise leak into the next test. */
+    @AfterEach
+    public void resetMocks() {
+        reset( ontology1, ontology2, ontologyService );
+    }
+
     @Test
     @WithMockUser
     public void test() throws TimeoutException {
@@ -89,5 +103,32 @@ public class FindObsoleteTermsCliTest extends BaseCliTest5 {
         verify( ontology1 ).setInferenceMode( ubic.gemma.core.ontology.providers.OntologyService.InferenceMode.NONE );
         verify( ontology1 ).initialize( true, false );
         verify( ontologyService ).findObsoleteTermUsage( 4, TimeUnit.HOURS );
+    }
+
+    /**
+     * One ontology that cannot load no longer takes the command down: the unified TDB store's lock error stopped
+     * fixOntologyTermLabels at ontology 3 of 20 on frink (2026-09-12). The rest load, and the check still runs.
+     */
+    @Test
+    @WithMockUser
+    public void anOntologyThatFailsToLoadIsSkippedAndTheCheckStillRuns() throws TimeoutException {
+        doThrow( new RuntimeException( "Unable to check TDB lock owner" ) ).when( ontology1 ).initialize( true, false );
+        TestCLIContext cliContext = new TestCLIContext( null, new String[] {} );
+        findObsoleteTermsCli.executeCommand( cliContext );
+        assertEquals( 0, cliContext.getExitStatus() );
+        verify( ontology2 ).initialize( true, false );
+        verify( ontologyService ).findObsoleteTermUsage( 4, TimeUnit.HOURS );
+    }
+
+    /** …but a run where nothing loads fails rather than reporting an empty result as success. */
+    @Test
+    @WithMockUser
+    public void whenNoOntologyLoadsTheCommandFails() throws TimeoutException {
+        doThrow( new RuntimeException( "boom" ) ).when( ontology1 ).initialize( true, false );
+        doThrow( new RuntimeException( "boom" ) ).when( ontology2 ).initialize( true, false );
+        TestCLIContext cliContext = new TestCLIContext( null, new String[] {} );
+        findObsoleteTermsCli.executeCommand( cliContext );
+        assertEquals( 1, cliContext.getExitStatus() );
+        verify( ontologyService, never() ).findObsoleteTermUsage( anyLong(), any() );
     }
 }

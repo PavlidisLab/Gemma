@@ -173,6 +173,16 @@ public interface ArrayDesignDao extends CuratableDao<ArrayDesign>,
 
     long countBlatResults( ArrayDesign arrayDesign );
 
+    /**
+     * Count the alignments held for this platform's sequences by the genome assembly they were searched against.
+     * <p>
+     * Results aligned before 2026-09-19 name the taxon ("rat") rather than the assembly, so they answer under that
+     * name and say nothing about which assembly they belong to.
+     *
+     * @see ubic.gemma.core.analysis.sequence.ShellDelegatingBlat#getSearchedGenome(ubic.gemma.model.genome.Taxon)
+     */
+    Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign );
+
     long countCompositeSequences( ArrayDesign id );
 
     long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign );

@@ -106,5 +106,18 @@ public class ExpressionExperimentFilterConfig implements Serializable {
      *
      * @see RowsWithSequencesFilter
      */
+    /**
+     * Keep at most this many design elements, the most variable ones, or 0 for no cap.
+     * <p>
+     * Off by default, and it must stay off for differential expression: cutting rows before the analysis is
+     * how you lose the thing you were looking for, so that path is deliberately generous (Paul, 2026-09-17).
+     * <p>
+     * The sample-correlation matrix is the opposite case. It asks how samples relate to one another, which a
+     * few thousand variable probes answer as well as thirty thousand do, while every stage that produces them
+     * is linear in the row count. {@code SampleCoexpressionAnalysisServiceImpl.cormatFilterConfig} is the only
+     * caller that sets it.
+     */
+    private int maxDesignElements = 0;
+
     private boolean requireSequences = true;
 }

@@ -190,8 +190,13 @@ public class CharacteristicDaoTest extends BaseDatabaseTest5 {
     public void testNormalizeByValue() {
         assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( null, "test" ) ) )
                 .isEqualTo( "test" );
+        // 🛑 A blank URI is stored as null (Characteristic.setValueUri), so the row normalises by its
+        // VALUE like any other ungrounded row. This used to assert "", which is what the empty string
+        // produced: every `VALUE_URI = ''` row in the corpus -- 80 of them on prod -- grouped together
+        // under one empty key in findByValueLikeGroupedByNormalizedValue and
+        // countByValueUriGroupedByNormalizedValue, whatever term it carried.
         assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( "", "test" ) ) )
-                .isEqualTo( "" );
+                .isEqualTo( "test" );
         assertThat( CharacteristicUtils.getNormalizedValue( createCharacteristic( "https://EXAMPLE.COM", "test" ) ) )
                 .isEqualTo( "https://example.com" );
     }

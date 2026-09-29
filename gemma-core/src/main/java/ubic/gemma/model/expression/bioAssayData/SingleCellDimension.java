@@ -15,6 +15,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -81,6 +83,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      */
     @MayBeUninitialized
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinTable(name = "BIO_ASSAYS2SINGLE_CELL_DIMENSIONS",
             joinColumns = @JoinColumn(name = "SINGLE_CELL_DIMENSIONS_FK", columnDefinition = "BIGINT",
                     foreignKey = @ForeignKey(name = "SINGLE_CELL_DIMENSIONS_FKC")),

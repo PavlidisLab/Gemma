@@ -40,6 +40,18 @@ public class TermViolation {
          */
         URI_UNRESOLVED,
         /**
+         * An NCBI gene id that NCBI itself still carries, but as a WITHDRAWN or secondary record: the
+         * annotation names a gene NCBI has retired. Distinct from {@link #URI_UNRESOLVED} because the id
+         * was real — the fix is the successor record, not a different gene.
+         */
+        GENE_WITHDRAWN,
+        /**
+         * A gene id absent from Gemma's gene table that NCBI could not be reached to check — unverified,
+         * not proven bad, and retryable. The NCBI sibling of {@link #UNVERIFIED_OLS_UNAVAILABLE}: a client
+         * retry loop keyed on the 400 status alone will spin on the two reasons above, which are not.
+         */
+        UNVERIFIED_NCBI_UNAVAILABLE,
+        /**
          * The URI is unknown locally and OLS could not be reached to check it — unverified, not proven bad.
          */
         UNVERIFIED_OLS_UNAVAILABLE,

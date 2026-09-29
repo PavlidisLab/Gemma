@@ -153,6 +153,25 @@ public class NetUtilsTest {
         assertThat( out ).doesNotExist();
     }
 
+    /**
+     * The remote was replaced between the listing and the transfer: NCBI regenerates its gene files daily, and a
+     * gene2accession download came back 34 MB longer than listed. The file received matches the remote as it is now,
+     * so it is kept.
+     */
+    @Test
+    public void remoteReplacedDuringTheDownload_keepsAFileMatchingTheNewRemote( @TempDir Path tmp ) throws IOException {
+        File out = tmp.resolve( "gene2accession.gz" ).toFile();
+        FTPClient f = clientDelivering( "gene2accession.gz", 1024, 1200 );
+        FTPFile before = new FTPFile();
+        before.setSize( 1024 );
+        FTPFile after = new FTPFile();
+        after.setSize( 1200 );
+        when( f.listFiles( "gene2accession.gz" ) ).thenReturn( new FTPFile[] { before }, new FTPFile[] { after } );
+
+        assertThat( NetUtils.ftpDownloadFile( f, "gene2accession.gz", out, false ) ).isTrue();
+        assertThat( out ).exists().hasSize( 1200 );
+    }
+
     @Test
     public void shortDownload_isRejectedAndTheFileRemoved( @TempDir Path tmp ) throws IOException {
         File out = tmp.resolve( "GSE1_RAW.tar" ).toFile();

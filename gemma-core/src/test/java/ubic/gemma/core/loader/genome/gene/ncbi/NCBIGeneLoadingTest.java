@@ -22,7 +22,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
 import ubic.gemma.core.util.FileTools;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
@@ -55,6 +57,10 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest5 {
     private GeneProductService geneProductService;
     @Autowired
     private GeneWriteService geneWriteService;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @BeforeEach
     public void setup() {
@@ -155,6 +161,31 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest5 {
         // test remove...
         geneProductService.remove( products );
 
+    }
+
+    /**
+     * A dry run goes through the real upsert and flush, reports what it would have done, and leaves nothing behind.
+     */
+    @Test
+    public void testDryRunWritesNothing() throws Exception {
+        NcbiGeneLoader loader = new NcbiGeneLoader();
+        loader.setGeneWriteService( geneWriteService );
+        loader.setTaxonService( taxonService );
+        loader.setTransactionManager( transactionManager );
+        loader.setSessionFactory( sessionFactory );
+        loader.setDryRun( true );
+        Taxon human = taxonService.findByCommonName( "human" );
+        assertNotNull( human );
+
+        loader.load( FileTools.resourceToPath( "/data/loader/genome/gene/gene_info.human.sample" ),
+                FileTools.resourceToPath( "/data/loader/genome/gene/gene2accession.human.sample" ),
+                FileTools.resourceToPath( "/data/loader/genome/gene/gene_history.human.sample" ), null, human );
+
+        assertEquals( 4, loader.getLoadedGeneCount() );
+        assertEquals( 4, loader.getCreatedGeneCount() );
+        assertEquals( 0, loader.getFailedGeneCount() );
+        assertTrue( geneService.findByOfficialSymbol( "A2M" ).isEmpty() );
+        assertNull( geneService.findByNCBIId( 2 ) );
     }
 
     private void clean() {

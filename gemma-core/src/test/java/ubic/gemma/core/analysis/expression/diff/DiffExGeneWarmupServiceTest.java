@@ -60,6 +60,9 @@ public class DiffExGeneWarmupServiceTest {
     @Mock
     private ExpressionExperimentService expressionExperimentService;
 
+    @Mock
+    private ubic.gemma.core.security.authentication.ManualAuthenticationService manualAuthenticationService;
+
     @InjectMocks
     private DiffExGeneWarmupService warmupService;
 
@@ -189,4 +192,32 @@ public class DiffExGeneWarmupServiceTest {
         return g;
     }
 
+
+    /**
+     * The pass runs with an anonymous authentication and leaves the caller's context as it found it. A
+     * {@code @Scheduled} thread carries none, and the pass reaches secured DAOs, which threw "Null authentication
+     * object" on every scheduled run on frink (2026-09-12).
+     */
+    @Test
+    void thePassRunsAsAnAnonymousCallerAndRestoresTheContext() {
+        org.springframework.security.authentication.AnonymousAuthenticationToken anonymous =
+                new org.springframework.security.authentication.AnonymousAuthenticationToken( "key", "anonymousUser",
+                        Collections.singletonList( new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                "IS_AUTHENTICATED_ANONYMOUSLY" ) ) );
+        when( manualAuthenticationService.authenticateAnonymously() ).thenReturn( anonymous );
+        java.util.concurrent.atomic.AtomicReference<org.springframework.security.core.Authentication> seen =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        when( expressionExperimentService.loadIdsWithCache( ( Filters ) any(), any( Sort.class ) ) ).thenAnswer( inv -> {
+            seen.set( org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() );
+            return Arrays.asList( 1L, 2L, 3L );
+        } );
+        warmupService.setSeedSymbolsCsv( "TP53" );
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+
+        warmupService.warmTopGenes();
+
+        assertThat( seen.get() ).as( "authentication in effect during the pass" ).isSameAs( anonymous );
+        assertThat( org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() )
+                .as( "the scheduler thread's own context afterwards" ).isNull();
+    }
 }

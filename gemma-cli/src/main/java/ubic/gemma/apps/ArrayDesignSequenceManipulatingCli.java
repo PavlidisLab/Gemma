@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
@@ -54,6 +55,11 @@ import static ubic.gemma.cli.util.EntityOptionsUtils.addCommaDelimitedPlatformOp
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSeekingCLI<ArrayDesign> {
 
+    /**
+     * @see #getMarkOnlyReason(CommandLine, String...)
+     */
+    protected static final String MARK_ONLY_OPTION = "markOnly";
+
     @Autowired
     protected ArrayDesignReportService arrayDesignReportService;
     @Autowired
@@ -68,9 +74,26 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     private boolean all;
     private Set<String> platformIdentifiers;
 
+    /**
+     * Refuse {@code -all}, so this CLI can never be pointed at every platform in the system; platforms must always
+     * be named with {@code -a} or {@code -f}.
+     */
+    private boolean explicitADsOnly = false;
+
     protected ArrayDesignSequenceManipulatingCli() {
         super( ArrayDesign.class );
         setRequireLogin();
+    }
+
+    /**
+     * Refuse {@code -all}, so this CLI can never be pointed at every platform in the system.
+     * <p>
+     * Intended for destructive CLIs ({@code detachSequences}, {@code deletePlatformElements}) where {@code -all}
+     * wiping every platform's sequences or elements is a mistake with no undo.
+     */
+    protected void setExplicitADsOnly() {
+        Assert.state( !this.explicitADsOnly, "Explicit ADs only is already enabled." );
+        this.explicitADsOnly = true;
     }
 
     @Override
@@ -80,7 +103,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     @Override
     protected final void buildOptions( Options options ) {
-        options.addOption( "all", "all", false, "Process all platforms." );
+        if ( !explicitADsOnly ) {
+            options.addOption( "all", "all", false, "Process all platforms." );
+        }
         addCommaDelimitedPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
         options.addOption( Option.builder( "f" )
                 .hasArg().argName( "File containing platform identifiers" )
@@ -124,6 +149,51 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     }
 
+    /**
+     * Read the reason given for {@code -markOnly}, or return null if it was not used.
+     * <p>
+     * A platform's BLAT results and gene mappings are held per sequence, so running one platform does the work for
+     * every platform that shares its sequences — but the audit event propagates only down the merge tree, leaving
+     * those platforms with fresh data and an audit trail that says they were never processed. {@code -markOnly}
+     * writes the event and nothing else.
+     * <p>
+     * The event is a claim that the work was done, so the platforms have to be ones the operator named: {@code -all},
+     * {@code -auto} and {@code -mdate} each select a set nobody enumerated.
+     *
+     * @param optionsThatDoWork options of the calling CLI that make it do work, which {@code -markOnly} contradicts
+     */
+    @Nullable
+    protected String getMarkOnlyReason( CommandLine commandLine, String... optionsThatDoWork ) throws ParseException {
+        if ( !commandLine.hasOption( MARK_ONLY_OPTION ) ) {
+            return null;
+        }
+        String reason = commandLine.getOptionValue( MARK_ONLY_OPTION );
+        if ( reason == null || reason.trim().isEmpty() ) {
+            throw new ParseException( "Give a reason with -" + MARK_ONLY_OPTION
+                    + " (e.g. 'sequences mapped by GPL6887'); it is recorded in the audit event." );
+        }
+        List<String> conflicting = new ArrayList<>();
+        for ( String option : optionsThatDoWork ) {
+            if ( commandLine.hasOption( option ) ) {
+                conflicting.add( option );
+            }
+        }
+        if ( !conflicting.isEmpty() ) {
+            throw new ParseException( "-" + MARK_ONLY_OPTION + " does no work, so it cannot be combined with -"
+                    + String.join( ", -", conflicting ) + "." );
+        }
+        for ( String option : new String[] { "all", "auto", "mdate" } ) {
+            if ( commandLine.hasOption( option ) ) {
+                throw new ParseException( "-" + MARK_ONLY_OPTION + " records that a platform was processed, "
+                        + "so name the platforms to mark with -a or -f rather than selecting them with -" + option + "." );
+            }
+        }
+        if ( !commandLine.hasOption( 'a' ) && !commandLine.hasOption( 'f' ) ) {
+            throw new ParseException( "Name the platforms to mark with -a or -f." );
+        }
+        return reason.trim();
+    }
+
     @Override
     protected final void doAuthenticatedWork() throws Exception {
         Collection<ArrayDesign> arrayDesignsToProcess;
@@ -136,7 +206,13 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
                     .collect( Collectors.toSet() );
         }
         if ( arrayDesignsToProcess.isEmpty() ) {
-            throw new RuntimeException( "No platforms matched the given options." );
+            if ( selectsOwnPlatforms() ) {
+                processArrayDesigns( arrayDesignsToProcess );
+                return;
+            }
+            throw new RuntimeException( explicitADsOnly
+                    ? "No platforms matched the given options; name them with -a or -f (this command never operates on all platforms)."
+                    : "No platforms matched the given options (none named with -a or -f, and -all not given)." );
         } else if ( arrayDesignsToProcess.size() == 1 ) {
             setEstimatedMaxTasks( 1 );
             log.info( "Final platform: " + arrayDesignsToProcess.iterator().next() );
@@ -147,6 +223,17 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
             setEstimatedMaxTasks( arrayDesignsToProcess.size() );
             processArrayDesigns( arrayDesignsToProcess );
         }
+    }
+
+    /**
+     * Whether the options of this CLI select platforms by some means other than {@code -a}, {@code -f} or
+     * {@code -all}.
+     * <p>
+     * If so, an empty selection from those options is not an error: {@link #processArrayDesigns(Collection)} is
+     * invoked with an empty collection and is responsible for finding its own platforms.
+     */
+    protected boolean selectsOwnPlatforms() {
+        return false;
     }
 
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {

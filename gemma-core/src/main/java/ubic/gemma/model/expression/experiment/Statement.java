@@ -187,8 +187,15 @@ public class Statement extends Characteristic {
         return predicateUri;
     }
 
+    /**
+     * Blank is stored as null, for the reason spelled out on
+     * {@link ubic.gemma.model.common.description.Characteristic#setValueUri(String)}: an empty string
+     * is a second dialect for ungrounded and no layer reads it that way. Prod carried 7
+     * {@code PREDICATE_URI = ''} and 3 {@code OBJECT_URI = ''} rows, all factor-value statements, when
+     * this landed — the statement columns were outside the sweep that cleared VALUE_URI.
+     */
     public void setPredicateUri( @Nullable String predicateUri ) {
-        this.predicateUri = predicateUri;
+        this.predicateUri = stripToNull( predicateUri );
     }
 
     @Nullable
@@ -210,7 +217,7 @@ public class Statement extends Characteristic {
     }
 
     public void setObjectUri( @Nullable String objectUri ) {
-        this.objectUri = objectUri;
+        this.objectUri = stripToNull( objectUri );
     }
 
     @Nullable
@@ -230,7 +237,7 @@ public class Statement extends Characteristic {
     }
 
     public void setSecondPredicateUri( @Nullable String secondPredicateUri ) {
-        this.secondPredicateUri = secondPredicateUri;
+        this.secondPredicateUri = stripToNull( secondPredicateUri );
     }
 
     @Nullable
@@ -250,7 +257,7 @@ public class Statement extends Characteristic {
     }
 
     public void setSecondObjectUri( @Nullable String secondObjectUri ) {
-        this.secondObjectUri = secondObjectUri;
+        this.secondObjectUri = stripToNull( secondObjectUri );
     }
 
     @Nullable

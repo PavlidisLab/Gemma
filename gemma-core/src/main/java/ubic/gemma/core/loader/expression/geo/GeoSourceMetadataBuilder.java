@@ -58,6 +58,13 @@ import java.util.Set;
  * {@code pub_med_ids}, which nothing on the consuming side reads, so the field would silently arrive
  * empty.</li>
  * <li>{@code samples} is a list with {@code accession} on each element, not a GSM-keyed map.</li>
+ * <li><b>Three counts, three sides.</b> {@code sampleCount} is GEO's — how many samples its record
+ * parsed to. {@code experimentSampleCount} is Gemma's — how many GSM accessions the experiment
+ * stores; it is absent only when the caller passed no accession set. {@code samples.length} is the
+ * overlap, how many of Gemma's were found in GEO's. A split sub-series legitimately has
+ * {@code sampleCount} above the other two; anything else that disagrees means the experiment
+ * references samples GEO no longer serves, and {@link #build} says so at WARN. Added 2026-09-17,
+ * again without bumping the version, for the reason below.</li>
  * <li><b>v1 is not one shape.</b> {@code sampleType} was added on 2026-08-29 without bumping the
  * version (Paul's call), so a document stamped {@code schemaVersion: 1} may or may not carry it and
  * a consumer cannot tell which by the version. Every field is optional by the absent-means-absent
@@ -187,6 +194,13 @@ public class GeoSourceMetadataBuilder {
         // title, summary and overallDesign verbatim, nothing else in the document would reveal the
         // error.
         doc.put( "sampleCount", series.getSamples().size() );
+        if ( identity.sampleAccessions != null ) {
+            // Gemma's side of the same question, carried so a reader holding the document alone can
+            // tell the two apart. sampleCount counts GEO's record; this counts the GSM accessions
+            // Gemma stores for the experiment; samples.length counts how many of Gemma's were found
+            // in GEO's. Only the first two can disagree without something being wrong.
+            doc.put( "experimentSampleCount", identity.sampleAccessions.size() );
+        }
 
         List<Map<String, Object>> samples = new ArrayList<>();
         for ( GeoSample s : series.getSamples() ) {
@@ -198,9 +212,17 @@ public class GeoSourceMetadataBuilder {
         if ( identity.sampleAccessions != null && samples.size() != identity.sampleAccessions.size() ) {
             // Not fatal — the document is still truthful about what it contains — but it means the
             // experiment references a sample the parsed series does not have, which is worth knowing.
-            log.warn( "Source metadata for " + identity.shortName + ": experiment claims "
-                    + identity.sampleAccessions.size() + " samples but only " + samples.size()
-                    + " were found in the parsed series." );
+            //
+            // Name which side every number came from. "claims N samples" read as if it were the
+            // document's sampleCount, and the two are different numbers that disagree on the same
+            // run: GSE42727 held 18 accessions, GEO's record parsed to 30, and none of the 18 were
+            // among them, so the WARN said 18 and the stored document said 30 (frb, 2026-09-17).
+            log.warn( "Source metadata for " + identity.shortName + ": Gemma holds "
+                    + identity.sampleAccessions.size() + " sample accessions for this experiment"
+                    + " (experimentSampleCount), GEO's record parsed to " + series.getSamples().size()
+                    + " (sampleCount), and " + samples.size() + " of Gemma's are among them"
+                    + " (samples.length). The document is truthful about what it contains; the"
+                    + " experiment references samples the parsed series does not have." );
         }
         doc.put( "samples", samples );
 

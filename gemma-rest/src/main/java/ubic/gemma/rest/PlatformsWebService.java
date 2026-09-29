@@ -16,10 +16,12 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,9 +64,11 @@ import ubic.gemma.persistence.util.CursorPage;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.annotations.GZIP;
+import ubic.gemma.rest.util.ApiDocs;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
@@ -95,6 +99,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/platforms")
 @Slf4j
+@Tag(name = "Platforms", description = "Array designs, their elements and the datasets using them")
 public class PlatformsWebService {
 
     private static final String ERROR_ANNOTATION_FILE_NOT_AVAILABLE = "The %s annotation file for platform %s does not exist or can not be accessed.";
@@ -147,17 +152,17 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platforms, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
                             }))),
             })
     public Object getPlatforms( // Params:
-            @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Opt-in: populate `numberOfGenes` (distinct genes the platform's elements map to) and `numberOfMappedElements` (elements with at least one gene mapping). Off by default — the counts aggregate the whole gene-to-element mapping for each platform on the page, which is wasted work for callers that do not render them.") @QueryParam("withGeneCounts") @DefaultValue("false") boolean withGeneCounts
     ) {
@@ -186,9 +191,12 @@ public class PlatformsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count platforms matching the provided filter")
+    @Operation(summary = "Count platforms matching the provided filter",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The number of platforms matching the filter.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<Long> getNumberOfPlatforms(
-            @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter ) {
         return respond( arrayDesignService.count( arrayDesignArgService.getFilters( filter ) ) );
     }
 
@@ -215,18 +223,18 @@ public class PlatformsWebService {
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); "
                     + "the path-derived platform-identifier predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platforms the identifiers resolved to, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
                             }))),
             })
     public Object getPlatformsByIds( // Params:
-            @PathParam("platform") PlatformArrayArg platformsArg, // Optional
-            @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArrayArg platformsArg, // Optional
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort, // Optional, default +id
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Opt-in: populate `numberOfGenes` (distinct genes the platform's elements map to) and `numberOfMappedElements` (elements with at least one gene mapping).") @QueryParam("withGeneCounts") @DefaultValue("false") boolean withGeneCounts
     ) {
@@ -266,17 +274,17 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); the blacklist short-name/accession predicate is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The blacklisted platforms, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectArrayDesignValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectArrayDesignValueObject.class
                             }))),
             })
     public Object getBlacklistedPlatforms(
-            @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ArrayDesign> filter,
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ArrayDesign> sort,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         Filters filters = arrayDesignArgService.getFilters( filter );
@@ -313,16 +321,16 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (legacy offset mode keys off `bioAssays.arrayDesignUsed.id`; cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `bioAssays.arrayDesignUsed.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The experiments using the platform, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectExpressionExperimentValueObject.class,
+                                    CursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getPlatformDatasets( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         if ( cursorArg != null ) {
@@ -358,21 +366,21 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (legacy offset mode uses the DAO default order; cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `arrayDesign.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platform's elements, in whichever pagination envelope the request selected. `sequence` and `genes` are populated only when asked for.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
                             }))),
             })
     public Object getPlatformElements( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Opt-in: populate `sequence` (raw probe sequence string) and `sequenceLength` on each element. Off by default to keep the listing response small — sequences are 25-300bp per probe and would inflate a 22k-element page by ~1 MB.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence,
             @Parameter(description = "Opt-in: populate `genes` (compact `{id, officialSymbol, ncbiId}` per mapped gene) on each element. Off by default; costs one extra batch query per page. An element that maps to no gene gets `[]`, so an empty list is distinguishable from the field not being requested.") @QueryParam("withGenes") @DefaultValue("false") boolean withGenes,
             @Parameter(description = "Restrict to the elements mapping to this gene. Free text, resolved through gene search — an official symbol, an alias/synonym (`p53` finds TP53), or an NCBI id all work. Scoped to the platform's own taxon, so no taxon argument is needed. A query matching no gene returns an empty page.") @QueryParam("gene") QueryArg geneQuery,
-            @QueryParam("filter") @DefaultValue("") FilterArg<CompositeSequence> filter // Optional, default no restriction
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<CompositeSequence> filter // Optional, default no restriction
     ) {
         // Resolve ?gene= before touching pagination: the resolution is a search, and a query that
         // matches no gene on this platform's taxon has to yield an empty page rather than silently
@@ -585,17 +593,17 @@ public class PlatformsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the path-derived `arrayDesign.id = ?` constraint and the `{probes}` id/name set restriction are both preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The named elements, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
                             }))),
             })
     public Object getPlatformElement( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg, // Required
-            @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @Parameter(description = "Probe identifiers, comma-separated.") @PathParam("probes") CompositeSequenceArrayArg probesArg, // Required
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Opt-in: populate `sequence` and `sequenceLength` on each element. Useful when looking up a small probe set explicitly — for a curator inspecting a single probe row, the sequence is a one-row fetch.") @QueryParam("withSequence") @DefaultValue("false") boolean withSequence,
             @Parameter(description = "Opt-in: populate `genes` (compact `{id, officialSymbol, ncbiId}` per mapped gene) on each element. An element that maps to no gene gets `[]`.") @QueryParam("withGenes") @DefaultValue("false") boolean withGenes
@@ -650,17 +658,17 @@ public class PlatformsWebService {
                     + "In cursor mode the result is always sorted by ascending `gene.id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); "
                     + "the path-derived `{platform}` and `{probe}` constraints are preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The genes the probe maps to, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectGeneValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectGeneValueObject.class
                             }))),
             })
     public Object getPlatformElementGenes( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg, // Required
-            @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @Parameter(description = "Probe identifier: the composite sequence's id or its name.") @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         if ( cursorArg != null ) {
@@ -707,13 +715,13 @@ public class PlatformsWebService {
     @Operation(summary = "Retrieve the gene-mapping summary for a probe",
             description = "Returns the probe value object with `geneMappingSummaries` populated: one entry per distinct BLAT alignment, carrying the alignment scores, the biological sequence metadata, and the genes supported by that alignment. Replaces the legacy `getGeneMappingSummary` DWR call.",
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The probe's gene-mapping summary: its BLAT alignments, its biological sequence, and the genes it supports.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "Probe not found on the given platform",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public ResponseDataObject<CompositeSequenceValueObject> getPlatformElementMappingSummary( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg, // Required
-            @PathParam("probe") CompositeSequenceArg<?> probeArg // Required
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @Parameter(description = "Probe identifier: the composite sequence's id or its name.") @PathParam("probe") CompositeSequenceArg<?> probeArg // Required
     ) {
         ArrayDesign platform = arrayDesignArgService.getEntity( platformArg );
         ubic.gemma.model.expression.designElement.CompositeSequence cs =
@@ -758,14 +766,14 @@ public class PlatformsWebService {
     @Operation(summary = "Retrieve the BLAT alignments of a probe as a UCSC custom track",
             description = "Returns a UCSC Genome Browser custom track in PSL format covering every BLAT alignment of the probe: a `browser position` line framing the best-scoring alignment, a `track` line, and one PSL data line per alignment. Intended to be POSTed to UCSC's `hgCustom` as `hgct_customText` by the client.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "A UCSC custom track in PSL format, ready to paste into the genome browser.",
                             content = @Content(mediaType = TEXT_PLAIN_UTF8, schema = @Schema(type = "string"))),
                     @ApiResponse(responseCode = "404", description = "Probe not found on the given platform, or it has no BLAT alignments that can be placed in the genome browser",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response getPlatformElementPslTrack( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg, // Required
-            @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg, // Required
+            @Parameter(description = "Probe identifier: the composite sequence's id or its name.") @PathParam("probe") CompositeSequenceArg<?> probeArg, // Required
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download
     ) {
         ArrayDesign platform = arrayDesignArgService.getEntity( platformArg );
@@ -876,14 +884,17 @@ public class PlatformsWebService {
                     + "assigned terms. The non-standard flavours only exist for platforms whose annotations were "
                     + "generated with GO loaded; requesting one that is absent regenerates all three.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platform's annotation file. It is generated on demand and cached on disk, so the first request after a mapping change pays for the generation.",
                             content = @Content(schema = @Schema(type = "string"),
                                     examples = { @ExampleObject("classpath:/restapidocs/examples/platform-annotations.tsv") })),
                     @ApiResponse(responseCode = "400", description = "The annotation file type is not a recognised value.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))),
+                    @ApiResponse(responseCode = "503", description = "The annotation file is not on disk and cannot be generated, because the Gene Ontology is not loaded on this instance.",
+                            headers = @Header(name = ApiDocs.RETRY_AFTER, description = ApiDocs.RETRY_AFTER_DESCRIPTION, schema = @Schema(type = "string")),
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
             })
     public Response getPlatformAnnotations( // Params:
-            @PathParam("platform") PlatformArg<?> platformArg,// Optional, default null
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg,// Optional, default null
             @Parameter(description = "Which annotation file to serve.", schema = @Schema(implementation = AnnotationFileType.class))
             @QueryParam("type") @DefaultValue("standard") String typeArg,
             @Parameter(hidden = true) @QueryParam("download") @DefaultValue("false") Boolean download,
@@ -950,14 +961,14 @@ public class PlatformsWebService {
                     + "the open-state restriction (OPEN/IN_PROGRESS) are preserved; `totalElements` is `null` by "
                     + "default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The platform's open curation tickets — a plain list, or the cursor envelope when a `cursor` was supplied.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    ResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    ResponseDataObjectListTicketValueObject.class,
+                                    CursorPaginatedResponseDataObjectTicketValueObject.class
                             })))
             })
     public Object getPlatformTickets(
-            @PathParam("platform") PlatformArg<?> platformArg,
+            @Parameter(description = "Platform identifier: either the ArrayDesign id or its short name (e.g. GPL1355).") @PathParam("platform") PlatformArg<?> platformArg,
             @Parameter(description = "Opaque keyset-pagination cursor token.")
             @QueryParam("cursor") CursorArg cursorArg,
             @Parameter(description = "Page size for cursor mode (ignored when no `cursor` is supplied).")

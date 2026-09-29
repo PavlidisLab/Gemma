@@ -149,7 +149,7 @@ public enum RelationInferenceDirection {
      * {@code OntologyRelationProducerImpl}, {@code MgiRelationProducer},
      * {@code CellosaurusRelationProducer} — and never by the curated harvest, which has one category and
      * it belongs to the subject. Of those three only CLO emits this predicate (Cellosaurus writes
-     * {@code CLO_0000015} / {@code CLO_0037208}, MGI the GENO ones), so requiring a typed object selects
+     * {@code CLO_0000015} / {@code ENVO_01003004}, MGI the GENO ones), so requiring a typed object selects
      * exactly CLO's flat {@code derives from} rows: {@code MCF7 -> breast},
      * {@code MCF7 -> epithelial cell}, where the subject is a cell line by construction and the sense is
      * provenance every time.</p>

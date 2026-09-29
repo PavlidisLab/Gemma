@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
@@ -66,9 +67,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * For an array design, generate gene product mappings for the sequences.
@@ -95,6 +99,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final GoldenPathSequenceAnalysisFactory goldenPathSequenceAnalysisFactory;
     private final ProbeMapper probeMapper;
     private final TaskExecutor taskExecutor;
+
+    private int queueSize = QUEUE_SIZE;
 
     @Autowired
     public ArrayDesignProbeMapperServiceImpl( AnnotationAssociationService annotationAssociationService,
@@ -153,59 +159,83 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Array design has sequence from multiple taxa and has no primary taxon set: " + arrayDesign );
         }
 
-        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( ArrayDesignProbeMapperServiceImpl.QUEUE_SIZE );
+        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( queueSize );
         AtomicBoolean generatorDone = new AtomicBoolean( false );
         AtomicBoolean loaderDone = new AtomicBoolean( false );
+        // set when this thread stops before the loader is done, so the loader stops too
+        AtomicBoolean stopLoader = new AtomicBoolean( false );
+        // where the loader records the exception or error that ended it
+        AtomicReference<Throwable> loaderFailure = new AtomicReference<>();
 
-        this.load( persistingQueue, generatorDone, loaderDone, useDB );
-
-        if ( useDB ) {
-            ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
-            arrayDesignService.deleteGeneProductAlignmentAssociations( arrayDesign );
-        }
+        this.load( persistingQueue, generatorDone, loaderDone, stopLoader, loaderFailure, useDB );
 
         int count = 0;
         int hits = 0;
         int numWithNoResults = 0;
-        ArrayDesignProbeMapperServiceImpl.log
-                .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
-        try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
-            for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
+        // the delete below is not undone by a later failure: this method holds no transaction across the mapping, so
+        // an abort leaves the platform with whatever the loader had persisted by then
+        boolean deletedOldAssociations = false;
+        boolean finished = false;
+        try {
+            try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
+                // before the delete: a missing GoldenPath table used to fail the first probe query, after the
+                // platform's associations were already gone
+                goldenPathDb.checkTablesForProbeMapping( config );
+                this.warnIfAlignedAgainstAnotherAssembly( arrayDesign, taxon, goldenPathDb.getDatabaseName() );
 
-                Map<String, Collection<BlatAssociation>> results = this
-                        .processCompositeSequence( config, taxon, goldenPathDb, compositeSequence );
-
-                if ( results == null ) {
-                    numWithNoResults++;
-                    continue;
+                if ( useDB ) {
+                    ArrayDesignProbeMapperServiceImpl.log.info( "Removing any old alignment-based associations" );
+                    arrayDesignService.deleteGeneProductAlignmentAssociations( arrayDesign );
+                    deletedOldAssociations = true;
                 }
 
-                for ( Collection<BlatAssociation> col : results.values() ) {
-                    for ( BlatAssociation association : col ) {
-                        if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
-                            ArrayDesignProbeMapperServiceImpl.log.debug( association );
-                        persistingQueue.add( new BACS( compositeSequence, association ) );
+                ArrayDesignProbeMapperServiceImpl.log
+                        .info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
+                for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
+                    Map<String, Collection<BlatAssociation>> results = this
+                            .processCompositeSequence( config, taxon, goldenPathDb, compositeSequence );
+
+                    if ( results == null ) {
+                        numWithNoResults++;
+                        continue;
                     }
-                    ++hits;
-                }
 
-                if ( ++count % 200 == 0 ) {
-                    ArrayDesignProbeMapperServiceImpl.log
-                            .info( "Processed " + count + " composite sequences" + " with blat results; " + hits
-                                    + " mappings found." );
+                    for ( Collection<BlatAssociation> col : results.values() ) {
+                        for ( BlatAssociation association : col ) {
+                            if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
+                                ArrayDesignProbeMapperServiceImpl.log.debug( association );
+                            this.enqueue( persistingQueue, new BACS( compositeSequence, association ), loaderFailure,
+                                    arrayDesign, useDB );
+                        }
+                        ++hits;
+                    }
+
+                    if ( ++count % 200 == 0 ) {
+                        ArrayDesignProbeMapperServiceImpl.log
+                                .info( "Processed " + count + " composite sequences" + " with blat results; " + hits
+                                        + " mappings found." );
+                    }
                 }
             }
-        }
 
-        generatorDone.set( true );
+            generatorDone.set( true );
 
-        ArrayDesignProbeMapperServiceImpl.log.info( "Waiting for loading to complete ..." );
-        while ( !loaderDone.get() ) {
-            try {
+            ArrayDesignProbeMapperServiceImpl.log.info( "Waiting for loading to complete ..." );
+            while ( !loaderDone.get() ) {
+                this.checkLoader( loaderFailure, arrayDesign, useDB );
                 Thread.sleep( 1000 );
-            } catch ( InterruptedException e ) {
-                throw new RuntimeException( e );
+            }
+            this.checkLoader( loaderFailure, arrayDesign, useDB );
+            finished = true;
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( "Interrupted while mapping " + arrayDesign + " to genes.", e );
+        } finally {
+            // before, a failure here left the loader polling forever for a generator that would never finish
+            stopLoader.set( true );
+            if ( deletedOldAssociations && !finished ) {
+                this.warnAssociationsAreIncomplete( arrayDesign );
             }
         }
 
@@ -219,6 +249,82 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         this.deleteOldFiles( arrayDesign );
+    }
+
+    /**
+     * Say when a platform's alignments were made against a different assembly than the one its probes are about to be
+     * mapped against.
+     * <p>
+     * The mapping matches a probe's aligned coordinates to transcript coordinates read from GoldenPath, so alignments
+     * from another assembly are matched against the wrong stretch of genome. Nothing detected this until a BLAT
+     * result recorded its assembly; whether a platform had been re-aligned for the assembly in use was answerable
+     * only from the operator's notes, and on 2026-09-19 those notes were confidently wrong for five hours.
+     * <p>
+     * A warning, not a refusal, and silent about alignments that name the taxon rather than an assembly — 13,223,868
+     * of them at the time of writing. "rat" does not contradict rn8; it just does not say anything.
+     */
+    private void warnIfAlignedAgainstAnotherAssembly( ArrayDesign arrayDesign, Taxon taxon, String assembly ) {
+        String warning = ArrayDesignProbeMapperServiceImpl.alignedAgainstAnotherAssembly( arrayDesign, taxon, assembly,
+                arrayDesignService.countBlatResultsBySearchedDatabase( arrayDesign ) );
+        if ( warning != null ) {
+            ArrayDesignProbeMapperServiceImpl.log.warn( warning );
+        }
+    }
+
+    /**
+     * @param alignedAgainst how many of the platform's alignments name each searched database
+     * @return the warning, or null when nothing the platform holds contradicts the assembly being mapped against
+     * @see #warnIfAlignedAgainstAnotherAssembly(ArrayDesign, Taxon, String)
+     */
+    @Nullable
+    static String alignedAgainstAnotherAssembly( ArrayDesign arrayDesign, Taxon taxon, String assembly,
+            Map<String, Long> alignedAgainst ) {
+        Map<String, Long> others = new TreeMap<>();
+        for ( Map.Entry<String, Long> aligned : alignedAgainst.entrySet() ) {
+            String name = aligned.getKey();
+            if ( name == null || name.equalsIgnoreCase( assembly )
+                    || name.equalsIgnoreCase( taxon.getCommonName() ) ) {
+                continue;
+            }
+            others.put( name, aligned.getValue() );
+        }
+        if ( others.isEmpty() ) {
+            return null;
+        }
+        StringBuilder counts = new StringBuilder();
+        for ( Map.Entry<String, Long> other : others.entrySet() ) {
+            if ( counts.length() > 0 ) {
+                counts.append( ", " );
+            }
+            counts.append( other.getValue() ).append( " against " ).append( other.getKey() );
+        }
+        return String.format(
+                "%s holds alignments made against another assembly (%s), but its probes are being mapped against %s. "
+                        + "Coordinates from one assembly do not name the same genes in another. Align the platform "
+                        + "against %s before mapping it.",
+                arrayDesign, counts, assembly, assembly );
+    }
+
+    /**
+     * Say that a platform has been left holding part of its mappings.
+     * <p>
+     * Nothing else does: the old associations are deleted before the mapping starts, no transaction spans the mapping,
+     * and a failure part way through is reported as a stack trace and a non-zero exit. Whether the platform kept 95%
+     * of its mappings or 5% is visible only to someone who counted them beforehand — a transient GoldenPath
+     * connection fault took GPL6887 from 35,376 mapped probes to 1,604 without a word about it.
+     */
+    private void warnAssociationsAreIncomplete( ArrayDesign arrayDesign ) {
+        String remaining;
+        try {
+            remaining = String.valueOf( arrayDesignService.countCompositeSequencesWithGenes( arrayDesign, false ) );
+        } catch ( Exception e ) {
+            // a diagnostic must not replace the failure that prompted it
+            remaining = "an unknown number of";
+        }
+        ArrayDesignProbeMapperServiceImpl.log.error( String.format(
+                "%s IS LEFT WITH INCOMPLETE GENE MAPPINGS: its alignment-based associations were deleted and the "
+                        + "mapping did not finish, so %s of its probes map to a gene. Map it to genes again.",
+                arrayDesign, remaining ) );
     }
 
     @Override
@@ -410,58 +516,81 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         return probeMapper.processBlatResults( goldenPathDb, blatResults, config );
     }
 
+    /**
+     * Hand an association to the loader, waiting while the queue is full. {@code queue.add} used to throw "Queue full"
+     * once a dead loader stopped draining it, which named neither the loader nor its failure.
+     */
+    private void enqueue( BlockingQueue<BACS> queue, BACS bacs, AtomicReference<Throwable> loaderFailure,
+            ArrayDesign arrayDesign, boolean useDB ) throws InterruptedException {
+        this.checkLoader( loaderFailure, arrayDesign, useDB );
+        while ( !queue.offer( bacs, 1, TimeUnit.SECONDS ) ) {
+            this.checkLoader( loaderFailure, arrayDesign, useDB );
+        }
+    }
+
+    /**
+     * Rethrow the loader's failure, if it has failed.
+     */
+    private void checkLoader( AtomicReference<Throwable> loaderFailure, ArrayDesign arrayDesign, boolean useDB ) {
+        Throwable t = loaderFailure.get();
+        if ( t != null ) {
+            throw new RuntimeException( "Saving the gene mappings for " + arrayDesign + " failed"
+                    + ( useDB ? "; its old alignment-based associations were already deleted, so it now has only some of "
+                    + "its mappings. Fix the cause and rerun mapPlatformToGenes for it." : "." ), t );
+        }
+    }
+
     private void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,
-            boolean persist ) {
+            AtomicBoolean stopLoader, boolean persist ) throws InterruptedException {
         int loadedAssociationCount = 0;
         while ( !( generatorDone.get() && queue.isEmpty() ) ) {
+            if ( stopLoader.get() ) {
+                ArrayDesignProbeMapperServiceImpl.log
+                        .warn( "Load thread stopped after " + loadedAssociationCount + " blat associations, because "
+                                + "the mapping stopped." );
+                return;
+            }
 
-            try {
-                BACS bacs = queue.poll();
-                if ( bacs == null ) {
-                    continue;
-                }
+            BACS bacs = queue.poll( 1, TimeUnit.SECONDS );
+            if ( bacs == null ) {
+                continue;
+            }
 
-                GeneProduct geneProduct = bacs.ba.getGeneProduct();
+            GeneProduct geneProduct = bacs.ba.getGeneProduct();
 
-                if ( geneProduct.getId() == null ) {
-                    GeneProduct existing = geneProductService.find( geneProduct );
+            if ( geneProduct.getId() == null ) {
+                GeneProduct existing = geneProductService.find( geneProduct );
 
+                if ( existing == null ) {
+
+                    existing = this.checkForAlias( geneProduct );
                     if ( existing == null ) {
-
-                        existing = this.checkForAlias( geneProduct );
-                        if ( existing == null ) {
-                            /*
-                             * We have to be careful not to cruft up the gene table now that I so carefully cleaned it.
-                             * But this is a problem if we aren't adding some other association to the gene at least.
-                             * But generally the mRNAs that GP has that NCBI doesn't are "alternative" or "additional".
-                             */
-                            if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
-                                ArrayDesignProbeMapperServiceImpl.log
-                                        .debug( "New gene product from GoldenPath is not in Gemma: " + geneProduct
-                                                + " skipping association to " + bacs.ba.getBioSequence()
-                                                + " [skipping policy in place]" );
-                            continue;
-                        }
+                        /*
+                         * We have to be careful not to cruft up the gene table now that I so carefully cleaned it.
+                         * But this is a problem if we aren't adding some other association to the gene at least.
+                         * But generally the mRNAs that GP has that NCBI doesn't are "alternative" or "additional".
+                         */
+                        if ( ArrayDesignProbeMapperServiceImpl.log.isDebugEnabled() )
+                            ArrayDesignProbeMapperServiceImpl.log
+                                    .debug( "New gene product from GoldenPath is not in Gemma: " + geneProduct
+                                            + " skipping association to " + bacs.ba.getBioSequence()
+                                            + " [skipping policy in place]" );
+                        continue;
                     }
-                    bacs.ba.setGeneProduct( existing );
                 }
+                bacs.ba.setGeneProduct( existing );
+            }
 
-                if ( persist ) {
-                    genomePersister.persistBlatAssociation( bacs.ba );
+            if ( persist ) {
+                genomePersister.persistBlatAssociation( bacs.ba );
 
-                    if ( ++loadedAssociationCount % 1000 == 0 ) {
-                        ArrayDesignProbeMapperServiceImpl.log
-                                .info( "Persisted " + loadedAssociationCount + " blat associations. "
-                                        + "Current queue has " + queue.size() + " items." );
-                    }
-                } else {
-                    this.printResult( bacs.cs, bacs.ba );
+                if ( ++loadedAssociationCount % 1000 == 0 ) {
+                    ArrayDesignProbeMapperServiceImpl.log
+                            .info( "Persisted " + loadedAssociationCount + " blat associations. "
+                                    + "Current queue has " + queue.size() + " items." );
                 }
-
-            } catch ( Exception e ) {
-                ArrayDesignProbeMapperServiceImpl.log.error( e, e );
-                loaderDone.set( true );
-                throw new RuntimeException( e );
+            } else {
+                this.printResult( bacs.cs, bacs.ba );
             }
         }
         ArrayDesignProbeMapperServiceImpl.log
@@ -515,8 +644,27 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * @param persist true to get results saved to database; otherwise output is to standard out.
      */
     private void load( final BlockingQueue<BACS> queue, final AtomicBoolean generatorDone,
-            final AtomicBoolean loaderDone, final boolean persist ) {
-        this.taskExecutor.execute( () -> ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, persist ) );
+            final AtomicBoolean loaderDone, final AtomicBoolean stopLoader,
+            final AtomicReference<Throwable> loaderFailure, final boolean persist ) {
+        this.taskExecutor.execute( () -> {
+            try {
+                ArrayDesignProbeMapperServiceImpl.this.doLoad( queue, generatorDone, loaderDone, stopLoader, persist );
+            } catch ( InterruptedException e ) {
+                Thread.currentThread().interrupt();
+                loaderFailure.compareAndSet( null, e );
+            } catch ( Throwable e ) {
+                // before, the loader logged the error, set loaderDone and died, and the mapping finished as a success
+                // if the queue could hold what was left
+                loaderFailure.compareAndSet( null, e );
+            }
+        } );
+    }
+
+    /**
+     * Capacity of the queue between the mapping and the thread that saves the associations.
+     */
+    void setQueueSize( int queueSize ) {
+        this.queueSize = queueSize;
     }
 
     /**

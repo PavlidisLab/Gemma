@@ -109,14 +109,16 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private String librarySelection;
 
     /**
-     * What kind of library — GEO's {@code library_strategy} ({@code RNA-Seq}, {@code scRNA-seq},
-     * {@code Ribo-Seq}, {@code ATAC-seq}, …). A string rather than an enum so a strategy nobody anticipated
-     * arrives intact instead of needing a schema change.
+     * What kind of library — GEO's {@code library_strategy}, as the {@code GeoLibraryStrategy} constant name
+     * ({@code RNA_SEQ}, {@code SCRNA_SEQ}, {@code RIBO_SEQ}, {@code ATAC_SEQ}, …) rather than GEO's spelling, or
+     * {@code MICROARRAY_ONE_COLOR} / {@code MICROARRAY_TWO_COLOR} for a microarray sample. A string rather than an
+     * enum so a strategy nobody anticipated arrives intact instead of needing a schema change.
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "GEO's library_strategy (RNA-Seq, scRNA-seq, Ribo-Seq, ATAC-seq, …). Free text, so "
-            + "a new strategy needs no schema change.")
+    @Schema(description = "GEO's library_strategy as a constant name (RNA_SEQ, SCRNA_SEQ, RIBO_SEQ, ATAC_SEQ, …), "
+            + "not GEO's spelling (RNA-Seq); MICROARRAY_ONE_COLOR or MICROARRAY_TWO_COLOR for a microarray sample, "
+            + "by channel count. Free text, so a new strategy needs no schema change.")
     private String libraryStrategy;
 
     // only for RNA-Seq data
@@ -139,6 +141,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private Integer numberOfCellsByDesignElements;
 
     // if it was removed as an outlier
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean outlier = false;
     /**
      * Whether the median-correlation algorithm flags this assay as a possible outlier.
@@ -151,8 +154,10 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "The median-correlation algorithm's guess at whether the sample is an outlier, which is not the same as a curator having flagged it. Null unless the request asked for it with `includePredictedOutliers=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
     private Boolean predictedOutlier;
     // to hold state change, initialized as this.outlier
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean userFlaggedOutlier = false;
 
     /**

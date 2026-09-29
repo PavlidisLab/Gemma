@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.analysis.preprocess.svd;
 
+import ubic.gemma.core.architecture.LongComputation;
+
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -66,6 +68,7 @@ public class ExpressionDataSVD {
      *
      * @param expressionData expression data
      */
+    @LongComputation("Singular value decomposition of the whole expression matrix.")
     public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData ) throws SVDException {
         this( expressionData, true );
     }
@@ -75,6 +78,7 @@ public class ExpressionDataSVD {
      * @param normalizeMatrix If true, the data matrix will be rescaled and centred to mean zero, variance one, for both
      *                        rows and columns ("double-standardized")
      */
+    @LongComputation("Singular value decomposition of the whole expression matrix.")
     public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix ) throws SVDException {
         this.expressionData = expressionData;
 

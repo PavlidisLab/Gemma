@@ -15,6 +15,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.support.TransactionTemplate;
+import ubic.gemma.core.ontology.providers.MgiAlleleOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceResolver;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.AnnotationRelation;
@@ -103,10 +104,10 @@ public class MgiRelationProducer {
     private static final int MOUSE_NCBI_TAXON_ID = 10090;
 
     /**
-     * The allele URI space. MGI's OBO PURL form 404s, so the canonical resolvable one is minted here,
-     * matching what {@code MgiStrainOntologyService} does for strains.
+     * The allele URI space, shared with {@link MgiAlleleOntologyService} so that an annotation made with one of its
+     * terms carries exactly the subject URI these relations are stored under.
      */
-    private static final String ALLELE_URI_PREFIX = "https://www.informatics.jax.org/allele/";
+    private static final String ALLELE_URI_PREFIX = MgiAlleleOntologyService.URI_PREFIX;
 
     /** The ontology whose cross-references translate {@code DOID:} into something Gemma annotates in. */
     private static final String XREF_SOURCE_TOKEN = "MONDO";
@@ -139,11 +140,14 @@ public class MgiRelationProducer {
     private static final String ASSERTED_CACHE = "mgiGenoDisease";
     private static final String REFUTED_CACHE = "mgiGenoNotDisease";
     private static final String MOUSE_MODEL_CACHE = "mgiDiseaseMouseModel";
+    /** The same cache name, and so the same cached bytes, as {@code MgiStrainOntologyService}. */
+    private static final String STRAIN_CACHE = "mgiStrain";
 
     /** What each report is called where a tally or a log line has to name it. */
     private static final String ASSERTED_REPORT = "MGI_Geno_DiseaseDO.rpt";
     private static final String REFUTED_REPORT = "MGI_Geno_NotDiseaseDO.rpt";
     private static final String MOUSE_MODEL_REPORT = "MGI_DiseaseMouseModel.rpt";
+    private static final String STRAIN_REPORT = "MGI_Strain.rpt";
 
     /**
      * Rebuild from the reports as configured, fetching and caching them the way the lexical ontology
@@ -163,7 +167,15 @@ public class MgiRelationProducer {
                 InputStream mouseModel = open( MOUSE_MODEL_CACHE, MOUSE_MODEL_REPORT,
                         "~6,300 statements over ~5,500 alleles, most of them named nowhere else" );
                 try {
-                    return produce( asserted, refuted, mouseModel );
+                    InputStream strains = open( STRAIN_CACHE, STRAIN_REPORT,
+                            "copies of each asserted relation under the MGI strains that carry its allele" );
+                    try {
+                        return produce( asserted, refuted, mouseModel, strains );
+                    } finally {
+                        if ( strains != null ) {
+                            strains.close();
+                        }
+                    }
                 } finally {
                     if ( mouseModel != null ) {
                         mouseModel.close();
@@ -211,6 +223,20 @@ public class MgiRelationProducer {
      */
     public int produce( InputStream asserted, @Nullable InputStream refuted,
             @Nullable InputStream mouseModel ) throws IOException {
+        return produce( asserted, refuted, mouseModel, null );
+    }
+
+    /**
+     * Rebuild every MGI relation from the three reports, and also store each asserted relation under the MGI strains
+     * whose nomenclature carries its allele.
+     *
+     * @param strains the {@code MGI_Strain.rpt} stream, or null to store no strain copies
+     * @return how many relation rows were written
+     * @see #produce(InputStream, InputStream, InputStream)
+     * @see MgiStrainAlleleIndex
+     */
+    public int produce( InputStream asserted, @Nullable InputStream refuted, @Nullable InputStream mouseModel,
+            @Nullable InputStream strains ) throws IOException {
         StopWatch timer = StopWatch.createStarted();
         OntologyXrefIndex xrefs = OntologyXrefIndex.fromSource(
                 OntologyServiceResolver.resolve( ontologies, XREF_SOURCE_TOKEN )
@@ -238,6 +264,12 @@ public class MgiRelationProducer {
             log.warn( "{} is not loaded, so MGI relations are stored only under their allele URIs,"
                     + " which no corpus annotation uses.", BRIDGE_SOURCE_TOKEN );
         }
+        // Paul, 2026-09-14: the relations are also stored under the MGI strains that carry the allele.
+        MgiStrainAlleleIndex strainIndex = strains != null
+                ? MgiStrainAlleleIndex.parse( strains ) : MgiStrainAlleleIndex.empty();
+        if ( strainIndex.isEmpty() ) {
+            log.warn( "No {} was read, so no MGI relation is stored under a strain.", STRAIN_REPORT );
+        }
 
         Date generatedAt = new Date();
         Taxon mouse = resolveMouse();
@@ -256,14 +288,14 @@ public class MgiRelationProducer {
         // The precedence order; see the class note. Refutation before assertion, cited before uncited.
         if ( refuted != null ) {
             rows.addAll( read( MgiDiseaseModelReport.parse( refuted ), AnnotationRelationStatus.REFUTED,
-                    xrefs, bridge, mouse, generatedAt, seen, reading.of( REFUTED_REPORT ) ) );
+                    xrefs, bridge, strainIndex, mouse, generatedAt, seen, reading.of( REFUTED_REPORT ) ) );
         }
         rows.addAll( read( filter( models, true ), AnnotationRelationStatus.REFUTED,
-                xrefs, bridge, mouse, generatedAt, seen, reading.of( MOUSE_MODEL_REPORT ) ) );
+                xrefs, bridge, strainIndex, mouse, generatedAt, seen, reading.of( MOUSE_MODEL_REPORT ) ) );
         rows.addAll( read( MgiDiseaseModelReport.parse( asserted ), AnnotationRelationStatus.ASSERTED,
-                xrefs, bridge, mouse, generatedAt, seen, reading.of( ASSERTED_REPORT ) ) );
+                xrefs, bridge, strainIndex, mouse, generatedAt, seen, reading.of( ASSERTED_REPORT ) ) );
         rows.addAll( read( filter( models, false ), AnnotationRelationStatus.ASSERTED,
-                xrefs, bridge, mouse, generatedAt, seen, reading.of( MOUSE_MODEL_REPORT ) ) );
+                xrefs, bridge, strainIndex, mouse, generatedAt, seen, reading.of( MOUSE_MODEL_REPORT ) ) );
 
         log.info( "Read {} MGI relations ({} asserted, {} refuted) from {} statements in {} ms.{}",
                 rows.size(), reading.asserted(), reading.refuted(), reading.statements(), timer.getTime(),
@@ -294,7 +326,7 @@ public class MgiRelationProducer {
 
     private List<AnnotationRelation> read( Collection<? extends MgiDiseaseModelReport.Entry> entries,
             AnnotationRelationStatus status, OntologyXrefIndex xrefs, OntologyXrefIndex bridge,
-            @Nullable Taxon mouse, Date generatedAt, Set<String> seen, Tally tally ) {
+            MgiStrainAlleleIndex strains, @Nullable Taxon mouse, Date generatedAt, Set<String> seen, Tally tally ) {
         List<AnnotationRelation> out = new ArrayList<>();
         for ( MgiDiseaseModelReport.Entry e : entries ) {
             tally.statements++;
@@ -333,6 +365,27 @@ public class MgiRelationProducer {
                     b.setSubjectCategoryUri( OntologyRelationSource.STRAIN.getCategoryUri() );
                     out.add( b );
                     tally.bridged++;
+                    tally.count( status );
+                }
+                // ...and under the MGI strains whose nomenclature carries the allele. Asserted rows only: a
+                // refutation is about the allele in the genotype MGI tested, and a strain may carry another
+                // allele that does model the disease.
+                if ( status != AnnotationRelationStatus.ASSERTED ) {
+                    continue;
+                }
+                for ( MgiStrainAlleleIndex.Strain strain : strains.strainsCarrying( e.getAlleleSymbol() ) ) {
+                    if ( !seen.add( strain.uri() + '\t' + mondoUri ) ) {
+                        continue;
+                    }
+                    AnnotationRelation s = build( e, mondoUri, label, status, mouse, generatedAt );
+                    s.setSubjectValue( truncate( strain.name() ) );
+                    s.setSubjectValueUri( strain.uri() );
+                    s.setSubjectCategory( OntologyRelationSource.STRAIN.getCategory() );
+                    s.setSubjectCategoryUri( OntologyRelationSource.STRAIN.getCategoryUri() );
+                    // Gemma's reading of MGI's nomenclature, not a statement MGI made about the strain
+                    s.setEvidenceCode( GOEvidenceCode.IEA );
+                    out.add( s );
+                    tally.strainBridged++;
                     tally.count( status );
                 }
             }
@@ -394,6 +447,7 @@ public class MgiRelationProducer {
         private int refuted = 0;
         private int untranslatable = 0;
         private int bridged = 0;
+        private int strainBridged = 0;
         private int unlabelled = 0;
         private int superseded = 0;
         private final Set<String> unresolved = new LinkedHashSet<>();
@@ -446,7 +500,7 @@ public class MgiRelationProducer {
 
         private String report() {
             StringBuilder sb = new StringBuilder();
-            sb.append( "\nreport\tstatements\tasserted\trefuted\tbridged\tuntranslatable DOID"
+            sb.append( "\nreport\tstatements\tasserted\trefuted\tbridged\tunder strains\tuntranslatable DOID"
                     + "\ttranslated but unnamed\talready claimed by an earlier report" );
             for ( java.util.Map.Entry<String, Tally> e : byReport.entrySet() ) {
                 Tally t = e.getValue();
@@ -455,6 +509,7 @@ public class MgiRelationProducer {
                         .append( '\t' ).append( t.asserted )
                         .append( '\t' ).append( t.refuted )
                         .append( '\t' ).append( t.bridged )
+                        .append( '\t' ).append( t.strainBridged )
                         .append( '\t' ).append( t.untranslatable )
                         .append( '\t' ).append( t.unlabelled )
                         .append( '\t' ).append( t.superseded );

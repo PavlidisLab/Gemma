@@ -135,8 +135,10 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             log.debug( GeeqServiceImpl.LOG_PREFIX + " Finished geeq re-scoring for " + ee
                     + ", saving results..." );
         } catch ( Exception e ) {
-            log.error( GeeqServiceImpl.LOG_PREFIX + " Scoring did not finish for " + ee + ".", e );
-            gq.addOtherIssues( e.getMessage() );
+            // Rethrowing rolls back this transaction: the partial score is not saved, the dataset keeps its previous
+            // score, and no GeeqEvent marks this run as done.
+            throw new RuntimeException( String.format( "GEEQ scoring (mode: %s) did not finish for %s; no score was saved.",
+                    mode, ee.getShortName() ), e );
         }
 
         // Recalculate final score

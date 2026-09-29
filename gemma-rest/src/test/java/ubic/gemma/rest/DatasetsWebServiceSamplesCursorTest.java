@@ -44,6 +44,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,12 +60,14 @@ import static org.mockito.Mockito.when;
  * Differences from the previous 1e-1j cursor tests:
  * - The legacy mode is NOT offset-paginated for this endpoint — it returns an
  *   unpaginated {@link ResponseDataObject}{@code <List<BioAssayValueObject>>}. The
- *   cursor branch is therefore strictly additive (an opt-in via {@code ?cursor=}).
+ *   cursor branch is therefore strictly additive (an opt-in via {@code ?cursor=} or
+ *   {@code ?limit=}; either one selects it, and a bare {@code limit} starts at the
+ *   first page with a null cursor).
  * - The endpoint also accepts {@code quantitationType} and
  *   {@code useProcessedQuantitationType} that select QT-narrowed assay listings; these
  *   intentionally remain in the legacy unpaginated mode (their sort and dimension
  *   restriction are not expressible as an id-only cursor under the step 1b restriction),
- *   so supplying {@code cursor} together with either is a {@code 400 Bad Request}.
+ *   so supplying {@code cursor} or {@code limit} together with either is a {@code 400 Bad Request}.
  *
  * @author phase3
  */
@@ -176,29 +179,49 @@ public class DatasetsWebServiceSamplesCursorTest {
     }
 
     /**
-     * 🛑 The route bound {@code limit} and then never used it outside cursor mode.
+     * A {@code limit} with no {@code cursor} starts a cursor walk at the first page, which is the only way
+     * into cursor mode from a standing start: this listing has no offset mode, so nothing it can return
+     * without a cursor carries a {@code nextCursor} to continue from.
      * <p>
-     * Measured on production ({@code gemma2}, dataset 7332 = GSE2109, 2158 samples):
-     * {@code GET /datasets/7332/samples?limit=20} answered with all 2158 assays — the same body as the
-     * no-parameter call, 22,846,518 bytes at the time — and nothing in it said the page size had been
-     * dropped. Truncating to 20 instead is no better: the legacy response is an unpaginated
-     * {@link ResponseDataObject} with no {@code totalElements} and no {@code nextCursor}, so it has
-     * nowhere to declare that 2138 rows were left out. A caller must not be able to receive a different
-     * number of rows than it asked for without being told, so the parameter is refused.
+     * It also makes a short answer possible at all. Measured on production ({@code gemma2}, dataset 7332 =
+     * GSE2109, 2158 samples), {@code GET /datasets/7332/samples?limit=20} used to answer with all 2158
+     * assays — the same body as the no-parameter call, 22,846,518 bytes at the time — with nothing in it
+     * saying the page size had been dropped. Truncating the unpaginated {@link ResponseDataObject} to 20
+     * would have been no better, since it has no {@code totalElements} and no {@code nextCursor} in which
+     * to declare that 2138 rows were left out; the cursor wrapper does.
      */
     @Test
-    public void limitWithoutCursorIsRejectedAs400() {
-        assertThatThrownBy( () -> webService.getDatasetSamples( datasetArg, null, false, null, limit( "20" ), null, false ) )
-                .isInstanceOf( BadRequestException.class );
+    public void limitWithoutCursorStartsACursorWalkAtTheFirstPage() {
+        CursorPage<BioAssayValueObject> cp = new CursorPage<>(
+                Collections.singletonList( ba1 ),
+                Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
+                1,
+                /* nextCursor */ "next-cursor-token",
+                /* prevCursor */ null,
+                /* totalElements */ null );
+        when( datasetArgService.getSamplesByCursor( any( DatasetArg.class ), isNull(), eq( 1 ), anyBoolean() ) ).thenReturn( cp );
 
-        // Neither listing may run: the point is that no body is produced at all, not that a truncated one is.
+        Object response = webService.getDatasetSamples( datasetArg, null, false, null, limit( "1" ), null, false );
+
+        assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
+        @SuppressWarnings("unchecked")
+        CursorPaginatedResponseDataObject<BioAssayValueObject> page =
+                ( CursorPaginatedResponseDataObject<BioAssayValueObject> ) response;
+        assertThat( page.getData() ).containsExactly( ba1 );
+        assertThat( page.getLimit() ).isEqualTo( 1 );
+        // The truncation is declared, which is what the unpaginated wrapper could not do.
+        assertThat( page.getNextCursor() ).isEqualTo( "next-cursor-token" );
+
+        // A null cursor is what tells the DAO to start at the first page.
+        verify( datasetArgService ).getSamplesByCursor( any( DatasetArg.class ), isNull(), eq( 1 ), anyBoolean() );
         verify( datasetArgService, never() ).getSamples( any( DatasetArg.class ), anyBoolean() );
-        verify( datasetArgService, never() ).getSamplesByCursor( any( DatasetArg.class ), any(), anyInt(), anyBoolean() );
     }
 
     /**
-     * The QT-narrowed listings are legacy-mode too, so they refuse a limit on the same grounds — the
-     * rejection is a property of "not paginating", not of the plain branch.
+     * The QT-narrowed listings stay unpaginated — they sort by assay name and restrict to a
+     * {@link ubic.gemma.model.expression.bioAssayData.BioAssayDimension}, neither of which an id-only
+     * cursor can express — so a {@code limit} there is refused rather than dropped, on the same grounds
+     * as a {@code cursor}.
      */
     @Test
     public void limitWithQuantitationTypeAndNoCursorIsRejectedAs400() {

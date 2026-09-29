@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,6 @@ import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.util.math.MatrixStats;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
 import ubic.gemma.core.security.audit.Audited;
@@ -78,6 +78,14 @@ import java.util.*;
 public class DataUpdaterImpl implements DataUpdater {
 
     private static final Log log = LogFactory.getLog( DataUpdaterImpl.class );
+
+    /**
+     * This bean, through its proxy, so that calls from one of its methods to an audited one record the event.
+     * {@code @Lazy} breaks the self-reference cycle at construction.
+     */
+    @Lazy
+    @Autowired
+    private DataUpdater self;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -184,7 +192,7 @@ public class DataUpdaterImpl implements DataUpdater {
         dataUpdaterAuditService.recordDataReplaced( ee,
                 "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform );
 
-        this.postprocess( ee );
+        this.postprocess( ee, "replaced" );
     }
 
     /**
@@ -223,10 +231,15 @@ public class DataUpdaterImpl implements DataUpdater {
              */
         }
 
-        this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
-
+        // Match the rows to the platform before dealWithMissingSamples, which removes and commits the unmatched
+        // samples: a matrix whose rows match no platform element must fail while the experiment is still intact.
         DoubleMatrix<CompositeSequence, BioMaterial> properCountMatrix = this
                 .matchElementsToRowNames( targetArrayDesign, countMatrix );
+        DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = rpkmMatrix != null ? this
+                .matchElementsToRowNames( targetArrayDesign, rpkmMatrix ) : null;
+
+        this.dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
+
         this.matchBioMaterialsToColNames( ee, countMatrix, properCountMatrix );
 
         assert !properCountMatrix.getColNames().isEmpty();
@@ -255,7 +268,13 @@ public class DataUpdaterImpl implements DataUpdater {
         ExpressionDataDoubleMatrix log2cpmEEMatrix = new ExpressionDataDoubleMatrix( ee, log2cpmMatrix, log2cpmQt );
 
         // important: replaceData takes care of the platform switch if necessary; call first. It also deletes old QTs, so from here we have to remake them.
-        this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+        RawDataPostprocessingException postprocessingFailure = null;
+        try {
+            this.replaceData( ee, targetArrayDesign, log2cpmEEMatrix );
+        } catch ( RawDataPostprocessingException e ) {
+            // the log2cpm data is stored and the old counts are gone; store the counts (and RPKM) before reporting it
+            postprocessingFailure = e;
+        }
 
         // Re-thaw + re-snapshot the EE's QTs: replaceData ran in its own transaction
         // and removed the old Counts/RPKM QTs from the DB, but the caller's detached
@@ -278,14 +297,12 @@ public class DataUpdaterImpl implements DataUpdater {
         }
         ExpressionDataDoubleMatrix countEEMatrix = new ExpressionDataDoubleMatrix( ee, properCountMatrix, countqt );
 
-        this.addData( ee, targetArrayDesign, countEEMatrix );
+        self.addData( ee, targetArrayDesign, countEEMatrix );
 
         this.addTotalCountInformation( ee, countEEMatrix, sequencingMetadata );
 
         if ( rpkmMatrix != null ) {
-
-            DoubleMatrix<CompositeSequence, BioMaterial> properRPKMMatrix = this
-                    .matchElementsToRowNames( targetArrayDesign, rpkmMatrix );
+            assert properRPKMMatrix != null;
             this.matchBioMaterialsToColNames( ee, rpkmMatrix, properRPKMMatrix );
 
             assert !properRPKMMatrix.getColNames().isEmpty();
@@ -301,9 +318,12 @@ public class DataUpdaterImpl implements DataUpdater {
 
             ExpressionDataDoubleMatrix rpkmEEMatrix = new ExpressionDataDoubleMatrix( ee, properRPKMMatrix, rpkmqt );
 
-            this.addData( ee, targetArrayDesign, rpkmEEMatrix );
+            self.addData( ee, targetArrayDesign, rpkmEEMatrix );
         }
 
+        if ( postprocessingFailure != null ) {
+            throw postprocessingFailure;
+        }
     }
 
     /**
@@ -352,12 +372,17 @@ public class DataUpdaterImpl implements DataUpdater {
             if ( platforms.size() > 1 )
                 throw new IllegalArgumentException( "Cannot apply to multiplatform data sets" );
 
-            this.addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
+            self.addData( ee, platforms.iterator().next(), log2cpmEEMatrix );
+        } catch ( RawDataPostprocessingException e ) {
+            // the log2cpm data was stored and is now the preferred data; only its post-processing failed, so the
+            // counts must stay non-preferred
+            throw e;
         } catch ( Exception e ) {
-            DataUpdaterImpl.log.error( e, e );
             // try to recover.
             qt.setIsPreferred( true );
             qtService.update( qt );
+            throw new RuntimeException( String.format( "Failed to compute log2cpm from %s for %s; %s is the preferred quantitation type again.",
+                    qt, ee.getShortName(), qt.getName() ), e );
         }
 
     }
@@ -538,21 +563,9 @@ public class DataUpdaterImpl implements DataUpdater {
          * Postprocessing, all of which is non-serious if it fails.
          */
 
-        /*
-         * Clean up any unused bioassaydimensions. We always make new ones here. At this point they should be freed up.
-         */
         try {
             sampleCorService.removeForExperiment( ee );
             pcaService.removeForExperiment( ee );
-            for ( BioAssayDimension bad : allOldBioAssayDims ) {
-                try {
-                    bioAssayDimensionService.remove( bad );
-                    DataUpdaterImpl.log.info( "Removed bioAssayDimension ID=" + bad.getId() );
-                } catch ( Exception e ) {
-                    DataUpdaterImpl.log.warn( "Failed to clean up old bioassaydimension with ID=" + bad.getId() + ": " + e
-                            .getMessage() );
-                }
-            }
         } catch ( Exception e ) {
             DataUpdaterImpl.log.warn( "Error during cleanup: " + e.getMessage() );
         }
@@ -578,7 +591,36 @@ public class DataUpdaterImpl implements DataUpdater {
         }
 
         if ( needsPost )
-            this.postprocess( ee );
+            this.postprocess( ee, "replaced" );
+
+        /*
+         * Clean up the old bioassaydimensions. We always make new ones here, so nothing should be using these --
+         * but only once the PROCESSED vectors have been rebuilt. Attempted before postprocess, every -force
+         * re-run logged `Cannot delete or update a parent row ... PROCESSED_EXPRESSION_DATA_VECTOR ...
+         * BIO_ASSAY_DIMENSION_FK` and swallowed it, because the old processed vectors were still pointing at the
+         * old dimension; createProcessedDataVectors replaces them wholesale off the new raw vectors, so by here
+         * nothing references it. 19 of 19 -force runs in FRB's custom-CDF campaign logged it (2026-09-22).
+         *
+         * It left nothing behind, which took a measurement to say: 0 orphaned dimensions are attributable to
+         * those 19 experiments, and GSE167387's log shows why -- dimension 48118 failed here ("has 29129 other
+         * vectors using it, it will not be deleted"), then was removed about a minute later in the same run,
+         * once the processed-vector replace had swapped the vectors over and its own removeUnusedDimensions
+         * found it free. So the error was noise and a later sweep collected the row. Running this one after
+         * postprocess makes the first attempt the one that succeeds, rather than leaving a failed delete in
+         * every -force run's log for a reader to work out.
+         *
+         * Still best-effort: a failure here leaves a stale dimension, which is not worth failing a completed
+         * reprocess over.
+         */
+        for ( BioAssayDimension bad : allOldBioAssayDims ) {
+            try {
+                bioAssayDimensionService.remove( bad );
+                DataUpdaterImpl.log.info( "Removed bioAssayDimension ID=" + bad.getId() );
+            } catch ( Exception e ) {
+                DataUpdaterImpl.log.warn( "Failed to clean up old bioassaydimension with ID=" + bad.getId() + ": " + e
+                        .getMessage() );
+            }
+        }
     }
 
     /**
@@ -647,7 +689,7 @@ public class DataUpdaterImpl implements DataUpdater {
 
         if ( qt.getIsPreferred() ) {
             DataUpdaterImpl.log.info( "Postprocessing preferred data" );
-            this.postprocess( ee );
+            this.postprocess( ee, "added" );
             assert ee.getNumberOfDataVectors() != null;
         }
     }
@@ -723,7 +765,7 @@ public class DataUpdaterImpl implements DataUpdater {
         // EntityNotFoundException: BioAssay#N (see Phase 2 Step 7 commit 27d09617b5 which
         // identified this as the remaining residual after the per-call-site re-resolves).
         ee = experimentService.thaw( ee );
-        this.postprocess( ee );
+        this.postprocess( ee, "replaced" );
 
         assert ee.getNumberOfDataVectors() != null;
     }
@@ -1174,15 +1216,16 @@ public class DataUpdaterImpl implements DataUpdater {
     /**
      * Generic
      *
-     * @param ee experiment
-     * @return experiment
+     * @param ee            experiment
+     * @param rawDataChange what was done to the raw data before this call ("replaced", "added"), for the error message
+     * @throws RawDataPostprocessingException if post-processing fails; the raw data change is already committed
      */
-    private void postprocess( ExpressionExperiment ee ) {
+    private void postprocess( ExpressionExperiment ee, String rawDataChange ) {
         // several transactions
         try {
             preprocessorService.process( ee );
-        } catch ( PreprocessingException e ) {
-            DataUpdaterImpl.log.error( "Error during postprocessing", e );
+        } catch ( RuntimeException e ) {
+            throw new RawDataPostprocessingException( ee, rawDataChange, e );
         }
     }
 

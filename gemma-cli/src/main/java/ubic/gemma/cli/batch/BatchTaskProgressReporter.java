@@ -2,6 +2,7 @@ package ubic.gemma.cli.batch;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AnsiEscapeCodes;
 
@@ -24,7 +25,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     private final AtomicInteger numberOfSuccessOrErrorObjects = new AtomicInteger( 0 );
     private volatile boolean hasErrorObjects = false;
 
-    private final ThreadLocal<Boolean> wasSuccessObjectAdded = ThreadLocal.withInitial( () -> false );
+    private final ThreadLocal<Boolean> wasResultAdded = ThreadLocal.withInitial( () -> false );
     private final ThreadLocal<Boolean> wasErrorObjectAdded = ThreadLocal.withInitial( () -> false );
 
     private final StopWatch timer = StopWatch.createStarted();
@@ -45,12 +46,16 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     }
 
     /**
-     * Indicate if a success object was added for the current thread.
+     * Indicate if any result -- success, warning or error -- was added for the current thread.
+     * <p>
+     * A warning counts. It used to not, and a batch task whose only report was a warning was then
+     * given a second, invented row saying "Batch task #N" SUCCESS by
+     * {@link BatchTaskExecutorService}, because nothing looked like a report to it.
      * <p>
      * This status is reset by {@link #clearThreadLocals()}.
      */
-    boolean wasSuccessObjectAdded() {
-        return wasSuccessObjectAdded.get();
+    boolean wasResultAdded() {
+        return wasResultAdded.get();
     }
 
     /**
@@ -67,7 +72,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      */
     void clearThreadLocals() {
         wasErrorObjectAdded.remove();
-        wasSuccessObjectAdded.remove();
+        wasResultAdded.remove();
     }
 
     /**
@@ -125,7 +130,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
     }
 
     public void addWarningObject( @Nullable Serializable warningObject, String message, Throwable throwable ) {
-        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, throwable ) );
+        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.WARNING, warningObject, message, withApplicationException( throwable ) ) );
     }
 
     /**
@@ -138,7 +143,7 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      * @param throwable   throwable to produce a stacktrace
      */
     public void addErrorObject( @Nullable Serializable errorObject, String message, Throwable throwable ) {
-        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, throwable ) );
+        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, message, withApplicationException( throwable ) ) );
     }
 
     /**
@@ -156,17 +161,34 @@ public class BatchTaskProgressReporter implements AutoCloseable {
      * @see #addErrorObject(Serializable, String, Throwable)
      */
     public void addErrorObject( @Nullable Serializable errorObject, Exception exception ) {
-        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, exception.getMessage(), exception ) );
+        addBatchProcessingResult( new BatchTaskProcessingResult( BatchTaskProcessingResult.ResultType.ERROR, errorObject, exception.getMessage(), withApplicationException( exception ) ) );
+    }
+
+    /**
+     * When a rollback fails, Spring throws the rollback's {@link TransactionSystemException} and keeps the exception
+     * that caused the rollback only as {@link TransactionSystemException#getApplicationException()}, which is not in
+     * the cause chain. Summaries print the root cause, so an {@link OutOfMemoryError} that desynchronized the JDBC
+     * connection was reported as the rollback's own {@code SQLException: Index 221 out of bounds for length 219}.
+     * <p>
+     * Report the application exception instead, with the rollback failure attached as suppressed.
+     */
+    private static Throwable withApplicationException( Throwable throwable ) {
+        if ( throwable instanceof TransactionSystemException tse && tse.getApplicationException() != null ) {
+            Throwable applicationException = tse.getApplicationException();
+            applicationException.addSuppressed( tse );
+            return applicationException;
+        }
+        return throwable;
     }
 
     private void addBatchProcessingResult( BatchTaskProcessingResult result ) {
         int completed;
+        wasResultAdded.set( true );
         if ( result.getResultType() == BatchTaskProcessingResult.ResultType.ERROR ) {
             wasErrorObjectAdded.set( true );
             hasErrorObjects = true;
             completed = numberOfSuccessOrErrorObjects.incrementAndGet();
         } else if ( result.getResultType() == BatchTaskProcessingResult.ResultType.SUCCESS ) {
-            wasSuccessObjectAdded.set( true );
             completed = numberOfSuccessOrErrorObjects.incrementAndGet();
         } else {
             completed = numberOfSuccessOrErrorObjects.get();

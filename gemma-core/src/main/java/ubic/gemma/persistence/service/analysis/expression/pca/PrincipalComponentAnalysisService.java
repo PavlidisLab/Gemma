@@ -43,6 +43,20 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeForExperiment( ExpressionExperiment ee );
 
+    /**
+     * Remove the experiment's PCA and store the given one, in a single transaction.
+     * <p>
+     * 🛑 The two halves must not be separate transactions. {@code SVDServiceImpl.svd} is
+     * {@code Propagation.NEVER} — the decomposition between its read and its write takes long enough that a
+     * transaction must not be open across it — so calling {@link #removeForExperiment} and {@link #create}
+     * from there would commit the removal, then fail, and leave the experiment with no PCA at all. Same shape
+     * as {@code replaceProcessedDataVectors}.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
+            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad, int numComponentsToStore,
+            int numLoadingsToStore );
+
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee );

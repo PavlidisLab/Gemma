@@ -45,9 +45,14 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
     private String file;
 
+    public ArrayDesignProbeCleanupCLI() {
+        // deleting probes and their vectors is irreversible; -a or -f must always name the platform, never -all
+        setExplicitADsOnly();
+    }
+
     @Override
     protected void buildArrayDesignOptions( Options options ) {
-        Option fileOption = Option.builder( "f" ).hasArg().required().argName( "file" )
+        Option fileOption = Option.builder( "file" ).hasArg().required().argName( "file" )
                 .desc( "File (tabbed) with element ids in the first column" ).longOpt( "file" )
                 .build();
 
@@ -57,8 +62,8 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     @Override
     protected void processArrayDesignOptions( CommandLine commandLine ) {
-        if ( commandLine.hasOption( 'f' ) ) {
-            file = commandLine.getOptionValue( 'f' );
+        if ( commandLine.hasOption( "file" ) ) {
+            file = commandLine.getOptionValue( "file" );
         }
     }
 

@@ -102,6 +102,10 @@ public interface DifferentialExpressionAnalyzerService {
 
     /**
      * Made public for testing purposes only.
+     * <p>
+     * Deletes the existing analyses the new one replaces first: one on the identical factor set (and the same subset),
+     * and, for a non-subset analysis, any non-subset analysis whose factors it covers. A redo replaces only the
+     * former.
      *
      * @param expressionExperiment the experiment
      * @param config               config

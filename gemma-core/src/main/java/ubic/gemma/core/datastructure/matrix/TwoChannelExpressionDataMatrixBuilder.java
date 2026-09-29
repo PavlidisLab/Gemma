@@ -45,7 +45,9 @@ import java.util.*;
  * This handles complexities such as experiments that contain multiple array designs with differing quantitation types.
  *
  * @author pavlidis
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 public class TwoChannelExpressionDataMatrixBuilder {
 
     private static final Log log = LogFactory.getLog( TwoChannelExpressionDataMatrixBuilder.class.getName() );

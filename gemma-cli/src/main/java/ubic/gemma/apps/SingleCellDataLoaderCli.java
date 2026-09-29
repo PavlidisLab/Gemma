@@ -328,7 +328,7 @@ public class SingleCellDataLoaderCli extends ExpressionExperimentManipulatingCLI
         // for AnnData
         options.addOption( ANNDATA_SAMPLE_FACTOR_NAME_OPTION, "anndata-sample-factor-name", true, "Name of the factor used for the sample name." );
         options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-factor-name", true, "Name of the factor used for the cell type, incompatible with " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + "." );
-        options.addOption( ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION, "anndata-cell-type-uri-factor-name", true, "Name of the factor used for the cell type URI, incompatible with " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + "." );
+        options.addOption( ANNDATA_CELL_TYPE_URI_FACTOR_NAME_OPTION, "anndata-cell-type-uri-factor-name", true, "Name of the factor used for the cell type URI, incompatible with " + formatOption( options, CELL_TYPE_ASSIGNMENT_FILE_OPTION ) + "." );
         options.addOption( ANNDATA_IGNORE_CELL_TYPE_FACTOR_OPTION, "anndata-ignore-cell-type-factor", false, "Do not attempt to load a cell type factor. Incompatible with " + formatOption( options, ANNDATA_CELL_TYPE_FACTOR_NAME_OPTION ) + "." );
         options.addOption( ANNDATA_UNKNOWN_CELL_TYPE_INDICATOR_OPTION, "anndata-unknown-cell-type-indicator", true, "Indicator used for missing cell type. Defaults to using the standard -1 categorical code." );
         OptionsUtils.addAutoOption( options,

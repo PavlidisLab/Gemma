@@ -51,6 +51,11 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
     private boolean delete;
 
+    public ArrayDesignBioSequenceDetachCli() {
+        // detaching/deleting sequences is irreversible; -a or -f must always name the platform(s), never -all
+        setExplicitADsOnly();
+    }
+
     @Override
     public String getCommandName() {
         return "detachSequences";

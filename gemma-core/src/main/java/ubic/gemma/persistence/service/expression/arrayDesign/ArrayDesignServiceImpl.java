@@ -302,6 +302,11 @@ public class ArrayDesignServiceImpl extends AbstractFilteringVoEnabledService<Ar
     }
 
     @Override
+    public Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign ) {
+        return readService.countBlatResultsBySearchedDatabase( arrayDesign );
+    }
+
+    @Override
     public long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign ) {
         return readService.countCompositeSequencesWithBioSequences( arrayDesign );
     }

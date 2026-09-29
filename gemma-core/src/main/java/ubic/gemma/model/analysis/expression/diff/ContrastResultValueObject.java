@@ -40,16 +40,16 @@ public class ContrastResultValueObject extends IdentifiableValueObject<ContrastR
     @JsonSerialize(using = RoundingUtils.SignificantDigitsSerializer.class)
     private Double logFoldChange;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "This property is mutually exclusive with `factorValue`.")
+    @Schema(description = "This property is mutually exclusive with `factorValue`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     private Long factorValueId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "This property is mutually exclusive with `factorValueId`.")
+    @Schema(description = "This property is mutually exclusive with `factorValueId`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     private FactorValueBasicValueObject factorValue;
-    @Schema(description = "This property is mutually exclusive with `secondFactorValue`.")
+    @Schema(description = "This property is mutually exclusive with `secondFactorValue`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long secondFactorValueId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "This property is mutually exclusive with `secondFactorValueId`.")
+    @Schema(description = "This property is mutually exclusive with `secondFactorValueId`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     private FactorValueBasicValueObject secondFactorValue;
 
     public ContrastResultValueObject() {

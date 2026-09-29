@@ -32,6 +32,8 @@
 --          ACEs are GROUP_ADMIN(16) + GROUP_AGENT(1) with NO IS_AUTHENTICATED_ANONYMOUSLY, so
 --          they are genuinely private and 2.0 already treats them so. No action needed, but
 --          re-check at drop time in case newer ones differ.
+--        * Protocol / ExpressionExperimentSet -- 816 / 33 live objects (2026-09-24), not
+--          children of anything and all public. Section 2b carries them, ACEs included.
 --
 
 -- ============================ 1. REPORT (read-only) ============================
@@ -114,6 +116,73 @@ COMMIT;
 -- 🛑 The ACEs on those user ACLs are NOT copied -- the old schema's MASK/SID rows would need
 --    translating and the 4 known cases carry 6 ACEs each of unexamined meaning. Inspect them
 --    with the report above and decide before dropping, or re-grant through the application.
+
+-- ========= 2b. CARRY PROTOCOL + EXPRESSION EXPERIMENT SET ACLs, WITH THEIR ACEs =========
+-- Both are SecuredNotChild: no parent experiment to fall back to, so dropping the old store
+-- would leave them with no ACL at all. Measured 2026-09-24: 816 Protocols (all "Differential
+-- expression analysis settings", ids 104869-105684, created by 1.32.x) and 33 live sets.
+-- Every one carries the same three ACEs -- GROUP_ADMIN 16, GROUP_AGENT 1,
+-- IS_AUTHENTICATED_ANONYMOUSLY 1 -- i.e. they are PUBLIC, so the ACEs are copied, not just the
+-- identity. None has a parent or inherits; no (object, ACE_ORDER) duplicates.
+--
+-- Ids are NOT preserved (unlike db.1.33.0): both stores have allocated ids since 2026-05-18.
+-- SIDs are matched by (principal, name), the same translation db.1.33.0 used; all needed SIDs
+-- already exist in acl_sid. Only rows whose entity still exists are carried -- the old store
+-- also holds rows for deleted objects.
+
+START TRANSACTION;
+
+INSERT INTO acl_object_identity (object_id_class, object_id_identity, parent_object, owner_sid, entries_inheriting)
+SELECT c.id, u.OBJECT_ID, NULL, ls.id, u.ENTRIES_INHERITING
+FROM ACLOBJECTIDENTITY u
+JOIN acl_class c ON c.class = u.OBJECT_CLASS
+LEFT JOIN acl_object_identity l
+       ON l.object_id_identity = u.OBJECT_ID AND l.object_id_class = c.id
+JOIN ACLSID os ON os.ID = u.OWNER_SID_FK
+JOIN acl_sid ls ON ls.principal = IF( os.class = 'PrincipalSid', 1, 0 )
+               AND ls.sid = COALESCE( os.PRINCIPAL, os.GRANTED_AUTHORITY )
+LEFT JOIN PROTOCOL p
+       ON p.ID = u.OBJECT_ID AND u.OBJECT_CLASS = 'ubic.gemma.model.common.protocol.Protocol'
+LEFT JOIN EXPRESSION_EXPERIMENT_SET s
+       ON s.ID = u.OBJECT_ID AND u.OBJECT_CLASS = 'ubic.gemma.model.analysis.expression.ExpressionExperimentSet'
+WHERE l.id IS NULL
+  AND ( p.ID IS NOT NULL OR s.ID IS NOT NULL );
+
+-- ACEs for the identities just created (and only those still without entries).
+INSERT INTO acl_entry (acl_object_identity, ace_order, sid, mask, granting, audit_success, audit_failure)
+SELECT l.id, e.ACE_ORDER, ls.id, e.MASK, e.GRANTING, 0, 0
+FROM ACLOBJECTIDENTITY u
+JOIN acl_class c ON c.class = u.OBJECT_CLASS
+JOIN acl_object_identity l
+  ON l.object_id_identity = u.OBJECT_ID AND l.object_id_class = c.id
+JOIN ACLENTRY e ON e.OBJECTIDENTITY_FK = u.ID
+JOIN ACLSID os ON os.ID = e.SID_FK
+JOIN acl_sid ls ON ls.principal = IF( os.class = 'PrincipalSid', 1, 0 )
+               AND ls.sid = COALESCE( os.PRINCIPAL, os.GRANTED_AUTHORITY )
+WHERE u.OBJECT_CLASS IN ( 'ubic.gemma.model.common.protocol.Protocol',
+                          'ubic.gemma.model.analysis.expression.ExpressionExperimentSet' )
+  AND NOT EXISTS ( SELECT 1 FROM acl_entry x WHERE x.acl_object_identity = l.id );
+
+SELECT 'live Protocols / sets still without a new-store ACL (want 0)' AS metric, COUNT(*) AS n
+FROM ACLOBJECTIDENTITY u
+LEFT JOIN acl_class c ON c.class = u.OBJECT_CLASS
+LEFT JOIN acl_object_identity l
+       ON l.object_id_identity = u.OBJECT_ID AND l.object_id_class = c.id
+LEFT JOIN PROTOCOL p
+       ON p.ID = u.OBJECT_ID AND u.OBJECT_CLASS = 'ubic.gemma.model.common.protocol.Protocol'
+LEFT JOIN EXPRESSION_EXPERIMENT_SET s
+       ON s.ID = u.OBJECT_ID AND u.OBJECT_CLASS = 'ubic.gemma.model.analysis.expression.ExpressionExperimentSet'
+WHERE l.id IS NULL AND ( p.ID IS NOT NULL OR s.ID IS NOT NULL );
+
+SELECT 'carried identities with no ACEs (want 0)' AS metric, COUNT(*) AS n
+FROM acl_object_identity l
+JOIN acl_class c ON c.id = l.object_id_class
+JOIN ACLOBJECTIDENTITY u ON u.OBJECT_ID = l.object_id_identity AND u.OBJECT_CLASS = c.class
+WHERE c.class IN ( 'ubic.gemma.model.common.protocol.Protocol',
+                   'ubic.gemma.model.analysis.expression.ExpressionExperimentSet' )
+  AND NOT EXISTS ( SELECT 1 FROM acl_entry x WHERE x.acl_object_identity = l.id );
+
+COMMIT;
 
 -- ============================== 3. THE DROP ==============================
 -- Uncomment only after sections 1 and 2 are done and 1.32.x is off for good.

@@ -21,8 +21,11 @@ package ubic.gemma.apps;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Regenerate the on-disk platform reports — the per-platform element / sequence / alignment / gene
@@ -72,7 +75,13 @@ public class ArrayDesignReportCli extends ArrayDesignSequenceManipulatingCli {
         int done = 0;
         for ( ArrayDesign ad : arrayDesigns ) {
             try {
-                arrayDesignReportService.generateArrayDesignReport( ad.getId() );
+                // not generateArrayDesignReport(Long): that one only logs a report it could not write
+                List<ArrayDesignValueObject> vos = arrayDesignService.loadValueObjectsByIds( Collections.singleton( ad.getId() ) );
+                if ( vos.isEmpty() ) {
+                    addErrorObject( ad, "No platform with ID " + ad.getId() + " to report on." );
+                    continue;
+                }
+                arrayDesignReportService.generateArrayDesignReport( vos.get( 0 ) );
                 done++;
                 addSuccessObject( ad );
             } catch ( Exception e ) {

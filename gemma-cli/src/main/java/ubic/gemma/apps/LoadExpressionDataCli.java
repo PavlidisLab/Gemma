@@ -39,7 +39,10 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
@@ -159,18 +162,7 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                     continue;
                 }
 
-                if ( platformOnly ) {
-                    Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, true, true );
-                    for ( Object object : designs ) {
-                        assert object instanceof ArrayDesign;
-                        ArrayDesign ad = ( ArrayDesign ) object;
-                        ad = ads.thawLite( ad );
-
-                        addSuccessObject( ad.getShortName() );
-                    }
-                } else {
-                    this.processAccession( accession );
-                }
+                this.loadAccession( accession );
             }
 
         }
@@ -186,7 +178,9 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                         continue;
                     }
 
-                    this.processAccession( accession );
+                    // Through the same -y check as -e: this called processAccession() directly, so
+                    // `-y -f` loaded full experiments for every accession in the file.
+                    this.loadAccession( accession );
 
                 }
             }
@@ -242,7 +236,25 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         }
     }
 
+    private void loadAccession( String accession ) {
+        if ( platformOnly ) {
+            Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, true, true );
+            for ( Object object : designs ) {
+                assert object instanceof ArrayDesign;
+                ArrayDesign ad = ( ArrayDesign ) object;
+                ad = ads.thawLite( ad );
+
+                addSuccessObject( ad.getShortName() );
+            }
+        } else {
+            this.processAccession( accession );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private void processAccession( String accession ) {
+        List<String> deleted = Collections.emptyList();
+        Collection<ExpressionExperiment> ees = null;
         try {
 
             log.info( " ***** Starting processing of " + accession + " *****" );
@@ -256,12 +268,14 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                 return;
             }
 
+            // The existing experiment is deleted, and that deletion committed, before the fetch:
+            // fetchAndLoad refuses an accession that is already loaded. A fetch or load that then fails
+            // leaves neither the old experiment nor a new one, which the error below states.
             if ( force ) {
-                this.removeIfExists( accession );
+                deleted = this.removeIfExists( accession );
             }
 
-            @SuppressWarnings("unchecked")
-            Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService
+            ees = ( Collection<ExpressionExperiment> ) geoService
                     .fetchAndLoad( accession, false, doMatching, this.splitByPlatform, this.allowSuperSeriesLoad,
                             this.allowSubSeriesLoad );
 
@@ -273,7 +287,13 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
                 addSuccessObject( object.getShortName() );
             }
         } catch ( Exception e ) {
-            addErrorObject( accession, e );
+            if ( !deleted.isEmpty() && ees == null ) {
+                addErrorObject( accession, "-force deleted the existing experiment(s) " + String.join( ", ", deleted )
+                        + " before loading, and the load failed: the old data is gone and " + accession
+                        + " was not reloaded.", e );
+            } else {
+                addErrorObject( accession, e );
+            }
         }
     }
 
@@ -281,8 +301,9 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
      * Delete previous version of the experiment.
      *
      * @param accession accession
+     * @return the short names of the experiments that were deleted
      */
-    private void removeIfExists( String accession ) {
+    private List<String> removeIfExists( String accession ) {
         DatabaseEntry acDbe = DatabaseEntry.Factory.newInstance();
         acDbe.setAccession( accession );
         ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
@@ -290,12 +311,16 @@ public class LoadExpressionDataCli extends AbstractAuthenticatedCLI {
         acDbe.setExternalDatabase( geo );
         Collection<ExpressionExperiment> existing = eeService.findByAccession( acDbe );
 
+        List<String> deleted = new ArrayList<>();
         if ( !existing.isEmpty() ) {
             log.info( "Deleting existing version of " + accession );
             for ( ExpressionExperiment expressionExperiment : existing ) {
+                String shortName = expressionExperiment.getShortName();
                 eeService.remove( expressionExperiment );
+                deleted.add( shortName );
             }
         }
+        return deleted;
     }
 
     /**

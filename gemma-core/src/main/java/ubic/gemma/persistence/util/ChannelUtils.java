@@ -23,7 +23,9 @@ package ubic.gemma.persistence.util;
  * them 'special'.
  *
  * @author paul
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 public class ChannelUtils {
 
     /**

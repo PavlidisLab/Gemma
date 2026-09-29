@@ -14,10 +14,8 @@
  */
 package ubic.gemma.core.util.math;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.BitSet;
 
-import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -74,83 +72,91 @@ public class MatrixNormalizer<R, C> {
         f.setMinPresentCount( 1 );
         DoubleMatrix<R, C> fM = f.filter( matrix );
 
-        DoubleMatrix<R, C> missingValueStatus = imputeMissing( fM );
+        BitSet missingValueStatus = imputeMissing( fM );
 
-        /*
-         * Compute ranks of each column. Missing values are wherever they end up, which is a bit odd.
-         */
-        Map<Integer, DoubleArrayList> ranks = new LinkedHashMap<>();
-
+        // copy() rather than a fresh matrix of the same shape because this method is generic over
+        // DoubleMatrix and cannot construct a concrete one; every cell is overwritten immediately below, so
+        // what the copy is actually for is the shape and the row and column names.
         DoubleMatrix<R, C> sortedData = fM.copy();
+
+        // One buffer for every column instead of one per column. getColumn() allocates a double[rows] on each
+        // call, so the old loop churned columns x rows doubles -- 299 MB on a 34,330 x 1,090 matrix -- to read
+        // data that is already in the matrix. DoubleArrayList wraps the array without copying and sort()
+        // orders it in place, so the sorted values are readable straight out of the buffer.
+        double[] columnBuffer = new double[fM.rows()];
+        DoubleArrayList sortedColumn = new DoubleArrayList( columnBuffer );
         for ( int i = 0; i < fM.columns(); i++ ) {
-            DoubleArrayList dataColumn = new DoubleArrayList( fM.getColumn( i ) );
-
-            DoubleArrayList sortedColumn = dataColumn.copy();
-            sortedColumn.sort();
-            for ( int j = 0; j < sortedColumn.size(); j++ ) {
-                sortedData.set( j, i, sortedColumn.get( j ) );
+            for ( int j = 0; j < fM.rows(); j++ ) {
+                columnBuffer[j] = fM.get( j, i );
             }
-
-            DoubleArrayList r = Rank.rankTransform( dataColumn );
-            assert r != null;
-            ranks.put( i, r );
+            sortedColumn.sort();
+            for ( int j = 0; j < fM.rows(); j++ ) {
+                sortedData.set( j, i, columnBuffer[j] );
+            }
         }
 
         /*
          * Compute the mean at each rank
          */
+        // Same again for the rows: getRow() allocated a double[columns] per row and then a DoubleArrayList
+        // around it, twice over, for every one of the rows. The buffer is sized for the widest case and
+        // setSize tells Descriptive.mean how much of it counts, which is how the includeInReference subset is
+        // expressed without a second allocation.
         DoubleArrayList rowMeans = new DoubleArrayList( sortedData.rows() );
+        double[] rowBuffer = new double[sortedData.columns()];
+        DoubleArrayList contributing = new DoubleArrayList( rowBuffer );
         for ( int i = 0; i < sortedData.rows(); i++ ) {
-            double[] row = sortedData.getRow( i );
-            DoubleArrayList contributing;
-            if ( includeInReference == null ) {
-                contributing = new DoubleArrayList( row );
-            } else {
-                contributing = new DoubleArrayList( row.length );
-                for ( int j = 0; j < row.length; j++ ) {
-                    if ( includeInReference[j] ) {
-                        contributing.add( row[j] );
-                    }
+            int n = 0;
+            for ( int j = 0; j < sortedData.columns(); j++ ) {
+                if ( includeInReference == null || includeInReference[j] ) {
+                    rowBuffer[n++] = sortedData.get( i, j );
                 }
             }
+            contributing.setSize( n );
             rowMeans.add( Descriptive.mean( contributing ) );
         }
 
         for ( int j = 0; j < sortedData.columns(); j++ ) {
 
+            // Ranked here, one column at a time, rather than all of them up front. Every rank column is
+            // read by exactly this iteration of j and by nothing else, so holding all of them cost
+            // columns x rows doubles for no reuse -- 299 MB on a 34,330 x 1,090 matrix. Same number of
+            // rankTransform calls either way.
+            // getColumn() here and not the shared buffer: rankTransform's treatment of the list it is
+            // handed is not part of its contract, and a buffer it retained would be silently overwritten by
+            // the next column. One allocation per column is worth not having to be sure.
+            DoubleArrayList ranks = Rank.rankTransform( new DoubleArrayList( fM.getColumn( j ) ) );
+            assert ranks != null;
+
             for ( int i = 0; i < sortedData.rows(); i++ ) {
 
-                if ( Double.isNaN( fM.get( i, j ) ) ) {
-                    sortedData.set( i, j, Double.NaN );
-                    continue;
-                }
+                // No missing-value test here: imputeMissing filled every NaN in fM with its row mean
+                // before sortedData was copied from it, so there is none left to find. The cells that
+                // were missing are re-masked from missingValueStatus below, which is the actual record.
 
-                double rank = ranks.get( j ).get( i ) - 1.0;
+                double rank = ranks.get( i ) - 1.0;
 
                 int intrank = ( int ) Math.floor( rank );
 
-                Double value = null;
+                // 🛑 double, not Double. This is the innermost loop of the whole normalization: it runs
+                // rows x columns times -- 37.4 million on a 34,330 x 1,090 matrix -- and boxing here
+                // allocated a Double object on every one of them, for a value that is read once and
+                // discarded. The null check went with it; a primitive cannot be null.
+                double value;
                 if ( rank - intrank > 0.4 && intrank > 0 ) {
                     // cope with tied ranks. 0.4 is the threshold R uses.
                     value = ( rowMeans.get( intrank ) + rowMeans.get( intrank - 1 ) ) / 2.0;
                 } else {
                     value = rowMeans.get( intrank );
                 }
-                assert value != null : "No mean value for rank=" + rank;
                 sortedData.set( i, j, value );
 
             }
         }
 
-        assert missingValueStatus.rows() == sortedData.rows() && missingValueStatus.columns() == sortedData.columns();
-
         // mask the missing values.
-        for ( int i = 0; i < missingValueStatus.rows(); i++ ) {
-            for ( int j = 0; j < missingValueStatus.columns(); j++ ) {
-                if ( Double.isNaN( missingValueStatus.get( i, j ) ) ) {
-                    sortedData.set( i, j, Double.NaN );
-                }
-            }
+        for ( int k = missingValueStatus.nextSetBit( 0 ); k >= 0; k = missingValueStatus.nextSetBit( k + 1 ) ) {
+            sortedData.set( k / sortedData.columns(), k % sortedData.columns(), Double.NaN );
         }
 
         return sortedData;
@@ -163,25 +169,28 @@ public class MatrixNormalizer<R, C> {
      * filtered, the row mean is better.
      * <p>
      * FIXME this should be factored out
+     * <p>
+     * The record of which cells were missing is a {@link BitSet} over {@code row * columns + column}, not a
+     * matrix: it is one bit of information per cell and a same-shaped {@code DenseDoubleMatrix} charged 64 bits
+     * for it. On a 34,330 x 1,090 matrix that is 4.7 MB rather than 299 MB, and on data with no missing values
+     * at all -- the common case -- it is an empty set rather than 37.4 million stored 1.0s.
      *
-     * @param matrix
-     * @return missing value status
+     * @param matrix modified in place: every missing cell is filled with its row mean
+     * @return the positions that were missing, as {@code row * matrix.columns() + column}
      */
-    private DoubleMatrix<R, C> imputeMissing( DoubleMatrix<R, C> matrix ) {
+    private BitSet imputeMissing( DoubleMatrix<R, C> matrix ) {
         /*
          * keep track of the missing values so they can be re-masked later.
          */
-        DoubleMatrix<R, C> missingValueInfo = new DenseDoubleMatrix<>( matrix.rows(), matrix.columns() );
+        BitSet missingValueInfo = new BitSet( matrix.rows() * matrix.columns() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DoubleArrayList v = new DoubleArrayList( matrix.getRow( i ) );
             double m = DescriptiveWithMissing.mean( v );
             for ( int j = 0; j < matrix.columns(); j++ ) {
                 double d = matrix.get( i, j );
                 if ( Double.isNaN( d ) ) {
-                    missingValueInfo.set( i, j, Double.NaN );
+                    missingValueInfo.set( i * matrix.columns() + j );
                     matrix.set( i, j, m );
-                } else {
-                    missingValueInfo.set( i, j, 1.0 );
                 }
             }
         }

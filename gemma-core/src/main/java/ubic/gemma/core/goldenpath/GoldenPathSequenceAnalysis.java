@@ -20,6 +20,9 @@ package ubic.gemma.core.goldenpath;
 
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.util.SQLUtils;
@@ -44,8 +47,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Using the Goldenpath databases for comparing sequence alignments to gene locations.
@@ -62,12 +70,185 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     private static final double RECHECK_OVERLAP_THRESHOLD = 0.9;
 
     /**
+     * UCSC's curated RefSeq transcripts, read by {@link #findRefGenesByLocation} and by the first query of
+     * {@link #findKnownGenesByLocation}. Its names are versioned (NM_006429.4).
+     */
+    static final String REFSEQ_TABLE = "ncbiRefSeqCurated";
+
+    /**
+     * Descriptions of the {@link #REFSEQ_TABLE} transcripts, keyed by the same versioned accession.
+     */
+    static final String REFSEQ_LINK_TABLE = "ncbiRefSeqLink";
+
+    /**
+     * A RefSeq transcript accession without its version. UCSC's knownToRefSeq held these until it switched to
+     * versioned accessions; they match nothing in {@link #REFSEQ_TABLE}.
+     */
+    private static final Pattern UNVERSIONED_REFSEQ = Pattern.compile( "^[NX][MR]_\\d+$" );
+
+    /**
      * cache results of mRNA queries.
      */
     private final LRUMap cache = new LRUMap( 2000 );
 
+    /**
+     * Longest transcript span per table; see {@link #getMaxTranscriptSpan}.
+     */
+    private final Map<String, Long> maxTranscriptSpans = new HashMap<>();
+
     public GoldenPathSequenceAnalysis( Taxon taxon ) {
         super( taxon );
+    }
+
+    /**
+     * Check that this database has the tables that {@link #findAssociations} reads with the given configuration, and
+     * that they can be joined. Call it before deleting anything that the mapping is meant to replace: a missing table
+     * otherwise surfaces as an SQL error on the first probe that reaches the query.
+     * <p>
+     * A missing {@code (chrom, txStart)} index on {@code ncbiRefSeqCurated} is logged as a warning: the mapping is
+     * slower without it, not wrong.
+     *
+     * @param config which tracks the mapping will read
+     * @throws IllegalStateException naming the database and every missing table; or when {@code knownToRefSeq} holds
+     *         RefSeq accessions without versions, which the known-gene join to {@code ncbiRefSeqCurated} cannot match
+     */
+    public void checkTablesForProbeMapping( ProbeMapperConfig config ) {
+        checkSomeGeneTrackIsOn( config );
+        for ( String warning : GoldenPathSequenceAnalysis.checkTablesForProbeMapping( this.getJdbcTemplate(),
+                this.getSearchedDatabase().getName(), config.isUseRefGene(), config.isUseKnownGene() ) ) {
+            GoldenPath.log.warn( warning );
+        }
+    }
+
+    /**
+     * {@link #findAssociations} finds gene products only through the RefSeq and known-gene tracks. With both off (the
+     * {@code -mirna} mode turns every track off, and nothing reads {@code useMiRNA}), a remap deletes the platform's
+     * alignment-based associations and creates none.
+     *
+     * @throws IllegalStateException if neither track is on
+     */
+    static void checkSomeGeneTrackIsOn( ProbeMapperConfig config ) {
+        if ( !config.isUseRefGene() && !config.isUseKnownGene() ) {
+            throw new IllegalStateException( "Neither the RefSeq nor the known-gene track is enabled, so probe mapping would "
+                    + "delete the platform's alignment-based associations and create none." );
+        }
+    }
+
+    /**
+     * @return warnings that do not stop the mapping
+     * @see #checkTablesForProbeMapping(ProbeMapperConfig)
+     */
+    static List<String> checkTablesForProbeMapping( JdbcTemplate jdbcTemplate, String database, boolean useRefGene,
+            boolean useKnownGene ) {
+        Set<String> required = new LinkedHashSet<>();
+        if ( useRefGene ) {
+            required.add( REFSEQ_TABLE );
+            required.add( REFSEQ_LINK_TABLE );
+        }
+        if ( useKnownGene ) {
+            required.add( "knownGene" );
+            required.add( "knownToRefSeq" );
+            required.add( "kgXref" );
+            required.add( REFSEQ_TABLE );
+        }
+
+        /*
+         * Selecting from each table resolves its name exactly as the mapping queries do, including the server's
+         * table-name case rules, which a lookup in information_schema would have to reproduce.
+         */
+        List<String> missing = new ArrayList<>();
+        List<BadSqlGrammarException> causes = new ArrayList<>();
+        for ( String table : required ) {
+            try {
+                jdbcTemplate.queryForList( "SELECT 1 FROM " + table + " LIMIT 0" );
+            } catch ( BadSqlGrammarException e ) {
+                missing.add( table );
+                causes.add( e );
+            }
+        }
+        if ( !missing.isEmpty() ) {
+            IllegalStateException e = new IllegalStateException( String.format(
+                    "GoldenPath database %s has no %s table%s, which mapping probes to genes reads with this "
+                            + "configuration. Load %s from UCSC (https://hgdownload.soe.ucsc.edu/goldenPath/%s/database/).",
+                    database, String.join( ", ", missing ), missing.size() > 1 ? "s" : "",
+                    missing.size() > 1 ? "them" : "it", database ) );
+            causes.forEach( e::addSuppressed );
+            throw e;
+        }
+
+        List<String> warnings = new ArrayList<>();
+        if ( useKnownGene ) {
+            GoldenPathSequenceAnalysis.checkKnownToRefSeqIsVersioned( jdbcTemplate, database, warnings );
+        }
+        if ( required.contains( REFSEQ_TABLE ) ) {
+            GoldenPathSequenceAnalysis.checkRangeIndex( jdbcTemplate, database, warnings );
+        }
+        return warnings;
+    }
+
+    /**
+     * Only NM_ and NR_ values are sampled: knownToRefSeq also holds XM_, XR_ and YP_ accessions, and, in mm39,
+     * mitochondrial gene symbols.
+     */
+    private static void checkKnownToRefSeqIsVersioned( JdbcTemplate jdbcTemplate, String database,
+            List<String> warnings ) {
+        List<String> sample = jdbcTemplate.queryForList(
+                "SELECT value FROM knownToRefSeq WHERE value LIKE ? OR value LIKE ? LIMIT 50", String.class, "NM\\_%",
+                "NR\\_%" );
+        if ( sample.isEmpty() ) {
+            throw new IllegalStateException( String.format(
+                    "knownToRefSeq in GoldenPath database %s holds no NM_ or NR_ accessions, so no known gene "
+                            + "can be joined to %s. Reload knownToRefSeq from UCSC.", database, REFSEQ_TABLE ) );
+        }
+        List<String> unversioned = new ArrayList<>();
+        for ( String value : sample ) {
+            if ( UNVERSIONED_REFSEQ.matcher( value ).matches() ) {
+                unversioned.add( value );
+            }
+        }
+        if ( unversioned.size() == sample.size() ) {
+            throw new IllegalStateException( String.format(
+                    "knownToRefSeq in GoldenPath database %s holds RefSeq accessions without versions (%s), but "
+                            + "%s names are versioned (NM_006429.4), so the known-gene join would match nothing. "
+                            + "The table predates UCSC's versioned format or was not reloaded with %s; reload "
+                            + "knownGene, knownToRefSeq and kgXref from UCSC.",
+                    database, unversioned.get( 0 ), REFSEQ_TABLE, REFSEQ_TABLE ) );
+        } else if ( !unversioned.isEmpty() ) {
+            warnings.add( String.format( "%d of %d sampled RefSeq accessions in %s.knownToRefSeq have no version "
+                            + "(e.g. %s); the known genes they belong to will not be joined to %s.", unversioned.size(),
+                    sample.size(), database, unversioned.get( 0 ), REFSEQ_TABLE ) );
+        }
+    }
+
+    private static void checkRangeIndex( JdbcTemplate jdbcTemplate, String database, List<String> warnings ) {
+        List<Map<String, Object>> indexColumns;
+        try {
+            indexColumns = jdbcTemplate.queryForList( "SHOW INDEX FROM " + REFSEQ_TABLE );
+        } catch ( DataAccessException e ) {
+            warnings.add( String.format( "Could not read the indexes of %s.%s: %s", database, REFSEQ_TABLE,
+                    e.getMessage() ) );
+            return;
+        }
+        Set<Object> startingWithChrom = new HashSet<>();
+        for ( Map<String, Object> column : indexColumns ) {
+            if ( isIndexColumn( column, 1, "chrom" ) ) {
+                startingWithChrom.add( column.get( "Key_name" ) );
+            }
+        }
+        for ( Map<String, Object> column : indexColumns ) {
+            if ( isIndexColumn( column, 2, "txStart" ) && startingWithChrom.contains( column.get( "Key_name" ) ) ) {
+                return;
+            }
+        }
+        warnings.add( String.format( "%s.%s has no index on (chrom, txStart), so each gene lookup reads every "
+                        + "transcript on the chromosome. The mapping will be slow, not wrong. To add it: ALTER TABLE %s "
+                        + "ADD KEY chrom_txStart (chrom, txStart);", database, REFSEQ_TABLE, REFSEQ_TABLE ) );
+    }
+
+    private static boolean isIndexColumn( Map<String, Object> column, int position, String name ) {
+        Object seq = column.get( "Seq_in_index" );
+        return seq instanceof Number && ( ( Number ) seq ).intValue() == position
+                && name.equalsIgnoreCase( String.valueOf( column.get( "Column_name" ) ) );
     }
 
     /**
@@ -249,18 +430,28 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         /*
          * Many known genes map to refseq genes. We use those gene symbols instead. Use kgXRef only to get the
          * description.
+         *
+         * knownToRefSeq.value and ncbiRefSeqCurated.name are both versioned (NM_006429.4) in UCSC's current tables, so
+         * they are joined as they are; wrapping either side in a function would stop MySQL using ncbiRefSeqCurated's
+         * name index. The product name is returned unversioned because Gemma's gene products are named without the
+         * version. A knownToRefSeq table from before UCSC versioned it (NM_006429) matches nothing here, which
+         * checkTablesForProbeMapping refuses.
+         *
+         * knownToRefSeq also points known genes at predicted (XM_, XR_) and mitochondrial protein (YP_) accessions:
+         * 130,747 of hg38's 584,971 rows in UCSC's 2026-07 table. ncbiRefSeqCurated holds none of those, so those
+         * known genes drop out of this join. That is expected and not a regression; refFlat did not hold them
+         * either. (The second query below does not pick them up, because they do have a knownToRefSeq row.)
          */
-        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgr.description) "
+        String query = "SELECT SUBSTRING_INDEX(r.name, '.', 1), r.name2, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgr.description) "
                 + " FROM knownGene as kg INNER JOIN knownToRefSeq kr on kr.name=kg.name inner join kgXref kgr on kgr.kgID=kg.name "
-                + " INNER JOIN refFlat r ON r.name=kr.value  WHERE "
-                + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
-                + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
+                + " INNER JOIN " + REFSEQ_TABLE + " r ON r.name=kr.value  WHERE "
+                + overlaps( "kg" );
 
         if ( strand != null ) {
             query = query + " AND kg.strand = ? ";
         }
 
-        Collection<GeneProduct> known2refseq = this.findGenesByQuery( start, end, searchChrom, strand, query );
+        Collection<GeneProduct> known2refseq = this.findGenesByQuery( start, end, searchChrom, strand, query, "knownGene" );
         Collection<GeneProduct> result = new HashSet<>( known2refseq );
 
         /*
@@ -269,13 +460,12 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         query = "SELECT kgxr.mRNA, kgxr.geneSymbol, kg.txStart, kg.txEnd, kg.strand, kg.exonStarts, kg.exonEnds, CONCAT('Known gene: ', kgxr.description) "
                 + " FROM knownGene as kg INNER JOIN"
                 + " kgXref AS kgxr ON kg.name=kgxr.kgID LEFT OUTER JOIN knownToRefSeq kr on kr.name=kg.name WHERE kr.value IS NULL AND "
-                + "((kg.txStart >= ? AND kg.txEnd <= ?) OR (kg.txStart <= ? AND kg.txEnd >= ?) OR "
-                + "(kg.txStart >= ?  AND kg.txStart <= ?) OR  (kg.txEnd >= ? AND  kg.txEnd <= ? )) and kg.chrom = ? ";
+                + overlaps( "kg" );
 
         if ( strand != null ) {
             query = query + " AND kg.strand = ? ";
         }
-        Collection<GeneProduct> knowng = this.findGenesByQuery( start, end, searchChrom, strand, query );
+        Collection<GeneProduct> knowng = this.findGenesByQuery( start, end, searchChrom, strand, query, "knownGene" );
         result.addAll( knowng );
 
         return result;
@@ -283,6 +473,15 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
     /**
      * Find RefSeq genes contained in or overlapping a region.
+     * <p>
+     * Reads UCSC's curated RefSeq track, {@code ncbiRefSeqCurated} (NM_, NR_ and a few YP_ transcripts; not the
+     * predicted XM_/XR_ models that {@code ncbiRefSeq} adds), with descriptions from {@code ncbiRefSeqLink}. It used to
+     * read {@code refFlat}, which UCSC stopped updating for hg38 and mm39 on 2020-08-18; {@code ncbiRefSeqCurated} is
+     * still maintained (hg38 2025-08-13, mm39 2024-02-20).
+     * <p>
+     * The query filters on {@code chrom} and the {@code txStart}/{@code txEnd} range and does not use UCSC's
+     * {@code bin} column. UCSC indexes {@code (chrom, bin)}, not {@code (chrom, txStart)}, so without an added
+     * {@code (chrom, txStart)} index each query reads every transcript on the chromosome.
      *
      * @param chromosome chromosome
      * @param start start
@@ -294,17 +493,18 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
 
         /*
-         * Use kgXRef only to get the description - sometimes missing thus the outer join.
+         * ncbiRefSeqCurated.name is versioned (NM_006429.4) and Gemma's gene products are named without the version,
+         * so the version is cut off. ncbiRefSeqLink is joined for the description only, hence the outer join; its id
+         * is the same versioned accession. This no longer reads kgXref, which rat's databases do not have from UCSC.
          */
-        String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgXref.description) "
-                + "FROM refFlat as r left outer join kgXref on r.geneName = kgXref.geneSymbol " + "WHERE "
-                + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
-                + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
+        String query = "SELECT SUBSTRING_INDEX(r.name, '.', 1), r.name2, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', l.product) "
+                + "FROM " + REFSEQ_TABLE + " AS r LEFT OUTER JOIN " + REFSEQ_LINK_TABLE + " AS l ON l.id = r.name WHERE "
+                + overlaps( "r" );
 
         if ( strand != null ) {
             query = query + " AND r.strand = ?  ";
         }
-        return this.findGenesByQuery( start, end, searchChrom, strand, query );
+        return this.findGenesByQuery( start, end, searchChrom, strand, query, REFSEQ_TABLE );
     }
 
     /**
@@ -671,20 +871,39 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param query query
      * @return List of GeneProducts. This is a collection of transient instances, not from Gemma's database.
      */
-    private Collection<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
-            String query ) {
-        // Cases:
-        // 1. gene is contained within the region: txStart > start & txEnd < end;
-        // 2. region is contained within the gene: txStart < start & txEnd > end;
-        // 3. region overlaps start of gene: txStart > start & txStart < end.
-        // 4. region overlaps end of gene: txEnd > start & txEnd < end
-        //
+    /**
+     * The condition for a transcript overlapping the region, with its parameters in the order
+     * {@link #findGenesByQuery} binds them.
+     * <p>
+     * A transcript overlaps [start, end] when {@code txStart <= end AND txEnd >= start}; that is the union of the four
+     * cases the query used to spell out (contained in, containing, overlapping the start, overlapping the end). Only
+     * {@code txStart} is indexed, and {@code txStart <= end} alone reads every transcript on the chromosome that starts
+     * before the region. No transcript that overlaps it can start earlier than {@code start} minus the longest
+     * transcript in the table, so that bound limits the index range without changing the result.
+     */
+    private static String overlaps( String alias ) {
+        return alias + ".txStart <= ? AND " + alias + ".txStart >= ? AND " + alias + ".txEnd >= ? AND " + alias + ".chrom = ? ";
+    }
 
+    /**
+     * The longest transcript span in a table, which bounds {@link #overlaps}. Read once per table; the tables do not
+     * change while a mapping runs.
+     */
+    private long getMaxTranscriptSpan( String table ) {
+        return maxTranscriptSpans.computeIfAbsent( table, t -> {
+            Long max = this.getJdbcTemplate().queryForObject( "SELECT MAX(txEnd - txStart) FROM " + t, Long.class );
+            return max != null ? max : 0L;
+        } );
+    }
+
+    private Collection<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
+            String query, String table ) {
+        long earliestStart = Math.max( 0L, starti - this.getMaxTranscriptSpan( table ) );
         Object[] params;
         if ( strand != null ) {
-            params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome, strand };
+            params = new Object[] { endi, earliestStart, starti, chromosome, strand };
         } else {
-            params = new Object[] { starti, endi, starti, endi, starti, endi, starti, endi, chromosome };
+            params = new Object[] { endi, earliestStart, starti, chromosome };
         }
 
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<GeneProduct>>() {

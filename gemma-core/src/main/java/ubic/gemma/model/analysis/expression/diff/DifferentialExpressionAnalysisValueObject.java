@@ -63,6 +63,7 @@ public class DifferentialExpressionAnalysisValueObject extends AnalysisValueObje
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "The assays the analysis ran over. Null unless the request asked for it with `includeAssays=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
     private Collection<BioAssayValueObject> bioAssaysAnalyzed;
 
     // for subsets

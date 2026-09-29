@@ -46,12 +46,17 @@ public interface PreprocessorService {
     /**
      * Preprocess a dataset.
      * <p>
-     * Mismatched quantitation types are ignored by default, diagnostics failure will in a {@link PreprocessingException}.
+     * A quantitation type that does not match the one inferred from the data fails the processing, as
+     * {@code makeProcessedData} does without {@code -ignoreqm}; a diagnostics failure also results in a
+     * {@link PreprocessingException}.
+     * <p>
+     * This used to ignore the mismatch, so loading and raw-data replacement only logged it: GSE38485 (Lumi vst values,
+     * already log2) was stored as LINEAR and logged a second time during processing at load.
      *
      * @see #process(ExpressionExperiment, boolean, boolean)
      */
     default void process( ExpressionExperiment ee ) throws PreprocessingException {
-        process( ee, true, false );
+        process( ee, false, false );
     }
 
     /**

@@ -465,8 +465,14 @@ public class GeoValues implements Serializable {
                 i++;
             }
 
-            if ( !found )
+            if ( !found ) {
+                // Say so: a sample with no entry here becomes an all-missing column in every vector, and nothing else
+                // records it. frinkbro (2026-09-15) found 11 such samples in 10 experiments whose data is at GEO.
+                GeoValues.log.warn( "No values for " + sample.getGeoAccession() + " under quantitation type index "
+                        + quantitationType + " on " + platform.getGeoAccession()
+                        + "; its column will be all missing values." );
                 result.add( null );
+            }
 
         }
 

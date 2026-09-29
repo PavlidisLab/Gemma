@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,7 @@ import ubic.gemma.rest.annotations.GZIP;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.SortValueObject;
@@ -86,6 +88,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/resultSets")
 @Slf4j
+@Tag(name = "Result Sets", description = "Differential expression result sets, their results and p-value distributions")
 public class AnalysisResultSetsWebService {
 
     public static final String TEXT_TAB_SEPARATED_VALUES_UTF8_Q9 = "text/tab-separated-values; charset=UTF-8; q=0.9";
@@ -134,19 +137,19 @@ public class AnalysisResultSetsWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user's `?sort=` is ignored); the dataset / databaseEntry / filter constraints are preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The matching result sets.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class
                             }))),
             })
     public Object getResultSets(
-            @Parameter(schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
-            @Parameter(schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit,
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort,
+            @Parameter(description = "Dataset identifiers, comma-separated. Each is an ExpressionExperiment id or short name.", schema = @Schema(implementation = DatasetArrayArg.class), explode = Explode.FALSE) @QueryParam("datasets") DatasetArrayArg datasets,
+            @Parameter(description = "Database entry identifiers, comma-separated.", schema = @Schema(implementation = DatabaseEntryArrayArg.class), explode = Explode.FALSE) @QueryParam("databaseEntries") DatabaseEntryArrayArg databaseEntries,
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filters,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit,
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionAnalysisResultSet> sort,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg ) {
         Collection<BioAssaySet> bas = null;
         if ( datasets != null ) {
@@ -181,9 +184,12 @@ public class AnalysisResultSetsWebService {
     @GET
     @Path("/count")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Count result sets matching the provided filter")
+    @Operation(summary = "Count result sets matching the provided filter",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The number of result sets matching the filter.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<Long> getNumberOfResultSets(
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionAnalysisResultSet> filter ) {
         return respond( expressionAnalysisResultSetService.count( expressionAnalysisResultSetArgService.getFilters( filter ) ) );
     }
 
@@ -213,7 +219,7 @@ public class AnalysisResultSetsWebService {
                     + "For interaction terms, `{fvId}` is structured as `{id1}_{id2}`. "
                     + "For continuous factors, `{fvId}` is empty and a single `_` delimiter is used.",
             responses = {
-                    @ApiResponse(responseCode = "200", content = {
+                    @ApiResponse(responseCode = "200", description = "The result set.", content = {
                             @Content(mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = PaginatedResultsResponseDataObjectDifferentialExpressionAnalysisResultSetValueObject.class)),
                             @Content(mediaType = TEXT_TAB_SEPARATED_VALUES_UTF8_Q9,
@@ -223,10 +229,10 @@ public class AnalysisResultSetsWebService {
                     @ApiResponse(responseCode = "404", description = "The analysis result set could not be found.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Object getResultSet(
-            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
-            @QueryParam("threshold") Double threshold,
-            @QueryParam("offset") OffsetArg offsetArg,
-            @QueryParam("limit") LimitArg limitArg,
+            @Parameter(description = "Identifier of the differential expression analysis result set.") @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @Parameter(description = "Only include results at or below this p-value threshold.") @QueryParam("threshold") Double threshold,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") LimitArg limitArg,
             @Parameter(description = "Include complete factor values in contrasts instead of only populating `factorValueId` and `secondFactorValueId`. In 2.9.0, this will default to false.", schema = @Schema(defaultValue = "true")) @QueryParam("includeFactorValuesInContrasts") Boolean includeFactorValuesInContrasts,
             @Parameter(description = "Include complete taxon in genes instead of only populating `taxonId`. When this is set to true, a `taxa` collection will be included in `DifferentialExpressionAnalysisResultSetValueObject`. In 2.9.0, this will default to false.", schema = @Schema(defaultValue = "true")) @QueryParam("includeTaxonInGenes") Boolean includeTaxonInGenes,
             @Parameter(hidden = true) @QueryParam("excludeResults") @DefaultValue("false") Boolean excludeResults,
@@ -315,7 +321,7 @@ public class AnalysisResultSetsWebService {
                     + "one would mean scanning the full results table, so `column=corrected` is rejected with a 400 "
                     + "instead of silently answering with the raw distribution.",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The stored p-value histogram, rebinned to the requested number of bins.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = PvalueDistributionResponseDataObject.class))),
                     @ApiResponse(responseCode = "204", description = "The stored histogram is empty — it has no bins, or every bin is zero (the analysis produced no non-null p-values)."),
                     @ApiResponse(responseCode = "400", description = "`bins` does not divide the stored bin count, or `column` is not 'raw'.",
@@ -323,7 +329,7 @@ public class AnalysisResultSetsWebService {
                     @ApiResponse(responseCode = "404", description = "The analysis result set could not be found, or it has no stored p-value distribution.",
                             content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class))) })
     public Response getPvalueDistribution(
-            @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
+            @Parameter(description = "Identifier of the differential expression analysis result set.") @PathParam("resultSet") ExpressionAnalysisResultSetArg analysisResultSet,
             @Parameter(description = "Number of bins. Must divide the stored bin count (100) exactly: 1, 2, 4, 5, 10, 20, 25, 50 or 100.",
                     schema = @Schema(defaultValue = "20", minimum = "1", maximum = "100"))
             @QueryParam("bins") @DefaultValue("20") int bins,

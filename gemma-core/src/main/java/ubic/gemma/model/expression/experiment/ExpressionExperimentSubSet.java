@@ -27,6 +27,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -62,6 +64,7 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
     public static final String NAME_DELIMITER = " - ";
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "SOURCE_EXPERIMENT_FK", columnDefinition = "BIGINT")
     private ExpressionExperiment sourceExperiment;
 

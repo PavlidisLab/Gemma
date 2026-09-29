@@ -18,6 +18,8 @@ public class ProcessedDataDeleterCli extends ExpressionExperimentVectorsManipula
 
     public ProcessedDataDeleterCli() {
         super( ProcessedExpressionDataVector.class );
+        // deletion is irreversible; -e must always name the experiments to delete, never -all/-eeset/-f/-q
+        setExplicitEEsOnly();
     }
 
     @Nullable

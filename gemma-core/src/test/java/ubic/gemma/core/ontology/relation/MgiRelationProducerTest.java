@@ -357,6 +357,63 @@ class MgiRelationProducerTest {
                 } );
     }
 
+    private List<AnnotationRelation> produceWithStrains( InputStream asserted, InputStream refuted,
+            InputStream strains ) throws Exception {
+        producer().produce( asserted, refuted, null, strains );
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Collection<AnnotationRelation>> captor = ArgumentCaptor.forClass( Collection.class );
+        verify( dao ).create( captor.capture() );
+        return new ArrayList<>( captor.getValue() );
+    }
+
+    private static final String SMN1_C_STRAIN = "https://www.informatics.jax.org/strain/MGI:3811194";
+
+    /**
+     * An allele's relation also lands on the MGI strains whose names carry it (Paul, 2026-09-14). GSE322566's mouse
+     * is JAX 008604, {@code FVB.129(B6)-Smn1<tm5(Smn1/SMN2)Mrph>/J}: MGI related its allele to SMA, and the strain,
+     * which a curator can annotate with, was related to nothing.
+     */
+    @Test
+    void anAssertedFactIsAlsoStoredUnderTheStrainsWhoseNomenclatureCarriesTheAllele() throws Exception {
+        List<AnnotationRelation> rows = produceWithStrains(
+                report( row( "Smn1<tm5(Smn1/SMN2)Mrph>", "MGI:3794202", "1", "DOID:1206" ) ), null,
+                report( "MGI:3811194\tFVB.129(B6)-Smn1<tm5(Smn1/SMN2)Mrph>/J\tcongenic",
+                        "MGI:3028467\tC57BL/6J\tinbred strain",
+                        "MGI:1\tB6.129-Smn1<tm1Msd>/J\tcongenic" ) );
+
+        assertThat( rows ).extracting( AnnotationRelation::getSubjectValueUri )
+                .containsExactly( "https://www.informatics.jax.org/allele/MGI:3794202", SMN1_C_STRAIN );
+        AnnotationRelation strain = rows.get( 1 );
+        assertThat( strain.getSubjectValue() ).isEqualTo( "FVB.129(B6)-Smn1<tm5(Smn1/SMN2)Mrph>/J" );
+        assertThat( strain.getSubjectCategory() ).isEqualTo( "strain" );
+        assertThat( strain.getPredicateUri() ).isEqualTo( rows.get( 0 ).getPredicateUri() );
+        assertThat( strain.getObjectValueUri() ).isEqualTo( MONDO_RETT );
+        // derived by Gemma from the name, so not qualified as the author statement the allele row is
+        assertThat( strain.getEvidenceCode() ).isEqualTo( GOEvidenceCode.IEA );
+    }
+
+    /** A gene symbol may contain the separator a background runs into it with, and must still match. */
+    @Test
+    void aGeneSymbolContainingAHyphenStillFindsItsStrain() throws Exception {
+        List<AnnotationRelation> rows = produceWithStrains(
+                report( row( "H2-Ab1<tm1Gru>", "MGI:1857233", "1", "DOID:1206" ) ), null,
+                report( "MGI:2\tB6.129S2-H2-Ab1<tm1Gru>/J\tcongenic" ) );
+
+        assertThat( rows ).extracting( AnnotationRelation::getSubjectValueUri )
+                .contains( "https://www.informatics.jax.org/strain/MGI:2" );
+    }
+
+    /** A refutation stays on the allele MGI tested; the strain may carry another allele that does model the disease. */
+    @Test
+    void aRefutationIsNotCopiedToAStrain() throws Exception {
+        List<AnnotationRelation> rows = produceWithStrains(
+                report( row( "Mecp2<tm1.1Bird>", "MGI:1857444", "1", "DOID:332" ) ),
+                report( row( "Smn1<tm5(Smn1/SMN2)Mrph>", "MGI:3794202", "", "DOID:1206" ) ),
+                report( "MGI:3811194\tFVB.129(B6)-Smn1<tm5(Smn1/SMN2)Mrph>/J\tcongenic" ) );
+
+        assertThat( rows ).extracting( AnnotationRelation::getSubjectValueUri ).doesNotContain( SMN1_C_STRAIN );
+    }
+
     /** An allele nothing cross-references is stored once, exactly as before. */
     @Test
     void anAlleleNoBridgingTermNamesIsStillStoredOnce() throws Exception {

@@ -75,7 +75,8 @@ public class AnnotationsUsageCountCacheTest extends BaseJerseyTest5 {
         public static TestPropertyPlaceholderConfigurer placeholderConfigurer() {
             return new TestPropertyPlaceholderConfigurer( "gemma.hosturl=http://localhost:8080",
                     "annotation.category.prefixes=",
-                    "annotation.category.excludedPrefixes=" );
+                    "annotation.category.excludedPrefixes=",
+                    "gemma.ontology.validation.olsFailClosed=true" );
         }
 
         @Bean
@@ -86,6 +87,15 @@ public class AnnotationsUsageCountCacheTest extends BaseJerseyTest5 {
         @Bean
         public OntologyService ontologyService() {
             return mock( OntologyService.class );
+        }
+
+        /**
+         * Required by {@code AnnotationsWebService} since its tag writes ground-check the terms they add;
+         * without it the context fails to build and these cache tests error before asserting anything.
+         */
+        @Bean
+        public ubic.gemma.core.ontology.OntologyTermValidator ontologyTermValidator() {
+            return mock( ubic.gemma.core.ontology.OntologyTermValidator.class );
         }
 
         /**

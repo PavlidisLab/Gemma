@@ -43,6 +43,17 @@ public class TicketTargetValueObject implements Serializable {
     private String screeningResultReason;
 
     /**
+     * This target's own task — what put THIS experiment on the ticket and what is being asked of the
+     * curator. Opaque JSON text, served verbatim; see {@link TicketTarget#getPayload()}.
+     */
+    @Nullable
+    private String payload;
+
+    /** Which schema {@link #payload} follows, or null when the writer declared none. */
+    @Nullable
+    private Integer payloadSchemaVersion;
+
+    /**
      * Short display label for the target (e.g. an EE's {@code shortName} like
      * {@code GSE12345}). {@code null} when no cheap join is available.
      */
@@ -67,6 +78,8 @@ public class TicketTargetValueObject implements Serializable {
         vo.status = t.getStatus() != null ? t.getStatus() : TicketTargetStatus.NOT_DONE;
         vo.screeningResult = t.getScreeningResult();
         vo.screeningResultReason = t.getScreeningResultReason();
+        vo.payload = t.getPayload();
+        vo.payloadSchemaVersion = t.getPayloadSchemaVersion();
         return vo;
     }
 

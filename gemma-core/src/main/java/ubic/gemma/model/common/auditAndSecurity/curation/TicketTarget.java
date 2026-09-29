@@ -19,6 +19,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import org.springframework.lang.Nullable;
 
@@ -69,6 +71,40 @@ public class TicketTarget extends AbstractIdentifiable {
     @Column(name = "SCREENING_RESULT_REASON", columnDefinition = "TEXT")
     private String screeningResultReason;
 
+    /**
+     * What this target's own task is — the finding that put THIS experiment on the ticket, and what the
+     * curator is being asked to do about it.
+     * <p>
+     * The ticket's {@code body} and {@link Ticket#getPayload() payload} are one per ticket, so a ticket
+     * carrying a thousand experiments can only say what is true of all thousand. Almost every finding an
+     * audit produces is per-experiment, and a curator opening the 734th target needs that one
+     * (frinkbro, 2026-09-11; Paul: "Each item has to have its task associated with it directly").
+     * <p>
+     * 🛑 Opaque to Gemma, exactly as {@link Ticket#getPayload()} is: nothing here parses, validates,
+     * filters or indexes it, and the schema belongs to the producing agent.
+     * <p>
+     * Distinct from {@link #screeningResultReason}, which explains a screening verdict already reached.
+     * <p>
+     * The JDBC type is pinned rather than left to {@code @Lob}, which resolves to {@code Types#CLOB}
+     * while Connector/J reports a MySQL {@code JSON} column as {@code Types#LONGVARCHAR} — the
+     * disagreement that took gemma-staging (the one deployment running
+     * {@code hbm2ddl.auto=validate}) down at startup on {@code ANNOTATION_SET.PAYLOAD_JSON}
+     * (commit {@code 00eb15abc9}).
+     */
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Nullable
+    @Column(name = "PAYLOAD", columnDefinition = "json")
+    private String payload;
+
+    /**
+     * Which schema {@link #payload} follows, or null when the writer declared none — the per-target
+     * counterpart of {@link Ticket#getPayloadSchemaVersion()}, and on the wire from the start for the
+     * same reason.
+     */
+    @Nullable
+    @Column(name = "PAYLOAD_SCHEMA_VERSION", columnDefinition = "INTEGER")
+    private Integer payloadSchemaVersion;
+
     public Ticket getTicket() {
         return ticket;
     }
@@ -117,6 +153,24 @@ public class TicketTarget extends AbstractIdentifiable {
 
     public void setScreeningResultReason( @Nullable String screeningResultReason ) {
         this.screeningResultReason = screeningResultReason;
+    }
+
+    @Nullable
+    public String getPayload() {
+        return payload;
+    }
+
+    public void setPayload( @Nullable String payload ) {
+        this.payload = payload;
+    }
+
+    @Nullable
+    public Integer getPayloadSchemaVersion() {
+        return payloadSchemaVersion;
+    }
+
+    public void setPayloadSchemaVersion( @Nullable Integer payloadSchemaVersion ) {
+        this.payloadSchemaVersion = payloadSchemaVersion;
     }
 
     @Override

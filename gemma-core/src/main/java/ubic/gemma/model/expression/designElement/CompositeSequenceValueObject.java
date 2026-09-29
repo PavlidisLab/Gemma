@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.designElement;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.lang.Nullable;
@@ -64,6 +65,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "The probe's raw sequence. Null unless the request asked for it with `withSequence=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
     private String sequence;
     /**
      * Pre-computed length from {@code BioSequence.length}, exposed alongside
@@ -73,6 +75,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Length of the probe's sequence. Null unless the request asked for it with `withSequence=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
     private Long sequenceLength;
 
     /**
@@ -92,6 +95,7 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "The genes this probe maps to, compactly. Populated only when the request asked for it with `withGenes=true`; a probe that maps to no gene then gets an empty list, so empty is distinguishable from not requested.")
     private List<GeneReferenceValueObject> genes;
 
     /**

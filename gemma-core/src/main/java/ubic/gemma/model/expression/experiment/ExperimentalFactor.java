@@ -86,6 +86,7 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
     @JoinColumn(name = "EXPERIMENTAL_DESIGN_FK", nullable = false, columnDefinition = "BIGINT")
     private ExperimentalDesign experimentalDesign;
     @OneToMany(mappedBy = "experimentalFactor", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<FactorValue> factorValues = new HashSet<>();
     @Deprecated
@@ -159,7 +160,9 @@ public class ExperimentalFactor extends AbstractDescribable implements SecuredCh
      * Opaque JSON array of supporting-evidence items ({@code [{"quote":...,"source":...,"location":...}, ...]})
      * backing this factor as a curated claim — the same verbatim provenance
      * {@link ubic.gemma.model.common.description.Characteristic#getSupportingEvidence()} carries for a tag or a
-     * statement. Stored as-is; Gemma does not parse or query it, so the agents repo owns the evidence schema.
+     * statement. Gemma parses it only to serve it and to compare a proposal with it by content
+     * ({@code CharacteristicUtils.sameSupportingEvidence}); it is never queried, and the agents repo owns the
+     * evidence schema.
      * <p>
      * A factor is not a {@link ubic.gemma.model.common.description.Characteristic}, so it has no evidence slot to
      * inherit. Its {@link #getCategory() category} is one, but a category is nullable and gets replaced during

@@ -28,6 +28,8 @@ public class ExpressionExperimentFilterResult {
     private int afterLowExpressionFilter;
     private boolean lowVarianceFilterApplied;
     private int afterLowVarianceFilter;
+    private boolean maxDesignElementsFilterApplied;
+    private int afterMaxDesignElementsFilter;
     private int finalRows;
     private int finalColumns;
 }

@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.CursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndCursorPaginatedResponseDataObject;
 import ubic.gemma.rest.util.FilteredAndPaginatedResponseDataObject;
+import ubic.gemma.rest.util.OpenApiResponseTypes.*;
 import ubic.gemma.rest.util.PaginatedResponseDataObject;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.args.*;
@@ -61,6 +63,7 @@ import static ubic.gemma.rest.util.Responders.respond;
  */
 @Service
 @Path("/taxa")
+@Tag(name = "Taxa", description = "Taxa, and the genes and datasets scoped to one")
 public class TaxaWebService {
 
     protected static final Log log = LogFactory.getLog( TaxaWebService.class.getName() );
@@ -91,7 +94,10 @@ public class TaxaWebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve all available taxa")
+    @Operation(summary = "Retrieve all available taxa",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Every taxon Gemma knows about.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<TaxonValueObject>> getTaxa() {
         return respond( taxonService.loadAllValueObjects() );
     }
@@ -111,8 +117,11 @@ public class TaxaWebService {
     @GET
     @Path("/{taxa}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve taxa by their identifiers")
-    public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @PathParam("taxa") TaxonArrayArg taxaArg ) {
+    @Operation(summary = "Retrieve taxa by their identifiers",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The taxa the identifiers resolved to.", useReturnTypeSchema = true, content = @Content())
+            })
+    public ResponseDataObject<List<TaxonValueObject>> getTaxaByIds( @Parameter(description = "Taxon identifiers, comma-separated.") @PathParam("taxa") TaxonArrayArg taxaArg ) {
         Filters filters = taxonArgService.getFilters( taxaArg );
         Sort sort = taxonService.getSort( "id", null, Sort.NullMode.LAST );
         return respond( taxonService.loadValueObjects( filters, sort ) );
@@ -132,13 +141,16 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/chromosomes/{chromosome}/genes")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes overlapping a given region in a taxon")
+    @Operation(summary = "Retrieve genes overlapping a given region in a taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The genes overlapping the requested region.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneValueObject>> getTaxonGenesOverlappingChromosome( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @PathParam("chromosome") String chromosomeName, // Required
-            @QueryParam("strand") String strand, //Optional, default +
-            @Parameter(required = true) @QueryParam("start") Long start, // Required
-            @Parameter(required = true) @QueryParam("size") Integer size // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Chromosome name, as the assembly spells it (for example `X` or `11`).") @PathParam("chromosome") String chromosomeName, // Required
+            @Parameter(description = "Restrict to genes on this strand, `+` or `-`. Omit for both.") @QueryParam("strand") String strand, //Optional, default +
+            @Parameter(description = "Start of the region, in base pairs.", required = true) @QueryParam("start") Long start, // Required
+            @Parameter(description = "Length of the region, in base pairs.", required = true) @QueryParam("size") Integer size // Required
     ) {
         if ( start == null ) {
             throw new BadRequestException( "The 'start' query parameter must be supplied." );
@@ -163,16 +175,16 @@ public class TaxaWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (cursor mode forces a single-component id sort pending the indexed-column audit in phase B); the `taxon.id = ?` constraint is preserved; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The taxon's genes, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectGeneValueObject.class,
+                                    CursorPaginatedResponseDataObjectGeneValueObject.class
                             }))),
             })
     public Object getTaxonGenes(
-            @PathParam("taxon") TaxonArg<?> taxonArg,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg,
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
@@ -205,10 +217,13 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve genes matching gene identifiers in a given taxon")
+    @Operation(summary = "Retrieve genes matching gene identifiers in a given taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The genes the identifiers resolved to, restricted to the taxon.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<GeneValueObject>> getTaxonGenesByIds( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @PathParam("gene") GeneArrayArg geneArg // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArrayArg geneArg // Required
     ) {
         List<GeneValueObject> vos = geneArgService.getGenesInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) );
         geneService.populateAssociatedExperimentCount( vos );
@@ -230,13 +245,13 @@ public class TaxaWebService {
                     + "the path-derived `{taxon}` + `{gene}` constraints are preserved (taxon enforced at gene-resolution time, identical scope to the offset variant); "
                     + "`totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The probes for the gene across the taxon's platforms, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    PaginatedResponseDataObject.class,
-                                    CursorPaginatedResponseDataObject.class
+                                    PaginatedResponseDataObjectCompositeSequenceValueObject.class,
+                                    CursorPaginatedResponseDataObjectCompositeSequenceValueObject.class
                             }))),
             })
-    public Object getTaxonGeneProbes( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg, @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
+    public Object getTaxonGeneProbes( @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg, @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg, @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg,
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg ) {
         Taxon taxon = taxonArgService.getEntity( taxonArg );
         if ( cursorArg != null ) {
@@ -258,8 +273,11 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}/goTerms")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve the GO terms associated to a gene in a given taxon")
-    public ResponseDataObject<List<GeneOntologyTermValueObject>> getTaxonGeneGoTerms( @PathParam("taxon") TaxonArg<?> taxonArg, @PathParam("gene") GeneArg<?> geneArg ) {
+    @Operation(summary = "Retrieve the GO terms associated to a gene in a given taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The GO terms annotated to the gene.", useReturnTypeSchema = true, content = @Content())
+            })
+    public ResponseDataObject<List<GeneOntologyTermValueObject>> getTaxonGeneGoTerms( @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg ) {
         return respond( geneArgService.getGeneGoTermsInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
 
@@ -274,10 +292,13 @@ public class TaxaWebService {
     @GET
     @Path("/{taxon}/genes/{gene}/locations")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Retrieve physical locations for a given gene and taxon")
+    @Operation(summary = "Retrieve physical locations for a given gene and taxon",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The gene's physical locations.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<List<PhysicalLocationValueObject>> getTaxonGeneLocations( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @PathParam("gene") GeneArg<?> geneArg // Required
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Gene identifier: an NCBI id, an Ensembl id, or an official symbol. The NCBI id is unambiguous; an official symbol can resolve to a homologue in another taxon.") @PathParam("gene") GeneArg<?> geneArg // Required
     ) {
         return respond( geneArgService.getGeneLocationInTaxon( geneArg, taxonArgService.getEntity( taxonArg ) ) );
     }
@@ -299,18 +320,18 @@ public class TaxaWebService {
                     + "`offset` and `cursor` are mutually exclusive — passing a non-null `cursor` selects cursor mode. "
                     + "In cursor mode the result is always sorted by ascending `id` (the user `sort` arg is currently ignored, pending the indexed-column audit in phase B); the `taxon.id = ?` constraint is preserved on top of the user-supplied `?filter=`; `totalElements` is `null` by default (no count query per request).",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The taxon's datasets, in whichever pagination envelope the request selected.",
                             content = @Content(schema = @Schema(oneOf = {
-                                    FilteredAndPaginatedResponseDataObject.class,
-                                    FilteredAndCursorPaginatedResponseDataObject.class
+                                    FilteredAndPaginatedResponseDataObjectExpressionExperimentValueObject.class,
+                                    FilteredAndCursorPaginatedResponseDataObjectExpressionExperimentValueObject.class
                             }))),
             })
     public Object getTaxonDatasets( // Params:
-            @PathParam("taxon") TaxonArg<?> taxonArg, // Required
-            @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
-            @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
-            @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort, // Optional, default +id
+            @Parameter(description = "Taxon identifier: its id, or its scientific or common name. The id is unambiguous.") @PathParam("taxon") TaxonArg<?> taxonArg, // Required
+            @Parameter(description = "Restrict the results with a filter expression. The schema documents the syntax and lists the properties available.") @QueryParam("filter") @DefaultValue("") FilterArg<ExpressionExperiment> filter, // Optional, default null
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offset, // Optional, default 0
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limit, // Optional, default 20
+            @Parameter(description = "Order the results by a property: `+` for ascending, `-` for descending.") @QueryParam("sort") @DefaultValue("+id") SortArg<ExpressionExperiment> sort, // Optional, default +id
             @Parameter(description = "Opaque keyset-pagination cursor token; mutually exclusive with `offset`.") @QueryParam("cursor") CursorArg cursorArg
     ) {
         // will raise a NotFoundException if the taxon is not found

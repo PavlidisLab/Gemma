@@ -56,7 +56,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -129,6 +128,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     private boolean useReferencesIfPossible = false;
 
     /**
+     * Require {@code -e} and refuse every other way of selecting experiments, so this CLI can never be pointed at
+     * "every experiment" by a bulk selector, whether that's {@code -all} or a broad {@code -eeset}/{@code -f}/
+     * {@code -q}.
+     */
+    private boolean explicitEEsOnly = false;
+
+    /**
      * Abort processing experiments if an error occurs.
      */
     private boolean abortOnError = false;
@@ -170,6 +176,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Subset of {@link #singleExperimentOptions} being used.
      */
     private final Set<String> singleExperimentOptionsUsed = new HashSet<>();
+    /**
+     * Whether this CLI defines the {@code -force} option; set when the options are built.
+     */
+    private boolean hasForceOption = false;
 
     protected ExpressionExperimentManipulatingCLI() {
         super( ExpressionExperiment.class );
@@ -296,11 +306,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     protected final void buildOptions( Options options ) {
         addDatasetOption( options, "e", "experiment",
-                "Dataset identifier. Most tools recognize comma-delimited values given on the command line, "
-                        + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." );
+                explicitEEsOnly
+                        ? "Dataset identifier. Comma-delimited values are recognized; this is the only way to select "
+                        + "datasets for this command, which never operates on all experiments."
+                        : "Dataset identifier. Most tools recognize comma-delimited values given on the command line, "
+                                + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." );
 
-        if ( singleExperimentMode ) {
+        if ( singleExperimentMode || explicitEEsOnly ) {
             buildExperimentOptions( options );
+            hasForceOption = options.hasOption( FORCE_OPTION );
             return;
         }
 
@@ -334,6 +348,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         addBatchOption( options );
 
         buildExperimentOptions( options );
+        hasForceOption = options.hasOption( FORCE_OPTION );
     }
 
     protected void buildExperimentOptions( Options options ) {
@@ -343,18 +358,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     @Override
     protected final void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
-        boolean hasAnyDatasetOptions = commandLine.hasOption( "all" )
-                || commandLine.hasOption( "eeset" )
-                || commandLine.hasOption( "e" )
-                || commandLine.hasOption( 'f' )
-                || commandLine.hasOption( 'q' );
-        if ( !hasAnyDatasetOptions && !defaultToAll ) {
-            throw new MissingOptionException( "At least one of -all, -e, -eeset, -f, or -q must be provided." );
+        // In single-experiment mode (and in explicit-EEs-only mode), buildOptions() defines -e and none of the other
+        // dataset options, so any of their keys on the command line belongs to the subclass: importDesign's -f is
+        // its design file, not a dataset list.
+        boolean datasetSelectionOptionsDefined = !singleExperimentMode && !explicitEEsOnly;
+        boolean hasAnyDatasetOptions = commandLine.hasOption( "e" )
+                || ( datasetSelectionOptionsDefined && (
+                commandLine.hasOption( "all" )
+                        || commandLine.hasOption( "eeset" )
+                        || commandLine.hasOption( 'f' )
+                        || commandLine.hasOption( 'q' ) ) );
+        if ( !hasAnyDatasetOptions && !defaultToAll && !selectsOwnExperiments( commandLine ) ) {
+            throw new MissingOptionException( explicitEEsOnly
+                    ? "-e must be provided; this command never operates on all experiments."
+                    : "At least one of -all, -e, -eeset, -f, or -q must be provided." );
         }
         if ( defaultToAll && !hasAnyDatasetOptions ) {
             this.all = true;
         } else {
-            this.all = commandLine.hasOption( "all" );
+            this.all = datasetSelectionOptionsDefined && commandLine.hasOption( "all" );
         }
         if ( this.all && allIsLazy ) {
             // when allIsLazy is set, filtering options are not available
@@ -375,11 +397,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             }
             this.ees = StringUtils.split( optionValue, "," );
         }
-        this.eeSet = commandLine.getOptionValue( "eeset" );
-        this.file = commandLine.getParsedOptionValue( 'f' );
-        this.query = commandLine.getOptionValue( 'q' );
-        this.taxonName = commandLine.getOptionValue( 't' );
-        this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        if ( datasetSelectionOptionsDefined ) {
+            this.eeSet = commandLine.getOptionValue( "eeset" );
+            this.file = commandLine.getParsedOptionValue( 'f' );
+            this.query = commandLine.getOptionValue( 'q' );
+            this.taxonName = commandLine.getOptionValue( 't' );
+            this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        }
         for ( Option option : commandLine.getOptions() ) {
             if ( singleExperimentOptions.contains( option.getOpt() ) ) {
                 singleExperimentOptionsUsed.add( option.getOpt() );
@@ -390,6 +414,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
 
+    }
+
+    /**
+     * Whether the given options select what to process by some means other than {@code -all}, {@code -e},
+     * {@code -eeset}, {@code -f} or {@code -q}.
+     * <p>
+     * If so, giving none of those is not an error. The subclass is then responsible for its own selection, e.g. by
+     * overriding {@link #doAuthenticatedWork()}. This is checked before {@link #processExperimentOptions(CommandLine)}.
+     */
+    protected boolean selectsOwnExperiments( CommandLine commandLine ) {
+        return false;
     }
 
     @Override
@@ -664,19 +699,25 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         Set<Long> troubledIds = new HashSet<>( eeService.loadTroubledIds() );
 
         // only retain non-troubled experiments
-        AtomicInteger removedTroubledExperiments = new AtomicInteger();
+        List<ExpressionExperiment> removedTroubledExperiments = new ArrayList<>();
         expressionExperiments.removeIf( ee -> {
             // for subsets, check source experiment troubled flag
             if ( troubledIds.contains( ee.getId() ) ) {
-                removedTroubledExperiments.incrementAndGet();
+                removedTroubledExperiments.add( ee );
                 return true;
             } else {
                 return false;
             }
         } );
-        if ( removedTroubledExperiments.get() > 0 ) {
-            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -%s to include those.",
-                    removedTroubledExperiments.get(), expressionExperiments.size(), FORCE_OPTION ) );
+        if ( !removedTroubledExperiments.isEmpty() ) {
+            // only point at -force if this CLI accepts it
+            String howToInclude = hasForceOption ? String.format( "; use -%s to include it", FORCE_OPTION ) : "";
+            for ( ExpressionExperiment ee : removedTroubledExperiments ) {
+                addWarningObject( ee, "Skipped because it is troubled" + howToInclude + "." );
+            }
+            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed%s.",
+                    removedTroubledExperiments.size(), expressionExperiments.size(),
+                    hasForceOption ? String.format( "; use -%s to include those", FORCE_OPTION ) : "" ) );
         }
     }
 
@@ -737,6 +778,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     public void setDefaultToAll() {
         Assert.state( !this.defaultToAll, "Default to all is already enabled." );
         this.defaultToAll = true;
+    }
+
+    /**
+     * Require {@code -e} and refuse {@code -all}, {@code -eeset}, {@code -f} and {@code -q}, so this CLI can never
+     * be pointed at every experiment in the system, whether by omission or by a broad filter.
+     * <p>
+     * Intended for destructive CLIs ({@code deleteExperiments}, {@code deleteRawData}, {@code deleteProcessedData},
+     * {@code deleteSingleCellData}) where a bulk selector deleting the whole database is a mistake with no undo.
+     */
+    protected void setExplicitEEsOnly() {
+        Assert.state( !this.explicitEEsOnly, "Explicit EEs only is already enabled." );
+        Assert.state( !this.defaultToAll, "Explicit EEs only is not compatible with defaultToAll." );
+        Assert.state( !this.allIsLazy, "Explicit EEs only is not compatible with allIsLazy." );
+        this.explicitEEsOnly = true;
     }
 
     /**

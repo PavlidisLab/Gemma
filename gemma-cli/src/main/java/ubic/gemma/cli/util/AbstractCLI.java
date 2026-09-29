@@ -21,6 +21,7 @@ package ubic.gemma.cli.util;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.apache.commons.io.output.ProxyOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -156,9 +157,15 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         return CommandGroup.MISC;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Defining an option whose short or long name is already taken, whether by this class or by a base class, raises
+     * an {@link IllegalStateException}.
+     */
     @Override
     public Options getOptions() {
-        Options options = new Options();
+        Options options = new DuplicateRejectingOptions( getClass().getName() );
         buildStandardOptions( options );
         buildOptions( options );
         return options;
@@ -235,7 +242,11 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             } else {
                 this.pipelineJobReporter.completed();
             }
-        } catch ( Exception e ) {
+        } catch ( Throwable t ) {
+            // Throwable, not Exception: an Error used to skip this block, so the batch executor was never shut down,
+            // its non-daemon threads kept the JVM alive, and GemmaCLI never reached System.exit(). An
+            // OutOfMemoryError does not get here: -XX:+ExitOnOutOfMemoryError ends the JVM first.
+            Exception e = t instanceof Exception ? ( Exception ) t : new RuntimeException( t.toString(), t );
             if ( e instanceof InterruptedException ) {
                 Thread.currentThread().interrupt();
             }
@@ -299,6 +310,38 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
     protected final CLIContext getCliContext() {
         Assert.state( cliContext != null, "The CLI context can only be obtained during the execution of the command." );
         return cliContext;
+    }
+
+    /**
+     * Open the standard output for writing a result.
+     * <p>
+     * Closing the returned stream leaves the standard output open, then fails with an {@link IOException} if any
+     * write to it has failed. Use this instead of wrapping {@code getCliContext().getOutputStream()} directly: a
+     * try-with-resources over the latter closes the standard output, and every later write in the same run (the
+     * next quantitation type under {@code -allQts}, the batch summary) goes into a closed {@link PrintStream}, which
+     * drops it without throwing.
+     */
+    protected final OutputStream openStandardOutput() {
+        return new ProxyOutputStream( CloseShieldOutputStream.wrap( getCliContext().getOutputStream() ) ) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                checkStandardOutput();
+            }
+        };
+    }
+
+    /**
+     * Fail if a write to the standard output has failed.
+     * <p>
+     * {@link PrintStream} never throws on a failed write (closed stream, closed pipe, full disk): it sets a flag
+     * that only {@link PrintStream#checkError()} reads. A result that was never written was otherwise reported as
+     * written.
+     */
+    protected final void checkStandardOutput() throws IOException {
+        if ( getCliContext().getOutputStream().checkError() ) {
+            throw new IOException( "Writing to the standard output failed." );
+        }
     }
 
     private void printHelp( Options options, PrintWriter writer ) {

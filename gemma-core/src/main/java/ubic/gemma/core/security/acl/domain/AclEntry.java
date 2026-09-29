@@ -32,6 +32,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.springframework.security.acls.domain.DefaultPermissionFactory;
 import org.springframework.security.acls.domain.PermissionFactory;
@@ -70,6 +72,7 @@ public class AclEntry implements AccessControlEntry, Comparable<AclEntry> {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "sid", nullable = false, columnDefinition = "BIGINT")
     private AclSid sid;
 

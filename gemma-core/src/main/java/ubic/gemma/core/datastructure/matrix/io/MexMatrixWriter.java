@@ -15,6 +15,7 @@ import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeCo
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
+import ubic.gemma.core.util.GzipUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -35,7 +36,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.formatBioAssayFilename;
 import static ubic.gemma.core.util.TsvUtils.format;
@@ -595,7 +595,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private Writer newWriter( OutputStream outputStream ) throws IOException {
-        return new OutputStreamWriter( new GZIPOutputStream( outputStream ), StandardCharsets.UTF_8 );
+        return new OutputStreamWriter( GzipUtils.newGzipOutputStream( outputStream ), StandardCharsets.UTF_8 );
     }
 }
 

@@ -155,6 +155,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Distinct genes the platform's elements map to. Null unless the request asked for it with `withGeneCounts=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
     private Long numberOfGenes;
     /**
      * Elements on the platform that map to at least one gene, or null when the caller did not ask.
@@ -163,6 +164,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Elements with at least one gene mapping. Null unless the request asked for it with `withGeneCounts=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
     private Long numberOfMappedElements;
     /**
      * When the report backing {@link #numberOfGenes} / {@link #numberOfMappedElements} was written,

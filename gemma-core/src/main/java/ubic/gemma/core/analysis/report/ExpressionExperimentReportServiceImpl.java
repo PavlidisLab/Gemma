@@ -25,6 +25,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -76,6 +77,14 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             LinkAnalysisEvent.class, MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class,
             DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
             PCAAnalysisEvent.class, BatchInformationMissingEvent.class );
+
+    /**
+     * This bean, through its proxy, so that calls from one of its methods to an audited one record the event.
+     * {@code @Lazy} breaks the self-reference cycle at construction.
+     */
+    @Lazy
+    @Autowired
+    private ExpressionExperimentReportService self;
 
     @Autowired
     private AuditEventService auditEventService;
@@ -372,8 +381,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
-        recalculateExperimentBatchConfound( ee );
-        recalculateExperimentBatchEffect( ee );
+        self.recalculateExperimentBatchConfound( ee );
+        self.recalculateExperimentBatchEffect( ee );
     }
 
     @Override

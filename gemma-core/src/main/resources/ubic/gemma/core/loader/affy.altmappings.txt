@@ -218,10 +218,16 @@ GPL15401=GPL6244
 # Clariom_s_Human
 GPL23159=GPL23159
 GPL26070=GPL23159
+GPL33245=GPL23159
 # GPL26710=GPL23159? ClariomSHuman_Hs_ENSG_22 no data sets anyway.
 
 # Clariom_s_Mouse
 GPL23038=GPL23038
+
+# Clariom_s_Mouse_HT
+# Its own platform, not an alternative to GPL23038: the plate format is a distinct chip type and has
+# its own library set. Same treatment as the other HT arrays (HT_HG-U133A, HT_MG-430_PM, HT_Rat-Focus).
+GPL24242=GPL24242
 
 # Clariom_d_human
 GPL23126=GPL23126
@@ -468,6 +474,7 @@ GPL98=GPL98
 GPL341=GPL341
 GPL8627=GPL341
 GPL14122=GPL341
+GPL35276=GPL341
 # note that in GEO this is incorrectly listed as being alt to another, may get fixed
 GPL27768=GPL341
 

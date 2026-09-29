@@ -90,7 +90,7 @@ BA9	Brodmann (1909) area 9	http://purl.obolibrary.org/obo/UBERON_0013540	organis
 BA9 prefrontal cortex	Brodmann (1909) area 9	http://purl.obolibrary.org/obo/UBERON_0013540	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 BALB	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 BALB/c	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005135
-BALB/cJ	BALB/c	http://www.ebi.ac.uk/efo/EFO_0000602	strain	http://www.ebi.ac.uk/efo/EFO_0005135
+BALB/cJ	BALB/cJ	https://www.informatics.jax.org/strain/MGI:2159737	strain	http://www.ebi.ac.uk/efo/EFO_0005135
 baseline	reference subject role	http://purl.obolibrary.org/obo/OBI_0000220	disease	http://www.ebi.ac.uk/efo/EFO_0000408
 basolateral amygdala	basolateral amygdaloid nuclear complex	http://purl.obolibrary.org/obo/UBERON_0006107	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 BEAS-2B	BEAS-2B cell	http://purl.obolibrary.org/obo/CLO_0001925	cell line	http://purl.obolibrary.org/obo/CLO_0000031

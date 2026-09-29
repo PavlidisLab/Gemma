@@ -127,7 +127,7 @@ public class IdentifiableUtils {
         } else if ( a == null ^ b == null ) {
             return false;
         } else if ( a.getId() != null || b.getId() != null ) {
-            return Objects.equals( b.getId(), b.getId() );
+            return Objects.equals( a.getId(), b.getId() );
         } else {
             // both IDs are null, objects can be compared directly
             return Objects.equals( a, b );

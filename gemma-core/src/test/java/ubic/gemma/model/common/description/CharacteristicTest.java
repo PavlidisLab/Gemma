@@ -179,4 +179,53 @@ public class CharacteristicTest {
         assertThat( a ).isEqualTo( b ).hasSameHashCodeAs( b );
     }
 
+    /**
+     * 🛑 An empty-string URI is a second dialect for ungrounded and no layer reads it that way:
+     * {@link CharacteristicUtils#equals} treats any non-null URI as grounded, so {@code ''} beside a NULL
+     * compares as "ontology term vs free text" and the duplicate guard in {@code doAddAnnotation} passes a
+     * pair it should refuse. Production carried 80 such rows on curation surfaces; normalising them to NULL
+     * collapsed two pairs onto one coordinate and manufactured duplicate tags (frinkbro, 2026-09-11).
+     * Blank now cannot be stored from any write path, including the 72 callsites that set a URI directly.
+     */
+    @Test
+    public void testBlankUriIsStoredAsNull() {
+        Characteristic c = Characteristic.Factory.newInstance();
+        c.setValueUri( "" );
+        c.setCategoryUri( "   " );
+        assertThat( c.getValueUri() ).isNull();
+        assertThat( c.getCategoryUri() ).isNull();
+
+        c.setValueUri( "http://purl.obolibrary.org/obo/CL_0000134" );
+        assertThat( c.getValueUri() ).as( "a real URI is untouched" )
+                .isEqualTo( "http://purl.obolibrary.org/obo/CL_0000134" );
+
+        // The consequence: an ungrounded pair now compares equal, so the duplicate guard can see it.
+        Characteristic blank = Characteristic.Factory.newInstance();
+        blank.setCategory( "strain" );
+        blank.setValue( "C57BL/6JOlaHsd" );
+        blank.setValueUri( "" );
+        Characteristic nul = Characteristic.Factory.newInstance();
+        nul.setCategory( "strain" );
+        nul.setValue( "C57BL/6JOlaHsd" );
+        assertThat( CharacteristicUtils.equals( blank.getValue(), blank.getValueUri(), nul.getValue(), nul.getValueUri() ) )
+                .as( "'' and NULL are both ungrounded, so the same term twice is one claim twice" )
+                .isTrue();
+    }
+
+    /** The statement URI slots carry the same rule; prod held 7 blank PREDICATE_URI and 3 blank OBJECT_URI rows. */
+    @Test
+    public void testBlankStatementUrisAreStoredAsNull() {
+        Statement st = Statement.Factory.newInstance();
+        st.setSubjectUri( "" );
+        st.setPredicateUri( "" );
+        st.setObjectUri( " " );
+        st.setSecondPredicateUri( "" );
+        st.setSecondObjectUri( "" );
+        assertThat( st.getSubjectUri() ).isNull();
+        assertThat( st.getPredicateUri() ).isNull();
+        assertThat( st.getObjectUri() ).isNull();
+        assertThat( st.getSecondPredicateUri() ).isNull();
+        assertThat( st.getSecondObjectUri() ).isNull();
+    }
+
 }

@@ -71,7 +71,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     @Override
     protected void buildArrayDesignOptions( Options options ) {
 
-        Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
+        Option fileOption = Option.builder( "file" ).argName( "Input sequence file" ).hasArg()
                 .desc( "Path to file (FASTA for cDNA or three-column format for OLIGO). If the FASTA file doesn't have " +
                         "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
 
@@ -111,8 +111,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
             sequenceType = commandLine.getOptionValue( 'y' );
         }
 
-        if ( commandLine.hasOption( 'f' ) ) {
-            this.sequenceFile = commandLine.getOptionValue( 'f' );
+        if ( commandLine.hasOption( "file" ) ) {
+            this.sequenceFile = commandLine.getOptionValue( "file" );
         }
 
         if ( commandLine.hasOption( 's' ) ) {
@@ -139,10 +139,14 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         // this is kind of an oddball function of this tool.
         if ( this.sequenceId != null ) {
+            String[] databases = new String[] { "nt", "est_others", "est_human", "est_mouse" };
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
-                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, force );
+                    databases, force );
             if ( updated != null ) {
                 log.info( "Updated or created " + updated );
+                addSuccessObject( this.sequenceId, "Updated or created " + updated );
+            } else {
+                addErrorObject( this.sequenceId, "Not found in the BLAST databases " + String.join( ", ", databases ) );
             }
             return;
         }
@@ -221,6 +225,12 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                     databases, force );
             this.audit( arrayDesign, "Sequence looked up from BLAST databases" );
         }
+    }
+
+    @Override
+    protected boolean selectsOwnPlatforms() {
+        // -s updates a single sequence and needs no platform
+        return sequenceId != null;
     }
 
     /**

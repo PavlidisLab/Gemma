@@ -38,13 +38,31 @@ import org.springframework.lang.Nullable;
 @DiscriminatorValue("SampleCoexpressionAnalysis")
 public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis<ExpressionExperiment> {
 
-    // using select because the matrices can be cached
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    /*
+     * 🛑 LAZY, and it has to be: these carry an n^2 LONGBLOB each and almost nobody who loads an analysis
+     * wants the bytes.
+     *
+     * They were EAGER with select fetching, which meant every query returning analyses batch-initialized
+     * both matrix proxies through EntityBatchLoaderInPredicate -- including findByExperimentAnalyzed, whose
+     * only caller is removeForExperiment and which therefore read ~19 MB of blob per analysis purely to
+     * find rows to delete. On GSE260875 (eid 35280) that read is where corrMat died, with 17.0 GB of
+     * connector packet buffers live across thirteen consecutive GCs (frb, 2026-09-16, JFR
+     * ObjectAllocationSample at stackdepth 256).
+     *
+     * This is an OWNING @ManyToOne -- the FK is on ANALYSIS -- so Hibernate can hand back a real proxy and
+     * LAZY works without bytecode enhancement. That is not true of an inverse @OneToOne, which is why the
+     * numberOfCells association on the vectors cannot be fixed the same way.
+     *
+     * Every reader is inside SampleCoexpressionAnalysisServiceImpl, which is @Transactional, so the session
+     * is open when the bytes are genuinely wanted. cascade = ALL still deletes them: Hibernate initializes
+     * the proxy to cascade the remove, which is one row.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "SAMPLE_COEXPRESSION_MATRIX_RAW_FK", unique = true, columnDefinition = "BIGINT")
     private SampleCoexpressionMatrix fullCoexpressionMatrix;
 
     @Nullable
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "SAMPLE_COEXPRESSION_MATRIX_REG_FK", unique = true, columnDefinition = "BIGINT")
     private SampleCoexpressionMatrix regressedCoexpressionMatrix;
 

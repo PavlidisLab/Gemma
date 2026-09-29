@@ -66,7 +66,7 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
             throw new UnsupportedOperationException( "Cell Browser-compatible metadata cannot be written to the standard location." );
         } else if ( destination.isStandardOutput() ) {
             dest = null;
-            try ( Writer out = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
+            try ( Writer out = new OutputStreamWriter( openStandardOutput(), StandardCharsets.UTF_8 ) ) {
                 CellBrowserMetadataWriter writer = new CellBrowserMetadataWriter();
                 writer.setSeparateSampleFromAssayIdentifiers( destination.isSeparateSampleFromAssaysIdentifiers() );
                 writer.setUseBioAssayIds( destination.isUseBioAssayIds() );

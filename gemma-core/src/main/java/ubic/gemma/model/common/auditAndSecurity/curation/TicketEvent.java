@@ -19,6 +19,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Immutable;
@@ -67,7 +69,11 @@ public class TicketEvent extends AbstractIdentifiable {
      * Kept as an opaque string at the entity layer; callers that want typed
      * access decode with Jackson at the service layer.
      */
-    @Lob
+    // 🛑 The JDBC type is pinned rather than left to @Lob, which resolves to Types#CLOB while
+    // Connector/J reports a MySQL JSON column as Types#LONGVARCHAR. gemma-staging is the one
+    // deployment running hbm2ddl.auto=validate, and that disagreement took it down at startup on
+    // ANNOTATION_SET.PAYLOAD_JSON (00eb15abc9). This column is JSON too.
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     @Nullable
     @Column(name = "PAYLOAD", columnDefinition = "json")
     private String payload;

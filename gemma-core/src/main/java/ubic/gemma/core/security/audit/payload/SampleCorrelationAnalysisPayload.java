@@ -52,6 +52,20 @@ import java.util.List;
  * correlation matrix predates this payload carry {@code null}, which means
  * "not recorded", never "nothing was filtered".
  *
+ * <h2>🛑 {@code dataSource} is how two matrices that disagree explain themselves</h2>
+ *
+ * <p>There are two ways this matrix gets its data, and they are not interchangeable.
+ * {@code unmasked-rebuild} reprocesses the raw vectors from scratch so a flagged outlier's values are present
+ * — quantile normalization included, against whatever set of rows that rebuild covered.
+ * {@code stored-vectors} filters the processed data as stored, which was normalized at some earlier time
+ * against whatever rows existed then. The numbers differ between the two, immaterially for a sample-sample
+ * correlation and not at all interpretably if you do not know which you are holding.</p>
+ *
+ * <p>Nothing on {@code SAMPLE_COEXPRESSION_MATRIX} records this, and it cannot be recovered from the matrix
+ * afterwards: it is a fact about how the bytes were made, knowable only at write time. So it is recorded here,
+ * beside {@code startingRows}, which gives the width the rebuild covered. Matrices written before this field
+ * existed carry {@code null}, meaning "not recorded", never "stored-vectors".</p>
+ *
  * @see ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterResult
  */
 public record SampleCorrelationAnalysisPayload(
@@ -60,7 +74,8 @@ public record SampleCorrelationAnalysisPayload(
         int startingRows,
         int startingColumns,
         int finalRows,
-        int finalColumns
+        int finalColumns,
+        @Nullable String dataSource
 ) implements AuditEventPayload {
 
     public SampleCorrelationAnalysisPayload {
@@ -83,7 +98,8 @@ public record SampleCorrelationAnalysisPayload(
             double lowVarianceCut,
             double lowDistinctValueCut,
             double minPresentFraction,
-            int minPresentCount
+            int minPresentCount,
+            int maxDesignElements
     ) {
     }
 

@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -114,31 +115,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
             expressionExperiment = eeserv.thawLite( expressionExperiment );
 
             try {
-                Collection<String> pmids = rec.getPubMedIds();
-
-                String pubmedId = pmids.iterator().next();
-
-                BibliographicReference publication = getBibliographicReference( pubmedId );
-
-                if ( publication != null && link( expressionExperiment, publication ) ) {
-                    expressionExperiment.setPrimaryPublication( publication );
-                    publicationAssociationService.assertAccepted( expressionExperiment,
-                            geoLink( publication, rec.getGeoAccession() ), PublicationAssociationRole.PRIMARY );
-                }
-
-                if ( pmids.size() > 1 ) {
-                    for ( int i = 1; i < pmids.size(); i++ ) {
-                        publication = getBibliographicReference( pubmedId );
-
-                        if ( publication != null && link( expressionExperiment, publication ) ) {
-                            expressionExperiment.getOtherRelevantPublications().add( publication );
-                            publicationAssociationService.assertAccepted( expressionExperiment,
-                                    geoLink( publication, rec.getGeoAccession() ), PublicationAssociationRole.OTHER_RELEVANT );
-                        }
-                    }
-                }
-
-                eeserv.update( expressionExperiment );
+                addPublications( expressionExperiment, rec.getGeoAccession(), rec.getPubMedIds() );
                 numFound++;
                 addSuccessObject( expressionExperiment.getShortName(), "Publication(s) added" );
             } catch ( Exception e ) {
@@ -149,6 +126,34 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
 
         }
         log.info( "Found publications for " + numFound + " experiments" );
+    }
+
+    /**
+     * Link GEO's papers to the experiment: the first as primary, the rest as other-relevant.
+     */
+    void addPublications( ExpressionExperiment expressionExperiment, String geoAccession, List<String> pmids ) {
+        BibliographicReference publication = getBibliographicReference( pmids.get( 0 ) );
+
+        if ( publication != null && link( expressionExperiment, publication ) ) {
+            expressionExperiment.setPrimaryPublication( publication );
+            publicationAssociationService.assertAccepted( expressionExperiment,
+                    geoLink( publication, geoAccession ), PublicationAssociationRole.PRIMARY );
+        }
+
+        // Each further PMID by its own id. This loop used to look up the first one every time, so the
+        // primary paper was added again as other-relevant, its PRIMARY assertion was rewritten as
+        // OTHER_RELEVANT, and the further papers were never added.
+        for ( String otherPmid : pmids.subList( 1, pmids.size() ) ) {
+            publication = getBibliographicReference( otherPmid );
+
+            if ( publication != null && link( expressionExperiment, publication ) ) {
+                expressionExperiment.getOtherRelevantPublications().add( publication );
+                publicationAssociationService.assertAccepted( expressionExperiment,
+                        geoLink( publication, geoAccession ), PublicationAssociationRole.OTHER_RELEVANT );
+            }
+        }
+
+        eeserv.update( expressionExperiment );
     }
 
     @Override

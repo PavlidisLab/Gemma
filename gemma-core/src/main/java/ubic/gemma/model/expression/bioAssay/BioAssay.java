@@ -74,6 +74,15 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     public static final int MAX_NAME_LENGTH = 255;
 
     /**
+     * {@link #getLibraryStrategy() libraryStrategy} of a microarray sample hybridized in one channel. Gemma's own
+     * value: GEO's {@code library_strategy} vocabulary covers sequencing only.
+     */
+    public static final String LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR = "MICROARRAY_ONE_COLOR";
+
+    /** {@link #getLibraryStrategy() libraryStrategy} of a microarray sample hybridized in two channels. */
+    public static final String LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR = "MICROARRAY_TWO_COLOR";
+
+    /**
      * A unique and recognizable identifier for this assay.
      * <p>
      * This is generally the same as the accession.
@@ -88,6 +97,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Platform used in this assay.
      */
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ARRAY_DESIGN_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private ArrayDesign arrayDesignUsed;
 
@@ -96,6 +106,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      */
     @Nullable
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ORIGINAL_PLATFORM_FK", columnDefinition = "BIGINT")
     private ArrayDesign originalPlatform;
 
@@ -103,6 +114,7 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
      * Sample used in this assay.
      */
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "SAMPLE_USED_FK", nullable = false, columnDefinition = "BIGINT")
     private BioMaterial sampleUsed;
 
@@ -173,9 +185,10 @@ public class BioAssay extends AbstractDescribable implements SecuredChild<Expres
     private String librarySelection;
 
     /**
-     * What kind of library it was — GEO's {@code library_strategy}: {@code RNA-Seq}, {@code scRNA-seq},
-     * {@code ATAC-seq} and so on. GEO's own spelling, not the Java constant name; null when unstated
-     * or non-GEO.
+     * What kind of library it was — GEO's {@code library_strategy}, stored as the {@code GeoLibraryStrategy}
+     * constant name: {@code RNA_SEQ}, {@code SCRNA_SEQ}, {@code ATAC_SEQ} and so on, not GEO's {@code RNA-Seq}.
+     * A microarray sample carries {@link #LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR} or
+     * {@link #LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR} by its channel count. Null when unstated or non-GEO.
      */
     @Nullable
     @Column(name = "LIBRARY_STRATEGY", columnDefinition = "VARCHAR(255)")

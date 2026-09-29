@@ -1139,7 +1139,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     continue;
                 }
                 try ( H5Dataset data = matrix.getData() ) {
-                    H5Dataset.H5Dataspace s = data.slice( start, end );
+                    // start and end are positions within this row's indices (IX), so the row's offset in the data
+                    // array must be added. Without it, every row took its values from the first rows of the matrix
+                    // while keeping its own indices (a44d9dbf98 through 2026-09).
+                    long rowOffset = matrix.getIndptr()[i];
+                    H5Dataset.H5Dataspace s = data.slice( rowOffset + start, rowOffset + end );
                     switch ( vector.getQuantitationType().getRepresentation() ) {
                         case FLOAT:
                             s.toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F32BE );

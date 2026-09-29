@@ -79,6 +79,10 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
 
     @Override
     public NCBIGene2Accession parseOneLine( String line ) {
+        // the loader interrupts this thread to stop it; most lines are filtered out and never reach queue.put()
+        if ( Thread.currentThread().isInterrupted() ) {
+            throw new RuntimeException( new InterruptedException( "Parsing gene2accession was interrupted." ) );
+        }
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
 
         if ( fields.length < NcbiGene2AccessionParser.NCBI_GENE2ACCESSION_FIELDS_PER_ROW ) {
@@ -143,6 +147,11 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
         if ( startingNcbiId == null )
             hasStarted = true;
         super.parse( is );
+
+        if ( !hasStarted ) {
+            throw new IllegalStateException( "The starting NCBI gene ID " + startingNcbiId
+                    + " was not found in gene2accession, so no genes were loaded; check the -restart value and -taxon." );
+        }
 
         // add last gene with an accession
         if ( geneData.getGeneInfo() != null ) {

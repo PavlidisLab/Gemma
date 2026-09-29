@@ -729,6 +729,51 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
     }
 
     /**
+     * One commit is all-or-none across sections: when the tags section throws, the design section that applied
+     * before it is rolled back with it. cab's one-click executor relies on this (2026-09-13).
+     * <p>
+     * The tag add duplicates a tag the experiment already carries, which {@code addAnnotation} refuses by throwing,
+     * after the factor rename has been applied in the same transaction.
+     */
+    @Test
+    public void commitCuration_aTagSectionThatThrowsRollsBackTheDesignSection() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        Characteristic existing = Characteristic.Factory.newInstance();
+        existing.setCategory( "organism part" );
+        existing.setValue( "brain" );
+        expressionExperimentService.addAnnotation( ee, existing );
+
+        ExperimentalDesignValueObject design = expressionExperimentService.getExperimentalDesignValueObject( ee );
+        ExperimentalDesignValueObject.ExperimentalFactorEntry factor = design.getExperimentalFactors().get( 0 );
+        Long factorId = factor.getId();
+        String originalName = factor.getName();
+        factor.setName( originalName + " renamed" );
+
+        Characteristic duplicate = Characteristic.Factory.newInstance();
+        duplicate.setCategory( "organism part" );
+        duplicate.setValue( "brain" );
+
+        CurationCommitRequest req = new CurationCommitRequest();
+        req.setDesignPresent( true );
+        req.setProposedDesign( design );
+        req.setDesignPlan( new DesignCommitPlan() );
+        req.setTagsPresent( true );
+        req.setTagsToAdd( java.util.Collections.singletonList( new CurationCommitRequest.TagAdd( "T1", duplicate ) ) );
+
+        org.junit.jupiter.api.Assertions.assertThrows( IllegalArgumentException.class,
+                () -> expressionExperimentService.commitCuration( ee, req, false ) );
+
+        ExperimentalDesignValueObject after = expressionExperimentService.getExperimentalDesignValueObject(
+                expressionExperimentService.load( ee.getId() ) );
+        assertThat( after.getExperimentalFactors() )
+                .filteredOn( f -> factorId.equals( f.getId() ) )
+                .singleElement()
+                .satisfies( f -> assertEquals( originalName, f.getName(),
+                        "the rename applied before the tag section threw must be rolled back with it" ) );
+    }
+
+    /**
      * Echoing {@code isBaseline: false} on a value whose stored flag is null is NOT an edit.
      * <p>
      * null and FALSE both mean "not the baseline", and the stored flag is null on every value that has never
@@ -849,6 +894,78 @@ public class ExpressionExperimentServiceIntegrationTest extends BaseSpringContex
         assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketTargetStatus.NOT_DONE,
                 reloaded.getTargets().get( 0 ).getStatus() );
         assertEquals( ubic.gemma.model.common.auditAndSecurity.curation.TicketState.OPEN, reloaded.getState() );
+    }
+
+    /**
+     * The baseline is compared with the database row, not with the second-level cache.
+     * <p>
+     * CURATION_DETAILS is cached, and a write from another process does not reach that cache. GSE90654, 2026-09-15: a
+     * gemma-cli DEA run moved LAST_UPDATED to 19:12:35 UTC. gemma-rest then refused a commit whose baseline was
+     * 19:12:35, reporting 15:59:09 as current, and two minutes later accepted one whose baseline was 15:59:09.
+     */
+    @Test
+    public void testTheBaselineIsComparedWithTheRowNotTheCachedCopy() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        Long curationDetailsId = ee.getCurationDetails().getId();
+        Date cached = new Date( 1_767_225_600_000L ); // 2026-01-01T00:00:00Z
+        Date written = new Date( cached.getTime() + 60_000L );
+
+        setCurationLastUpdated( curationDetailsId, cached );
+        sessionFactory.getCache().evictEntityData(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails.class, curationDetailsId );
+        assertEquals( cached.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime(),
+                "the cache holds the first value" );
+        // another process writes the row
+        setCurationLastUpdated( curationDetailsId, written );
+        assertEquals( cached.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime(),
+                "a plain load still reads the cached value, or this test proves nothing" );
+
+        CurationCommitRequest stale = new CurationCommitRequest();
+        stale.setExpectedLastUpdated( cached );
+        assertThrows( org.springframework.dao.OptimisticLockingFailureException.class,
+                () -> expressionExperimentService.commitCuration( ee, stale, true ),
+                "a baseline from before the other process's write is stale" );
+
+        CurationCommitRequest current = new CurationCommitRequest();
+        current.setExpectedLastUpdated( written );
+        assertEquals( written.getTime(),
+                expressionExperimentService.commitCuration( ee, current, true ).getNewLastUpdated().getTime() );
+    }
+
+    /**
+     * {@code GET /datasets/{id}/refresh} loads the experiment this way, and it is how a gemma-cli run tells gemma-rest
+     * that the database changed. On GSE90654 the DEA run's refresh succeeded at 19:12:35.973 UTC, and a commit five
+     * minutes later still saw the curation details from before the run.
+     */
+    @Test
+    public void testRefreshingTheExperimentRefreshesItsCurationDetails() {
+        runAsAdmin();
+        ExpressionExperiment ee = createExpressionExperiment();
+        Long curationDetailsId = ee.getCurationDetails().getId();
+        Date cached = new Date( 1_767_225_600_000L ); // 2026-01-01T00:00:00Z
+        Date written = new Date( cached.getTime() + 60_000L );
+
+        setCurationLastUpdated( curationDetailsId, cached );
+        sessionFactory.getCache().evictEntityData(
+                ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails.class, curationDetailsId );
+        expressionExperimentService.load( ee.getId() ); // caches the first value
+        setCurationLastUpdated( curationDetailsId, written );
+        assertEquals( cached.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime(),
+                "a plain load still reads the cached value, or this test proves nothing" );
+
+        expressionExperimentService.loadAndThawLiteWithRefreshCacheMode( ee.getId() );
+
+        assertEquals( written.getTime(),
+                expressionExperimentService.load( ee.getId() ).getCurationDetails().getLastUpdated().getTime() );
+    }
+
+    private void setCurationLastUpdated( Long curationDetailsId, Date lastUpdated ) {
+        getJdbcTemplate().update( "update CURATION_DETAILS set LAST_UPDATED = ? where ID = ?",
+                new java.sql.Timestamp( lastUpdated.getTime() ), curationDetailsId );
     }
 
     /**

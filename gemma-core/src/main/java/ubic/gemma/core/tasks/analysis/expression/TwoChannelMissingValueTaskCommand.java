@@ -31,7 +31,9 @@ import java.util.HashSet;
 
 /**
  * @author paul
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 @SuppressWarnings("unused") // Possible external use
 @Getter
 @Setter

@@ -87,17 +87,19 @@ public class OptionsUtils {
 
         @Override
         public Date apply( String string ) throws ParseException {
+            // Relative dates first: SimpleDateFormat parses a leading prefix, so "yyyy" read "-30d" as the year -30.
+            // The relative pattern must match the whole string and cannot match an ISO 8601 date.
+            try {
+                return DateUtil.getRelativeDate( relativeTo, string );
+            } catch ( IllegalArgumentException e ) {
+                // ignore
+            }
             for ( SimpleDateFormat format : exactDateFormats ) {
                 try {
                     return format.parse( string );
                 } catch ( ParseException e ) {
                     // ignore
                 }
-            }
-            try {
-                return DateUtil.getRelativeDate( relativeTo, string );
-            } catch ( IllegalArgumentException e ) {
-                // ignore
             }
             List<Date> candidates = parser.parse( string, relativeTo );
             if ( candidates.isEmpty() ) {

@@ -235,7 +235,15 @@ pipeline {
                             // an excluded group beats a selected one, so -Dgroups=slow
                             // on its own would run zero tests. Overriding to `network`
                             // drops slow from the exclusions and keeps network out.
-                            sh 'mvn -B test --fail-at-end -Dgroups=slow -DexcludedGroups=network -DskipWebpack'
+                            //
+                            // -Dbasecode.load.mgiStrain=true: GeoTermReplacementTest verifies
+                            // MGI strain URIs in valueStringToOntologyTermMappings.txt (BALB/cJ,
+                            // 0124e538bc). load.mgiStrain is false in basecode.properties, and the
+                            // lexical loader honours that flag even on initialize(true, ...), so
+                            // without this it never loads and every MGI row fails "No term found".
+                            // Surefire forwards -D properties to the forked JVM, where
+                            // Configuration reads them as system properties.
+                            sh 'mvn -B test --fail-at-end -Dgroups=slow -DexcludedGroups=network -DskipWebpack -Dbasecode.load.mgiStrain=true'
                         }
                     }
                     post {

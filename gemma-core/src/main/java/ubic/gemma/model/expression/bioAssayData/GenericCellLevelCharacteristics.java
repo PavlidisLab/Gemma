@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
@@ -50,6 +52,7 @@ public class GenericCellLevelCharacteristics extends AbstractDescribable impleme
     // The characteristics appear in the CHARACTERISTIC table; spell out the FK + ordering column.
     @MayBeUninitialized
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "CELL_LEVEL_CHARACTERISTICS_FK", columnDefinition = "BIGINT",
             foreignKey = @ForeignKey(name = "CHARACTERISTIC_CELL_LEVEL_CHARACTERISTICS_FKC"))
     @OrderColumn(name = "CELL_LEVEL_CHARACTERISTICS_ORDERING")

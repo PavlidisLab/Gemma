@@ -24,6 +24,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import org.springframework.lang.Nullable;
@@ -40,6 +42,7 @@ public abstract class DesignElementDataVector extends DataVector {
     // EAGER matches the hbm default (lazy="false") for the bulk + single-cell vector tables; the
     // single-cell entity adds a named foreign-key via @AssociationOverride.
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "DESIGN_ELEMENT_FK", nullable = false, columnDefinition = "BIGINT")
     private CompositeSequence designElement;
 

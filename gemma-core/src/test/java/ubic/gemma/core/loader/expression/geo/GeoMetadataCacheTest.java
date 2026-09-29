@@ -97,11 +97,8 @@ class GeoMetadataCacheTest {
     @Test
     void testAnHtmlErrorPageIsNotParsedAsSoft( @TempDir Path cacheDir ) throws Exception {
         String acc = "GSE9999999";
-        Path dir = Files.createDirectories( cacheDir.resolve( acc ) );
-        String page = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n<HTML>\n"
-                + "<HEAD><title>GEO Accession Display</title></HEAD>\n<BODY>not a record</BODY></HTML>\n";
-        Files.write( dir.resolve( acc + ".self.brief.soft" ), page.getBytes( StandardCharsets.UTF_8 ) );
-        Files.write( dir.resolve( acc + ".gsm.brief.soft" ), page.getBytes( StandardCharsets.UTF_8 ) );
+        writeCachedPage( cacheDir, acc, accessionViewerPage( acc,
+                "Accession \"" + acc + "\" was deleted by the GEO staff on Jun 18, 2007." ) );
 
         GeoDomainObjectGenerator generator = new GeoDomainObjectGenerator();
         generator.setMetadataCacheDir( cacheDir.toFile() );
@@ -109,5 +106,64 @@ class GeoMetadataCacheTest {
         assertThatThrownBy( () -> generator.generateSeriesMetadataOnly( acc ) )
                 .hasMessageContaining( "HTML page" )
                 .hasMessageContaining( "withdrawn, private or unknown" );
+    }
+
+    /**
+     * 🛑 The verdict has to come from GEO, not from the mere fact that HTML arrived. acc.cgi
+     * intermittently answers a perfectly good accession with an NCBI error page — GSE42727,
+     * 133 KB of it, 2026-09-17, with the SOFT record on the very next attempt — and the old wording
+     * called every one of those a withdrawn, private or unknown accession. Seventeen experiments in
+     * the 2026-09-15 backfill summary carry that sentence with nothing having asked twice.
+     */
+    @Test
+    void testAnErrorPageIsNotCalledAWithdrawnAccession( @TempDir Path cacheDir ) throws Exception {
+        String acc = "GSE9999999";
+        writeCachedPage( cacheDir, acc, "<!DOCTYPE html>\n<html><head><title>Error</title></head>\n"
+                + "<body>The NCBI web site is temporarily unavailable.</body></html>\n" );
+
+        GeoDomainObjectGenerator generator = new GeoDomainObjectGenerator();
+        generator.setMetadataCacheDir( cacheDir.toFile() );
+
+        assertThatThrownBy( () -> generator.generateSeriesMetadataOnly( acc ) )
+                .hasMessageContaining( "HTML page" )
+                .hasMessageContaining( "error page" )
+                .hasMessageNotContaining( "withdrawn, private or unknown" );
+    }
+
+    /**
+     * Which of withdrawn, private and unknown it was is in GEO's own sentence, so a summary row says
+     * so without anyone re-fetching the page to find out. The three wordings were measured against
+     * acc.cgi on 2026-09-17.
+     */
+    @Test
+    void testTheVerdictIsQuotedBackFromThePage( @TempDir Path cacheDir ) throws Exception {
+        String acc = "GSE9999999";
+        writeCachedPage( cacheDir, acc, accessionViewerPage( acc,
+                "Accession &quot;" + acc + "&quot; is currently private and is scheduled to be released on Dec 31, 2027." ) );
+
+        GeoDomainObjectGenerator generator = new GeoDomainObjectGenerator();
+        generator.setMetadataCacheDir( cacheDir.toFile() );
+
+        assertThatThrownBy( () -> generator.generateSeriesMetadataOnly( acc ) )
+                .hasMessageContaining( "is currently private and is scheduled to be released on Dec 31, 2027." );
+    }
+
+    /**
+     * The shape acc.cgi serves: the verdict sits in a {@code <font color="red">} of its own, on one
+     * very long line of markup, which is why the enclosing tags and not the line bound it.
+     */
+    private static String accessionViewerPage( String acc, String verdict ) {
+        return "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n<HTML>\n"
+                + "<HEAD><TITLE>GEO Accession viewer</TITLE></HEAD>\n<BODY>"
+                + "<tr><td align=\"left\" bgcolor=\"white\"><table><tr><td colspan=\"2\">"
+                + "<font color=\"red\">" + verdict + "</font><br><br>"
+                + "GEO can be contacted at geo@ncbi.nlm.nih.gov if additional assistance is required."
+                + "</td></tr></table></td></tr></BODY></HTML>\n";
+    }
+
+    private static void writeCachedPage( Path cacheDir, String acc, String page ) throws Exception {
+        Path dir = Files.createDirectories( cacheDir.resolve( acc ) );
+        Files.write( dir.resolve( acc + ".self.brief.soft" ), page.getBytes( StandardCharsets.UTF_8 ) );
+        Files.write( dir.resolve( acc + ".gsm.brief.soft" ), page.getBytes( StandardCharsets.UTF_8 ) );
     }
 }

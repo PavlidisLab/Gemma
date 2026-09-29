@@ -19,6 +19,8 @@ public class RawDataDeleterCli extends ExpressionExperimentVectorsManipulatingCl
     public RawDataDeleterCli() {
         super( RawExpressionDataVector.class );
         setDefaultToPreferredQuantitationType();
+        // deletion is irreversible; -e must always name the experiments to delete, never -all/-eeset/-f/-q
+        setExplicitEEsOnly();
     }
 
     @Nullable

@@ -4,7 +4,7 @@ defaultResponseCode: 200
 openAPI:
   info:
     title: Gemma RESTful API
-    version: 2.9.4
+    version: 3.0.0
     description: |
       This website documents the usage of the [Gemma RESTful API](https://gemma.msl.ubc.ca/rest/v2/). Here you can find
       example script usage of the API, as well as graphical interface for each endpoint, with description of its
@@ -23,4 +23,5 @@ openAPI:
   security:
     - basicAuth: []
     - cookieAuth: [] # this is meant for client that reuse their JSESSIONID from Gemma website
+    - bearerAuth: [] # opaque token from POST /login, sent as Authorization: Bearer <token>
     - {} # this corresponds to anonymous authentication

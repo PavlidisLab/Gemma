@@ -43,17 +43,38 @@ public interface ArrayDesignReportService {
      */
     String getReportDir();
 
+    /**
+     * Write the report summarizing all platforms.
+     *
+     * @throws java.io.UncheckedIOException if the report cannot be written; the previous report is left in place
+     */
     void generateAllArrayDesignReport();
 
     /**
      * Generate reports for all array designs, as well as the "global" report.
+     * <p>
+     * A platform whose report cannot be written is logged and skipped.
      */
     @Secured({ "GROUP_AGENT" })
     void generateArrayDesignReport();
 
+    /**
+     * Generate the report for one platform.
+     *
+     * @throws java.io.UncheckedIOException if the report cannot be written; the previous report is left in place
+     */
     @Secured({ "GROUP_AGENT" })
     void generateArrayDesignReport( ArrayDesignValueObject adVo );
 
+    /**
+     * Generate the report for one platform, for callers that do so as a side effect of other work.
+     * <p>
+     * A report that cannot be written is logged, not thrown, and the previous report is left in place. Use
+     * {@link #generateArrayDesignReport(ArrayDesignValueObject)} to find out whether the write succeeded.
+     *
+     * @return the report just written, or null if the platform has no value object or the report could not be
+     * written
+     */
     @Secured({ "GROUP_AGENT" })
     ArrayDesignValueObject generateArrayDesignReport( Long id );
 

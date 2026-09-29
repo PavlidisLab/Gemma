@@ -1,6 +1,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.analysis.AnalysisResultSetValueObject;
@@ -37,6 +38,7 @@ public class DifferentialExpressionAnalysisResultSetValueObject extends Analysis
      */
     @Nullable
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "Taxa of the genes in the results. Populated only when the request asked for it with `includeTaxonInGenes=true`, which also swaps each gene's `taxonId` for the full taxon. Null therefore means “not requested” as well as “none” — the two are not distinguishable here.")
     private Set<TaxonValueObject> taxa;
 
     /**

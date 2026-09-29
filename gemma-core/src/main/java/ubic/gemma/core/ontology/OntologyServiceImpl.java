@@ -1060,8 +1060,8 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                 break;
             }
 
-            boolean needsUpdate = false;
             for ( Characteristic ch : chars ) {
+                boolean needsUpdate = false;
                 String valueUri = ch.getValueUri();
                 if ( StringUtils.isNotBlank( valueUri ) ) {
                     OntologyTerm term = this.getTerm( valueUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
@@ -1091,15 +1091,12 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                     if ( StringUtils.isNotBlank( objectUri ) ) {
                         OntologyTerm term = this.getTerm( objectUri, Math.max( timeoutMs - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
 
-
+                        // an unresolved object URI only skips this field: a correction already made to the value (or
+                        // to be made to the second object) must still be saved below
                         if ( term == null ) {
                             if ( log.isDebugEnabled() )
                                 log.debug( "No term for " + objectUri + " (In Gemma: " + statement.getObject() + ")" );
-                            checked++;
-                            continue;
-                        }
-
-                        if ( term.getLabel() != null && !term.getLabel().equals( statement.getObject() ) ) {
+                        } else if ( term.getLabel() != null && !term.getLabel().equals( statement.getObject() ) ) {
                             lastFixedLabel = statement.getObject();
                             mismatchedTerms.put( statement.getObject(), term );
                             statement.setObject( term.getLabel() );
@@ -1115,11 +1112,7 @@ public class OntologyServiceImpl implements OntologyService, InitializingBean {
                         if ( term == null ) {
                             if ( log.isDebugEnabled() )
                                 log.debug( "No term for " + secondObjectUri + " (In Gemma: " + statement.getSecondObject() + ")" );
-                            checked++;
-                            continue;
-                        }
-
-                        if ( term.getLabel() != null && !term.getLabel().equals( statement.getSecondObject() ) ) {
+                        } else if ( term.getLabel() != null && !term.getLabel().equals( statement.getSecondObject() ) ) {
                             lastFixedLabel = statement.getSecondObject();
                             mismatchedTerms.put( statement.getSecondObject(), term );
                             statement.setSecondObject( term.getLabel() );

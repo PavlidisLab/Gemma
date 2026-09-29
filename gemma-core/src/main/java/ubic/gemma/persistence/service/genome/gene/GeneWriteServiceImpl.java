@@ -24,11 +24,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeLocation;
 import ubic.gemma.model.genome.Gene;
@@ -46,11 +50,18 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao
 import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Consumer;
 
 /**
  * Implementation of {@link GeneWriteService}. Method bodies are copied
@@ -93,6 +104,13 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public Gene upsert( Gene gene ) {
+        return this.upsert( gene, true, null );
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Gene upsert( Gene gene, boolean removeProducts, @Nullable Consumer<GeneProductChange> changes ) {
+        ChangeLog changeLog = changes != null ? new ChangeLog( changes ) : null;
         Gene existingGene;
         if ( gene.getId() != null ) {
             existingGene = geneDao.load( gene.getId() );
@@ -113,22 +131,26 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         Map<Integer, Chromosome> chromosomeCache = new HashMap<>();
 
         if ( existingGene == null ) {
-            return this.create( gene, externalDbCache, chromosomeCache );
+            Gene created = this.create( gene, externalDbCache, chromosomeCache, changeLog );
+            if ( changeLog != null ) {
+                this.report( changeLog );
+            }
+            return created;
         }
 
         if ( log.isDebugEnabled() )
             log.debug( "Updating " + existingGene );
 
-        return this.updateGene( existingGene, gene, externalDbCache, chromosomeCache );
+        return this.updateGene( existingGene, gene, externalDbCache, chromosomeCache, removeProducts, changeLog );
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public Gene create( Gene gene ) {
-        return this.create( gene, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>() );
+        return this.create( gene, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>(), null );
     }
 
-    private Gene create( Gene gene, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache ) {
+    private Gene create( Gene gene, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache, @Nullable ChangeLog changeLog ) {
         if ( !gene.getAccessions().isEmpty() ) {
             for ( DatabaseEntry de : gene.getAccessions() ) {
                 this.fillInDatabaseEntry( de, externalDbCache );
@@ -174,7 +196,12 @@ public class GeneWriteServiceImpl implements GeneWriteService {
                  * A geneProduct is being moved to a gene that didn't exist in the system already
                  */
                 Gene previousGeneForProduct = existingProduct.getGene();
-                previousGeneForProduct.getProducts().remove( existingProduct );
+                if ( changeLog != null && previousGeneForProduct != null ) {
+                    changeLog.moved( existingProduct, previousGeneForProduct, gene );
+                }
+                if ( previousGeneForProduct != null ) {
+                    previousGeneForProduct.getProducts().remove( existingProduct );
+                }
                 product.setGene( null ); // we aren't going to make it, this isn't really necessary.
                 existingProduct.setGene( gene );
                 geneProductsForNewGene.add( existingProduct );
@@ -188,11 +215,17 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             }
         }
 
-        // attach the products.
-        gene.setProducts( geneProductsForNewGene );
-        for ( GeneProduct gp : gene.getProducts() ) {
+        // Resolve the products BEFORE attaching them to the saved gene. A lookup here is a query whenever the cache
+        // misses — a taken-over product's accessions come from the database, so its external database need not be one
+        // the new products carry — and a query auto-flushes. Once the products hang off the saved gene, that flush
+        // cascades into them, and any product still holding the gene's unsaved Chromosome fails the flush with
+        // TransientObjectException, which ends a gene load.
+        for ( GeneProduct gp : geneProductsForNewGene ) {
             this.fillInGeneProductAssociations( gp, externalDbCache, chromosomeCache );
         }
+
+        // attach the products.
+        gene.setProducts( geneProductsForNewGene );
 
         try {
             // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
@@ -213,10 +246,11 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public Gene updateGene( Gene existingGene, Gene newGeneInfo ) {
-        return this.updateGene( existingGene, newGeneInfo, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>() );
+        return this.updateGene( existingGene, newGeneInfo, new HashMap<String, ExternalDatabase>(), new HashMap<Integer, Chromosome>(), true, null );
     }
 
-    private Gene updateGene( Gene existingGene, Gene newGeneInfo, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache ) {
+    private Gene updateGene( Gene existingGene, Gene newGeneInfo, Map<String, ExternalDatabase> externalDbCache, Map<Integer, Chromosome> chromosomeCache,
+            boolean removeProducts, @Nullable ChangeLog changeLog ) {
 
         // NCBI id can be null if gene has been loaded from a gene info file.
         Integer existingNcbiId = existingGene.getNcbiGeneId();
@@ -256,8 +290,8 @@ public class GeneWriteServiceImpl implements GeneWriteService {
              * Note: On occasion, we have two genes with the same symbol but different NCBI ids. This happens when NCBI
              * screws up somehow (?) and has two records for the same gene with different IDs, and we end up with them
              * both at the time they were considered separate genes. At some later date NCBI decides to (in effect)
-             * merge them, so one of the genes has to be deprecated. Such 'relics' are deleted by the DAO, because it
-             * results in more than one gene being found.
+             * merge them, so one of the genes has to be deprecated. Such 'relics' are left in place: GeneDaoImpl.find()
+             * no longer deletes them (HQL_SQL_AUDIT C4), it logs them and returns the gene with the matching NCBI id.
              */
 
         }
@@ -354,6 +388,9 @@ public class GeneWriteServiceImpl implements GeneWriteService {
 
                             // Here we just remove its old association.
                             oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
+                            if ( changeLog != null ) {
+                                changeLog.moved( existingGeneProduct, oldGeneForExistingGeneProduct, existingGene );
+                            }
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
                             log.debug( "Switch: Removing " + existingGeneProduct + " from " + oldGeneForExistingGeneProduct + " GI="
                                     + existingGeneProduct.getNcbiGi() );
@@ -397,10 +434,15 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         Collection<GeneProduct> toRemove = new HashSet<>();
 
         if ( !usedGIs.isEmpty() ) {
-            toRemove = this.handleGeneProductChangedGIs( existingGene, usedGIs );
+            toRemove = this.handleGeneProductChangedGIs( existingGene, usedGIs, removeProducts, changeLog );
         }
 
         geneDao.update( existingGene );
+
+        if ( changeLog != null ) {
+            // before the removal, which deletes the associations this counts
+            this.report( changeLog );
+        }
 
         if ( !toRemove.isEmpty() ) {
             this.removeGeneProducts( toRemove );
@@ -416,6 +458,15 @@ public class GeneWriteServiceImpl implements GeneWriteService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public Collection<GeneProduct> handleGeneProductChangedGIs( Gene existingGene, Map<String, GeneProduct> usedGIs ) {
+        return this.handleGeneProductChangedGIs( existingGene, usedGIs, true, null );
+    }
+
+    /**
+     * @param removeProducts if false, return nothing to remove and leave every product that would be removed attached
+     *                       to its gene
+     */
+    private Collection<GeneProduct> handleGeneProductChangedGIs( Gene existingGene, Map<String, GeneProduct> usedGIs,
+            boolean removeProducts, @Nullable ChangeLog changeLog ) {
         Collection<String> switchedGis = new HashSet<>();
         Collection<GeneProduct> toRemove = new HashSet<>();
         for ( GeneProduct existingGp : existingGene.getProducts() ) {
@@ -497,12 +548,23 @@ public class GeneWriteServiceImpl implements GeneWriteService {
 
                 Gene oldGeneForExistingGeneProduct = otherGpUsingThisGi.getGene();
                 if ( oldGeneForExistingGeneProduct == null ) {
-                    log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
-                            + " and deleting orphan GP with same GI: " + otherGpUsingThisGi );
+                    if ( changeLog != null ) {
+                        changeLog.removed( otherGpUsingThisGi, null, existingGene.getTaxon(), removeProducts );
+                    }
+                    if ( removeProducts ) {
+                        log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
+                                + " and deleting orphan GP with same GI: " + otherGpUsingThisGi );
 
-                    existingGp.setNcbiGi( ngp.getNcbiGi() );
-                    // remove the old one, which was an orphan already.
-                    toRemove.add( otherGpUsingThisGi );
+                        existingGp.setNcbiGi( ngp.getNcbiGi() );
+                        // remove the old one, which was an orphan already.
+                        toRemove.add( otherGpUsingThisGi );
+                    } else {
+                        // The GI stays as it is: with the orphan kept, two products would hold the new one, and
+                        // findByNcbiId above expects at most one.
+                        log.warn( "Not updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
+                                + ", because removing gene products is off and orphan GP " + otherGpUsingThisGi
+                                + " holds that GI" );
+                    }
                     deleteIt = false;
                 } else if ( oldGeneForExistingGeneProduct.equals( existingGene ) ) {
                     // this is the common case, for crufted database.
@@ -530,11 +592,21 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             }
 
             if ( deleteIt ) {
-                toRemove.add( existingGp );
-                existingGp.setGene( null ); // we are erasing this association as we assume it is no longer
-                // valid.
-                log.warn( "Removing gene product from system: " + existingGp
-                        + ", it is no longer listed as a product of " + existingGene );
+                if ( changeLog != null ) {
+                    changeLog.removed( existingGp, existingGene, existingGene.getTaxon(), removeProducts );
+                }
+                if ( removeProducts ) {
+                    toRemove.add( existingGp );
+                    existingGp.setGene( null ); // we are erasing this association as we assume it is no longer
+                    // valid.
+                    log.warn( "Removing gene product from system: " + existingGp
+                            + ", it is no longer listed as a product of " + existingGene );
+                } else {
+                    // Not detached either: a product without a gene drops out of GENE2CS and the annotation files
+                    // just as a deleted one does.
+                    log.warn( "Not removing gene product " + existingGp + ", which is no longer listed as a product of "
+                            + existingGene + ", because removing gene products is off" );
+                }
             }
         } // over this gene's gene products.
 
@@ -638,6 +710,207 @@ public class GeneWriteServiceImpl implements GeneWriteService {
         }
     }
 
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public GeneProductRemovalOutcome replayGeneProductRemoval( GeneProductChange removal, @Nullable Collection<ArrayDesign> platforms, boolean dryRun ) {
+        Assert.isTrue( removal.kind() == GeneProductChange.Kind.REMOVE && !removal.applied(),
+                "Only a gene product removal that was not applied can be replayed." );
+        Assert.isTrue( platforms == null || !platforms.isEmpty(), "The platforms to limit the removal to must not be empty; pass null for no limit." );
+
+        GeneProduct gp = removal.productId() != null ? geneProductDao.load( removal.productId() ) : null;
+        if ( gp == null ) {
+            return GeneProductRemovalOutcome.skipped( GeneProductRemovalOutcome.SkipReason.PRODUCT_NOT_FOUND,
+                    "there is no gene product with ID " + removal.productId() );
+        }
+        if ( gp.isDummy() ) {
+            return GeneProductRemovalOutcome.skipped( GeneProductRemovalOutcome.SkipReason.DUMMY_PRODUCT,
+                    gp + " is a dummy gene product" );
+        }
+        Gene gene = gp.getGene();
+        if ( removal.geneNcbiId() == null ? gene != null : gene == null || !removal.geneNcbiId().equals( gene.getNcbiGeneId() ) ) {
+            return GeneProductRemovalOutcome.skipped( GeneProductRemovalOutcome.SkipReason.GENE_CHANGED,
+                    gp + " now belongs to " + ( gene != null ? gene.getOfficialSymbol() + " [NCBI " + gene.getNcbiGeneId() + "]" : "no gene" )
+                            + ", not " + ( removal.geneNcbiId() != null ? removal.geneSymbol() + " [NCBI " + removal.geneNcbiId() + "]" : "no gene" ) );
+        }
+        if ( !Objects.equals( StringUtils.stripToNull( removal.productGi() ), StringUtils.stripToNull( gp.getNcbiGi() ) ) ) {
+            return GeneProductRemovalOutcome.skipped( GeneProductRemovalOutcome.SkipReason.GI_CHANGED,
+                    gp + " now has GI " + gp.getNcbiGi() + ", not " + removal.productGi() );
+        }
+
+        Collection<BlatAssociation> blatAssociations;
+        Collection<AnnotationAssociation> annotationAssociations;
+        if ( platforms == null ) {
+            blatAssociations = blatAssociationDao.find( Collections.singleton( gp ) );
+            annotationAssociations = annotationAssociationDao.find( Collections.singleton( gp ) );
+        } else {
+            blatAssociations = this.findAssociationsOnPlatforms( BlatAssociation.class, gp, platforms );
+            annotationAssociations = this.findAssociationsOnPlatforms( AnnotationAssociation.class, gp, platforms );
+        }
+        boolean deleteProduct = platforms == null
+                || this.countAssociations( gp ) == blatAssociations.size() + annotationAssociations.size();
+
+        Set<BioSequence> sequences = new HashSet<>();
+        blatAssociations.forEach( a -> sequences.add( a.getBioSequence() ) );
+        annotationAssociations.forEach( a -> sequences.add( a.getBioSequence() ) );
+        List<String> affectedPlatforms = this.findPlatformShortNames( sequences );
+
+        if ( !dryRun ) {
+            if ( deleteProduct ) {
+                if ( gene != null ) {
+                    gene.getProducts().remove( gp );
+                    gp.setGene( null );
+                }
+                // deletes the associations too; with a platform limit, those found above are all there are
+                this.removeGeneProducts( Collections.singleton( gp ) );
+            } else {
+                blatAssociationDao.remove( blatAssociations );
+                annotationAssociationDao.remove( annotationAssociations );
+            }
+        }
+
+        String detail = ( dryRun ? "would delete " : "deleted " ) + blatAssociations.size() + " BLAT and "
+                + annotationAssociations.size() + " annotation associations"
+                + ( affectedPlatforms.isEmpty() ? "" : " (on " + String.join( ", ", affectedPlatforms ) + ")" )
+                + ( deleteProduct ? " and the gene product" : "; the gene product " + ( dryRun ? "would be" : "is" )
+                + " kept for its associations on other platforms" );
+        return new GeneProductRemovalOutcome( null, detail, deleteProduct, blatAssociations.size(),
+                annotationAssociations.size(), affectedPlatforms );
+    }
+
+    private <T extends BioSequence2GeneProduct> List<T> findAssociationsOnPlatforms( Class<T> type, GeneProduct gp, Collection<ArrayDesign> platforms ) {
+        return sessionFactory.getCurrentSession()
+                .createQuery( "select distinct a from " + type.getSimpleName() + " a, CompositeSequence cs "
+                        + "where a.geneProduct = :gp and cs.biologicalCharacteristic = a.bioSequence "
+                        + "and cs.arrayDesign in (:platforms)", type )
+                .setParameter( "gp", gp )
+                .setParameterList( "platforms", platforms )
+                .list();
+    }
+
+    /**
+     * Every association to the product, of any kind: the product cannot be deleted while one is left.
+     */
+    private long countAssociations( GeneProduct gp ) {
+        return sessionFactory.getCurrentSession()
+                .createQuery( "select count(a) from BioSequence2GeneProduct a where a.geneProduct = :gp", Long.class )
+                .setParameter( "gp", gp )
+                .uniqueResult();
+    }
+
+    private List<String> findPlatformShortNames( Collection<BioSequence> sequences ) {
+        if ( sequences.isEmpty() ) {
+            return Collections.emptyList();
+        }
+        return sessionFactory.getCurrentSession()
+                .createQuery( "select distinct ad.shortName from CompositeSequence cs join cs.arrayDesign ad "
+                        + "where cs.biologicalCharacteristic in (:sequences) and ad.shortName is not null "
+                        + "order by ad.shortName", String.class )
+                .setParameterList( "sequences", sequences )
+                .list();
+    }
+
+    /**
+     * Gene product removals and moves seen during one upsert, reported together so that the associations of all the
+     * products are counted in one set of queries.
+     */
+    private static final class ChangeLog {
+
+        private final Consumer<GeneProductChange> sink;
+        private final List<PendingChange> pending = new ArrayList<>();
+
+        private ChangeLog( Consumer<GeneProductChange> sink ) {
+            this.sink = sink;
+        }
+
+        private void removed( GeneProduct product, @Nullable Gene gene, @Nullable Taxon taxon, boolean applied ) {
+            pending.add( new PendingChange( GeneProductChange.Kind.REMOVE, applied, product, gene, null, taxon ) );
+        }
+
+        private void moved( GeneProduct product, Gene from, Gene to ) {
+            pending.add( new PendingChange( GeneProductChange.Kind.SWITCH, true, product, from, to, from.getTaxon() ) );
+        }
+    }
+
+    /**
+     * The genes are held rather than their NCBI ids and symbols, which may still change during the upsert.
+     */
+    private record PendingChange( GeneProductChange.Kind kind, boolean applied, GeneProduct product,
+                                  @Nullable Gene gene, @Nullable Gene toGene, @Nullable Taxon taxon ) {
+    }
+
+    /**
+     * Count the associations of each pending product, send the changes to the sink and clear them. Must run before
+     * any of the products is deleted.
+     */
+    private void report( ChangeLog changeLog ) {
+        if ( changeLog.pending.isEmpty() ) {
+            return;
+        }
+        Set<Long> productIds = new HashSet<>();
+        for ( PendingChange change : changeLog.pending ) {
+            productIds.add( change.product().getId() );
+        }
+        productIds.remove( null );
+        Map<Long, Long> blatCounts = this.countAssociationsByProduct( BlatAssociation.class, productIds );
+        Map<Long, Long> annotationCounts = this.countAssociationsByProduct( AnnotationAssociation.class, productIds );
+        Map<Long, SortedSet<String>> platforms = new HashMap<>();
+        this.addPlatformsByProduct( BlatAssociation.class, productIds, platforms );
+        this.addPlatformsByProduct( AnnotationAssociation.class, productIds, platforms );
+        for ( PendingChange change : changeLog.pending ) {
+            GeneProduct product = change.product();
+            Long id = product.getId();
+            Gene gene = change.gene();
+            Gene toGene = change.toGene();
+            changeLog.sink.accept( new GeneProductChange(
+                    change.kind(),
+                    change.applied(),
+                    change.taxon() != null ? change.taxon().getCommonName() : null,
+                    gene != null ? gene.getNcbiGeneId() : null,
+                    gene != null ? gene.getOfficialSymbol() : null,
+                    toGene != null ? toGene.getNcbiGeneId() : null,
+                    toGene != null ? toGene.getOfficialSymbol() : null,
+                    id,
+                    product.getName(),
+                    product.getNcbiGi(),
+                    id != null ? blatCounts.getOrDefault( id, 0L ) : 0L,
+                    id != null ? annotationCounts.getOrDefault( id, 0L ) : 0L,
+                    id != null ? new ArrayList<>( platforms.getOrDefault( id, Collections.emptySortedSet() ) ) : Collections.emptyList() ) );
+        }
+        changeLog.pending.clear();
+    }
+
+    private Map<Long, Long> countAssociationsByProduct( Class<? extends BioSequence2GeneProduct> type, Collection<Long> productIds ) {
+        Map<Long, Long> counts = new HashMap<>();
+        if ( productIds.isEmpty() ) {
+            return counts;
+        }
+        List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createQuery( "select a.geneProduct.id, count(a) from " + type.getSimpleName() + " a "
+                        + "where a.geneProduct.id in (:ids) group by a.geneProduct.id", Object[].class )
+                .setParameterList( "ids", productIds )
+                .list();
+        for ( Object[] row : rows ) {
+            counts.put( ( Long ) row[0], ( Long ) row[1] );
+        }
+        return counts;
+    }
+
+    private void addPlatformsByProduct( Class<? extends BioSequence2GeneProduct> type, Collection<Long> productIds, Map<Long, SortedSet<String>> platforms ) {
+        if ( productIds.isEmpty() ) {
+            return;
+        }
+        List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createQuery( "select distinct a.geneProduct.id, ad.shortName from " + type.getSimpleName() + " a, "
+                        + "CompositeSequence cs join cs.arrayDesign ad "
+                        + "where cs.biologicalCharacteristic = a.bioSequence and a.geneProduct.id in (:ids) "
+                        + "and ad.shortName is not null", Object[].class )
+                .setParameterList( "ids", productIds )
+                .list();
+        for ( Object[] row : rows ) {
+            platforms.computeIfAbsent( ( Long ) row[0], k -> new TreeSet<>() ).add( ( String ) row[1] );
+        }
+    }
+
     // ---- helpers replicated from GenomePersister / CommonPersister ----
     // These are cache-free copies. Hibernate L1 covers within-transaction
     // identity. Once the cutover lands, GenomePersister's copies go away.
@@ -713,8 +986,10 @@ public class GeneWriteServiceImpl implements GeneWriteService {
             return chromosomeCache.get( key );
         }
 
+        // By name and taxon only, as Gemma 1.x did. The full business key also matches the sequence, and gene2accession
+        // places a gene on several genomic accessions, so each one created another chromosome of the same name.
         Session session = sessionFactory.getCurrentSession();
-        Chromosome existing = BusinessKey.find( session, chromosome );
+        Chromosome existing = BusinessKey.find( session, Chromosome.Factory.newInstance( chromosome.getName(), ct ) );
 
         Chromosome resolved;
         if ( existing == null ) {

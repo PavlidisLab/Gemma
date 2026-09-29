@@ -180,6 +180,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis dea, DifferentialExpressionAnalysisConfig config ) {
+        Assert.isTrue( !config.isDeleteOtherAnalyses(), "Deleting the other analyses is only supported for a fresh run, not a redo." );
 
         if ( !differentialExpressionAnalysisService.canDelete( dea ) ) {
             throw new IllegalArgumentException(
@@ -194,7 +195,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, dea, newConfig );
 
         if ( config.isPersist() ) {
-            return this.persistAnalyses( ee, results, newConfig );
+            // false: a redo re-persists each existing analysis in turn, so replacing a narrower one here would delete
+            // an analysis the same loop has yet to redo.
+            return this.persistAnalyses( ee, results, newConfig, false );
         }
         return results;
     }
@@ -236,11 +239,18 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
         config.setUseWeights( rnaSeq );
 
+        // resolved before the analysis runs, so an analysis that cannot be deleted refuses the run before any work
+        Collection<DifferentialExpressionAnalysis> others = config.isDeleteOtherAnalyses()
+                ? this.getAnalysesToDeleteAfterSaving( expressionExperiment, config )
+                : null;
+
         Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
                 .analyze( expressionExperiment, config );
 
-        if ( config.isPersist() ) {
-            diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
+        if ( others != null ) {
+            diffExpressionAnalyses = this.saveAnalysesThenDelete( expressionExperiment, diffExpressionAnalyses, config, others );
+        } else if ( config.isPersist() ) {
+            diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config, true );
         } else {
             DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
         }
@@ -259,8 +269,26 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
+        return this.persistAnalysis( expressionExperiment, analysis, config, true );
+    }
 
-        this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
+    /**
+     * @param replaceSuperseded also delete an existing non-subset analysis whose factors this one covers — see
+     *                          {@link #deleteOldAnalyses}
+     */
+    private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config,
+            boolean replaceSuperseded ) {
+
+        this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude(), replaceSuperseded );
+        return this.saveAnalysis( expressionExperiment, analysis, config );
+    }
+
+    /**
+     * Save an analysis, schedule its archive file and audit it, without deleting any existing analysis.
+     */
+    private DifferentialExpressionAnalysis saveAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -445,7 +473,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
+            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors,
+            boolean replaceSuperseded ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByExperiment( expressionExperiment, true );
         int numDeleted = 0;
@@ -470,9 +499,18 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             /*
              * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
              */
-            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors ) && (
-                    subsetFactorValueForExisting == null || subsetFactorValueForExisting
-                            .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
+            boolean sameAnalysis = factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors )
+                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting
+                    .equals( newAnalysis.getSubsetFactorValue() ) );
+            /*
+             * Or, on a fresh run, if a non-subset run covers every factor of a non-subset analysis (Paul's ruling,
+             * 2026-09-13). GSE107259 kept 264375 on {genotype} beside 432412 on {genotype, treatment}, because the
+             * sets differed.
+             */
+            boolean superseded = replaceSuperseded
+                    && subsetFactorValueForExisting == null && newAnalysis.getSubsetFactorValue() == null
+                    && !factorsInAnalysis.isEmpty() && factors.containsAll( factorsInAnalysis );
+            if ( sameAnalysis || superseded ) {
 
                 DifferentialExpressionAnalyzerServiceImpl.log
                         .info( "Deleting analysis with ID=" + existingAnalysis.getId() );
@@ -555,13 +593,70 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     private Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, boolean replaceSuperseded ) {
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
             DifferentialExpressionAnalysis persistentAnalysis = this
-                    .persistAnalysis( expressionExperiment, analysis, config );
+                    .persistAnalysis( expressionExperiment, analysis, config, replaceSuperseded );
             results.add( persistentAnalysis );
+        }
+        return results;
+    }
+
+    /**
+     * The analyses {@code deleteOtherAnalyses} will delete: the experiment's analyses on the same subset factor as this
+     * run, as they stand before it. Without a subset factor, those are the analyses that are not subset analyses.
+     * <p>
+     * Paul, 2026-09-15: "don't replace analyses that don't need to be updated."
+     *
+     * @throws IllegalStateException if one of them cannot be deleted
+     */
+    private Collection<DifferentialExpressionAnalysis> getAnalysesToDeleteAfterSaving( ExpressionExperiment ee,
+            DifferentialExpressionAnalysisConfig config ) {
+        Assert.isTrue( config.isPersist(), "Other analyses can only be deleted when the new analyses are persisted." );
+        Long subsetFactorId = config.getSubsetFactor() != null ? config.getSubsetFactor().getId() : null;
+        Collection<DifferentialExpressionAnalysis> others = new ArrayList<>();
+        for ( DifferentialExpressionAnalysis existing : differentialExpressionAnalysisService
+                .thaw( differentialExpressionAnalysisService.findByExperiment( ee, true ) ) ) {
+            FactorValue subsetFactorValue = existing.getSubsetFactorValue();
+            Long existingSubsetFactorId = subsetFactorValue != null
+                    ? subsetFactorValue.getExperimentalFactor().getId()
+                    : null;
+            if ( !Objects.equals( existingSubsetFactorId, subsetFactorId ) ) {
+                continue;
+            }
+            if ( !differentialExpressionAnalysisService.canDelete( existing ) ) {
+                throw new IllegalStateException( "Cannot delete " + existing + " after the run: it is tied up with "
+                        + "another entity, such as a meta-analysis. Delete the constraining entity first." );
+            }
+            others.add( existing );
+        }
+        return others;
+    }
+
+    /**
+     * Save the new analyses, then delete {@code others}.
+     * <p>
+     * Unlike {@link #persistAnalyses}, nothing is deleted before saving, not even an analysis on the same factors, so
+     * the experiment keeps its analyses until the new ones exist. If no analysis was produced, or a save fails, nothing
+     * is deleted.
+     */
+    private Collection<DifferentialExpressionAnalysis> saveAnalysesThenDelete( ExpressionExperiment ee,
+            Collection<DifferentialExpressionAnalysis> analyses, DifferentialExpressionAnalysisConfig config,
+            Collection<DifferentialExpressionAnalysis> others ) {
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            results.add( this.saveAnalysis( ee, analysis, config ) );
+        }
+        if ( results.isEmpty() ) {
+            log.warn( "No analysis was produced for " + ee.getShortName() + "; its " + others.size()
+                    + " existing analyses are kept." );
+            return results;
+        }
+        for ( DifferentialExpressionAnalysis other : others ) {
+            log.info( "Deleting " + other + ", which is not one of the " + results.size() + " analyses just saved." );
+            this.deleteAnalysis( ee, other );
         }
         return results;
     }

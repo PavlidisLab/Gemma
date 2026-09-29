@@ -63,6 +63,15 @@ public interface ExpressionExperimentDao
 
     void evictQuantitationTypesCache( ExpressionExperiment ee );
 
+    /**
+     * Reload the experiment's curation details from the database, replacing their second-level cache entry.
+     * <p>
+     * A write by another process, such as a gemma-cli run, does not reach this process's cache, and loading the
+     * experiment with {@link org.hibernate.CacheMode#REFRESH} leaves the cached curation details as they were
+     * (measured 2026-09-15).
+     */
+    void refreshCurationDetails( ExpressionExperiment ee );
+
     @Data
     class Identifiers {
         Long id;
@@ -814,6 +823,13 @@ public interface ExpressionExperimentDao
      * Delete the given single-cell dimension.
      */
     void deleteSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
+
+    /**
+     * Remove all the cell-level characteristics of a single-cell dimension.
+     *
+     * @return the number of cell-level characteristics removed
+     */
+    int removeAllCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension singleCellDimension );
 
     /**
      * Reload a single-cell dimension.

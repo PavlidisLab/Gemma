@@ -11,7 +11,6 @@
  */
 package ubic.gemma.rest;
 
-import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,12 +33,12 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -152,18 +151,34 @@ public class DatasetsWebServiceSubSetSamplesCursorTest {
     }
 
     /**
-     * Same rule as the parent {@code /datasets/{id}/samples} listing: this route is unpaginated without a
-     * cursor and has no field in which to declare a truncation, so a {@code limit} it cannot honour is
-     * refused rather than dropped. Treated identically because the two routes have the same shape — a
-     * client that learned the parent's behaviour must not find the sibling silently different.
+     * Same rule as the parent {@code /datasets/{id}/samples} listing: a {@code limit} with no {@code cursor}
+     * starts a cursor walk at the first page. Treated identically because the two routes have the same
+     * shape — a client that learned the parent's behaviour must not find the sibling silently different.
      */
     @Test
-    public void limitWithoutCursorIsRejectedAs400() {
-        assertThatThrownBy( () -> webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "20" ), false ) )
-                .isInstanceOf( BadRequestException.class );
+    public void limitWithoutCursorStartsACursorWalkAtTheFirstPage() {
+        CursorPage<BioAssayValueObject> cp = new CursorPage<>(
+                Collections.singletonList( ba1 ),
+                Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" ),
+                1,
+                /* nextCursor */ "next-cursor-token",
+                /* prevCursor */ null,
+                /* totalElements */ null );
+        when( datasetArgService.getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), isNull(), eq( 1 ), anyBoolean() ) ).thenReturn( cp );
 
+        Object response = webService.getDatasetSubSetSamples( datasetArg, SUBSET_ID, null, limit( "1" ), false );
+
+        assertThat( response ).isInstanceOf( CursorPaginatedResponseDataObject.class );
+        @SuppressWarnings("unchecked")
+        CursorPaginatedResponseDataObject<BioAssayValueObject> page =
+                ( CursorPaginatedResponseDataObject<BioAssayValueObject> ) response;
+        assertThat( page.getData() ).containsExactly( ba1 );
+        assertThat( page.getLimit() ).isEqualTo( 1 );
+        assertThat( page.getNextCursor() ).isEqualTo( "next-cursor-token" );
+
+        // A null cursor is what tells the DAO to start at the first page.
+        verify( datasetArgService ).getSubSetSamplesByCursor( any( DatasetArg.class ), eq( SUBSET_ID ), isNull(), eq( 1 ), anyBoolean() );
         verify( datasetArgService, never() ).getSubSetSamples( any( DatasetArg.class ), anyLong(), anyBoolean() );
-        verify( datasetArgService, never() ).getSubSetSamplesByCursor( any( DatasetArg.class ), anyLong(), any(), anyInt(), anyBoolean() );
     }
 
     /**

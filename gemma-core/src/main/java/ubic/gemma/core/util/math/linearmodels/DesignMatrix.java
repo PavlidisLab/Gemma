@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +79,12 @@ public class DesignMatrix {
      * Only applied for categorical factors.
      */
     private final Map<String, List<String>> levelsForFactors = new LinkedHashMap<>();
+
+    /**
+     * How each categorical factor's levels are coded into columns. A factor absent from this map is
+     * {@link ContrastCoding#TREATMENT}, which is what every factor was before the map existed.
+     */
+    private final Map<String, ContrastCoding> codingForFactors = new LinkedHashMap<>();
 
     private DoubleMatrix<String, String> matrix;
 
@@ -328,6 +335,63 @@ public class DesignMatrix {
         return matrix;
     }
 
+    /**
+     * The contrasts a {@link ContrastCoding#SUM_TO_ZERO} factor needs but has no column for, as a map from the
+     * name such a column would have had to the design columns that determine it.
+     * <p>
+     * A derived level's deviation is minus the sum of its factor's coefficients, and the variance of that sum
+     * needs the whole covariance block for those columns, not the individual variances -- which is why the
+     * columns are handed over rather than just the name. {@link LeastSquaresFit} does the arithmetic per row,
+     * where the QR for that row is in hand.
+     * <p>
+     * A factor's columns are identified by exact name ({@code factorName + level}) rather than by prefix:
+     * factor names are {@code f} plus an id, so {@code f10} is a prefix of {@code f100} and matching on prefixes
+     * would quietly pull another factor's columns into the sum.
+     * <p>
+     * 🛑 A factor whose columns do not come out at one per non-derived level is left out entirely. Dropped
+     * factors, interactions and any future change to how columns are named all land here, and a contrast that is
+     * missing is something a caller notices, whereas one computed over the wrong columns is not.
+     *
+     * @return derived-level column name to design column indices, empty when no factor is sum-coded
+     */
+    public Map<String, List<Integer>> getDerivedLevelColumns() {
+        Map<String, List<Integer>> out = new LinkedHashMap<>();
+        if ( codingForFactors.isEmpty() || matrix == null ) {
+            return out;
+        }
+        List<String> colNames = matrix.getColNames();
+        if ( colNames == null ) {
+            return out;
+        }
+        for ( Map.Entry<String, ContrastCoding> e : codingForFactors.entrySet() ) {
+            if ( e.getValue() != ContrastCoding.SUM_TO_ZERO ) {
+                continue;
+            }
+            String factorName = e.getKey();
+            List<String> levels = levelsForFactors.get( factorName );
+            if ( levels == null || levels.size() < 2 || droppedFactors.contains( factorName ) ) {
+                continue;
+            }
+            Set<String> owned = new HashSet<>();
+            for ( String level : levels ) {
+                owned.add( factorName + level );
+            }
+            List<Integer> cols = new ArrayList<>();
+            for ( int j = 0; j < colNames.size(); j++ ) {
+                if ( owned.contains( colNames.get( j ) ) ) {
+                    cols.add( j );
+                }
+            }
+            if ( cols.size() != levels.size() - 1 ) {
+                log.warn( "Expected " + ( levels.size() - 1 ) + " columns for sum-coded factor " + factorName
+                        + " but found " + cols.size() + "; its derived level will have no contrast." );
+                continue;
+            }
+            out.put( factorName + levels.get( 0 ), cols );
+        }
+        return out;
+    }
+
     public List<String> getTerms() {
         List<String> result = new ArrayList<>();
         result.addAll( terms.keySet() );
@@ -344,6 +408,44 @@ public class DesignMatrix {
 
     public boolean isHasIntercept() {
         return hasIntercept;
+    }
+
+    /**
+     * How the given factor's levels are coded into columns; {@link ContrastCoding#TREATMENT} unless set.
+     */
+    public ContrastCoding getContrastCoding( String factorName ) {
+        return codingForFactors.getOrDefault( factorName, ContrastCoding.TREATMENT );
+    }
+
+    /**
+     * Choose how one categorical factor's levels are coded, and rebuild the design.
+     * <p>
+     * Per factor rather than per matrix on purpose: a design can hold a genotype factor with a real wild-type
+     * control and a tissue factor with no control at all, and those two want different codings in the same model.
+     * <p>
+     * The level that has no column of its own is the same one under either coding, so
+     * {@link #setBaseline(String, String)} still decides which level is derived rather than estimated — under
+     * {@link ContrastCoding#SUM_TO_ZERO} it is not a baseline anything is measured against, only the one whose
+     * deviation is recovered from the others.
+     *
+     * @throws IllegalArgumentException if the factor is not in this design, or is continuous — a continuous
+     *                                  covariate has one column and no levels, so there is nothing to code
+     */
+    public void setContrastCoding( String factorName, ContrastCoding coding ) {
+        Assert.notNull( coding, "Contrast coding cannot be null." );
+        if ( !this.levelsForFactors.containsKey( factorName ) ) {
+            throw new IllegalArgumentException( "No categorical factor known by name " + factorName
+                    + ", choices are: " + StringUtils.join( this.levelsForFactors.keySet(), "," ) );
+        }
+        if ( this.droppedFactors.contains( factorName ) ) {
+            log.warn( "Can't set contrast coding for a dropped factor, skipping" );
+            return;
+        }
+        if ( coding == getContrastCoding( factorName ) ) {
+            return;
+        }
+        this.codingForFactors.put( factorName, coding );
+        this.rebuild();
     }
 
     /**
@@ -569,6 +671,18 @@ public class DesignMatrix {
 
                 String contrastingValue = "";
                 assert tmp != null;
+                /*
+                 * The level with no column of its own. Under TREATMENT it is the baseline and its rows are all
+                 * zero; under SUM_TO_ZERO its rows are -1 in every column of this factor, which is what turns
+                 * each coefficient from "difference from that level" into "deviation from the mean of the level
+                 * means". It is levelList.get(0) either way, so setBaseline still chooses it.
+                 *
+                 * startUsed == 1 gives every level a column, so nothing is derived and there is nothing to
+                 * put -1 in.
+                 */
+                String derivedLevel = startUsed > 1 ? levelList.get( 0 ) : null;
+                boolean sumToZero = derivedLevel != null
+                        && getContrastCoding( factorName ) == ContrastCoding.SUM_TO_ZERO;
                 for ( int j = 0; j < tmp.rows(); j++ ) {
                     Object fv = factorValues.get(j);
 
@@ -578,11 +692,19 @@ public class DesignMatrix {
                         throw new IllegalArgumentException("Null value for factor " + factorName + " at row " + j);
                     }
 
-                    boolean isBaseline = !fv.equals( level );
-                    if ( !isBaseline ) {
+                    boolean isThisLevel = fv.equals( level );
+                    if ( isThisLevel ) {
                         contrastingValue = ( String ) fv;
                     }
-                    tmp.set( j, currentColumn, isBaseline ? 0.0 : 1.0 );
+                    double cell;
+                    if ( isThisLevel ) {
+                        cell = 1.0;
+                    } else if ( sumToZero && fv.equals( derivedLevel ) ) {
+                        cell = -1.0;
+                    } else {
+                        cell = 0.0;
+                    }
+                    tmp.set( j, currentColumn, cell );
                 }
 
                 // boolean redundant = checkForRedundancy( tmp, currentColumn );

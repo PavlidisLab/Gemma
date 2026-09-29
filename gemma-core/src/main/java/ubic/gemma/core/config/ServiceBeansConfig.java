@@ -10,7 +10,10 @@
  */
 package ubic.gemma.core.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -19,6 +22,9 @@ import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import ubic.gemma.core.metrics.binder.VirtualThreadExecutorMetrics;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Phase 3 XML-&gt;Java migration: replaces the default-profile beans from
@@ -78,11 +84,70 @@ public class ServiceBeansConfig {
      * (DifferentialExpressionAnalyzerServiceImpl, ExpressionDataFileServiceImpl) both treat
      * {@code TaskRejectedException} as a soft failure ("archive will be rebuilt on next read"),
      * so dropping queue-based backpressure is safe.
+     * <p>
+     * Pending tasks are waited for when the context closes, for at most
+     * {@code gemma.expressionDataFileTasks.shutdownTimeoutSeconds}; see {@link DrainingTaskExecutor}.
      */
     @Bean(name = "expressionDataFileTaskExecutor")
-    public AsyncTaskExecutor expressionDataFileTaskExecutor( VirtualThreadExecutorMetrics expressionDataFileTaskExecutorMetrics ) {
-        return new ConcurrentTaskExecutor( expressionDataFileTaskExecutorMetrics.wrap(
-                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() ) );
+    public DrainingTaskExecutor expressionDataFileTaskExecutor( VirtualThreadExecutorMetrics expressionDataFileTaskExecutorMetrics,
+            @Value("${gemma.expressionDataFileTasks.shutdownTimeoutSeconds:60}") int shutdownTimeoutSeconds ) {
+        return new DrainingTaskExecutor( expressionDataFileTaskExecutorMetrics.wrap(
+                ubic.gemma.core.util.concurrent.Executors.newVirtualThreadPerTaskExecutorIfAvailable() ), shutdownTimeoutSeconds );
+    }
+
+    /**
+     * A {@link ConcurrentTaskExecutor} that waits for its pending tasks when the context is stopped.
+     * <p>
+     * The tasks run on virtual threads, which are daemon threads: {@code System.exit} halts them mid-task. The DEA
+     * archive written after an analysis runs on this executor, so a CLI exiting right after an analysis would halt
+     * that write. GemmaCLI's shutdown hook closes the context, and the JVM halts daemon threads only once its
+     * shutdown hooks have returned.
+     * <p>
+     * The wait is in {@link #stop()}, which the context calls before it destroys any bean, so the tasks still have
+     * the beans they use, the database included. Tasks still running after the timeout are interrupted.
+     */
+    public static class DrainingTaskExecutor extends ConcurrentTaskExecutor implements SmartLifecycle {
+
+        private static final Log log = LogFactory.getLog( DrainingTaskExecutor.class );
+
+        private final ExecutorService executorService;
+        private final int shutdownTimeoutSeconds;
+        private volatile boolean running;
+
+        DrainingTaskExecutor( ExecutorService executorService, int shutdownTimeoutSeconds ) {
+            super( executorService );
+            this.executorService = executorService;
+            this.shutdownTimeoutSeconds = shutdownTimeoutSeconds;
+        }
+
+        @Override
+        public void start() {
+            running = true;
+        }
+
+        @Override
+        public void stop() {
+            running = false;
+            executorService.shutdown();
+            try {
+                if ( executorService.awaitTermination( 0, TimeUnit.SECONDS ) ) {
+                    return;
+                }
+                log.info( "Waiting at most " + shutdownTimeoutSeconds + "s for pending data file writes to complete..." );
+                if ( !executorService.awaitTermination( shutdownTimeoutSeconds, TimeUnit.SECONDS ) ) {
+                    log.warn( "Data file writes were still running after " + shutdownTimeoutSeconds + "s, interrupting them." );
+                    executorService.shutdownNow();
+                }
+            } catch ( InterruptedException e ) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        @Override
+        public boolean isRunning() {
+            return running;
+        }
     }
 
     /**

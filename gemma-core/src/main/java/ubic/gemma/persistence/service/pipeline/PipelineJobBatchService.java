@@ -11,15 +11,18 @@
  */
 package ubic.gemma.persistence.service.pipeline;
 
+import java.util.Date;
 import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.PipelineJob;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
+import ubic.gemma.model.pipeline.PipelineJobBatchValueObject;
 import ubic.gemma.model.pipeline.PipelineJobEvent;
 
 import java.util.Collection;
 import java.util.List;
+import ubic.gemma.model.pipeline.PipelineJobEventValueObject;
 
 /**
  * Curator-driven pipeline batch submissions. One submit call creates a
@@ -48,6 +51,33 @@ public interface PipelineJobBatchService {
     PipelineJobBatch get( Long batchId );
 
     List<PipelineJobBatch> findByOwner( Long contactId, @Nullable PipelineJobBatch.BatchState state, int limit );
+
+    /**
+     * Project one batch together with its jobs, for the REST surface.
+     * <p>
+     * Separate from {@link #get(Long)} because the projection reads the lazy
+     * {@code jobs} collection and so has to happen inside this call's transaction. A resource
+     * method that projected the returned entity itself would be reading a detached association.
+     *
+     * @return the batch, or {@code null} if there is none with that id
+     */
+    @Nullable
+    PipelineJobBatchValueObject loadValueObject( Long batchId );
+
+    /**
+     * Project a curator's batches, <em>without</em> their jobs.
+     * <p>
+     * A listing leaves {@link PipelineJobBatchValueObject#getJobs()} empty for payload economy —
+     * the same split {@code TicketValueObject} makes between its list and single-ticket endpoints.
+     * Fetch one batch's jobs with {@link #loadValueObject(Long)}.
+     */
+    List<PipelineJobBatchValueObject> loadValueObjectsByOwner( Long contactId,
+            @Nullable PipelineJobBatch.BatchState state, int limit );
+
+    /**
+     * Project one job's events, newest bound by {@code since} and capped at {@code limit}.
+     */
+    List<PipelineJobEventValueObject> loadEventValueObjects( Long jobId, @Nullable Date since, int limit );
 
     /**
      * Request cancellation of every non-terminal job in the batch. Each job's

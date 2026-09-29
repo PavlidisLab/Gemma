@@ -1,10 +1,12 @@
 package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,6 +35,7 @@ import static ubic.gemma.rest.util.Responders.respond;
 @Service
 @Path("/tasks")
 @Slf4j
+@Tag(name = "Tasks", description = "Status and cancellation for submitted pipeline tasks")
 public class TasksWebService {
 
     @Autowired
@@ -54,11 +57,11 @@ public class TasksWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The task's current state. Tasks live in an in-memory store, so one that finished long ago may have been evicted and answer 404 instead.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The task was never submitted or has already been evicted from the in-memory store.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TaskStatusValueObject> getTaskStatus(
-            @PathParam("taskId") String taskId
+            @Parameter(description = "Identifier of the submitted task, as returned when it was accepted.") @PathParam("taskId") String taskId
     ) {
         SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
         if ( task == null ) {
@@ -83,11 +86,11 @@ public class TasksWebService {
             security = { @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
                     @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" }) },
             responses = {
-                    @ApiResponse(responseCode = "200", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "200", description = "The cancellation request was recorded, and the body is the task's state at that moment. Cancellation is cooperative, so the task may still be running.", useReturnTypeSchema = true, content = @Content()),
                     @ApiResponse(responseCode = "404", description = "The task was never submitted or has already been evicted from the in-memory store.",
                             content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))) })
     public ResponseDataObject<TaskStatusValueObject> cancelTask(
-            @PathParam("taskId") String taskId
+            @Parameter(description = "Identifier of the submitted task, as returned when it was accepted.") @PathParam("taskId") String taskId
     ) {
         SubmittedTask task = taskRunningService.getSubmittedTask( taskId );
         if ( task == null ) {

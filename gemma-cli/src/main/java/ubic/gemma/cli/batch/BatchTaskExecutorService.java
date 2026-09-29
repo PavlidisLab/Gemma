@@ -36,12 +36,14 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
         return () -> {
             try {
                 runnable.run();
-                if ( !progressReporter.wasSuccessObjectAdded() && !progressReporter.wasErrorObjectAdded() ) {
+                if ( !progressReporter.wasResultAdded() ) {
                     progressReporter.addSuccessObject( batchObject );
                 }
-            } catch ( Exception e ) {
+            } catch ( Throwable e ) {
+                // Throwable, not Exception: an Error recorded nothing, so a run whose tasks all failed that way
+                // exited 0
                 if ( !progressReporter.wasErrorObjectAdded() ) {
-                    progressReporter.addErrorObject( batchObject, e );
+                    progressReporter.addErrorObject( batchObject, e.getMessage(), e );
                 }
                 throw e;
             } finally {
@@ -57,13 +59,13 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
         return () -> {
             try {
                 T result = callable.call();
-                if ( !progressReporter.wasSuccessObjectAdded() && !progressReporter.wasErrorObjectAdded() ) {
+                if ( !progressReporter.wasResultAdded() ) {
                     progressReporter.addSuccessObject( batchObject );
                 }
                 return result;
-            } catch ( Exception e ) {
+            } catch ( Throwable e ) {
                 if ( !progressReporter.wasErrorObjectAdded() ) {
-                    progressReporter.addErrorObject( batchObject, e );
+                    progressReporter.addErrorObject( batchObject, e.getMessage(), e );
                 }
                 throw e;
             } finally {
@@ -96,8 +98,15 @@ public class BatchTaskExecutorService extends AbstractDelegatingExecutorService 
         }
     }
 
+    /**
+     * Shut the executor down (queued tasks still run) and close the progress reporter.
+     * <p>
+     * This used to close only the reporter. On a path that skipped every shutdown call, the executor's idle
+     * non-daemon threads then kept the JVM from exiting.
+     */
     @Override
     public void close() {
+        shutdown();
         try {
             progressReporter.close();
         } catch ( IOException e ) {

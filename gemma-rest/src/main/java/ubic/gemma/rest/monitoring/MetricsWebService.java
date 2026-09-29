@@ -2,6 +2,7 @@ package ubic.gemma.rest.monitoring;
 
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -59,7 +60,7 @@ public class MetricsWebService {
                     @ApiResponse(responseCode = "503", description = "Metrics Spring profile not active; no Prometheus registry available",
                             content = @Content(mediaType = "text/plain; charset=utf-8", schema = @Schema(type = "string")))
             })
-    public Response scrape( @HeaderParam(TOKEN_HEADER) String presentedToken ) {
+    public Response scrape( @Parameter(description = "Shared secret configured as `gemma.metrics.scrapeToken`. The endpoint answers 404 when no token is configured, so it cannot be probed for existence.") @HeaderParam(TOKEN_HEADER) String presentedToken ) {
         if ( scrapeToken == null || scrapeToken.isEmpty() ) {
             return Response.status( Response.Status.NOT_FOUND )
                     .type( "text/plain; charset=utf-8" )

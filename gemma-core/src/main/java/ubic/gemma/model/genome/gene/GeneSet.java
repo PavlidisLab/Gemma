@@ -65,6 +65,7 @@ import java.util.Set;
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "GENE_SET_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "CHARACTERISTIC_GENE_SET_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Characteristic> characteristics = new HashSet<>();

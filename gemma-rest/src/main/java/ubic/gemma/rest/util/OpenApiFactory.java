@@ -7,8 +7,11 @@ import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.servers.Server;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -106,6 +109,7 @@ public class OpenApiFactory extends AbstractAsyncFactoryBean<OpenAPI> implements
         } );
         visitor.visit( spec );
         applyFilterAndSortArgDefaults( spec );
+        stripQualityFromResponseMediaTypes( spec );
         return spec;
     }
 
@@ -146,6 +150,74 @@ public class OpenApiFactory extends AbstractAsyncFactoryBean<OpenAPI> implements
                 }
             }
         }
+    }
+
+    /**
+     * Drop the JAX-RS quality-of-source parameter from response media types.
+     * <p>
+     * A resource that serves both JSON and TSV lowers the TSV branch with
+     * {@code @Produces(TEXT_TAB_SEPARATED_VALUES_UTF8 + ";qs=0.9")} so JSON stays the default when the
+     * client expresses no preference. That is a server-side negotiation weight and has to stay in the
+     * annotation, but swagger-core copies the whole {@code @Produces} string into the response
+     * {@code content} map and rewrites {@code qs} to {@code q} on the way, producing keys like
+     * {@code text/tab-separated-values; charset=UTF-8; q=0.9}.
+     * <p>
+     * A {@code q} parameter is not part of a media type in a {@code content} map — it belongs in an
+     * {@code Accept} header — so that key matches nothing a client would send, and the same endpoint
+     * could carry two spellings of it ({@code ; q=0.9} on one response, {@code ;q=0.9} on another) that
+     * no consumer can tell are the same type. Stripping it here rather than per endpoint keeps the
+     * annotation honest about negotiation and the spec honest about the wire.
+     */
+    private void stripQualityFromResponseMediaTypes( OpenAPI spec ) {
+        if ( spec.getPaths() == null ) {
+            return;
+        }
+        for ( PathItem pathItem : spec.getPaths().values() ) {
+            for ( Operation op : pathItem.readOperations() ) {
+                if ( op.getResponses() == null ) {
+                    continue;
+                }
+                for ( ApiResponse response : op.getResponses().values() ) {
+                    Content content = response.getContent();
+                    if ( content == null ) {
+                        continue;
+                    }
+                    Content normalized = new Content();
+                    boolean changed = false;
+                    for ( Map.Entry<String, MediaType> entry : content.entrySet() ) {
+                        String key = stripQuality( entry.getKey() );
+                        changed |= !key.equals( entry.getKey() );
+                        // two keys can normalize onto one; the first spelling wins
+                        normalized.putIfAbsent( key, entry.getValue() );
+                    }
+                    if ( changed ) {
+                        response.setContent( normalized );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * A media type without its {@code q} / {@code qs} parameter, other parameters (notably
+     * {@code charset}) kept and re-joined with the {@code "; "} separator the rest of the spec uses.
+     * <p>
+     * Public so {@code OpenApiTest} can assert against the same rule the factory applies rather than
+     * a second, drifting copy of it.
+     */
+    public static String stripQuality( String mediaType ) {
+        String[] parts = mediaType.split( ";" );
+        StringBuilder sb = new StringBuilder( parts[0].trim() );
+        for ( int i = 1; i < parts.length; i++ ) {
+            String parameter = parts[i].trim();
+            int eq = parameter.indexOf( '=' );
+            String name = eq >= 0 ? parameter.substring( 0, eq ).trim() : parameter;
+            if ( name.equalsIgnoreCase( "q" ) || name.equalsIgnoreCase( "qs" ) ) {
+                continue;
+            }
+            sb.append( "; " ).append( parameter );
+        }
+        return sb.toString();
     }
 
     @Override

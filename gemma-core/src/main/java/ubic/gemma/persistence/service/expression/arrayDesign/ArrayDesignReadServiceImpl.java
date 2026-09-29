@@ -379,6 +379,12 @@ public class ArrayDesignReadServiceImpl implements ArrayDesignReadService {
 
     @Override
     @Transactional(readOnly = true)
+    public Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign ) {
+        return arrayDesignDao.countBlatResultsBySearchedDatabase( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign ) {
         return arrayDesignDao.countCompositeSequencesWithBioSequences( arrayDesign );
     }

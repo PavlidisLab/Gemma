@@ -47,8 +47,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -143,7 +145,10 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
     @Nullable
     private PrintWriter changeLog;
 
-    /** Accessions already recorded by an earlier run of the same change log; skipped on resume. */
+    /**
+     * Experiment ids an earlier run of the same change log settled; skipped on resume. Keyed by id, not
+     * accession: split experiments share an accession, and one sibling's row says nothing about another.
+     */
     private final Set<String> alreadyDone = new HashSet<>();
 
     @Override
@@ -175,7 +180,9 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
                         + " same columns and will show them immediately." );
         options.addOption( null, CHANGE_LOG_OPTION, true,
                 "TSV of every decision, one row per dataset, written as the run goes. Re-running with the"
-                        + " same file resumes: accessions already in it are not re-fetched." );
+                        + " same file resumes: datasets already settled in it are not re-fetched. Rows where GEO"
+                        + " could not be read are retried, and so are no_primary rows when --" + FILL_OPTION
+                        + " is given." );
         options.addOption( null, PACE_OPTION, true,
                 "Milliseconds to wait between GEO requests. Default " + DEFAULT_PACE_MILLIS + "." );
     }
@@ -240,8 +247,8 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
             record( ee, null, "skipped_not_geo_series", null, null, null, "no GEO series accession" );
             return;
         }
-        if ( alreadyDone.contains( accession ) ) {
-            log.debug( accession + " is already in the change log; skipping." );
+        if ( alreadyDone.contains( String.valueOf( ee.getId() ) ) ) {
+            log.debug( ee.getShortName() + " is already settled in the change log; skipping." );
             return;
         }
 
@@ -280,6 +287,11 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
         handleExistingPrimary( ee, accession, fetchFromGeo( accession ), primary, held, gemmaPmid );
     }
 
+    /** GEO could not be read, so nothing was concluded; retried on resume. */
+    private static final String GEO_UNREADABLE = "geo_unreadable";
+    /** Gemma has no primary and GEO was not asked (no --fill); retried on a resume with --fill. */
+    private static final String NO_PRIMARY = "no_primary";
+
     /** Marks "GEO was deliberately not asked", which is different from "GEO said nothing". */
     private static final List<Integer> NOT_FETCHED = Collections.emptyList();
 
@@ -292,15 +304,17 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
         if ( !fill ) {
             // GEO is not consulted in a verify-only run: it cannot change anything here, and asking
             // would cost a request per dataset to write a note nobody can act on until --fill runs.
-            record( ee, accession, "no_primary", null, null, null,
+            record( ee, accession, NO_PRIMARY, null, null, null,
                     "Gemma has no primary; run with --" + FILL_OPTION + " to ask GEO for one" );
             return;
         }
         if ( geoIds == null ) {
             // unreadable, not empty: say nothing about what GEO lists, and fill nothing in
-            record( ee, accession, "geo_unreadable", null, null, null,
+            record( ee, accession, GEO_UNREADABLE, null, null, null,
                     "could not read " + accession + " from GEO; no conclusion drawn" );
-            addWarningObject( ee, "Could not read " + accession + " from GEO." );
+            // An error, not a warning: this dataset was not checked. As a warning, a run in which GEO
+            // could not be read at all exited 0.
+            addErrorObject( ee, "Could not read " + accession + " from GEO." );
             return;
         }
         if ( geoIds.isEmpty() ) {
@@ -358,9 +372,9 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
             BibliographicReference primary, PublicationAssociation held, @Nullable String gemmaPmid ) {
         if ( geoIds == null ) {
             // unreadable, not empty: the held evidence code stands, because nothing was verified
-            record( ee, accession, "geo_unreadable", gemmaPmid, null, String.valueOf( held.getEvidenceCode() ),
+            record( ee, accession, GEO_UNREADABLE, gemmaPmid, null, String.valueOf( held.getEvidenceCode() ),
                     "could not read " + accession + " from GEO; existing evidence left as-is" );
-            addWarningObject( ee, "Could not read " + accession + " from GEO." );
+            addErrorObject( ee, "Could not read " + accession + " from GEO." );
             return;
         }
         if ( geoIds.isEmpty() ) {
@@ -492,6 +506,9 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
         }
         boolean resuming = changeLogFile.exists() && changeLogFile.length() > 0;
         if ( resuming ) {
+            // The last row for an experiment is its current state: a retried row is appended, not
+            // rewritten in place.
+            Map<String, String> lastOutcome = new HashMap<>();
             try ( BufferedReader r = new BufferedReader( new FileReader( changeLogFile ) ) ) {
                 String line;
                 while ( ( line = r.readLine() ) != null ) {
@@ -499,12 +516,24 @@ public class VerifyPublicationEvidenceCli extends ExpressionExperimentManipulati
                         continue;
                     }
                     String[] f = line.split( "\t", -1 );
-                    if ( f.length > 2 && StringUtils.isNotBlank( f[2] ) ) {
-                        alreadyDone.add( f[2] );
+                    if ( f.length > 3 && StringUtils.isNotBlank( f[0] ) && StringUtils.isNotBlank( f[2] ) ) {
+                        lastOutcome.put( f[0], f[3] );
                     }
                 }
             }
-            log.info( "Resuming: " + alreadyDone.size() + " accessions already in " + changeLogFile );
+            // Only a settled row counts as done. Every row used to, so a dataset GEO could not be read
+            // for was never retried, and the no_primary rows a verify-only run leaves for --fill were
+            // skipped by the --fill rerun they point to.
+            int retrying = 0;
+            for ( Map.Entry<String, String> e : lastOutcome.entrySet() ) {
+                if ( GEO_UNREADABLE.equals( e.getValue() ) || ( fill && NO_PRIMARY.equals( e.getValue() ) ) ) {
+                    retrying++;
+                } else {
+                    alreadyDone.add( e.getKey() );
+                }
+            }
+            log.info( "Resuming: " + alreadyDone.size() + " datasets already settled in " + changeLogFile
+                    + ", " + retrying + " to retry." );
         }
         changeLog = new PrintWriter( Files.newBufferedWriter( Paths.get( changeLogFile.getPath() ),
                 StandardCharsets.UTF_8,

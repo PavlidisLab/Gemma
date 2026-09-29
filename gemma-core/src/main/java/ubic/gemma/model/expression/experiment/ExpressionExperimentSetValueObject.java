@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,6 +42,7 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
     private static final long serialVersionUID = -6852364688337216390L;
 
     private String description = "";
+    @Schema(description = "Identifiers of the datasets in the set. Populated only when the request asked for it with `includeMembers=true`, which is off by default because a set can hold thousands; empty otherwise, so empty does not mean the set has no members.")
     private Collection<Long> expressionExperimentIds = new HashSet<>();
     /**
      * Accessor names are constrained by {@link SecureValueObject}; keep these getters/setters manual.

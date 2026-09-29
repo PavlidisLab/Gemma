@@ -97,7 +97,12 @@ public class LoadSimpleExpressionDataCliTest extends BaseCliTest5 {
                 .withArguments( "-f", new ClassPathResource( "ubic/gemma/apps/simple-data-file.tsv" ).getFile().getAbsolutePath(),
                         "-d", new ClassPathResource( "ubic/gemma/apps" ).getFile().getAbsolutePath() )
                 .succeeds();
-        verify( simpleExpressionDataLoaderService ).create( any(), assertArg( matrix -> {
+        verify( simpleExpressionDataLoaderService ).create( assertArg( metaData ->
+                // this loader always creates a brand new experiment with exactly one (raw) quantitation type, so
+                // it must always be preferred - otherwise the load never gets preprocessed and a later
+                // makeProcessedData fails outright with "No preferred data vectors".
+                assertThat( metaData.getQuantitationType().getIsPreferred() ).isTrue()
+        ), assertArg( matrix -> {
             assertThat( matrix.getRowNames() ).containsExactly( "cs1", "cs2", "cs3" );
             assertThat( matrix.getColNames() ).containsExactly( "ba1", "ba2" );
         } ) );

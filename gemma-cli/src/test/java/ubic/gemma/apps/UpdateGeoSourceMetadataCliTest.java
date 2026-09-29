@@ -30,6 +30,7 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import org.mockito.ArgumentCaptor;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -172,6 +173,27 @@ public class UpdateGeoSourceMetadataCliTest extends BaseCliTest5 {
         assertThat( cli ).withArguments( "-e", "GSE1234" ).succeeds();
 
         verify( geoService, never() ).updateFromGEO( any( ExpressionExperiment.class ), any() );
+    }
+
+    /**
+     * 🛑 A skip is not a success, and the batch summary is read by status. Reported as SUCCESS, a
+     * repair pass over 8 experiments read 8/8 SUCCESS having touched none of them, and only
+     * re-reading the rows in gemd showed nothing had changed (frink, 2026-09-17). The message said
+     * "skipped" the whole time; nothing aggregating a TSV by its status column reads messages.
+     */
+    @Test
+    @WithMockUser
+    public void testASkipIsNotReportedAsASuccess() {
+        ExpressionExperiment ee = geoExperiment();
+        when( eeService.hasSourceMetadata( ee ) ).thenReturn( true );
+
+        assertThat( cli ).withArguments( "-e", "GSE1234" )
+                .succeeds()
+                .standardOutput()
+                .asString( StandardCharsets.UTF_8 )
+                .contains( "Already has a source metadata document, skipped." )
+                .contains( "Warnings occurred during the processing of 1 objects" )
+                .doesNotContain( "Successfully processed" );
     }
 
     /** ... unless the caller says to replace it. */

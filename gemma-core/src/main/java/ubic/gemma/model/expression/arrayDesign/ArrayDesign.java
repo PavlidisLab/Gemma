@@ -100,6 +100,7 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
 
     /* fetched with select because taxon are very redundant */
     @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "PRIMARY_TAXON_FK", nullable = false, columnDefinition = "BIGINT")
     private Taxon primaryTaxon;
 
@@ -140,6 +141,7 @@ public class ArrayDesign extends AbstractAuditable implements Curatable, Secured
     /* this is assumed readily available in the frontend */
     /* it makes sense to use an eager select here because we pro-actively cache them, so it never really result in an additional query */
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "ARRAY_DESIGN_FK", columnDefinition = "BIGINT", foreignKey = @ForeignKey(name = "ALTERNATE_NAME_ARRAY_DESIGN_FKC"))
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<AlternateName> alternateNames = new HashSet<>();

@@ -69,12 +69,15 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayFieldCountValueObject;
+import ubic.gemma.model.expression.bioAssay.ExtractedMolecule;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.util.UninitializedList;
 import ubic.gemma.model.util.UninitializedSet;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
@@ -249,6 +252,13 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void evictBioAssaysCache( ExpressionExperiment ee ) {
         getSessionFactory().getCache().evictCollectionData( ExpressionExperiment.class.getName() + ".bioAssays", ee.getId() );
+    }
+
+    @Override
+    public void refreshCurationDetails( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails() != null && ee.getCurationDetails().getId() != null ) {
+            getSessionFactory().getCurrentSession().refresh( ee.getCurationDetails() );
+        }
     }
 
     @Override
@@ -2598,6 +2608,79 @@ public class ExpressionExperimentDaoImpl
         populateDateCreated( results );
         populateSingleCellInfo( results );
         populateOtherParts( results );
+        populateLibraryFields( results );
+    }
+
+    /**
+     * Fill in {@code libraryStrategies}, {@code librarySelections} and {@code extractedMolecules} — the
+     * distinct values of each across a dataset's assays, with counts — for a page of VOs in one query.
+     * <p>
+     * One {@code group by} over the three columns together, not three queries: the combinations partition the
+     * dataset's assays, so a per-field count is a sum over the combination rows, and a dataset that is uniform
+     * in all three (better than 99.9% of them, measured by uib 2026-09-16) yields a single row.
+     * <p>
+     * A null value is carried through as a null-valued entry rather than dropped, so the counts sum to the
+     * dataset's assay count and an all-null field — {@code librarySelection} on every microarray dataset —
+     * is distinguishable from a dataset with no assays. Each field's entries are ordered by descending count so
+     * the majority value is first, which is the one a caller reading a single value wants.
+     * <p>
+     * Batched here rather than read off the entity because {@code ee.bioAssays} is lazy; touching it per VO is
+     * an N+1 on every dataset listing, and the whole point of putting these on the dataset is that a client
+     * should not have to fetch 2,158 assay rows to learn one constant.
+     */
+    private void populateLibraryFields( Collection<ExpressionExperimentValueObject> eevos ) {
+        if ( eevos.isEmpty() ) {
+            return;
+        }
+        Query q = getSessionFactory().getCurrentSession()
+                .createQuery( "select ee.id, ba.libraryStrategy, ba.librarySelection, ba.extractedMolecule, count(ba.id) "
+                        + "from ExpressionExperiment ee "
+                        + "join ee.bioAssays as ba "
+                        + "where ee.id in (:ids) "
+                        + "group by ee.id, ba.libraryStrategy, ba.librarySelection, ba.extractedMolecule" )
+                .setCacheable( true )
+                .setCacheRegion( FILTERED_VO_CACHE_REGION );
+        Map<Long, Map<String, Integer>> strategiesByEe = new HashMap<>();
+        Map<Long, Map<String, Integer>> selectionsByEe = new HashMap<>();
+        Map<Long, Map<String, Integer>> moleculesByEe = new HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( q, "ids", IdentifiableUtils.getIds( eevos ), 2048 )
+                .forEach( row -> {
+                    Long eeId = ( Long ) row[0];
+                    int n = ( ( Number ) row[4] ).intValue();
+                    // HashMap tolerates the null key, which is the point: a null is a value here.
+                    tally( strategiesByEe, eeId, ( String ) row[1], n );
+                    tally( selectionsByEe, eeId, ( String ) row[2], n );
+                    tally( moleculesByEe, eeId, nameOf( ( ExtractedMolecule ) row[3] ), n );
+                } );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            eevo.setLibraryStrategies( toFieldCounts( strategiesByEe.get( eevo.getId() ) ) );
+            eevo.setLibrarySelections( toFieldCounts( selectionsByEe.get( eevo.getId() ) ) );
+            eevo.setExtractedMolecules( toFieldCounts( moleculesByEe.get( eevo.getId() ) ) );
+        }
+    }
+
+    /**
+     * Add {@code n} to the count for {@code value} under {@code eeId}. {@code value} may be null.
+     */
+    private static void tally( Map<Long, Map<String, Integer>> byEe, Long eeId, @Nullable String value, int n ) {
+        byEe.computeIfAbsent( eeId, k -> new HashMap<>() ).merge( value, n, Integer::sum );
+    }
+
+    /**
+     * Project one field's tallies into the wire shape, most-carried value first.
+     */
+    private static List<BioAssayFieldCountValueObject> toFieldCounts( @Nullable Map<String, Integer> counts ) {
+        if ( counts == null ) {
+            return new ArrayList<>();
+        }
+        return counts.entrySet().stream()
+                .map( e -> new BioAssayFieldCountValueObject( e.getKey(), e.getValue() ) )
+                .sorted( Comparator.comparingInt( BioAssayFieldCountValueObject::getNumberOfBioAssays ).reversed()
+                        // Ties would otherwise order by hash, so a page could report the same dataset two
+                        // different ways on two requests.
+                        .thenComparing( BioAssayFieldCountValueObject::getValue,
+                                Comparator.nullsLast( Comparator.naturalOrder() ) ) )
+                .collect( Collectors.toList() );
     }
 
     /**
@@ -3493,13 +3576,34 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void createSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().persist( singleCellDimension );
     }
 
     @Override
     public void updateSingleCellDimension( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
         validateSingleCellDimension( ee, singleCellDimension );
+        recordExperimentOnCellTypeAssignments( ee, singleCellDimension );
         getSessionFactory().getCurrentSession().update( singleCellDimension );
+    }
+
+    /**
+     * Record on each of the dimension's cell type assignments the experiment it belongs to
+     * ({@link CellTypeAssignment#getExperimentAnalyzed()}). The single-cell service adds, relabels and replaces
+     * assignments through {@link #createSingleCellDimension} and {@link #updateSingleCellDimension}, so both call this.
+     */
+    private static void recordExperimentOnCellTypeAssignments( ExpressionExperiment ee, SingleCellDimension dimension ) {
+        if ( !ModelUtils.isInitialized( dimension.getCellTypeAssignments() ) ) {
+            return;
+        }
+        for ( CellTypeAssignment cta : dimension.getCellTypeAssignments() ) {
+            if ( cta.getExperimentAnalyzed() == null ) {
+                cta.setExperimentAnalyzed( ee );
+            } else {
+                Assert.isTrue( ee.getId() == null || ee.getId().equals( cta.getExperimentAnalyzed().getId() ),
+                        cta + " is recorded against a different experiment than " + ee + "." );
+            }
+        }
     }
 
     /**
@@ -3600,7 +3704,60 @@ public class ExpressionExperimentDaoImpl
         // BEFORE deleting the dimension itself, otherwise the FK constraint on
         // SINGLE_CELL_DIMENSION_EXPERIMENT.SINGLE_CELL_DIMENSION_FK rejects the delete.
         singleCellDimensionExperimentDao.removeBySingleCellDimension( singleCellDimension );
+        if ( !Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            // leaves the cascade below nothing to load
+            removeCellLevelCharacteristicsInBulk( singleCellDimension );
+        }
         getSessionFactory().getCurrentSession().delete( singleCellDimension );
+    }
+
+    @Override
+    public int removeAllCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDimension singleCellDimension ) {
+        if ( Hibernate.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
+            int removed = singleCellDimension.getCellLevelCharacteristics().size();
+            singleCellDimension.getCellLevelCharacteristics().clear();
+            updateSingleCellDimension( ee, singleCellDimension );
+            return removed;
+        }
+        return removeCellLevelCharacteristicsInBulk( singleCellDimension );
+    }
+
+    /**
+     * Delete the cell-level characteristics of a dimension, and their characteristics, without loading them.
+     * <p>
+     * Loading them join-fetches {@code CELL_LEVEL_CHARACTERISTICS} with {@code CHARACTERISTIC}, which repeats the
+     * per-cell {@code INDICES} blob on every characteristic row, and the cascade then deletes the characteristics one
+     * statement at a time. A CLC made from a continuous column has one characteristic per cell: GSE244451's 104 CLCs
+     * held 3,369,548 characteristics, and deleting them ran a 200 GB heap out of memory.
+     * <p>
+     * Only valid while {@link SingleCellDimension#getCellLevelCharacteristics()} is uninitialized; otherwise the
+     * session holds entities whose rows this removes.
+     *
+     * @return the number of cell-level characteristics removed
+     */
+    private int removeCellLevelCharacteristicsInBulk( SingleCellDimension singleCellDimension ) {
+        //noinspection unchecked
+        List<Long> clcIds = getSessionFactory().getCurrentSession()
+                .createQuery( "select clc.id from SingleCellDimension scd join scd.cellLevelCharacteristics clc where scd = :scd" )
+                .setParameter( "scd", singleCellDimension )
+                .list();
+        if ( clcIds.isEmpty() ) {
+            return 0;
+        }
+        // neither FK column is mapped as a property, hence native queries
+        int removedCharacteristics = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CHARACTERISTIC where CELL_LEVEL_CHARACTERISTICS_FK in (:clcIds)" )
+                .addSynchronizedEntityClass( Characteristic.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        int removedClcs = getSessionFactory().getCurrentSession()
+                .createNativeQuery( "delete from CELL_LEVEL_CHARACTERISTICS where ID in (:clcIds)" )
+                .addSynchronizedEntityClass( GenericCellLevelCharacteristics.class )
+                .setParameterList( "clcIds", clcIds )
+                .executeUpdate();
+        log.info( String.format( "Removed %d cell-level characteristics with %d characteristics from %s.",
+                removedClcs, removedCharacteristics, singleCellDimension ) );
+        return removedClcs;
     }
 
     @Override
@@ -4971,6 +5128,15 @@ public class ExpressionExperimentDaoImpl
     }
 
     /**
+     * The enum's name, matching how {@code BioAssayValueObject#getExtractedMolecule()} serializes it, so a
+     * per-dataset tally and a per-sample read spell the same molecule the same way.
+     */
+    @Nullable
+    private static String nameOf( @Nullable ExtractedMolecule em ) {
+        return em != null ? em.name() : null;
+    }
+
+    /**
      * When each dataset was created in Gemma, from its {@code C} audit event.
      * <p>
      * A second batched query rather than a join onto the platform one: the two go through different
@@ -5072,9 +5238,15 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<RawExpressionDataVector> getPreferredRawDataVectors( ExpressionExperiment ee ) {
+        // Same fetches as getProcessedDataVectors. The unmasked matrix built from these vectors is filtered with
+        // no transaction open, and AffyProbeNameFilter reads each design element's sequence name: GSE96826
+        // (ee 15112) failed there with a LazyInitializationException on the BioSequence proxy.
         //noinspection unchecked
         return getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from RawExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "left join fetch cs.biologicalCharacteristic "
                                 + "join dedv.quantitationType q "
                                 + "where q.isPreferred = true and dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
@@ -5099,12 +5271,18 @@ public class ExpressionExperimentDaoImpl
         Assert.notNull( newQt.getId(), "Quantitation type must be persistent." );
         Assert.isTrue( !newVectors.isEmpty(), "At least one vectors must be provided, use removeAllRawDataVectors() to delete vectors instead." );
         // each set of raw vectors must have a *distinct* QT
-        Set<String> existingNames = DescribableUtils.getNames( ee.getQuantitationTypes() );
+        // Read the names off the MANAGED copy. The caller's instance can be detached with its
+        // quantitationTypes collection never initialized -- affyFromCel reads the experiment, computes for
+        // minutes with no session open, then writes (DataUpdaterImpl.reprocessAffyDataFromCel) -- and
+        // navigating it there throws LazyInitializationException. checkVectors below keeps the CALLER's
+        // instance on purpose: it asserts by reference that the vectors point at that very object.
+        ExpressionExperiment managedEe = ensureEeInSession( ee );
+        Set<String> existingNames = DescribableUtils.getNames( managedEe.getQuantitationTypes() );
         Assert.notNull( newQt.getName(), "The quantitation type must have a name." );
         Assert.isTrue( !existingNames.contains( newQt.getName() ),
                 "There is already a quantitation type named " + newQt.getName() + " in " + ee + "." );
         checkVectors( ee, newQt, newVectors );
-        ee = ensureEeInSession( ee );
+        ee = managedEe;
         if ( newQt.getIsPreferred() ) {
             for ( QuantitationType qt : ee.getQuantitationTypes() ) {
                 if ( qt.getIsPreferred() && !qt.equals( newQt ) ) {

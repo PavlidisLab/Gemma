@@ -6,6 +6,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import org.springframework.lang.Nullable;
 import java.util.Collection;
 
+/**
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
+ */
+@Deprecated
 public interface TwoChannelMissingValues {
 
     double DEFAULT_SIGNAL_TO_NOISE_THRESHOLD = 1.5;

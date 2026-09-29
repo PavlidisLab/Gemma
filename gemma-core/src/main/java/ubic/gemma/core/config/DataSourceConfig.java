@@ -84,6 +84,9 @@ public class DataSourceConfig {
     @Value("${gemma.db.hikari.sessionVariables}")
     private String hikariSessionVariables;
 
+    @Value("${gemma.db.hikari.readOnlyPropagatesToServer}")
+    private String hikariReadOnlyPropagatesToServer;
+
     /**
      * Server-side statement timeout in milliseconds, appended to {@link #hikariSessionVariables}
      * as MySQL's {@code max_execution_time}. Blank (the shipped default) leaves the session
@@ -130,6 +133,18 @@ public class DataSourceConfig {
         // Drop ONLY_FULL_GROUP_BY from sql_mode for the connection's session, plus the statement
         // timeout when the deployment sets one.
         props.setProperty( "sessionVariables", withMaxExecutionTime( hikariSessionVariables, hikariMaxExecutionTime ) );
+        // Off: every read-only transaction otherwise costs a round-trip that changes nothing we use.
+        // Connector/J's default propagates Connection.setReadOnly() to the server, and Spring calls it on
+        // each read-only transaction and again on release. performance_schema on prod-db has counted
+        // SELECT @@SESSION.transaction_read_only 23.6 million times since May on one digest and 10.1 million
+        // on another -- 525 seconds of server time returning a single row (measured 2026-09-17).
+        // ⚠️ It is not free either way. With it on, the server gets SET SESSION TRANSACTION READ ONLY and
+        // InnoDB can skip assigning a transaction id; with it off it cannot, and read-only transactions look
+        // like ordinary ones to the server. Gemma is read-heavy and latency-bound rather than
+        // transaction-id-bound, so the round-trip is the worse cost -- but that is a judgement, not a
+        // measurement, and the saving has not been measured end to end either. It is a property rather than
+        // a literal so a deployment can put it back without a rebuild.
+        props.setProperty( "readOnlyPropagatesToServer", hikariReadOnlyPropagatesToServer );
         return props;
     }
 

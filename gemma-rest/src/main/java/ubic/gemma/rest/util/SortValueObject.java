@@ -1,5 +1,6 @@
 package ubic.gemma.rest.util;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import ubic.gemma.persistence.util.Sort;
 
@@ -10,7 +11,9 @@ import ubic.gemma.persistence.util.Sort;
 @Data
 public class SortValueObject {
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The property the results are ordered by.")
     private final String orderBy;
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "`+` for ascending, `-` for descending.")
     private final String direction;
 
     public SortValueObject( Sort sort ) {

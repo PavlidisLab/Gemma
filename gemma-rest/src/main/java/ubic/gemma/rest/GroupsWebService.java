@@ -13,6 +13,9 @@ package ubic.gemma.rest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -112,12 +115,15 @@ public class GroupsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List user groups",
             description = "Returns paginated group summaries. Anonymous callers get 401. "
-                    + "The underlying service filters out groups the caller cannot read.")
+                    + "The underlying service filters out groups the caller cannot read.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The user groups as summary rows, paginated.", useReturnTypeSchema = true, content = @Content())
+            })
     public PaginatedResponseDataObject<GroupSummaryValueObject> getGroups(
             @Parameter(description = "Case-insensitive substring of the group name.")
             @QueryParam("query") @Nullable String query,
-            @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
-            @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
+            @Parameter(description = "How many results to skip before the page begins. Mutually exclusive with `cursor`.") @QueryParam("offset") @DefaultValue("0") OffsetArg offsetArg,
+            @Parameter(description = "Maximum number of results to return.") @QueryParam("limit") @DefaultValue("20") LimitArg limitArg
     ) {
         int offset = offsetArg.getValue();
         int limit = limitArg.getValue();
@@ -151,10 +157,13 @@ public class GroupsWebService {
             description = "When includeSummaries=true the response payload is a "
                     + "GroupWithMembersValueObject (members included); otherwise the lighter "
                     + "GroupValueObject (memberCount only). The legacy snake_case spelling "
-                    + "`include_summaries` is still accepted.")
+                    + "`include_summaries` is still accepted.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<? extends GroupValueObject> getGroup(
-            @PathParam("id") Long id,
-            @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
+            @Parameter(description = "Populate the per-row summary fields.") @QueryParam("includeSummaries") @DefaultValue("false") boolean includeSummaries,
             // Legacy spelling, accepted so a stale caller gets the behaviour it asked for rather
             // than silently falling back to the default. Remove once no client sends it.
             @Parameter(hidden = true)
@@ -181,7 +190,11 @@ public class GroupsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create a new group",
             description = "Body: {name, description?}. The authenticated user becomes the owner. "
-                    + "The three system groups (Administrators, Users, Agents) are reserved.")
+                    + "The three system groups (Administrators, Users, Agents) are reserved.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "The group as created.",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseDataObjectGroupValueObject.class)))
+            })
     public Response createGroup( GroupCreateRequest req ) {
         if ( req == null || req.getName() == null || req.getName().trim().isEmpty() ) {
             throw new BadRequestException( "name is required." );
@@ -223,9 +236,12 @@ public class GroupsWebService {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Update a group (rename + description)",
             description = "Partial update: any subset of name / description may be supplied. "
-                    + "The authenticated user must own the group (enforced at the service layer).")
+                    + "The authenticated user must own the group (enforced at the service layer).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group after the change.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<GroupValueObject> updateGroup(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
             GroupUpdateRequest req
     ) {
         if ( req == null ) {
@@ -268,9 +284,12 @@ public class GroupsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Delete a group",
-            description = "The three system groups (Administrators, Users, Agents) cannot be deleted.")
+            description = "The three system groups (Administrators, Users, Agents) cannot be deleted.",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "The group was deleted.")
+            })
     public Response deleteGroup(
-            @PathParam("id") Long id
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id
     ) {
         UserGroup g = loadGroupById( id );
         rejectSystemGroupName( g.getName() );
@@ -291,9 +310,12 @@ public class GroupsWebService {
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Add a member to a group",
-            description = "Body: {username} or {userId} (one required).")
+            description = "Body: {username} or {userId} (one required).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The group, with its membership after the addition.", useReturnTypeSchema = true, content = @Content())
+            })
     public ResponseDataObject<GroupWithMembersValueObject> addMember(
-            @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
             MemberAddRequest req
     ) {
         if ( req == null || ( ( req.getUsername() == null || req.getUsername().isEmpty() ) && req.getUserId() == null ) ) {
@@ -314,10 +336,13 @@ public class GroupsWebService {
     @Path("/{id}/members/{memberId}")
     @Produces(MediaType.APPLICATION_JSON)
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Remove a member from a group")
+    @Operation(summary = "Remove a member from a group",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "The member was removed from the group.")
+            })
     public Response removeMember(
-            @PathParam("id") Long id,
-            @PathParam("memberId") Long memberId
+            @Parameter(description = "Identifier of the group.") @PathParam("id") Long id,
+            @Parameter(description = "Identifier of the group member (Contact).") @PathParam("memberId") Long memberId
     ) {
         UserGroup g = loadGroupById( id );
         User u = userReadService.load( memberId );
@@ -568,4 +593,19 @@ public class GroupsWebService {
         public String getEmail() { return email; }
         public boolean isEnabled() { return enabled; }
     }
+
+    /**
+     * Response shape for {@link #createGroup}.
+     * <p>
+     * Doc-only: the method returns {@code Response} so it can set the status, which leaves
+     * swagger-core nothing to introspect, and naming the raw {@code ResponseDataObject} would erase
+     * the payload type. Naming a bound subclass is the only way an annotation can carry it.
+     */
+    public static class ResponseDataObjectGroupValueObject extends ResponseDataObject<GroupValueObject> {
+
+        public ResponseDataObjectGroupValueObject( GroupValueObject payload ) {
+            super( payload );
+        }
+    }
+
 }

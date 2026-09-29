@@ -35,6 +35,26 @@ public class FactorValueTest {
         assertNotEquals( fv1, fv2 );
     }
 
+    /**
+     * Two unsaved factor values that differ only in their (saved) factor are different factor values.
+     * {@code IdentifiableUtils.equals} compared the second factor's id with itself, so any factor with an id matched any
+     * other, and such factor values collapsed into one in a set.
+     */
+    @Test
+    public void testEqualsWithDifferentFactors() {
+        ExperimentalFactor genotype = ExperimentalFactor.Factory.newInstance();
+        genotype.setId( 1L );
+        ExperimentalFactor treatment = ExperimentalFactor.Factory.newInstance();
+        treatment.setId( 2L );
+        FactorValue fv1 = new FactorValue();
+        fv1.setExperimentalFactor( genotype );
+        fv1.setValue( "control" );
+        FactorValue fv2 = new FactorValue();
+        fv2.setExperimentalFactor( treatment );
+        fv2.setValue( "control" );
+        assertNotEquals( fv1, fv2 );
+    }
+
     private Statement createStatement( String subject, String predicate, String object ) {
         Statement s = new Statement();
         s.setSubject( subject );

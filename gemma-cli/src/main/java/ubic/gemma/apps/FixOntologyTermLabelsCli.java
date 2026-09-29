@@ -77,13 +77,22 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
         log.info( String.format( "Warming up %d ontologies ...", ontologies.size() ) );
         CompletionService<ubic.gemma.core.ontology.providers.OntologyService> completionService = new ExecutorCompletionService<>( ontologyTaskExecutor );
         Map<ubic.gemma.core.ontology.providers.OntologyService, Future<ubic.gemma.core.ontology.providers.OntologyService>> futures = new LinkedHashMap<>();
+        java.util.List<ubic.gemma.core.ontology.providers.OntologyService> failedToLoad = java.util.Collections.synchronizedList( new java.util.ArrayList<>() );
         for ( ubic.gemma.core.ontology.providers.OntologyService ontology : ontologies ) {
             ontologiesLoading.add( ontology );
             futures.put( ontology, completionService.submit( () -> {
                 // we don't need all those features
                 ontology.setSearchEnabled( false );
                 ontology.setInferenceMode( ubic.gemma.core.ontology.providers.OntologyService.InferenceMode.NONE );
-                ontology.initialize( true, false );
+                try {
+                    ontology.initialize( true, false );
+                } catch ( RuntimeException e ) {
+                    // One ontology that cannot load must not take the whole command down. The unified TDB store's
+                    // lock error stopped fixOntologyTermLabels at ontology 3 of 20 on frink (2026-09-12) while
+                    // gemma-rest logs the same failure and carries on; terms it owns are simply not found.
+                    log.error( "Failed to load " + ontology + "; continuing without it.", e );
+                    failedToLoad.add( ontology );
+                }
                 return ontology;
             } ) );
         }
@@ -102,6 +111,13 @@ public class FixOntologyTermLabelsCli extends AbstractAuthenticatedCLI {
 
         log.info( "Ontologies warmed up, starting check..." );
 
+        if ( failedToLoad.size() == ontologies.size() ) {
+            throw new IllegalStateException( "No ontology could be loaded, so there is nothing to check against." );
+        }
+        if ( !failedToLoad.isEmpty() ) {
+            log.warn( String.format( "%d of %d ontologies failed to load and are skipped: %s", failedToLoad.size(),
+                    ontologies.size(), failedToLoad.stream().map( Object::toString ).collect( Collectors.joining( ", " ) ) ) );
+        }
         Map<String, OntologyTerm> mismatches = ontologyService.fixOntologyTermLabels( dryRun, 4, TimeUnit.HOURS );
 
         getCliContext().getOutputStream().println( "Wrong_label\tCorrect_Label\tURI" );

@@ -169,6 +169,11 @@ public interface ArrayDesignReadService {
 
     long countBlatResults( ArrayDesign arrayDesign );
 
+    /**
+     * @see ArrayDesignDao#countBlatResultsBySearchedDatabase(ArrayDesign)
+     */
+    Map<String, Long> countBlatResultsBySearchedDatabase( ArrayDesign arrayDesign );
+
     long countCompositeSequencesWithBioSequences( ArrayDesign arrayDesign );
 
     long countCompositeSequencesWithBlatResults( ArrayDesign arrayDesign );

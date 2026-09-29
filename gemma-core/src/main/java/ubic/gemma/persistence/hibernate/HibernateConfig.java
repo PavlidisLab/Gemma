@@ -155,7 +155,8 @@ public class HibernateConfig {
      */
     @Bean(name = "sessionFactory")
     @org.springframework.context.annotation.DependsOn("createDatabaseInitializer")
-    public HibernateSessionFactoryBean sessionFactory( DataSource dataSource ) {
+    public HibernateSessionFactoryBean sessionFactory( DataSource dataSource,
+            org.springframework.core.env.Environment environment ) {
         HibernateSessionFactoryBean factory = new HibernateSessionFactoryBean();
         factory.setDataSource( dataSource );
         factory.setConfigLocation( new ClassPathResource( "hibernate.cfg.xml" ) );
@@ -171,8 +172,11 @@ public class HibernateConfig {
         props.setProperty( "hibernate.cache.region.factory_class", "jcache" );
         props.setProperty( "hibernate.javax.cache.provider", "org.ehcache.jsr107.EhcacheCachingProvider" );
         props.setProperty( "hibernate.javax.cache.missing_cache_strategy", "create" );
-        props.setProperty( "hibernate.cache.use_query_cache", "true" );
-        props.setProperty( "hibernate.cache.use_second_level_cache", "true" );
+        boolean l2 = secondLevelCacheEnabled( environment );
+        props.setProperty( "hibernate.cache.use_query_cache", String.valueOf( l2 ) );
+        props.setProperty( "hibernate.cache.use_second_level_cache", String.valueOf( l2 ) );
+        log.info( "Hibernate second-level and query caches are " + ( l2 ? "ENABLED" : "DISABLED" )
+                + " for this process." );
         // defaults for fetching/inserting
         props.setProperty( "hibernate.max_fetch_depth", "3" );
         props.setProperty( "hibernate.default_batch_fetch_size", defaultBatchFetchSize );
@@ -357,6 +361,32 @@ public class HibernateConfig {
         retryable.put( org.hibernate.StaleObjectStateException.class, true );
         retryable.put( org.hibernate.StaleStateException.class, true );
         return new SimpleRetryPolicy( maxRetries, retryable, true );
+    }
+
+    /**
+     * Whether this process gets a second-level and query cache. The CLI does not.
+     *
+     * <h2>Why the CLI is different</h2>
+     *
+     * <p>A second-level cache earns its heap by being asked the same question repeatedly over a long life.
+     * That is the webapp. A CLI command visits each experiment once and exits, so the entity cache has almost
+     * no reuse to find and the query cache has less — every write invalidates timestamps that nothing goes on
+     * to read. What it does have is the cost, and these regions are sized in ENTRIES, which is a heap budget
+     * only if you know what an entry weighs.</p>
+     *
+     * <p>That was not theoretical. {@code SampleCoexpressionMatrix} sat in a 1,000-entry region holding an
+     * n-squared LONGBLOB that reaches 110 MB a row on production, and nothing about a batch process made the
+     * caching worth the exposure. Paul, 2026-09-17: "no cache for the cli".</p>
+     *
+     * <p>⚠️ There is a real cost and it is the small reference entities — {@code Taxon},
+     * {@code AuditEventType}, {@code Chromosome} — which a corpus sweep hits constantly for a few megabytes.
+     * If a sweep measurably slows, that is where to look, and the answer is to cache those few rather than to
+     * switch the whole thing back on. {@code hibernate.generate_statistics} is already true, so the hit rates
+     * can be read rather than guessed at.</p>
+     */
+    private static boolean secondLevelCacheEnabled( org.springframework.core.env.Environment environment ) {
+        return !environment.acceptsProfiles(
+                org.springframework.core.env.Profiles.of( ubic.gemma.core.context.EnvironmentProfiles.CLI ) );
     }
 
     /**

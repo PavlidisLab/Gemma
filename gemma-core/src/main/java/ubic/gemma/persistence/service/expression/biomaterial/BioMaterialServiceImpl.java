@@ -266,7 +266,7 @@ public class BioMaterialServiceImpl extends AbstractVoEnabledService<BioMaterial
             if ( match == null ) {
                 toAdd.add( copyForAdd( d ) );
             } else if ( d.getSupportingEvidence() != null
-                    && !Objects.equals( d.getSupportingEvidence(), match.getSupportingEvidence() ) ) {
+                    && !CharacteristicUtils.sameSupportingEvidence( match.getSupportingEvidence(), d.getSupportingEvidence() ) ) {
                 match.setSupportingEvidence( d.getSupportingEvidence() );
                 evidenceUpdates++;
             }

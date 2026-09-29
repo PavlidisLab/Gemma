@@ -822,11 +822,19 @@ public class GeoConverterImpl implements GeoConverter {
      * often do not reach for it. Reading only the declared field files every such series under {@code OTHER},
      * which is the same bucket as spatial and APEX-seq and says nothing about what was measured.
      * <p>
-     * Deliberately narrow. Only unambiguous ribosome-profiling naming counts, and only when the sample is
-     * already transcriptomic-and-{@code OTHER} — a series that DECLARES its strategy is believed. Related
-     * assays that are not ribosome profiling are left alone even when they appear alongside it: TCP-seq,
-     * polysome and disome profiling are their own methods, and calling them {@code RIBO_SEQ} would trade one
-     * wrong label for another. Screening the remainder is a job for the curation agents, not for a regex here.
+     * {@code RIBO_SEQ} means ALL ribosome-associated profiling here — footprinting, TRAP / RiboTag and
+     * polysome purification alike — not footprinting alone. Paul's ruling, 2026-09-16, WIDENING what an
+     * earlier version of this comment said. Three things decided it: the column is already majority Gemma
+     * vocabulary ({@code MICROARRAY_*} is in no SRA CV), the broad sense is already in the corpus and GEO's
+     * own declarations put it there (40 TRAP/IP and 32 polysome samples carried {@code RIBO_SEQ} before this
+     * regex could match any of them), and widening is monotone — every row already labelled stays true, so
+     * nothing is re-labelled and nothing has to be revisited.
+     * <p>
+     * Still gated on transcriptomic-and-{@code OTHER}: a series that DECLARES its strategy is believed. That
+     * leaves two shapes this cannot reach, both real — GSE arms that declare {@code RNA_SEQ} outright
+     * (eid 57963 has both shapes in one curator-defined arm) and samples with no declared strategy at all
+     * (eid 50185, titled {@code RiboTag, CA1, Control, IP, …}). Reaching those means overriding or
+     * substituting for GEO's declaration, which is a different decision and not this one.
      * <p>
      * ⚠️ This CHANGES THE LABEL, NOT WHAT IS IMPORTED. {@code RIBO_SEQ} is admitted by the eligibility gate
      * alongside {@code RNA_SEQ} / {@code SSRNA_SEQ} / {@code OTHER}, so the samples that used to come in as
@@ -834,7 +842,14 @@ public class GeoConverterImpl implements GeoConverter {
      * profiling, which is a different decision and not this one.
      */
     private static final Pattern RIBO_SEQ_NAMING = Pattern.compile(
-            "ribo[\\s._-]?seq|ribosome[\\s._-]?profil|ribosome[\\s._-]?footprint|ribosome[\\s._-]?protected[\\s._-]?fragment|\\bRPF\\b",
+            "ribo[\\s._-]?seq|ribosome[\\s._-]?profil|ribosome[\\s._-]?footprint"
+                    + "|ribosome[\\s._-]?protected[\\s._-]?fragment|\\bRPF\\b"
+                    // ribosome-associated, per the 2026-09-16 ruling: affinity pulldown and fraction purification
+                    + "|\\btrap\\b|ribo[\\s._-]?tag|\\brpl10a\\b|pulldown|pull[\\s._-]down"
+                    // (?!y) keeps the karyotype words out: polysomy / monosomy / uniparental disomy are
+                    // chromosome counts, not ribosome fractions. The lookahead still admits polysome,
+                    // polysomal, polysomes.
+                    + "|polysom(?!y)|monosom(?!y)|disom(?!y)|tcp[\\s._-]?seq|immunoprecipit",
             Pattern.CASE_INSENSITIVE );
 
     /**
@@ -855,6 +870,41 @@ public class GeoConverterImpl implements GeoConverter {
             return GeoLibraryStrategy.RIBO_SEQ;
         }
         return declared;
+    }
+
+    /**
+     * What {@code BIO_ASSAY.LIBRARY_STRATEGY} records for a sample.
+     * <ul>
+     *     <li>A sequencing sample: its {@linkplain #effectiveLibStrategy effective strategy}, as the constant name
+     *         ({@code RNA_SEQ}) rather than GEO's spelling ({@code RNA-Seq}). Paul's ruling, 2026-09-13: production
+     *         rows were already in that form, because the 2026-09-05 backfill copied them from
+     *         {@code SOURCE_METADATA}, which {@code GeoSourceMetadataBuilder} writes with {@code toString()}.</li>
+     *     <li>A microarray sample, which GEO types {@link GeoSampleType#RNA} (the same test the eligibility gate
+     *         uses): how many channels it was hybridized in, {@link BioAssay#LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR} or
+     *         {@link BioAssay#LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR} (Paul, 2026-09-13). The sample's channel count,
+     *         not the platform's technology type — Paul, 2026-09-13: "dualmode is the technology, not the
+     *         application. library strategy is the application."</li>
+     * </ul>
+     *
+     * @return null for a sample that is neither, or a microarray sample reporting other than one or two channels
+     */
+    @Nullable
+    static String libraryStrategy( GeoSample sample ) {
+        GeoLibraryStrategy effective = effectiveLibStrategy( sample );
+        if ( effective != null ) {
+            return effective.name();
+        }
+        if ( !Objects.equals( sample.getType(), GeoSampleType.RNA ) ) {
+            return null;
+        }
+        switch ( sample.getChannels().size() ) {
+            case 1:
+                return BioAssay.LIBRARY_STRATEGY_MICROARRAY_ONE_COLOR;
+            case 2:
+                return BioAssay.LIBRARY_STRATEGY_MICROARRAY_TWO_COLOR;
+            default:
+                return null;
+        }
     }
 
     @Nullable
@@ -1900,11 +1950,7 @@ public class GeoConverterImpl implements GeoConverter {
         }
         bioAssay.setExtractedMolecule( molecule );
         bioAssay.setLibrarySelection( StringUtils.trimToNull( sample.getLibrarySelection() ) );
-        GeoLibraryStrategy effectiveStrategy = GeoConverterImpl.effectiveLibStrategy( sample );
-        // getGeoString(), not toString(): the column stores GEO's spelling. toString() yields the Java
-        // constant name -- RNA_SEQ, and MDB_SEQ for a value GEO writes MBD-Seq -- which is not what
-        // BioAssay.libraryStrategy's javadoc or BioAssayValueObject's @Schema tell a client to expect.
-        bioAssay.setLibraryStrategy( effectiveStrategy != null ? effectiveStrategy.getGeoString() : null );
+        bioAssay.setLibraryStrategy( GeoConverterImpl.libraryStrategy( sample ) );
 
         // Taxon lastTaxon = null;
 

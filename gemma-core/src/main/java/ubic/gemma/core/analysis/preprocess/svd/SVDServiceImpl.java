@@ -19,8 +19,10 @@ import cern.colt.list.IntArrayList;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.math.CorrelationStats;
@@ -79,6 +81,15 @@ public class SVDServiceImpl implements SVDService {
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
+
+    /**
+     * This bean, through its proxy. {@link #svd} declares {@link Propagation#NEVER}, so a self-invocation of
+     * {@link #getSvdFactorAnalysis} would bypass the proxy and run with no transaction at all rather than the
+     * {@code readOnly} one it declares.
+     */
+    @Lazy
+    @Autowired
+    private SVDService self;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -140,7 +151,17 @@ public class SVDServiceImpl implements SVDService {
     }
 
     @Override
-    @Transactional
+    /**
+     * 🛑 {@link Propagation#NEVER}: the decomposition between the read and the write is the expensive part and
+     * needs no connection, and {@code hibernate.connection.handling_mode = DELAYED_ACQUISITION_AND_HOLD} means
+     * a transaction around it pins one for the duration without issuing a statement. See
+     * {@code TransactionSpanningComputeRuleTest}.
+     * <p>
+     * The write is {@code replaceForExperiment}, which removes and creates in one transaction. Doing those as
+     * two calls from here would commit the removal and then be able to fail, leaving the experiment with no
+     * PCA.
+     */
+    @Transactional(propagation = Propagation.NEVER)
     @Audited(value = PCAAnalysisEvent.class, message = "SVD computation")
     public SVDResult svd( ExpressionExperiment ee ) throws SVDException {
         assert ee != null;
@@ -166,9 +187,11 @@ public class SVDServiceImpl implements SVDService {
 
         BioAssayDimension b = mat.getBioAssayDimension();
 
-        PrincipalComponentAnalysis pca = this.updatePca( ee, svd, v, b );
+        PrincipalComponentAnalysis pca = principalComponentAnalysisService
+                .replaceForExperiment( ee, svd.getU(), svd.getEigenvalues(), v, b,
+                        SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST, SVDServiceImpl.MAX_LOADINGS_TO_PERSIST );
 
-        return this.getSvdFactorAnalysis( pca );
+        return self.getSvdFactorAnalysis( pca );
     }
 
     @Override
@@ -584,15 +607,4 @@ public class SVDServiceImpl implements SVDService {
 
     }
 
-    private PrincipalComponentAnalysis updatePca( ExpressionExperiment ee, ExpressionDataSVD svd,
-            DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension b ) {
-        principalComponentAnalysisService.removeForExperiment( ee );
-        PrincipalComponentAnalysis pca = principalComponentAnalysisService
-                .create( ee, svd.getU(), svd.getEigenvalues(), v, b, SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST,
-                        SVDServiceImpl.MAX_LOADINGS_TO_PERSIST );
-
-        expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
-        // Audit event written by @Audited on svd() via AuditedAspect.
-        return pca;
-    }
 }
