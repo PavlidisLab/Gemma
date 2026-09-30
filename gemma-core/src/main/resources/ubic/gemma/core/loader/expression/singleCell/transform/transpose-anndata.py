@@ -50,10 +50,39 @@ memory_limit(.9)
 
 try:
     import anndata
-    from scipy.sparse import issparse, isspmatrix_csr
+    import numpy as np
+    from scipy.sparse import csr_matrix, issparse, isspmatrix_csc, isspmatrix_csr
 except ImportError as e:
     print('You need anndata and scipy to run this script. Install it with "pip install anndata".')
     raise e
+
+try:
+    from scipy.sparse._sparsetools import csc_tocsr
+    from scipy.sparse._sputils import upcast
+except ImportError:
+    csc_tocsr = None
+
+
+def to_csr(m):
+    """
+    Convert a sparse matrix to CSR, without the throwaway copies scipy's CSC.tocsr() makes of the index arrays.
+
+    scipy (1.13) passes self.indptr.astype(idx_dtype) and self.indices.astype(idx_dtype) to csc_tocsr, and astype
+    copies even when the dtype is unchanged; for MSSM_Cohort (1.56e10 non-zeros, int64 indices) that is an extra
+    116 GiB on top of the input and the output. This is the same call with copy=False, so the result is identical.
+    """
+    if csc_tocsr is None or not isspmatrix_csc(m):
+        return m.tocsr()
+    M, N = m.shape
+    idx_dtype = m._get_index_dtype((m.indptr, m.indices), maxval=max(m.nnz, N))
+    indptr = np.empty(M + 1, dtype=idx_dtype)
+    indices = np.empty(m.nnz, dtype=idx_dtype)
+    data = np.empty(m.nnz, dtype=upcast(m.dtype))
+    csc_tocsr(M, N, m.indptr.astype(idx_dtype, copy=False), m.indices.astype(idx_dtype, copy=False), m.data,
+              indptr, indices, data)
+    A = csr_matrix((data, indices, indptr), shape=m.shape, copy=False)
+    A.has_sorted_indices = True
+    return A
 
 try:
     input_file, output_file = sys.argv[1:]
@@ -67,10 +96,10 @@ df = anndata.read_h5ad(input_file).transpose()
 # either 1) stored in CSR or 2) being stored in row-major format.
 if issparse(df.X) and not isspmatrix_csr(df.X):
     print("Rewriting /X to CSR...")
-    df.X = df.X.tocsr()
+    df.X = to_csr(df.X)
 for layer in df.layers:
     if issparse(df.layers[layer]) and not isspmatrix_csr(df.layers[layer]):
         print("Rewriting /layers/" + layer + " to CSR...")
-        df.layers[layer] = df.layers[layer].tocsr()
+        df.layers[layer] = to_csr(df.layers[layer])
 print("Writing result to " + output_file + "...")
 df.write_h5ad(output_file)
