@@ -192,6 +192,14 @@ public class AnnotationsWebService {
     private ubic.gemma.persistence.service.association.Gene2GOAssociationService gene2GOAssociationService;
     @Autowired(required = false)
     private ubic.gemma.core.ontology.providers.GeneOntologyService geneOntologyService;
+    /**
+     * NCBI fallback for a gene URI {@link #geneService} does not carry — same collaborator the
+     * curation gate ({@code OntologyTermValidatorImpl}) resolves gene URIs through. Optional so a
+     * test context that never exercises the gene branch of {@code /annotations/term} need not wire
+     * it; a missing bean there degrades to Gemma's own gene table being the only authority.
+     */
+    @Autowired(required = false)
+    private ubic.gemma.core.ontology.ncbi.NcbiGeneResolver ncbiGeneResolver;
     @Autowired(required = false)
     private org.springframework.cache.CacheManager cacheManager;
     private volatile org.springframework.cache.Cache searchResponseCache;
@@ -547,7 +555,8 @@ public class AnnotationsWebService {
     @Path("/term")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Retrieve an ontology term by its URI",
-            description = "For a term the ontology has deprecated (`obsolete: true`), the response also carries where to go next: `termReplacedBy` (the successor's full IRI, `IAO:0100001`) with `termReplacedByLabel`, the weaker `consider` candidates, and `obsoletedInVersion`. These are absent/empty for live terms.",
+            description = "For a term the ontology has deprecated (`obsolete: true`), the response also carries where to go next: `termReplacedBy` (the successor's full IRI, `IAO:0100001`) with `termReplacedByLabel`, the weaker `consider` candidates, and `obsoletedInVersion`. These are absent/empty for live terms. "
+                    + "A gene value URI (`http://purl.org/commons/record/ncbi_gene/<id>`) is answered too, grounded the same way the curation write-side gate does: Gemma's own gene table first, NCBI itself for ids Gemma does not carry. A withdrawn NCBI record still resolves as `obsolete: true`; `termReplacedBy`/`consider`/`ontologyVersion`/`parents`/`synonyms` are not applicable to a gene and are always absent or empty.",
             responses = {
             @ApiResponse(responseCode = "200", description = "The term. For one the ontology has deprecated, `termReplacedBy` and `consider` say where to go instead; both are absent or empty for a live term.", useReturnTypeSchema = true, content = @Content()),
             @ApiResponse(responseCode = "404", description = "No term matched the given URI.", content = @Content(schema = @Schema(implementation = ResponseErrorObject.class))),
@@ -567,6 +576,9 @@ public class AnnotationsWebService {
         }
         try {
             StopWatch timer = StopWatch.createStarted();
+            if ( termUri.startsWith( Gene.NCBI_URI_PREFIX ) ) {
+                return respond( geneTermValueObject( termUri ) );
+            }
             // get term returns the first match
             OntologyTerm term = ontologyService.getTerm( termUri, Math.max( 30000 - timer.getTime(), 0 ), TimeUnit.MILLISECONDS );
             if ( term == null ) {
@@ -633,7 +645,71 @@ public class AnnotationsWebService {
             return respond( new OntologyTermValueObject( term.getUri(), term.getLabel(), definition, term.isObsolete(), usageCount, parentVos, synonyms, alternativeIds, dbXrefs, citationXrefCount, ontologyVersion, sourceMetadataOf( term ), termReplacedBy, termReplacedByLabel, consider, obsoletedInVersion ) );
         } catch ( TimeoutException e ) {
             throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
+        } catch ( ubic.gemma.core.ontology.ncbi.NcbiUnavailableException e ) {
+            throw new ServiceUnavailableException( DateUtils.addSeconds( new Date(), 30 ), e );
         }
+    }
+
+    /**
+     * Ground an NCBI gene URI the same way the curation write-side gate does: Gemma's own gene table
+     * first, then NCBI itself for the ids Gemma does not carry. No ontology and no OLS is involved —
+     * the authority for a gene record is the gene record. Mirrors
+     * {@code OntologyTermValidatorImpl#validateGeneUri}, the write-side counterpart, reusing the same
+     * two collaborators ({@link #geneService}, {@link #ncbiGeneResolver}) rather than a third resolver
+     * of its own — until this existed, a gene URI Gemma's curation preflight accepted 404'd here,
+     * because this route never touched either one (measured on gemma2, 2026-09-30).
+     * <p>
+     * A withdrawn NCBI record still resolves — {@code 200}, {@code obsolete: true}, NCBI's old symbol
+     * as the label — the same "real but retired" shape a deprecated ontology term gets from this
+     * endpoint. An id nobody has, Gemma or NCBI, is the ordinary 404. NCBI unreachable propagates
+     * {@link ubic.gemma.core.ontology.ncbi.NcbiUnavailableException} for the caller to map to 503 like
+     * an ontology-lookup timeout: unlike the write-side gate there is no fail-open here, since a read
+     * has nothing to optimistically accept — an outage can only be reported as "unknown", never as
+     * "valid".
+     */
+    private OntologyTermValueObject geneTermValueObject( String uri ) throws ubic.gemma.core.ontology.ncbi.NcbiUnavailableException {
+        String id = uri.substring( Gene.NCBI_URI_PREFIX.length() );
+        int ncbiId;
+        try {
+            ncbiId = Integer.parseInt( id );
+        } catch ( NumberFormatException e ) {
+            throw new NotFoundException( "No ontology term with URI " + uri );
+        }
+        Gene gene = geneService.findByNCBIId( ncbiId );
+        if ( gene != null ) {
+            String official = gene.getOfficialSymbol();
+            String taxon = gene.getTaxon() != null ? gene.getTaxon().getCommonName() : null;
+            String label = StringUtils.isNotBlank( official )
+                    ? official
+                            + ( StringUtils.isNotBlank( taxon ) ? " [" + taxon + "]" : "" )
+                            + ( StringUtils.isNotBlank( gene.getOfficialName() ) ? " " + gene.getOfficialName() : "" )
+                    : uri;
+            return geneTermValueObject( uri, label, gene.getOfficialName(), false );
+        }
+        if ( ncbiGeneResolver == null ) {
+            throw new NotFoundException( "No ontology term with URI " + uri );
+        }
+        ubic.gemma.core.ontology.ncbi.NcbiGeneRecord record = ncbiGeneResolver.resolve( ncbiId );
+        if ( !record.isFound() ) {
+            throw new NotFoundException( "No ontology term with URI " + uri );
+        }
+        if ( !record.isLive() ) {
+            // Withdrawn: still a real, identifiable record, so it resolves like a deprecated ontology
+            // term rather than a 404. NCBI's own old symbol is reported, not a composed display form.
+            return geneTermValueObject( uri, record.getSymbol(), record.getName(), true );
+        }
+        String label = record.getSymbol()
+                + ( StringUtils.isNotBlank( record.getOrganism() ) ? " [" + record.getOrganism() + "]" : "" )
+                + ( StringUtils.isNotBlank( record.getName() ) ? " " + record.getName() : "" );
+        return geneTermValueObject( uri, label, record.getName(), false );
+    }
+
+    private OntologyTermValueObject geneTermValueObject( String uri, String label, @Nullable String definition, boolean obsolete ) {
+        Integer usageCount = getDistinctEeCountsByUri( Collections.singleton( uri ) ).getOrDefault( uri, 0 );
+        return new OntologyTermValueObject( uri, label, definition, obsolete, usageCount,
+                Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+                Collections.emptyList(), 0, null, sourceMetadataOf( null ), null, null,
+                Collections.emptyList(), null );
     }
 
     /**

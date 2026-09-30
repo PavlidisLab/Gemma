@@ -191,6 +191,7 @@ public class AdminWebService {
     private final BlacklistedEntityService blacklistedEntityService;
     private final ExternalDatabaseReadService externalDatabaseReadService;
     private final GeoScrapeService geoScrapeService;
+    private final ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService;
 
     @Value("${gemma.curationAgent.healthUrl:}")
     private String curationAgentHealthUrl;
@@ -279,7 +280,8 @@ public class AdminWebService {
             GeoScrapeService geoScrapeService,
             IndexerService indexerService,
             PlatformArgService platformArgService,
-            ArrayDesignReportService arrayDesignReportService ) {
+            ArrayDesignReportService arrayDesignReportService,
+            ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService ) {
         this.cacheManager = cacheManager;
         this.platformArgService = platformArgService;
         this.arrayDesignReportService = arrayDesignReportService;
@@ -297,6 +299,7 @@ public class AdminWebService {
         this.externalDatabaseReadService = externalDatabaseReadService;
         this.geoScrapeService = geoScrapeService;
         this.indexerService = indexerService;
+        this.curationLockService = curationLockService;
     }
 
     /* ===== Caches ===== */
@@ -1037,6 +1040,85 @@ public class AdminWebService {
             return ( (UserDetails) principal ).getUsername();
         }
         return principal.toString();
+    }
+
+    /* ===== Curation locks ===== */
+
+    /**
+     * Every advisory curation lock currently held, corpus-wide. Exists for an admin release panel: the
+     * per-dataset lock surface (see {@code DatasetsWebService}'s {@code /curation/lock*} routes) answers
+     * "is this one dataset locked", scoped to what the caller can already read, but there was no way to
+     * ask "what is locked right now" without already holding the list of dataset ids to check — which is
+     * exactly the thing an admin deciding whether to force-release something does not have.
+     * <p>
+     * Unlike the per-dataset routes, this bypasses per-dataset ACL by construction — it names datasets
+     * the caller may not otherwise be able to read — so it is {@code GROUP_ADMIN}-gated like the rest of
+     * this resource, not {@code isAuthenticated()} like the scoped ones.
+     * <p>
+     * {@code CURATION_LOCK} holds one row per currently-locked dataset, not one per dataset in the
+     * corpus, so the answer is bounded by how much curation/agent activity is in flight right now.
+     */
+    @GET
+    @Path("/curation-locks")
+    @Produces(MediaType.APPLICATION_JSON)
+    @PreAuthorize("hasAuthority('GROUP_ADMIN')")
+    @Operation(summary = "List every currently-held curation lock, corpus-wide",
+            description = "Unlike the per-dataset `GET /datasets/{dataset}/curation/lock` and its bulk-by-id siblings, this names every locked dataset without the caller supplying a list of ids first, which is what an admin release panel needs. Admin-only, since it is not scoped to datasets the caller can already read. A lapsed claim is never returned — nothing sweeps expired rows, so the underlying table can hold more than this lists.",
+            security = {
+                    @SecurityRequirement(name = "basicAuth", scopes = { "GROUP_ADMIN" }),
+                    @SecurityRequirement(name = "cookieAuth", scopes = { "GROUP_ADMIN" })
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Every unexpired curation lock, newest first.", useReturnTypeSchema = true, content = @Content())
+            })
+    public ResponseDataObject<List<CurationLockValueObject>> getAllCurationLocks() {
+        List<ubic.gemma.model.common.auditAndSecurity.curation.CurationLock> locks = curationLockService.allActive();
+        List<CurationLockValueObject> rows = new ArrayList<>( locks.size() );
+        for ( ubic.gemma.model.common.auditAndSecurity.curation.CurationLock lock : locks ) {
+            CurationLockValueObject vo = new CurationLockValueObject();
+            vo.datasetId = lock.getInvestigationId();
+            ubic.gemma.model.analysis.Investigation investigation = lock.getInvestigation();
+            if ( investigation instanceof ExpressionExperiment ) {
+                vo.datasetShortName = ( (ExpressionExperiment) investigation ).getShortName();
+            }
+            vo.lockedBy = lock.getLockedBy();
+            vo.lockedAt = lock.getLockedAt();
+            vo.expiresAt = lock.getExpiresAt();
+            vo.stolenFrom = lock.getStolenFrom();
+            vo.stolenAt = lock.getStolenAt();
+            vo.runId = lock.getRunId();
+            vo.agentName = lock.getAgentName();
+            rows.add( vo );
+        }
+        // newest claim first, so a curator's recent lock doesn't sink below a long-running batch's
+        rows.sort( Comparator.comparing( ( CurationLockValueObject v ) -> v.lockedAt, Comparator.reverseOrder() ) );
+        return respond( rows );
+    }
+
+    public static class CurationLockValueObject {
+        @Schema(description = "The locked dataset's id.")
+        public Long datasetId;
+        @Nullable
+        @Schema(description = "The locked dataset's short name (accession). Null when the locked investigation is not (or is no longer) an ExpressionExperiment.")
+        public String datasetShortName;
+        @Schema(description = "Who holds the lock. Passed in by the caller rather than read from the security context, since curation normally reaches Gemma through an agent.")
+        public String lockedBy;
+        @Schema(description = "When the current holder took (or last refreshed) the lock.")
+        public Date lockedAt;
+        @Schema(description = "When the lock lapses if not refreshed. Nothing sweeps an expired row, so this endpoint filters them rather than the table holding only live ones.")
+        public Date expiresAt;
+        @Nullable
+        @Schema(description = "The previous holder, when the current lock was taken by stealing rather than acquired fresh. Null otherwise.")
+        public String stolenFrom;
+        @Nullable
+        @Schema(description = "When the steal happened. Null unless stolenFrom is set.")
+        public Date stolenAt;
+        @Nullable
+        @Schema(description = "What is holding it, when that is a job rather than a person; null for a person. lockedBy alone cannot say whether a blocked curator should wait or steal.")
+        public String runId;
+        @Nullable
+        @Schema(description = "The agent holding the lock, paired with runId; null for a person.")
+        public String agentName;
     }
 
     /* ===== Loaded ontologies ===== */

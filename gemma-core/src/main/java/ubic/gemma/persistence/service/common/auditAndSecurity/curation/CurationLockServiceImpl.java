@@ -20,6 +20,7 @@ import org.springframework.util.Assert;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationLock;
 import ubic.gemma.model.analysis.Investigation;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.List;
@@ -196,6 +197,27 @@ public class CurationLockServiceImpl implements CurationLockService {
             // method's contract identical to the single-dataset current(): present means held right now.
             if ( !l.isExpired( now ) ) {
                 out.put( l.getInvestigation().getId(), l );
+            }
+        }
+        return out;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CurationLock> allActive() {
+        // No id list to narrow by -- see current(Collection) for that sibling. The table is at most as
+        // large as how much curation/agent activity is in flight right now, so an unfiltered select is
+        // the same cost shape as the existing bulk-by-id query.
+        List<CurationLock> locks = sessionFactory.getCurrentSession()
+                .createQuery( "select l from CurationLock l", CurationLock.class )
+                .list();
+        Date now = new Date();
+        List<CurationLock> out = new ArrayList<>( locks.size() );
+        for ( CurationLock l : locks ) {
+            // Expiry is never swept, so the table still holds lapsed rows -- same contract as every
+            // other read here: present means held right now.
+            if ( !l.isExpired( now ) ) {
+                out.add( l );
             }
         }
         return out;
