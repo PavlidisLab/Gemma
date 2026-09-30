@@ -31,6 +31,7 @@ import java.io.Console;
 import java.nio.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
@@ -86,30 +87,36 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 .build();
         log.info( "Loading single-cell data vectors for aggregation for " + qt + "..." );
         long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
-        // Vectors are iterated TWICE downstream: once in computeLibrarySize (line ~189, log2cpm branch only),
-        // and once in the main aggregation loop. The aggregation algorithm needs a fully materialized
-        // collection for the two-pass access pattern, so the streaming fetch-size only controls the JDBC
-        // cursor / batch size while still ending in collect-to-list. Size-guard against catastrophic OOM:
-        // anything past the SC matrix ceiling is hopeless regardless of which branch we pick.
-        if ( numVecs > SingleCellExpressionExperimentServiceImpl.SC_MATRIX_VECTOR_COUNT_LIMIT ) {
-            throw new IllegalStateException( String.format(
-                    "Refusing to aggregate single-cell vectors for %s in %s: %d vectors exceeds the %d ceiling "
-                            + "and the two-pass aggregation algorithm requires fully materialized vectors.",
-                    qt, ee, numVecs, SingleCellExpressionExperimentServiceImpl.SC_MATRIX_VECTOR_COUNT_LIMIT ) );
-        }
+        // With a positive fetch size, the vectors are streamed from the database instead of being materialized:
+        // once for computeLibrarySize (log2cpm only) and once for the aggregation loop. Only the aggregated vectors
+        // (one double per pseudo-bulk assay) are held in memory, so heap use no longer scales with the number of
+        // cells. Both streams run in this method's transaction, which keeps the session open for their lifetime.
+        final boolean useStreaming = config.getFetchSize() > 0;
         Collection<SingleCellExpressionDataVector> vectors;
-        if ( config.getFetchSize() > 0 ) {
-            vectors = singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, config.getFetchSize(), config.isUseCursorFetchIfSupported(), false, vectorInitConfig )
-                    .peek( createStreamMonitor( ee, qt, SingleCellExpressionExperimentAggregateServiceImpl.class.getName(), 100, numVecs, config.getConsole() ) )
-                    .collect( Collectors.toList() );
+        SingleCellDimension scd;
+        if ( useStreaming ) {
+            // the streamed vectors use a dimension without cell IDs, so that is what we retrieve here too
+            scd = numVecs > 0 ? singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt ) : null;
+            if ( scd == null ) {
+                throw new IllegalStateException( ee + " does not have single-cell vectors for " + qt + "." );
+            }
+            vectors = null;
         } else {
+            // the in-memory path holds every vector's data and indices at once
+            if ( numVecs > SingleCellExpressionExperimentServiceImpl.SC_MATRIX_VECTOR_COUNT_LIMIT ) {
+                throw new IllegalStateException( String.format(
+                        "Refusing to aggregate single-cell vectors for %s in %s in memory: %d vectors exceeds the %d ceiling. "
+                                + "Use a positive fetch size to stream the vectors instead.",
+                        qt, ee, numVecs, SingleCellExpressionExperimentServiceImpl.SC_MATRIX_VECTOR_COUNT_LIMIT ) );
+            }
             vectors = singleCellExpressionExperimentService.getSingleCellDataVectors( ee, qt, vectorInitConfig );
-        }
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( ee + " does not have single-cell vectors for " + qt + "." );
+            if ( vectors.isEmpty() ) {
+                throw new IllegalStateException( ee + " does not have single-cell vectors for " + qt + "." );
+            }
+            scd = vectors.iterator().next().getSingleCellDimension();
+            numVecs = vectors.size();
         }
 
-        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
         // check the QT and determine how to aggregate its data
         // TODO: support other types and representations for aggregation
         Assert.isTrue( qt.getGeneralType().equals( GeneralType.QUANTITATIVE ), "Only quantitative data can be aggregated." );
@@ -198,11 +205,15 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             // TODO: compute normalization factors from data
             normalizationFactor = new double[cellBAs.size()];
             Arrays.fill( normalizationFactor, 1.0 );
-            librarySize = computeLibrarySize( vectors, newBad, cellLevelCharacteristics,
-                    // when including masked cells, do not allow the calculation to consider the mask
-                    config.isIncludeMaskedCellsInLibrarySize() ? null : mask,
-                    sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices,
-                    method, config.isAdjustLibrarySizes(), sourceSampleStarts, sourceSampleEnds, config.getConsole() );
+            try ( Stream<SingleCellExpressionDataVector> libStream = useStreaming
+                    ? streamVectors( ee, qt, vectorInitConfig, config )
+                    : vectors.stream() ) {
+                librarySize = computeLibrarySize( libStream::iterator, numVecs, newBad, cellLevelCharacteristics,
+                        // when including masked cells, do not allow the calculation to consider the mask
+                        config.isIncludeMaskedCellsInLibrarySize() ? null : mask,
+                        sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices,
+                        method, config.isAdjustLibrarySizes(), sourceSampleStarts, sourceSampleEnds, config.getConsole() );
+            }
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
                     log.warn( "Library size for " + cellBAs.get( i ) + " is zero, this will cause NaN values in the log2cpm transformation." );
@@ -233,26 +244,31 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         }
 
         StopWatch timer = StopWatch.createStarted();
-        Collection<RawExpressionDataVector> rawVectors = new ArrayList<>( vectors.size() );
-        for ( SingleCellExpressionDataVector v : vectors ) {
-            RawExpressionDataVector rawVector = new RawExpressionDataVector();
-            rawVector.setExpressionExperiment( ee );
-            rawVector.setQuantitationType( newQt );
-            rawVector.setBioAssayDimension( newBad );
-            rawVector.setDesignElement( v.getDesignElement() );
-            int[] numberOfCells = new int[cellBAs.size()];
-            rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap,
-                    sourceSampleToIndex, cellTypeIndices, method, expressedCells, designElementsByBioAssay,
-                    cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, sourceSampleStarts, sourceSampleEnds, numberOfCells ) );
-            rawVector.setNumberOfCells( numberOfCells );
-            rawVectors.add( rawVector );
-            if ( rawVectors.size() % 100 == 0 ) {
-                if ( config.getConsole() != null ) {
-                    config.getConsole().printf( "Aggregating single-cell vectors [%d/%d] @ %.2f vectors/sec.\r",
-                            rawVectors.size(), vectors.size(), 1000.0 * rawVectors.size() / timer.getTime() );
-                } else {
-                    log.info( String.format( "Aggregating single-cell vectors [%d/%d] @ %.2f vectors/sec.",
-                            rawVectors.size(), vectors.size(), 1000.0 * rawVectors.size() / timer.getTime() ) );
+        Collection<RawExpressionDataVector> rawVectors = new ArrayList<>( ( int ) numVecs );
+        try ( Stream<SingleCellExpressionDataVector> aggStream = useStreaming
+                ? streamVectors( ee, qt, vectorInitConfig, config )
+                .peek( createStreamMonitor( ee, qt, SingleCellExpressionExperimentAggregateServiceImpl.class.getName(), 100, numVecs, config.getConsole() ) )
+                : vectors.stream() ) {
+            for ( SingleCellExpressionDataVector v : ( Iterable<SingleCellExpressionDataVector> ) aggStream::iterator ) {
+                RawExpressionDataVector rawVector = new RawExpressionDataVector();
+                rawVector.setExpressionExperiment( ee );
+                rawVector.setQuantitationType( newQt );
+                rawVector.setBioAssayDimension( newBad );
+                rawVector.setDesignElement( v.getDesignElement() );
+                int[] numberOfCells = new int[cellBAs.size()];
+                rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap,
+                        sourceSampleToIndex, cellTypeIndices, method, expressedCells, designElementsByBioAssay,
+                        cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, sourceSampleStarts, sourceSampleEnds, numberOfCells ) );
+                rawVector.setNumberOfCells( numberOfCells );
+                rawVectors.add( rawVector );
+                if ( rawVectors.size() % 100 == 0 ) {
+                    if ( config.getConsole() != null ) {
+                        config.getConsole().printf( "Aggregating single-cell vectors [%d/%d] @ %.2f vectors/sec.\r",
+                                rawVectors.size(), numVecs, 1000.0 * rawVectors.size() / timer.getTime() );
+                    } else {
+                        log.info( String.format( "Aggregating single-cell vectors [%d/%d] @ %.2f vectors/sec.",
+                                rawVectors.size(), numVecs, 1000.0 * rawVectors.size() / timer.getTime() ) );
+                    }
                 }
             }
         }
@@ -358,6 +374,13 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         return newQt;
     }
 
+    private Stream<SingleCellExpressionDataVector> streamVectors( ExpressionExperiment ee, QuantitationType qt,
+            SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig vectorInitConfig,
+            SingleCellAggregationConfig config ) {
+        return singleCellExpressionExperimentService.streamSingleCellDataVectors( ee, qt, config.getFetchSize(),
+                config.isUseCursorFetchIfSupported(), false, vectorInitConfig );
+    }
+
     private void updateSequenceReadCounts( BioAssayDimension bad, double[] librarySize ) {
         for ( int i = 0; i < bad.getBioAssays().size(); i++ ) {
             BioAssay ba = bad.getBioAssays().get( i );
@@ -406,8 +429,11 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
 
     /**
      * Compute the library size for each sample.
+     *
+     * @param vectors    vectors to iterate, consumed exactly once so that a database stream can be passed
+     * @param numVectors expected number of vectors, only used to report progress
      */
-    private double[] computeLibrarySize( Collection<SingleCellExpressionDataVector> vectors,
+    private double[] computeLibrarySize( Iterable<SingleCellExpressionDataVector> vectors, long numVectors,
             BioAssayDimension bad, CellLevelCharacteristics cta,
             @Nullable boolean[] mask,
             Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex,
@@ -480,16 +506,16 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             w++;
             if ( w % 100 == 0 ) {
                 if ( console != null ) {
-                    console.printf( "Computing library size [%d/%d] @ %.2f vector/sec.\r", w, vectors.size(),
+                    console.printf( "Computing library size [%d/%d] @ %.2f vector/sec.\r", w, numVectors,
                             1000.0 * w / timer.getTime() );
                 } else {
-                    log.info( String.format( "Computing library size [%d/%d] @ %.2f vector/sec.", w, vectors.size(),
+                    log.info( String.format( "Computing library size [%d/%d] @ %.2f vector/sec.", w, numVectors,
                             1000.0 * w / timer.getTime() ) );
                 }
             }
         }
-        log.info( String.format( "Computed library size for %d vectors @ %.2f vector/sec.", vectors.size(),
-                1000.0 * vectors.size() / timer.getTime() ) );
+        log.info( String.format( "Computed library size for %d vectors @ %.2f vector/sec.", w,
+                1000.0 * w / timer.getTime() ) );
         if ( adjustLibrarySizes ) {
             log.info( "Adjusting library sizes..." );
             for ( Map.Entry<BioAssay, Integer> e : sourceSampleToIndex.entrySet() ) {
