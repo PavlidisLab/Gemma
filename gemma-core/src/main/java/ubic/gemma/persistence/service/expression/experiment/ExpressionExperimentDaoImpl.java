@@ -3542,11 +3542,14 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors ) {
         Session session = getSessionFactory().getCurrentSession();
+        boolean collectionInitialized = Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() );
         int batchSize = 500;
         int count = 0;
+        Set<QuantitationType> qts = new HashSet<>();
         List<SingleCellExpressionDataVector> batch = new ArrayList<>();
         for ( SingleCellExpressionDataVector vector : vectors ) {
             session.persist( vector );
+            qts.add( vector.getQuantitationType() );
             batch.add( vector );
             if ( ++count % batchSize == 0 ) {
                 session.flush();
@@ -3562,13 +3565,19 @@ public class ExpressionExperimentDaoImpl
                 session.evict( v );
             }
         }
-        // CacheMode.IGNORE to prevent hibernate from calling update() on read-only cache entries
-        CacheMode previousCacheMode = session.getCacheMode();
-        session.setCacheMode( CacheMode.IGNORE );
-        try {
-            session.refresh( ee );
-        } finally {
-            session.setCacheMode( previousCacheMode );
+        // An initialized collection now misses the vectors that were just persisted, so repopulate it from the database;
+        // an uninitialized one will load them when first read. session.refresh( ee ) is not used: when ee was created
+        // in this session, the refresh cascades to immutable entities that still hold the insert's WRITE lock, which
+        // Hibernate rejects with UnsupportedLockAttemptException, and it would also reset ee's other thawed collections.
+        if ( collectionInitialized && !qts.isEmpty() ) {
+            //noinspection unchecked
+            List<SingleCellExpressionDataVector> reloaded = session
+                    .createQuery( "select vec from SingleCellExpressionDataVector vec "
+                            + "where vec.expressionExperiment = :ee and vec.quantitationType in :qts" )
+                    .setParameter( "ee", ee )
+                    .setParameterList( "qts", qts )
+                    .list();
+            ee.getSingleCellExpressionDataVectors().addAll( reloaded );
         }
         log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
     }
