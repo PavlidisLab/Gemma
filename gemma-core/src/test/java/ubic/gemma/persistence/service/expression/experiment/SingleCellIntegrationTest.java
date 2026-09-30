@@ -2,7 +2,8 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellAggregationConfig;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
@@ -62,8 +63,13 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest5 {
         // }
     }
 
-    @Test
-    public void test() {
+    /**
+     * @param fetchSize -1 (the default) aggregates the single-cell vectors in memory; a positive value streams them from the database
+     *                  twice (library sizes, then aggregation), as {@code aggregateSingleCellData} does with 30
+     */
+    @ParameterizedTest
+    @ValueSource(ints = { -1, 30 })
+    public void test( int fetchSize ) {
         Random random = new Random( 123L );
         QuantitationType qt = new QuantitationType();
         qt.setName( "counts" );
@@ -111,7 +117,7 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest5 {
         for ( ExpressionExperimentSubSet subset : subsets ) {
             cellBAs.addAll( subset.getBioAssays() );
         }
-        SingleCellAggregationConfig config = SingleCellAggregationConfig.builder().makePreferred( true ).build();
+        SingleCellAggregationConfig config = SingleCellAggregationConfig.builder().makePreferred( true ).fetchSize( fetchSize ).build();
         QuantitationType aggregatedQt = singleCellExpressionExperimentAggregateService.aggregateVectorsByCellType( ee, cellBAs, config );
 
         assertThat( aggregatedQt.getName() ).isEqualTo( "counts aggregated by cell type (log2cpm)" );

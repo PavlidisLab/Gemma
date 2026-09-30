@@ -761,6 +761,132 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                 .contains( "Number of assigned cells=4000" );
     }
 
+    /**
+     * Streaming the vectors (positive fetch size) must produce exactly what the in-memory path produces, including
+     * the two passes needed for log2cpm.
+     */
+    @Test
+    public void testStreamingMatchesInMemoryForCounts() {
+        assertStreamingMatchesInMemory( createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ), false, false, true );
+    }
+
+    @Test
+    public void testStreamingMatchesInMemoryForCountsAsInts() {
+        assertStreamingMatchesInMemory( createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.INT ), false, false, false );
+    }
+
+    @Test
+    public void testStreamingMatchesInMemoryWithMaskAndAdjustedLibrarySizes() {
+        assertStreamingMatchesInMemory( createQt( StandardQuantitationType.COUNT, ScaleType.COUNT, PrimitiveType.DOUBLE ), true, true, true );
+    }
+
+    @Test
+    public void testStreamingMatchesInMemoryForLog1p() {
+        assertStreamingMatchesInMemory( createQt( StandardQuantitationType.COUNT, ScaleType.LOG1P, PrimitiveType.DOUBLE ), false, true, true );
+    }
+
+    /**
+     * Amounts are not converted to log2cpm, so the library size pass is skipped and the vectors are streamed once.
+     */
+    @Test
+    public void testStreamingMatchesInMemoryForLog2Amounts() {
+        assertStreamingMatchesInMemory( createQt( StandardQuantitationType.AMOUNT, ScaleType.LOG2, PrimitiveType.DOUBLE ), false, false, true );
+    }
+
+    private QuantitationType createQt( StandardQuantitationType type, ScaleType scale, PrimitiveType representation ) {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "Counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( type );
+        qt.setScale( scale );
+        qt.setRepresentation( representation );
+        return qt;
+    }
+
+    private void assertStreamingMatchesInMemory( QuantitationType qt, boolean adjustLibrarySizes, boolean withMask, boolean makePreferred ) {
+        List<SingleCellExpressionDataVector> vectors = randomSingleCellVectors( ee, ad, qt );
+        SingleCellDimension dimension = vectors.iterator().next().getSingleCellDimension();
+        for ( BioAssay ba : dimension.getBioAssays() ) {
+            // large enough to never be exceeded by the library sizes recorded in the vectors
+            ba.setSequenceReadCount( 10_000_000L );
+        }
+        CellTypeAssignment cta = createCellTypeAssignment( dimension );
+        dimension.getCellTypeAssignments().add( cta );
+        CellLevelCharacteristics mask = withMask ? createMask( dimension, 0.1 ) : null;
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee, qt ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellQuantitationType( ee ) )
+                .thenReturn( Optional.of( qt ) );
+        when( singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt ) )
+                .thenReturn( ( long ) vectors.size() );
+        when( singleCellExpressionExperimentService.getSingleCellDataVectors( eq( ee ), eq( qt ), any() ) )
+                .thenReturn( vectors );
+        when( singleCellExpressionExperimentService.getSingleCellDimensionWithoutCellIds( ee, qt ) )
+                .thenReturn( dimension );
+        int[] opened = { 0 };
+        int[] closed = { 0 };
+        when( singleCellExpressionExperimentService.streamSingleCellDataVectors( eq( ee ), eq( qt ), eq( 30 ), anyBoolean(), eq( false ), any( SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig.class ) ) )
+                .thenAnswer( a -> {
+                    opened[0]++;
+                    return vectors.stream().onClose( () -> closed[0]++ );
+                } );
+
+        SingleCellAggregationConfig.SingleCellAggregationConfigBuilder config = SingleCellAggregationConfig.builder()
+                .mask( mask )
+                .makePreferred( makePreferred )
+                .adjustLibrarySizes( adjustLibrarySizes );
+
+        AggregationResult inMemory = aggregate( config.build() );
+        verify( singleCellExpressionExperimentService, never() ).streamSingleCellDataVectors( any(), any( QuantitationType.class ), anyInt(), anyBoolean(), anyBoolean(), any( SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig.class ) );
+
+        clearInvocations( expressionExperimentService, bioAssayService, aggregateAuditService, singleCellExpressionExperimentService );
+        for ( BioAssay ba : cellBAs ) {
+            ba.setNumberOfCells( null );
+            ba.setNumberOfDesignElements( null );
+            ba.setNumberOfCellsByDesignElements( null );
+            ba.setSequenceReadCount( null );
+        }
+
+        AggregationResult streamed = aggregate( config.fetchSize( 30 ).build() );
+        verify( singleCellExpressionExperimentService, never() ).getSingleCellDataVectors( any(), any( QuantitationType.class ), any( SingleCellExpressionExperimentService.SingleCellVectorInitializationConfig.class ) );
+        boolean log2cpm = qt.getType() == StandardQuantitationType.COUNT;
+        assertThat( opened[0] ).isEqualTo( log2cpm ? 2 : 1 );
+        assertThat( closed[0] ).isEqualTo( opened[0] );
+
+        assertThat( streamed.newQt.getName() ).isEqualTo( inMemory.newQt.getName() );
+        assertThat( streamed.newQt.getType() ).isEqualTo( inMemory.newQt.getType() );
+        assertThat( streamed.newQt.getScale() ).isEqualTo( inMemory.newQt.getScale() );
+        assertThat( streamed.vectors ).hasSameSizeAs( inMemory.vectors ).hasSize( vectors.size() );
+        for ( int i = 0; i < inMemory.vectors.size(); i++ ) {
+            RawExpressionDataVector expected = inMemory.vectors.get( i );
+            RawExpressionDataVector actual = streamed.vectors.get( i );
+            assertThat( actual.getDesignElement() ).isSameAs( expected.getDesignElement() );
+            // compared bit for bit, NaNs included
+            assertThat( actual.getDataAsDoubles() ).isEqualTo( expected.getDataAsDoubles() );
+            assertThat( actual.getNumberOfCells() ).isEqualTo( expected.getNumberOfCells() );
+        }
+        assertThat( streamed.assayMetrics ).isEqualTo( inMemory.assayMetrics );
+        assertThat( streamed.payload ).isEqualTo( inMemory.payload );
+    }
+
+    private AggregationResult aggregate( SingleCellAggregationConfig config ) {
+        QuantitationType newQt = singleCellExpressionExperimentAggregateService.aggregateVectorsByCellType( ee, cellBAs, config );
+        ArgumentCaptor<Collection<RawExpressionDataVector>> vecs = ArgumentCaptor.captor();
+        verify( expressionExperimentService ).addRawDataVectors( eq( ee ), eq( newQt ), vecs.capture() );
+        ArgumentCaptor<SingleCellAggregationPayload> payload = ArgumentCaptor.captor();
+        verify( aggregateAuditService ).recordAggregateCreated( eq( ee ), any( String.class ), payload.capture() );
+        List<Object> assayMetrics = new ArrayList<>();
+        for ( BioAssay ba : cellBAs ) {
+            assayMetrics.add( Arrays.asList( ba.getNumberOfCells(), ba.getNumberOfDesignElements(),
+                    ba.getNumberOfCellsByDesignElements(), ba.getSequenceReadCount() ) );
+        }
+        return new AggregationResult( newQt, new ArrayList<>( vecs.getValue() ), assayMetrics, payload.getValue() );
+    }
+
+    private record AggregationResult( QuantitationType newQt, List<RawExpressionDataVector> vectors,
+                                      List<Object> assayMetrics, SingleCellAggregationPayload payload ) {
+    }
+
     private CellTypeAssignment createCellTypeAssignment( SingleCellDimension dimension ) {
         CellTypeAssignment cta = new CellTypeAssignment();
         int[] indices = new int[dimension.getNumberOfCellIds()];
