@@ -556,6 +556,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             }
         }
         expressionExperimentDao.update( ee );
+        // the collection variant records the (ee, qt, scd) triple too; without it the dimension is invisible to the
+        // link-table lookups, and deleting the experiment leaves its BioAssays referenced by the dimension
+        singleCellDimensionExperimentDao.record( ee, finalQt, scd );
         if ( finalQt.getIsSingleCellPreferred() && scdCreated ) {
             CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
             if ( preferredLabelling != null ) {

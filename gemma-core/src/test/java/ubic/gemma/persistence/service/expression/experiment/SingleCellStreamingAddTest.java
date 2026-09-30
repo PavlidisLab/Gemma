@@ -203,6 +203,19 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest5 {
                 } );
     }
 
+    /**
+     * The dimension must be findable through the {@code SINGLE_CELL_DIMENSION_EXPERIMENT} link table, as it is after
+     * the collection variant. HBCC_Cohort (93544), added through the streaming path, had no link row, so
+     * {@code deleteExperiments} never found its dimension and failed on {@code BIO_ASSAYS_SC_FKC}.
+     */
+    @Test
+    public void testStreamingAddRecordsTheDimensionInTheLinkTable() {
+        Fixture f = newFixture( "counts", true );
+        service.addSingleCellDataVectors( ee, f.qt, f.scd, f.vectors.stream(), null, true, false );
+        sessionFactory.getCurrentSession().flush();
+        assertThat( expressionExperimentDao.getSingleCellDimensions( ee ) ).containsExactly( f.scd );
+    }
+
     @Test
     public void testStreamingAddMatchesCollectionVariant() {
         // Adding a non-preferred second QT lets us run both variants on the same EE without tripping
