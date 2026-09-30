@@ -711,6 +711,10 @@ public interface ExpressionExperimentDao
      * Add processed data vectors
      * <p>
      * The number of vectors {@link ExpressionExperiment#getNumberOfDataVectors()} is updated.
+     * <p>
+     * The vectors are persisted in batches and evicted from the session once flushed, so they are detached (but have
+     * IDs) when this returns. If the experiment's processed vectors collection was initialized, it is repopulated
+     * from the database; otherwise it is left uninitialized.
      *
      * @return the number of created processed vectors
      */
