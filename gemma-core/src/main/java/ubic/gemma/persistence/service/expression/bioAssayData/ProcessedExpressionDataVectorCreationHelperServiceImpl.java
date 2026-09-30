@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
-import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
@@ -435,46 +433,23 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
                 "At least " + MIN_SIZE_FOR_RENORMALIZATION + " vector are required for renormalization." );
 
         int cols = vectors.values().iterator().next().length;
-        int rows = vectors.size();
-        DoubleMatrix<CompositeSequence, Integer> mat = new DenseDoubleMatrix<>( rows, cols );
-        for ( int i = 0; i < cols; i++ ) {
-            mat.setColumnName( i, i );
-        }
 
+        // The vectors' own arrays, normalized in place. This used to copy them into a DenseDoubleMatrix and hand that
+        // to QuantileNormalizer.normalize, which makes two more full-size copies before the result was copied back:
+        // four representations of the whole dataset at once, which large pseudo-bulk experiments cannot afford.
+        //
+        // All-NaN rows are left untouched, as they were when the matrix normalizer dropped them.
+        double[][] rows = new double[vectors.size()][];
         int i = 0;
         for ( Map.Entry<CompositeSequence, double[]> c : vectors.entrySet() ) {
-            CompositeSequence designElement = c.getKey();
             double[] data = c.getValue();
             if ( data.length != cols ) {
-                throw new IllegalStateException( "Unexpected vector length for design element " + designElement + "." );
+                throw new IllegalStateException( "Unexpected vector length for design element " + c.getKey() + "." );
             }
-            for ( int j = 0; j < cols; j++ ) {
-                mat.set( i, j, data[j] );
-            }
-            mat.setRowName( designElement, i );
-            i++;
+            rows[i++] = data;
         }
 
-        assert mat.columns() == cols;
-        assert mat.rows() == rows;
-
-        DoubleMatrix<CompositeSequence, Integer> normalizedMat = new QuantileNormalizer<CompositeSequence, Integer>()
-                .normalize( mat, referenceColumns );
-
-        assert normalizedMat.columns() == cols;
-
-        // rewrite the vectors with normalized data
-        //
-        // By the NORMALIZED matrix's rows, not the input's: the normalizer's RowMissingFilter drops every row with no
-        // value in any column, so its result can be shorter. Those rows are all-NaN and keep their input vector,
-        // which is what normalizing them would have produced. Iterating by the input count ran off the end --
-        // GSE21509 (eid 30208), "Index 45708 out of bounds for length 45708", 2026-09-14.
-        for ( i = 0; i < normalizedMat.rows(); i++ ) {
-            CompositeSequence c = normalizedMat.getRowName( i );
-            double[] vector = vectors.get( c );
-            for ( int j = 0; j < cols; j++ ) {
-                vector[j] = normalizedMat.get( i, j );
-            }
-        }
+        log.info( String.format( "Quantile normalizing %d vectors x %d samples...", rows.length, cols ) );
+        QuantileNormalizer.normalizeInPlace( rows, referenceColumns );
     }
 }
