@@ -185,6 +185,38 @@ public class CurationLockPersistenceIT extends BaseIntegrationTest5 {
         assertThat( curationLockService.forceRelease( ee ) ).isFalse();
     }
 
+    @Test
+    @DisplayName("allActive lists every unexpired lock across datasets, and nothing else")
+    public void allActiveListsEveryUnexpiredLockAcrossDatasets() {
+        assertThat( curationLockService.allActive() ).isEmpty();
+
+        PreboardedExperiment second = new PreboardedExperiment();
+        second.setAccession( "GSE-lock-it-" + UUID.randomUUID() );
+        second.setSource( "GEO" );
+        second.setName( "CurationLockIT preboarded #2" );
+        second.setWorkflowState( WorkflowState.Preboarded );
+        sessionFactory.getCurrentSession().persist( second );
+        sessionFactory.getCurrentSession().flush();
+
+        curationLockService.acquire( ee, "alice", false, 30 );
+        CurationLock secondLock = curationLockService.acquire( second, "bob", false, 30 );
+        // A third dataset holds a lapsed claim -- present in the table, absent from the answer.
+        PreboardedExperiment stale = new PreboardedExperiment();
+        stale.setAccession( "GSE-lock-it-" + UUID.randomUUID() );
+        stale.setSource( "GEO" );
+        stale.setName( "CurationLockIT preboarded #3 (stale)" );
+        stale.setWorkflowState( WorkflowState.Preboarded );
+        sessionFactory.getCurrentSession().persist( stale );
+        sessionFactory.getCurrentSession().flush();
+        CurationLock staleLock = curationLockService.acquire( stale, "carol", false, 30 );
+        staleLock.setExpiresAt( new Date( System.currentTimeMillis() - 1000L ) );
+        sessionFactory.getCurrentSession().flush();
+
+        assertThat( curationLockService.allActive() )
+                .extracting( CurationLock::getInvestigationId )
+                .containsExactlyInAnyOrder( ee.getId(), secondLock.getInvestigationId() );
+    }
+
     /**
      * The dataset the caller hands in is normally NOT in the session this service runs in — the REST layer
      * resolves it first, and {@code acquire} opens its own. Every other test here seeds the investigation

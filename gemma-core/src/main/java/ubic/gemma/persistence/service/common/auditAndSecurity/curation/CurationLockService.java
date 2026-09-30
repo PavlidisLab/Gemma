@@ -16,6 +16,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationLock;
 import ubic.gemma.model.analysis.Investigation;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -109,6 +110,17 @@ public interface CurationLockService {
      * treat presence in this map as "held right now" without re-checking dates.
      */
     Map<Long, CurationLock> current( Collection<Long> investigationIds );
+
+    /**
+     * Every unexpired lock across the whole corpus, for an admin view that needs to see what is locked
+     * right now without already holding a list of ids to ask about — {@link #current(Collection)}'s
+     * sibling for the case where there is no id list to narrow by.
+     * <p>
+     * The table holds one row per currently-locked dataset (not one per dataset in the corpus), so this
+     * is bounded by how much curation/agent activity is in flight at once, not by corpus size. Same
+     * expiry rule as {@link #current(Investigation)} — a lapsed row is never returned.
+     */
+    List<CurationLock> allActive();
 
     /**
      * Whether {@code username} holds an unexpired lock. This is what sign-off
