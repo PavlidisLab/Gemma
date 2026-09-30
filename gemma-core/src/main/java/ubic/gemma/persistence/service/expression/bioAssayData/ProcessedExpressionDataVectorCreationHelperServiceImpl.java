@@ -114,6 +114,8 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
         // objects, 299 MB apiece on a 34,330 x 1,090 experiment, to arrive at the numbers already in hand.
         ExpressionDataDoubleMatrix consolidated = consolidateAndLogTransform( expressionExperiment,
                 rawPreferredDataVectors, ignoreQuantitationMismatch );
+        // only the consolidated matrix is used after this point, let the raw vectors go
+        rawPreferredDataVectors = null;
 
         // once the vectors have been consolidated, we can recover the dimension
         // note that if multiple BADs were consolidated, this will be a new BAD, otherwise the same BAD that was
@@ -140,6 +142,8 @@ class ProcessedExpressionDataVectorCreationHelperServiceImpl implements Processe
                 numberOfCells.put( designElement, noc );
             }
         }
+        // likewise, preferredData holds its own copy of every row from here on
+        consolidated = null;
 
         boolean isTwoChannel = expressionExperimentService.isTwoChannel( expressionExperiment );
         Collection<RawExpressionDataVector> missingValueVectors = getMissingValueVectors( expressionExperiment );

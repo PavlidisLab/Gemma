@@ -5575,12 +5575,68 @@ public class ExpressionExperimentDaoImpl
         // just-issued bulk DELETE and the assert below would spuriously fire. Resolving via
         // session.get() first ensures we check the up-to-date managed collection state.
         ee = ensureEeInSession( ee );
-        Assert.isTrue( ee.getProcessedExpressionDataVectors().isEmpty(), "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
+        Session session = getSessionFactory().getCurrentSession();
+        // Check the in-memory collection only when it is already initialized; otherwise ask the database, so that
+        // the collection stays uninitialized and there is nothing to repopulate below.
+        boolean collectionInitialized = Hibernate.isInitialized( ee.getProcessedExpressionDataVectors() );
+        boolean hasProcessedVectors = collectionInitialized ? !ee.getProcessedExpressionDataVectors().isEmpty()
+                : ( Long ) session.createQuery( "select count(v) from ProcessedExpressionDataVector v where v.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult() > 0;
+        Assert.isTrue( !hasProcessedVectors, "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
+
+        // ee is managed, the metadata changes are flushed with the first batch
         ee.getQuantitationTypes().add( qt );
-        ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
-        updateWithNewVectors( ee, vectors );
-        return vectors.size();
+
+        // Persist the vectors directly in batches, flushing and evicting as we go, rather than adding them to
+        // ee.getProcessedExpressionDataVectors() and cascading them through update(ee): the cascade kept every vector
+        // (and a copy of each made by the merge) resident in the session until the transaction ended, which does not
+        // fit in memory for large pseudo-bulk experiments. Same approach as createSingleCellDataVectors.
+        //
+        // persist() inserts each vector before cascading to its number of cells, so the insert ordering that
+        // updateWithNewVectors works around does not arise here.
+        int batchSize = 500;
+        int count = 0;
+        List<ProcessedExpressionDataVector> batch = new ArrayList<>( batchSize );
+        for ( ProcessedExpressionDataVector v : vectors ) {
+            session.persist( v );
+            batch.add( v );
+            if ( ++count % batchSize == 0 ) {
+                session.flush();
+                for ( ProcessedExpressionDataVector b : batch ) {
+                    session.evict( b );
+                }
+                batch.clear();
+                log.info( String.format( "Persisted %d / %d processed vectors for %s...", count, vectors.size(), ee ) );
+            }
+        }
+        if ( !batch.isEmpty() ) {
+            session.flush();
+            for ( ProcessedExpressionDataVector b : batch ) {
+                session.evict( b );
+            }
+            batch.clear();
+        }
+        log.info( String.format( "Persisted %d processed vectors for %s.", count, ee ) );
+
+        // An initialized collection now misses the vectors that were just persisted, and anything reading it later in
+        // this session (e.g. replaceProcessedDataVectors, which derives the QTs and dimensions to remove from it)
+        // would act on the stale state, so repopulate it from the database. session.refresh( ee ) is not used because
+        // it would reset the experiment's other thawed collections.
+        if ( collectionInitialized ) {
+            //noinspection unchecked
+            List<ProcessedExpressionDataVector> reloaded = session
+                    .createQuery( "select vec from ProcessedExpressionDataVector vec "
+                            + "left join fetch vec.numberOfCellsObject "
+                            + "where vec.expressionExperiment = :ee and vec.quantitationType = :qt" )
+                    .setParameter( "ee", ee )
+                    .setParameter( "qt", qt )
+                    .list();
+            ee.getProcessedExpressionDataVectors().addAll( reloaded );
+        }
+
+        return count;
     }
 
     @Override
