@@ -405,6 +405,64 @@ public class SingleCellExpressionExperimentServiceTest extends BaseDatabaseTest5
         // AuditedAspectTest.
     }
 
+    /**
+     * The collection variant persists its vectors through the DAO in batches of 500 (flushed, then evicted) rather
+     * than cascading them from {@code ee.getSingleCellExpressionDataVectors()} on update, which kept every vector in
+     * the session until commit. 600 vectors cross one batch boundary.
+     */
+    @Test
+    public void testAddSingleCellDataVectorsPersistsEveryVectorInBatches() {
+        for ( int i = 10; i < 600; i++ ) {
+            CompositeSequence cs = new CompositeSequence();
+            cs.setName( "test" + i );
+            cs.setArrayDesign( ad );
+            sessionFactory.getCurrentSession().persist( cs );
+            ad.getCompositeSequences().add( cs );
+        }
+        Collection<SingleCellExpressionDataVector> vectors = createSingleCellVectors( "counts", true );
+        assertThat( vectors ).hasSize( 600 );
+        QuantitationType qt = vectors.iterator().next().getQuantitationType();
+        SingleCellDimension scd = vectors.iterator().next().getSingleCellDimension();
+
+        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false ) )
+                .isEqualTo( 600 );
+        assertThat( vectors ).allSatisfy( v -> {
+            assertThat( v.getId() ).isNotNull();
+            assertThat( sessionFactory.getCurrentSession().contains( v ) ).isFalse();
+        } );
+        assertThat( ee.getQuantitationTypes() ).contains( qt );
+        assertThat( ee.getNumberOfCells() ).isNotNull();
+
+        sessionFactory.getCurrentSession().flush();
+        assertThat( countRows( "select count(*) from SINGLE_CELL_EXPRESSION_DATA_VECTOR where EXPRESSION_EXPERIMENT_FK = " + ee.getId()
+                + " and QUANTITATION_TYPE_FK = " + qt.getId() ) )
+                .isEqualTo( 600 );
+        assertThat( countRows( "select count(*) from SINGLE_CELL_DIMENSION_EXPERIMENT where EXPRESSION_EXPERIMENT_FK = " + ee.getId()
+                + " and QUANTITATION_TYPE_FK = " + qt.getId() + " and SINGLE_CELL_DIMENSION_FK = " + scd.getId() ) )
+                .isEqualTo( 1 );
+        assertThat( ee.getSingleCellExpressionDataVectors() ).hasSize( 600 );
+        assertThat( scExpressionExperimentService.getCellTypeFactor( ee ) ).isPresent();
+    }
+
+    /**
+     * Vectors that are equal (same experiment, quantitation type and design element) collapsed into one when they
+     * were added to the dataset's vector set, and the returned count reflected that. Persisting through the DAO
+     * must keep that.
+     */
+    @Test
+    public void testAddSingleCellDataVectorsCollapsesEqualVectors() {
+        List<SingleCellExpressionDataVector> vectors = new ArrayList<>( createSingleCellVectors( "counts", false ) );
+        SingleCellExpressionDataVector first = vectors.get( 0 );
+        vectors.add( randomSingleCellVector( ee, first.getDesignElement(), first.getQuantitationType(), first.getSingleCellDimension(), 0.9 ) );
+        QuantitationType qt = first.getQuantitationType();
+
+        assertThat( scExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, null, true, false ) )
+                .isEqualTo( 10 );
+        sessionFactory.getCurrentSession().flush();
+        assertThat( countRows( "select count(*) from SINGLE_CELL_EXPRESSION_DATA_VECTOR where QUANTITATION_TYPE_FK = " + qt.getId() ) )
+                .isEqualTo( 10 );
+    }
+
     @Test
     public void testAddSingleCellDataVectorsWithInteger() {
         QuantitationType qt = new QuantitationType();
