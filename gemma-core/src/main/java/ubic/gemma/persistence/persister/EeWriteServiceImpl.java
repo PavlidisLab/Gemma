@@ -63,11 +63,15 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Strangler-fig replacement for the EE-graph write path historically owned by
@@ -512,6 +516,7 @@ public class EeWriteServiceImpl implements EeWriteService {
     void processBioAssays( ExpressionExperiment expressionExperiment, Map<String, ExternalDatabase> xdbCache, @Nullable ArrayDesignsForExperimentCache adCache, Map<Integer, QuantitationType> qtCache, Map<Object, Taxon> taxonCache, Map<Integer, BioAssayDimension> badCache ) {
         if ( expressionExperiment.getRawExpressionDataVectors().isEmpty() ) {
             log.debug( "Filling in bioassays" );
+            skipBioAssaysWithExistingBioMaterials( expressionExperiment );
             for ( BioAssay bioAssay : expressionExperiment.getBioAssays() ) {
                 fillInBioAssayAssociations( bioAssay, xdbCache, adCache, taxonCache );
             }
@@ -522,6 +527,66 @@ public class EeWriteServiceImpl implements EeWriteService {
             expressionExperiment.setBioAssays( alreadyFilled );
             expressionExperiment.setNumberOfSamples( alreadyFilled.size() );
         }
+    }
+
+    /**
+     * Drop the BioAssays whose BioMaterial name is already used by a BioMaterial that some BioAssay in the database
+     * uses.
+     * <p>
+     * Without this, {@link BioMaterialDao#findOrCreate} would attach the new BioAssay to the existing BioMaterial, which
+     * for CELLxGENE samples (no accession, no description) is a match by name and taxon alone, so the two experiments
+     * would share it. Ported from {@code ExpressionPersister} ({@code 0795755cb8}, {@code 1d6d8c454e}), which was lost
+     * when that class was folded into this one. The match is by name only, as it was there.
+     */
+    private void skipBioAssaysWithExistingBioMaterials( ExpressionExperiment expressionExperiment ) {
+        Set<String> existingNames = findExistingBioMaterialNames( expressionExperiment.getBioAssays() );
+        if ( existingNames.isEmpty() ) {
+            return;
+        }
+        int before = expressionExperiment.getBioAssays().size();
+        Map<String, Set<String>> usedBy = findExperimentsUsingBioMaterialNames( existingNames );
+        for ( String name : new TreeSet<>( existingNames ) ) {
+            log.warn( String.format( "%s: skipping sample %s, a BioMaterial with that name is already used by %s.",
+                    expressionExperiment.getShortName(), name,
+                    usedBy.containsKey( name ) ? String.join( ", ", usedBy.get( name ) ) : "a BioAssay outside any experiment" ) );
+        }
+        expressionExperiment.getBioAssays().removeIf( ba -> existingNames.contains( ba.getSampleUsed().getName() ) );
+        expressionExperiment.setNumberOfSamples( expressionExperiment.getBioAssays().size() );
+        log.warn( String.format( "%s: skipped %d of %d samples whose BioMaterials already exist in the database; %d remain.",
+                expressionExperiment.getShortName(), before - expressionExperiment.getBioAssays().size(), before,
+                expressionExperiment.getBioAssays().size() ) );
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<String> findExistingBioMaterialNames( Collection<BioAssay> bioAssays ) {
+        List<String> names = bioAssays.stream()
+                .map( ba -> ba.getSampleUsed().getName() )
+                .filter( Objects::nonNull )
+                .collect( Collectors.toList() );
+        if ( names.isEmpty() ) {
+            return Collections.emptySet();
+        }
+        List<String> found = sessionFactory.getCurrentSession()
+                .createQuery( "select bm.name from BioMaterial bm where bm.name in :names and exists (select ba from BioAssay ba where ba.sampleUsed = bm)" )
+                .setParameterList( "names", names )
+                .list();
+        return new HashSet<>( found );
+    }
+
+    /**
+     * Short names of the experiments using a BioMaterial with each of the given names, for the skip warnings.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Set<String>> findExperimentsUsingBioMaterialNames( Collection<String> names ) {
+        List<Object[]> rows = sessionFactory.getCurrentSession()
+                .createQuery( "select bm.name, ee.shortName from ExpressionExperiment ee join ee.bioAssays ba join ba.sampleUsed bm where bm.name in :names" )
+                .setParameterList( "names", names )
+                .list();
+        Map<String, Set<String>> result = new HashMap<>();
+        for ( Object[] row : rows ) {
+            result.computeIfAbsent( ( String ) row[0], k -> new TreeSet<>() ).add( ( String ) row[1] );
+        }
+        return result;
     }
 
     /**
