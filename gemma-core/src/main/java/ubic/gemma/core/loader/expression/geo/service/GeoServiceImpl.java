@@ -25,7 +25,9 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
@@ -131,6 +133,17 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     @Autowired
     private FileLockManager fileLockManager;
 
+    /**
+     * This bean, through its proxy. Needed because {@link #fetchAndLoad} declares
+     * {@link Propagation#NEVER}: a self-invocation of {@link #loadPlatforms}/{@link #convertAndPersist}
+     * would bypass the proxy and, with no transaction inherited from the caller any more, run without
+     * one. {@code @Lazy} breaks the self-reference cycle at construction; the field is interface-typed, so
+     * the proxy is what arrives.
+     */
+    @Lazy
+    @Autowired
+    private GeoService self;
+
     @Value("${geo.minimumSamplesToLoad}")
     private int minimumSampleCountToLoad;
     @Value("${entrez.efetch.apikey}")
@@ -202,12 +215,13 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         return targetPlatform;
     }
 
+    /** See the 6-arg overload for why this is {@code Propagation.NEVER} and routes through {@link #self}. */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     @Nullable
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform ) {
-        return this.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, splitByPlatform, true, true );
+        return self.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, splitByPlatform, true, true );
     }
 
     /**
@@ -219,8 +233,18 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
      * </ol>
      */
+    /**
+     * 🛑 {@code Propagation.NEVER}: {@link GeoDomainObjectGenerator#generate} downloads and parses the
+     * series' SOFT file over the network — 36 MB for one series the size of GSE1024, proportionally more
+     * for a bigger one — and {@code hibernate.connection.handling_mode=DELAYED_ACQUISITION_AND_HOLD} means
+     * a transaction open around that fetch pins a pooled connection for its entire duration without
+     * issuing a statement. The blacklist/existence pre-checks above the fetch, and everything from
+     * conversion through the persist below it, are unchanged — each already runs as its own transaction
+     * (now reached through {@link #self}, since a self-invocation would not pass the proxy and this method
+     * no longer carries one of its own) or, for the pre-checks, through the callee's own.
+     */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     @Nullable
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
@@ -229,11 +253,6 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             throw new IllegalArgumentException( "Entity with accession " + geoAccession + " is blacklisted" );
         }
 
-        /*
-         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
-         */
-        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
-
         geoDomainObjectGenerator.setProcessPlatformsOnly( geoAccession.startsWith( "GPL" ) || loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitByPlatform );
 
@@ -241,37 +260,62 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         this.checkForExisting( projectedAccessions );
 
         if ( loadPlatformOnly ) {
+            // the network fetch: no transaction open while this runs
             Collection<? extends GeoData> platforms = geoDomainObjectGenerator.generate( geoAccession );
             if ( platforms.isEmpty() ) {
                 GeoServiceImpl.log
                         .warn( "GeoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );t no results" );
                 return null;
             }
-            geoConverter.setForceConvertElements( true );
-
-            for ( GeoData d : platforms ) {
-                if ( d.getGeoAccession() != null && expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
-                    throw new IllegalArgumentException(
-                            "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
-                }
-            }
-
-            Collection<ArrayDesign> arrayDesigns = geoConverter.convert( platforms, ArrayDesign.class );
-            // Persister-shrink S3: was persisterHelper.persist(arrayDesigns) into the
-            // polymorphic ArrayDesign dispatch arm; now drive the typed bean directly.
-            Collection<ArrayDesign> persistedAds = new ArrayList<>( arrayDesigns.size() );
-            for ( ArrayDesign ad : arrayDesigns ) {
-                persistedAds.add( arrayDesignPersister.persistArrayDesign( ad ) );
-            }
-            return persistedAds;
+            return self.loadPlatforms( geoAccession, platforms );
         }
 
+        // the network fetch: no transaction open while this runs
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         if ( parseResult.isEmpty() ) {
             GeoServiceImpl.log.warn( "Got no results" );
             return null;
         }
         GeoServiceImpl.log.debug( "Generated GEO domain objects for " + geoAccession );
+
+        return self.convertAndPersist( parseResult, doSampleMatching, splitByPlatform, allowSuperSeriesImport, allowSubSeriesImport );
+    }
+
+    @Override
+    @Transactional
+    public Collection<ArrayDesign> loadPlatforms( String geoAccession, Collection<? extends GeoData> platforms ) {
+        /*
+         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
+         */
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
+        geoConverter.setForceConvertElements( true );
+
+        for ( GeoData d : platforms ) {
+            if ( d.getGeoAccession() != null && expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
+                throw new IllegalArgumentException(
+                        "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
+            }
+        }
+
+        Collection<ArrayDesign> arrayDesigns = geoConverter.convert( platforms, ArrayDesign.class );
+        // Persister-shrink S3: was persisterHelper.persist(arrayDesigns) into the
+        // polymorphic ArrayDesign dispatch arm; now drive the typed bean directly.
+        Collection<ArrayDesign> persistedAds = new ArrayList<>( arrayDesigns.size() );
+        for ( ArrayDesign ad : arrayDesigns ) {
+            persistedAds.add( arrayDesignPersister.persistArrayDesign( ad ) );
+        }
+        return persistedAds;
+    }
+
+    @Override
+    @Transactional
+    @Nullable
+    public Collection<?> convertAndPersist( Collection<? extends GeoData> parseResult, boolean doSampleMatching,
+            boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
+        /*
+         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
+         */
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
 
         Object obj = parseResult.iterator().next();
         if ( !( obj instanceof GeoSeries ) ) {
@@ -729,13 +773,14 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         geoUpdateAuditService.recordGeoUpdate( ee, numNewCharacteristics, pubUpdate );
     }
 
+    /** See {@link #fetchAndLoad} for why this is {@code Propagation.NEVER} and routes through {@link #self}. */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform ) {
         File f = new File( softFile );
         this.geoDomainObjectGenerator = new GeoDomainObjectGeneratorLocal( f.getParent() );
         this.geoDomainObjectGenerator.setNcbiApiKey( ncbiApiKey );
-        return fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, splitByPlatform );
+        return self.fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, splitByPlatform );
     }
 
     private void check( Collection<ExpressionExperiment> result ) {
