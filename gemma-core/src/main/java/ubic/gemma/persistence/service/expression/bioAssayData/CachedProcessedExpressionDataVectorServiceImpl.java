@@ -318,15 +318,22 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
          */
         Collection<Long> genes = new HashSet<>();
-        for ( Collection<Long> csGenes : cs2gene.values() ) {
-            genes.addAll( csGenes );
+        // the probe ids actually requested for each gene. A gene's cache entry is only trustworthy for THIS
+        // call if it covers every one of these -- see checkCacheForProbes, and why a plain checkCache hit is
+        // not enough here even though it is for the by-gene path above.
+        Map<Long, Collection<Long>> geneToRequestedProbes = new HashMap<>();
+        for ( Map.Entry<Long, Collection<Long>> entry : cs2gene.entrySet() ) {
+            genes.addAll( entry.getValue() );
+            for ( Long g : entry.getValue() ) {
+                geneToRequestedProbes.computeIfAbsent( g, k -> new HashSet<>() ).add( entry.getKey() );
+            }
         }
 
         // this will be populated with experiments for which we don't have all the needed results cached
         Collection<BioAssaySet> needToSearch = new HashSet<>();
         // will contain IDs of genes that weren't covered by the cache
         Collection<Long> genesToSearch = new HashSet<>();
-        this.checkCache( ees, genes, results, needToSearch, genesToSearch );
+        this.checkCacheForProbes( ees, geneToRequestedProbes, results, needToSearch, genesToSearch );
 
         if ( !results.isEmpty() )
             log.debug( results.size() + " vectors fetched from cache" );
@@ -401,15 +408,79 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
             }
 
             if ( !newResults.isEmpty() ) {
-                this.cacheResults( newResults );
-
+                // Not cached: this fetch is restricted to the probes actually requested in this call, which can
+                // be a strict subset of a gene's full probe set (filteredcs2gene, above, is built from probeIds,
+                // not from "every probe of every gene involved"). The by-gene cache's contract is that a present
+                // entry holds the COMPLETE vector set for that gene -- getProcessedDataArrays(genes) upholds it
+                // by always fetching every composite sequence for the genes it searches. Writing a probe-filtered
+                // result under the same gene key would break that contract and silently hand a later, unrelated
+                // request for a DIFFERENT probe of the same gene this probe's data instead of its own.
                 newResults = this.sliceSubsets( ees, newResults );
 
                 results.addAll( newResults );
             }
         }
 
+        // Belt-and-suspenders: a cached gene entry can legitimately hold more probes than this call asked for
+        // (e.g. populated earlier by the by-gene path). Only ever return vectors for the probes actually
+        // requested, regardless of which path -- cache or DB -- supplied them.
+        results.removeIf( v -> v.getDesignElement() == null || !probeIds.contains( v.getDesignElement().getId() ) );
+
         return results;
+    }
+
+    /**
+     * As {@link #checkCache}, but for a probe-scoped request: a gene's cache entry is trusted only when it
+     * covers every one of {@code geneToRequestedProbes}' probe ids for that gene, not merely when the gene key
+     * is present.
+     * <p>
+     * {@link #checkCache} assumes any present entry is the complete vector set for the gene, which holds for
+     * its only caller ({@link #getProcessedDataArrays(Collection, Collection)}, which always fetches every
+     * composite sequence for the genes it searches) but not here: a probe-scoped call only ever asks about
+     * (and, per {@link #getProcessedDataArraysByProbeIds(Collection, Collection)}'s own caching, only ever
+     * writes) the probes it was actually given, so a present entry can be an older, narrower slice of the
+     * gene's probes than this call needs. Trusting it anyway is what let one probe's cached data answer a
+     * request for a different probe of the same gene — see that method's comment at its cacheResults call
+     * site, and notable_cases 2026-10-01 (209072_at / 207323_s_at, both MBP, RA 2026-09-30).
+     *
+     * @param bioAssaySets         that we exactly need the data for.
+     * @param geneToRequestedProbes genes that might have cached results, each mapped to the probe ids actually
+     *                             requested for it in this call.
+     * @param results              from the cache will be put here
+     * @param needToSearch         experiments that need to be searched (not fully cached); this will be populated
+     * @param genesToSearch        that still need to be searched (not in cache, or cached incompletely)
+     */
+    private void checkCacheForProbes( Collection<? extends BioAssaySet> bioAssaySets,
+            Map<Long, Collection<Long>> geneToRequestedProbes, Collection<DoubleVectorValueObject> results,
+            Collection<BioAssaySet> needToSearch, Collection<Long> genesToSearch ) {
+
+        for ( BioAssaySet ee : bioAssaySets ) {
+
+            for ( Map.Entry<Long, Collection<Long>> e : geneToRequestedProbes.entrySet() ) {
+                Long g = e.getKey();
+                Collection<Long> requestedProbesForGene = e.getValue();
+                Collection<DoubleVectorValueObject> obs = processedDataVectorByGeneCache.get( getExperiment( ee ), g );
+                Set<Long> cachedProbeIds = obs == null ? Collections.emptySet() : obs.stream()
+                        .map( v -> v.getDesignElement() != null ? v.getDesignElement().getId() : null )
+                        .collect( Collectors.toSet() );
+                if ( obs != null && cachedProbeIds.containsAll( requestedProbesForGene ) ) {
+                    if ( ee instanceof ExpressionExperimentSubSet ) {
+                        // we cache vectors at the experiment level. If we need subsets, we have to slice them out.
+                        results.addAll( this.sliceSubSet( ( ExpressionExperimentSubSet ) ee, obs ) );
+                    } else {
+                        results.addAll( obs );
+                    }
+                } else {
+                    genesToSearch.add( g );
+                }
+            }
+            /*
+             * This experiment is not fully cached for the genes in question.
+             */
+            if ( !genesToSearch.isEmpty() ) {
+                needToSearch.add( ee );
+            }
+        }
     }
 
     @Override
