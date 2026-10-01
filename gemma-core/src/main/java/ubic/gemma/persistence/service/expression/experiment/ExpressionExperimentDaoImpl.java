@@ -3542,11 +3542,14 @@ public class ExpressionExperimentDaoImpl
     @Override
     public void createSingleCellDataVectors( ExpressionExperiment ee, Iterable<SingleCellExpressionDataVector> vectors ) {
         Session session = getSessionFactory().getCurrentSession();
+        boolean collectionInitialized = Hibernate.isInitialized( ee.getSingleCellExpressionDataVectors() );
         int batchSize = 500;
         int count = 0;
+        Set<QuantitationType> qts = new HashSet<>();
         List<SingleCellExpressionDataVector> batch = new ArrayList<>();
         for ( SingleCellExpressionDataVector vector : vectors ) {
             session.persist( vector );
+            qts.add( vector.getQuantitationType() );
             batch.add( vector );
             if ( ++count % batchSize == 0 ) {
                 session.flush();
@@ -3562,13 +3565,19 @@ public class ExpressionExperimentDaoImpl
                 session.evict( v );
             }
         }
-        // CacheMode.IGNORE to prevent hibernate from calling update() on read-only cache entries
-        CacheMode previousCacheMode = session.getCacheMode();
-        session.setCacheMode( CacheMode.IGNORE );
-        try {
-            session.refresh( ee );
-        } finally {
-            session.setCacheMode( previousCacheMode );
+        // An initialized collection now misses the vectors that were just persisted, so repopulate it from the database;
+        // an uninitialized one will load them when first read. session.refresh( ee ) is not used: when ee was created
+        // in this session, the refresh cascades to immutable entities that still hold the insert's WRITE lock, which
+        // Hibernate rejects with UnsupportedLockAttemptException, and it would also reset ee's other thawed collections.
+        if ( collectionInitialized && !qts.isEmpty() ) {
+            //noinspection unchecked
+            List<SingleCellExpressionDataVector> reloaded = session
+                    .createQuery( "select vec from SingleCellExpressionDataVector vec "
+                            + "where vec.expressionExperiment = :ee and vec.quantitationType in :qts" )
+                    .setParameter( "ee", ee )
+                    .setParameterList( "qts", qts )
+                    .list();
+            ee.getSingleCellExpressionDataVectors().addAll( reloaded );
         }
         log.info( String.format( "Created %d single-cell data vectors for %s.", count, ee ) );
     }
@@ -5575,12 +5584,68 @@ public class ExpressionExperimentDaoImpl
         // just-issued bulk DELETE and the assert below would spuriously fire. Resolving via
         // session.get() first ensures we check the up-to-date managed collection state.
         ee = ensureEeInSession( ee );
-        Assert.isTrue( ee.getProcessedExpressionDataVectors().isEmpty(), "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
+        Session session = getSessionFactory().getCurrentSession();
+        // Check the in-memory collection only when it is already initialized; otherwise ask the database, so that
+        // the collection stays uninitialized and there is nothing to repopulate below.
+        boolean collectionInitialized = Hibernate.isInitialized( ee.getProcessedExpressionDataVectors() );
+        boolean hasProcessedVectors = collectionInitialized ? !ee.getProcessedExpressionDataVectors().isEmpty()
+                : ( Long ) session.createQuery( "select count(v) from ProcessedExpressionDataVector v where v.expressionExperiment = :ee" )
+                .setParameter( "ee", ee )
+                .uniqueResult() > 0;
+        Assert.isTrue( !hasProcessedVectors, "ExpressionExperiment already has processed vectors, remove them before creating new ones or use replaceProcessedDataVectors()." );
+
+        // ee is managed, the metadata changes are flushed with the first batch
         ee.getQuantitationTypes().add( qt );
-        ee.getProcessedExpressionDataVectors().addAll( vectors );
         ee.setNumberOfDataVectors( vectors.size() );
-        updateWithNewVectors( ee, vectors );
-        return vectors.size();
+
+        // Persist the vectors directly in batches, flushing and evicting as we go, rather than adding them to
+        // ee.getProcessedExpressionDataVectors() and cascading them through update(ee): the cascade kept every vector
+        // (and a copy of each made by the merge) resident in the session until the transaction ended, which does not
+        // fit in memory for large pseudo-bulk experiments. Same approach as createSingleCellDataVectors.
+        //
+        // persist() inserts each vector before cascading to its number of cells, so the insert ordering that
+        // updateWithNewVectors works around does not arise here.
+        int batchSize = 500;
+        int count = 0;
+        List<ProcessedExpressionDataVector> batch = new ArrayList<>( batchSize );
+        for ( ProcessedExpressionDataVector v : vectors ) {
+            session.persist( v );
+            batch.add( v );
+            if ( ++count % batchSize == 0 ) {
+                session.flush();
+                for ( ProcessedExpressionDataVector b : batch ) {
+                    session.evict( b );
+                }
+                batch.clear();
+                log.info( String.format( "Persisted %d / %d processed vectors for %s...", count, vectors.size(), ee ) );
+            }
+        }
+        if ( !batch.isEmpty() ) {
+            session.flush();
+            for ( ProcessedExpressionDataVector b : batch ) {
+                session.evict( b );
+            }
+            batch.clear();
+        }
+        log.info( String.format( "Persisted %d processed vectors for %s.", count, ee ) );
+
+        // An initialized collection now misses the vectors that were just persisted, and anything reading it later in
+        // this session (e.g. replaceProcessedDataVectors, which derives the QTs and dimensions to remove from it)
+        // would act on the stale state, so repopulate it from the database. session.refresh( ee ) is not used because
+        // it would reset the experiment's other thawed collections.
+        if ( collectionInitialized ) {
+            //noinspection unchecked
+            List<ProcessedExpressionDataVector> reloaded = session
+                    .createQuery( "select vec from ProcessedExpressionDataVector vec "
+                            + "left join fetch vec.numberOfCellsObject "
+                            + "where vec.expressionExperiment = :ee and vec.quantitationType = :qt" )
+                    .setParameter( "ee", ee )
+                    .setParameter( "qt", qt )
+                    .list();
+            ee.getProcessedExpressionDataVectors().addAll( reloaded );
+        }
+
+        return count;
     }
 
     @Override

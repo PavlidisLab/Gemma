@@ -75,6 +75,17 @@ public class QuantitationTypeParameterGuesserTest {
         assertEquals( ScaleType.LOG2, s, "got " + s );
     }
 
+    /**
+     * "log" inside another word does not make a description log-scaled; ported from {@code f9972eba53}.
+     */
+    @Test
+    public void testLogInsideAnotherWordIsNotLogScale() {
+        assertEquals( ScaleType.LINEAR, QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "Normalized biological replicate counts" ) );
+        assertEquals( ScaleType.LINEAR, QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "Counts per gene from the catalog annotation" ) );
+        assertEquals( ScaleType.LOGBASEUNKNOWN, QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "log transformed expression" ) );
+        assertEquals( ScaleType.LOGBASEUNKNOWN, QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "Normalized (log) signal" ) );
+    }
+
     @Test
     public void testrma() {
         ScaleType s = QuantitationTypeParameterGuesser.guessScaleType( "VALUE", "Signals calculated by RMA" );

@@ -6,6 +6,10 @@ import java.util.List;
 
 @Data
 public class DatasetMetadata {
+    /**
+     * Dataset version identifier; it changes whenever the dataset is revised. Use {@link DatasetVersion#getDatasetId()}
+     * for the permanent identifier.
+     */
     String id;
     String collectionId;
     String name;

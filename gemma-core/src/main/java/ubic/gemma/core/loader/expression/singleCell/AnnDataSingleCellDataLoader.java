@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
@@ -15,6 +16,7 @@ import ubic.gemma.core.loader.util.hdf5.H5Type;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.EntityMapper;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -417,7 +419,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     unknownCellTypeCode = i;
                     continue;
                 }
-                String ctUri = cellTypeUris != null ? cellTypeUris.getCategories()[i] : null;
+                String ctUri = cellTypeUris != null ? normalizeCellTypeUri( cellTypeUris.getCategories()[i], ct ) : null;
                 assignment.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, ct, ctUri ) );
             }
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
@@ -451,6 +453,26 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             assignment.setNumberOfAssignedCells( ( int ) Arrays.stream( cellTypeIndices ).filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ).count() );
             return Collections.singleton( assignment );
         }
+    }
+
+    /**
+     * Store a cell type's term as a URI, whichever spelling the file uses.
+     * <p>
+     * CELLxGENE writes {@code cell_type_ontology_term_id} as CURIEs ({@code CL:0000127}), and the value used to be
+     * stored as-is: HBCC_Cohort's reload on 2026-09-29 wrote 25 CURIEs into its cell type assignment and the cell type
+     * factor built from it, which then matched none of the pseudo-bulk samples' full URIs. The other ingestion paths
+     * normalize through {@link OntologyUtils#termIdOrUriToUri(String)} since f53b1f94fb; this is the same boundary.
+     * A value that is not an identifier at all is dropped with a warning rather than stored in a URI field, as the
+     * cell-level metadata parser does.
+     */
+    @Nullable
+    private String normalizeCellTypeUri( @Nullable String rawUri, String cellType ) {
+        String normalized = OntologyUtils.termIdOrUriToUri( rawUri );
+        if ( normalized == null && StringUtils.isNotBlank( rawUri ) ) {
+            log.warn( "Ignoring the term '" + rawUri + "' for cell type '" + cellType + "' in " + file
+                    + ": it is neither a URI nor a recognized term identifier, so it cannot be stored as one." );
+        }
+        return normalized;
     }
 
     @Override

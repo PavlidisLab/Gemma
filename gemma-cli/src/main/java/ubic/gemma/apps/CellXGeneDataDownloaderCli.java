@@ -11,6 +11,7 @@ import ubic.gemma.core.loader.expression.cellxgene.CellXGeneUtils;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 
 import org.springframework.lang.Nullable;
@@ -47,7 +48,7 @@ public class CellXGeneDataDownloaderCli extends AbstractCLI {
     @Override
     protected void buildOptions( Options options ) {
         options.addRequiredOption( "collectionId", "collection-id", true, "CELLxGENE collection identifier." );
-        options.addOption( "datasetId", "dataset-id", true, "CELLxGENE dataset identifier." );
+        options.addOption( "datasetId", "dataset-id", true, "CELLxGENE dataset, given as its permanent dataset ID, a dataset version ID or its title within the collection. Required if the collection holds more than one dataset." );
         options.addOption( "assetId", "asset-id", true, "CELLxGENE asset identifier." );
     }
 
@@ -65,33 +66,23 @@ public class CellXGeneDataDownloaderCli extends AbstractCLI {
             fetcher.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
         }
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( collectionId );
-        assert cm.getDatasets() != null;
-        DatasetMetadata dm;
-        if ( datasetId != null ) {
-            dm = cm.getDatasets().stream().filter( d -> d.getId().equals( datasetId ) )
-                    .findFirst()
-                    .orElseThrow( () -> new IllegalArgumentException( "Could not find dataset " + datasetId + " in collection." ) );
-        } else {
-            if ( cm.getDatasets().isEmpty() ) {
-                throw new IllegalArgumentException( "No dataset found in collection " + collectionId + "." );
-            } else if ( cm.getDatasets().size() > 1 ) {
-                throw new IllegalArgumentException( "Multiple datasets found in the collection " + collectionId + ". Please specify a dataset ID." );
-            }
-            dm = cm.getDatasets().get( 0 );
-        }
+        DatasetVersion version = fetcher.resolveDataset( collectionId, datasetId );
+        DatasetMetadata dm = CellXGeneUtils.getDatasetMetadata( cm, version );
+        log.info( String.format( "Resolved CELLxGENE dataset %s (version %s): %s", version.getDatasetId(),
+                version.getDatasetVersionId(), version.getTitle() ) );
         DatasetAsset am;
         if ( assetId != null ) {
             am = dm.getDatasetAssets().stream().filter( a -> a.getId().equals( assetId ) )
                     .findFirst()
-                    .orElseThrow( () -> new IllegalArgumentException( "Could not find asset " + assetId + " in dataset " + datasetId + "." ) );
+                    .orElseThrow( () -> new IllegalArgumentException( "Could not find asset " + assetId + " in dataset " + version.getDatasetId() + "." ) );
         } else {
             List<DatasetAsset> found = dm.getDatasetAssets().stream()
                     .filter( CellXGeneUtils::isAnnData )
                     .collect( Collectors.toList() );
             if ( found.isEmpty() ) {
-                throw new IllegalArgumentException( "No AnnData asset found in dataset " + dm.getId() + "." );
+                throw new IllegalArgumentException( "No AnnData asset found in dataset " + version.getDatasetId() + "." );
             } else if ( found.size() > 1 ) {
-                throw new IllegalArgumentException( "Multiple AnnData assets found in dataset " + dm.getId() + ". Please specify an assetId." );
+                throw new IllegalArgumentException( "Multiple AnnData assets found in dataset " + version.getDatasetId() + ". Please specify an assetId." );
             }
             am = found.iterator().next();
         }

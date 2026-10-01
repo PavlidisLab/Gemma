@@ -203,6 +203,19 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest5 {
                 } );
     }
 
+    /**
+     * The dimension must be findable through the {@code SINGLE_CELL_DIMENSION_EXPERIMENT} link table, as it is after
+     * the collection variant. HBCC_Cohort (93544), added through the streaming path, had no link row, so
+     * {@code deleteExperiments} never found its dimension and failed on {@code BIO_ASSAYS_SC_FKC}.
+     */
+    @Test
+    public void testStreamingAddRecordsTheDimensionInTheLinkTable() {
+        Fixture f = newFixture( "counts", true );
+        service.addSingleCellDataVectors( ee, f.qt, f.scd, f.vectors.stream(), null, true, false );
+        sessionFactory.getCurrentSession().flush();
+        assertThat( expressionExperimentDao.getSingleCellDimensions( ee ) ).containsExactly( f.scd );
+    }
+
     @Test
     public void testStreamingAddMatchesCollectionVariant() {
         // Adding a non-preferred second QT lets us run both variants on the same EE without tripping
@@ -240,6 +253,35 @@ public class SingleCellStreamingAddTest extends BaseDatabaseTest5 {
         }
         int sum = ee.getBioAssays().stream().mapToInt( BioAssay::getNumberOfCells ).sum();
         assertThat( ee.getNumberOfCells() ).isEqualTo( sum );
+    }
+
+    /**
+     * Recomputing the metrics from the stored vectors must give what the add computed.
+     * <p>
+     * The streaming {@code applyBioAssaySparsityMetrics} behind {@code updateSparsityMetrics} incremented
+     * {@code sampleIndex} a second time inside its loop, so samples 1 and 3 were never counted and got 0 cells, 0 design
+     * elements and 0 cells by design element. Master fixed it in {@code ee070b4f3c}; it was never ported.
+     */
+    @Test
+    public void testUpdateSparsityMetricsCountsEverySample() {
+        Fixture f = newFixture( "counts", true );
+        service.addSingleCellDataVectors( ee, f.qt, f.scd, f.vectors.stream(), null, true, false );
+        sessionFactory.getCurrentSession().flush();
+        Map<BioAssay, List<Integer>> expected = new HashMap<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            expected.put( ba, Arrays.asList( ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) );
+        }
+        assertThat( expected.values() ).allSatisfy( m -> assertThat( m.get( 1 ) ).isPositive() );
+        Integer expectedTotal = ee.getNumberOfCells();
+
+        service.updateSparsityMetrics( ee );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            assertThat( Arrays.asList( ba.getNumberOfCells(), ba.getNumberOfDesignElements(), ba.getNumberOfCellsByDesignElements() ) )
+                    .as( "sparsity metrics of %s", ba.getName() )
+                    .isEqualTo( expected.get( ba ) );
+        }
+        assertThat( ee.getNumberOfCells() ).isEqualTo( expectedTotal );
     }
 
     @Test

@@ -321,6 +321,25 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
                             + " You do not have permission to edit this experiment." );
         }
 
+        // Everything that indexes a BioAssayDimension goes first: analyses (including those of subsets), then the
+        // processed and raw vectors. Subset removal only deletes a subset's own assays -- the pseudobulks of a
+        // single-cell cell-type split -- once their dimension indexes no data, and that dimension is held by the
+        // experiment's aggregated vectors. Removing subsets while those vectors were still around left the dimension,
+        // its assays and their samples behind with nothing pointing at them.
+
+        // Remove differential expression analyses
+        this.differentialExpressionAnalysisService.removeForExperiment( ee, true );
+
+        // Remove any sample coexpression matrices
+        this.sampleCoexpressionAnalysisService.removeForExperiment( ee );
+
+        // Remove PCA
+        this.principalComponentAnalysisService.removeForExperiment( ee );
+
+        // Remove bulk vectors, processed before raw; dimensions left indexing nothing are deleted along with them
+        expressionExperimentDao.removeProcessedDataVectors( ee );
+        expressionExperimentDao.removeAllRawDataVectors( ee );
+
         // Remove subsets
         Collection<ExpressionExperimentSubSet> subsets = expressionExperimentDao.getSubSets( ee );
         for ( ExpressionExperimentSubSet subset : subsets ) {
@@ -335,15 +354,6 @@ public class ExpressionExperimentWriteServiceImpl implements ExpressionExperimen
         for ( AnnotationSet annotationSet : annotationSetService.findByInvestigation( ee, null ) ) {
             annotationSetService.delete( annotationSet.getId() );
         }
-
-        // Remove differential expression analyses
-        this.differentialExpressionAnalysisService.removeForExperiment( ee, true );
-
-        // Remove any sample coexpression matrices
-        this.sampleCoexpressionAnalysisService.removeForExperiment( ee );
-
-        // Remove PCA
-        this.principalComponentAnalysisService.removeForExperiment( ee );
 
         /*
          * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment

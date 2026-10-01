@@ -14,6 +14,7 @@ import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
@@ -92,15 +93,17 @@ public class CellXGeneConverterTest extends BaseTest5 {
         platform.setPrimaryTaxon( human );
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
         DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
+        DatasetVersion dv = new DatasetVersion( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd", "e6ef2a07-1b8e-49a8-a771-15b81971eac7", dm.getName() );
         Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder()
                         // this will skip the transpose and sort by sample steps
                         .ignoreDataVectors( true )
                         .build() );
-        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, Collections.emptySet(), "Clarence-2025", dataLoader, false );
+        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, dv, platform, Collections.emptySet(), "Clarence-2025", dataLoader, false );
         assertThat( ee.getAccession() ).isNotNull().satisfies( accession -> {
-            assertThat( accession.getAccession() ).isEqualTo( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
+            assertThat( accession.getAccession() ).isEqualTo( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd" );
+            assertThat( accession.getAccessionVersion() ).isEqualTo( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
             assertThat( accession.getUri() ).isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
             assertThat( accession.getExternalDatabase().getName() ).isEqualTo( "CELLxGENE" );
         } );
@@ -171,11 +174,12 @@ public class CellXGeneConverterTest extends BaseTest5 {
         platform.getCompositeSequences().addAll( designElements );
         CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
         DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
+        DatasetVersion dv = new DatasetVersion( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd", "e6ef2a07-1b8e-49a8-a771-15b81971eac7", dm.getName() );
         Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         dataLoader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
-        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, platform, designElements, "Clarence-2025", dataLoader, true );
+        ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, dv, platform, designElements, "Clarence-2025", dataLoader, true );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 );
         assertThat( ee.getSingleCellExpressionDataVectors() ).hasSize( 2 );
     }

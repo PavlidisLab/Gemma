@@ -19,6 +19,35 @@ void setBuildStatus(String context, String message, String state) {
     ])
 }
 
+/**
+ * Run body in a workspace of its own, checked out at this build's commit and cleaned.
+ *
+ * The parallel stages below each run a Maven lifecycle, and they used to run it in the one shared workspace. Any of
+ * them that finds its sources stale recompiles the module, which empties target/test-classes before rewriting it, so
+ * a sibling that is mid-way through loading test classes loses them. The slow-test stage died that way:
+ *   Unable to create test class 'ubic.gemma.core.goldenpath.GoldenPathConnectionPoolTest'
+ *   Caused by: java.lang.ClassNotFoundException
+ * with "Nothing to compile" printed moments earlier, while the class file was re-written 70 s later by another stage.
+ * The same thing happened at 19:35 that day on FileUtilsTest. A lock does not help: the stages that race are not the
+ * ones sharing database/gemdtest.
+ *
+ * Only the stages that need it are moved out. The slow and integration tests read target/test-classes, and share one
+ * workspace under the database/gemdtest lock they already take turns on, so ws() must stay inside that lock. Deploy
+ * artifacts and Deploy Gemma REST ship what they build, and a jar or WAR packaged while a sibling rewrites target/
+ * would go out incomplete without failing anything. SonarQube and the Maven site stay in the shared workspace: a race
+ * there costs a flaky report or page that the next build replaces, not the price of another full build.
+ *
+ * junit reads relative to the current workspace, so a stage that publishes test results must call it inside body;
+ * a post block runs back in the shared workspace and would find nothing.
+ */
+void inOwnWorkspace(String name, Closure body) {
+    ws("${env.WORKSPACE}@${name}") {
+        checkout scm
+        sh 'mvn -B -q clean'
+        body()
+    }
+}
+
 pipeline {
     agent any
     tools {
@@ -243,13 +272,18 @@ pipeline {
                             // without this it never loads and every MGI row fails "No term found".
                             // Surefire forwards -D properties to the forked JVM, where
                             // Configuration reads them as system properties.
-                            sh 'mvn -B test --fail-at-end -Dgroups=slow -DexcludedGroups=network -DskipWebpack -Dbasecode.load.mgiStrain=true'
+                            script {
+                                inOwnWorkspace('tests') {
+                                    try {
+                                        sh 'mvn -B test --fail-at-end -Dgroups=slow -DexcludedGroups=network -DskipWebpack -Dbasecode.load.mgiStrain=true'
+                                    } finally {
+                                        junit testResults: '**/target/surefire-reports/*.xml'
+                                    }
+                                }
+                            }
                         }
                     }
                     post {
-                        always {
-                            junit testResults: '**/target/surefire-reports/*.xml'
-                        }
                         success {
                             setBuildStatus "Slow tests", "Slow tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
@@ -287,13 +321,18 @@ pipeline {
                             // 6e5a3c90ae, 2026-05-18) and init-acls.sql says so in its header. It went
                             // unnoticed because CLAUDE.md's canonical local invocation passes the flag
                             // and this stage never ran on a branch carrying the change until hotfix-2.0.
-                            sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack -Dgemma.hibernate.hbm2ddl.auto=create'
+                            script {
+                                inOwnWorkspace('tests') {
+                                    try {
+                                        sh 'mvn -B verify --fail-at-end -DskipUnitTests -DskipJavadoc -DskipWebpack -Dgemma.hibernate.hbm2ddl.auto=create'
+                                    } finally {
+                                        junit testResults: '**/target/failsafe-reports/*.xml'
+                                    }
+                                }
+                            }
                         }
                     }
                     post {
-                        always {
-                            junit testResults: '**/target/failsafe-reports/*.xml'
-                        }
                         success {
                             setBuildStatus "Integration tests", "Integration tests for build #${env.BUILD_NUMBER} have passed.", 'SUCCESS'
                         }
@@ -351,7 +390,11 @@ pipeline {
                         }
                     }
                     steps {
-                        sh 'mvn -B deploy -DskipTests -DskipJavadoc -DskipWebpack'
+                        script {
+                            inOwnWorkspace('deploy-artifacts') {
+                                sh 'mvn -B deploy -DskipTests -DskipJavadoc -DskipWebpack'
+                            }
+                        }
                     }
                 }
                 stage('Deploy Maven website') {
@@ -403,8 +446,12 @@ pipeline {
                         // -am is needed because `package` does not install gemma-core
                         // into the local repository, so gemma-rest cannot resolve it
                         // from a previous stage's output.
-                        sh 'mvn -B -P gemma-rest-war package -pl gemma-rest -am -DskipTests -DskipJavadoc -DskipWebpack'
-                        sh "env GEMMA_REST_DEPLOY_SERVER=${deployServer} GEMMA_REST_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-rest/deploy.sh ${deployRef}"
+                        script {
+                            inOwnWorkspace('gemma-rest') {
+                                sh 'mvn -B -P gemma-rest-war package -pl gemma-rest -am -DskipTests -DskipJavadoc -DskipWebpack'
+                                sh "env GEMMA_REST_DEPLOY_SERVER=${deployServer} GEMMA_REST_PREFIX=${params.DEPLOY_DIR_PREFIX} ./gemma-rest/deploy.sh ${deployRef}"
+                            }
+                        }
                     }
                 }
                 stage('Deploy Gemma CLI') {
@@ -418,6 +465,8 @@ pipeline {
                         }
                     }
                     steps {
+                        // Stays in the shared workspace, deliberately: it runs no Maven, and it ships
+                        // gemma-cli/target/appassembler as the Package stage left it.
                         sh "env GEMMA_CLI_PREFIX=${params.CLI_DIR_PREFIX} ./gemma-cli/deploy.sh ${cliRef}"
                         sh "env GEMMA_CLI_WIKI_PAGE_SUFFIX='${cliWikiPageSuffix}' ./gemma-cli/deploy-wiki.sh 'pavlab-wiki:Global/gemma/Gemma Landing Page/Gemma Curation/List of Gemma CLI Tools${cliWikiPageSuffix}'"
                     }

@@ -435,17 +435,22 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
         for ( SingleCellExpressionDataVector v : vectors ) {
             v.setExpressionExperiment( ee );
         }
-        int previousSize = ee.getSingleCellExpressionDataVectors().size();
+        // vectors equal under SingleCellExpressionDataVector#equals (same design element) used to collapse when added to
+        // the dataset's vector set; keep that, since the count and the rows persisted both depended on it. The set is
+        // built after setExpressionExperiment() because the experiment is part of the hash code.
+        Set<SingleCellExpressionDataVector> distinctVectors = new LinkedHashSet<>( vectors );
+        int numVectorsAdded = distinctVectors.size();
         log.info( String.format( "Adding %d single-cell vectors to %s for %s", vectors.size(), ee, quantitationType ) );
-        ee.getSingleCellExpressionDataVectors().addAll( vectors );
-        int numVectorsAdded = ee.getSingleCellExpressionDataVectors().size() - previousSize;
+        // persisted in batches of 500 with flush + evict, instead of cascading from
+        // ee.getSingleCellExpressionDataVectors() on update(), which kept every vector in the session until commit
+        expressionExperimentDao.createSingleCellDataVectors( ee, distinctVectors );
         ee.getQuantitationTypes().add( quantitationType );
         applyPreferredSingleCellVectors( ee, quantitationType );
         if ( quantitationType.getIsSingleCellPreferred() ) {
             log.info( "Recomputing single-cell sparsity metrics for " + quantitationType + "..." );
             applyBioAssaySparsityMetrics( ee, scd, vectors );
         }
-        expressionExperimentDao.update( ee ); // will take care of creating vectors
+        expressionExperimentDao.update( ee );
         // PERF_PROBE_REPORT_ROUND4 B1: record the (ee, qt, scd) triple in the link table so the
         // 30+ dimension/CTA/CLC lookups in ExpressionExperimentDaoImpl can resolve via a single
         // indexed row instead of scanning SCEDV. record() is idempotent under the unique
@@ -556,6 +561,9 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
             }
         }
         expressionExperimentDao.update( ee );
+        // the collection variant records the (ee, qt, scd) triple too; without it the dimension is invisible to the
+        // link-table lookups, and deleting the experiment leaves its BioAssays referenced by the dimension
+        singleCellDimensionExperimentDao.record( ee, finalQt, scd );
         if ( finalQt.getIsSingleCellPreferred() && scdCreated ) {
             CellTypeAssignment preferredLabelling = scd.getCellTypeAssignments().stream().filter( CellTypeAssignment::isPreferred ).findFirst().orElse( null );
             if ( preferredLabelling != null ) {
@@ -752,7 +760,6 @@ public class SingleCellExpressionExperimentServiceImpl implements SingleCellExpr
                 SingleCellSparsityMetrics.addExpressedCells( vec, sampleIndex, null, -1, null, isExpressed );
                 numberOfDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfDesignElements( vec, sampleIndex, null, -1, null );
                 numberOfCellByDesignElements[sampleIndex] += SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( vec, sampleIndex, null, -1, null );
-                sampleIndex++;
             }
         }
         for ( BioAssay ba : ee.getBioAssays() ) {

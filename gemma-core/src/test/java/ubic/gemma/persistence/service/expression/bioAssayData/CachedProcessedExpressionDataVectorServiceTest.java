@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDaoImpl;
@@ -33,6 +34,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -188,6 +190,61 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
 
         assertThat( cachedProcessedExpressionDataVectorService.getRandomProcessedDataArrays( subsets.get( 0 ), 10 ) )
                 .hasSize( 10 );
+    }
+
+    /**
+     * Regression for a cache-key granularity bug: two probes mapped to the same gene must each answer with
+     * their OWN vector, not whichever one happened to be cached first under that gene's key.
+     * <p>
+     * Before the fix, caching cs0's vector by probe wrote it under the shared (ee, gene) key that
+     * {@link #testGetVectors}'s by-gene lookups also use; a later probe-scoped request for the different
+     * probe cs1 saw that key present and returned cs0's vector for it instead of fetching cs1's own. Found
+     * on real GEO data by RA (2026-09-30): {@code /datasets/{id}/heatmap-data?probes=209072_at} answered
+     * with {@code 207323_s_at} -- both probes of MBP.
+     */
+    @Test
+    @WithMockUser
+    public void testGetVectorsByProbeDoesNotLeakAnotherProbesCachedDataForTheSameGene() {
+        ExpressionExperiment ee = createExperiment();
+        ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
+        CompositeSequence cs0 = ad.getCompositeSequences().stream()
+                .filter( cs -> "cs0".equals( cs.getName() ) ).findFirst().orElseThrow( AssertionError::new );
+        CompositeSequence cs1 = ad.getCompositeSequences().stream()
+                .filter( cs -> "cs1".equals( cs.getName() ) ).findFirst().orElseThrow( AssertionError::new );
+
+        Gene gene = new Gene();
+        sessionFactory.getCurrentSession().persist( gene );
+        createProbeLink( gene, cs0 );
+        createProbeLink( gene, cs1 );
+
+        // cs0 alone: this is what populates the shared (ee, gene) cache entry.
+        Collection<DoubleVectorValueObject> first = cachedProcessedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ee, Collections.singletonList( cs0 ) );
+        assertThat( first ).hasSize( 1 );
+        assertThat( first.iterator().next().getDesignElement().getId() ).isEqualTo( cs0.getId() );
+
+        // cs1 alone, a DIFFERENT probe of the same gene: must fetch and return cs1's own vector, not the
+        // cs0 vector the previous call left in the gene-keyed cache.
+        Collection<DoubleVectorValueObject> second = cachedProcessedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ee, Collections.singletonList( cs1 ) );
+        assertThat( second ).hasSize( 1 );
+        assertThat( second.iterator().next().getDesignElement().getId() ).isEqualTo( cs1.getId() );
+
+        // both together: exactly the two requested probes, nothing substituted or dropped.
+        Collection<DoubleVectorValueObject> both = cachedProcessedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ee, Arrays.asList( cs0, cs1 ) );
+        assertThat( both ).extracting( v -> v.getDesignElement().getId() )
+                .containsExactlyInAnyOrder( cs0.getId(), cs1.getId() );
+    }
+
+    private void createProbeLink( Gene gene, CompositeSequence cs ) {
+        // manually insert an entry in the GENE2CS table (denormalized, maintained by TableMaintenanceUtil in
+        // production; not worth the full annotation pipeline just to populate it here).
+        sessionFactory.getCurrentSession().createNativeQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
+                .setParameter( 1, gene.getId() )
+                .setParameter( 2, cs.getId() )
+                .setParameter( 3, cs.getArrayDesign().getId() )
+                .executeUpdate();
     }
 
     private ExpressionExperiment createExperiment() {

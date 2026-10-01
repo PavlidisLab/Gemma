@@ -939,21 +939,22 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
      * Download a specific dataset from CELLxGENE that is linked to a GEO series.
      *
      * @param collectionId a CELLxGENE collection identifier
-     * @param datasetId    a CELLxGENE dataset identifier
+     * @param datasetId    a CELLxGENE permanent dataset ID, dataset version ID or dataset title
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId, String datasetId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
         Assert.notNull( geoSeries.getGeoAccession() , "must not be null");
         DatasetMetadata datasetMetadata = getDatasetMetadataFromCellXGene( geoSeries, collectionId, datasetId );
         DatasetAsset asset = selectDatasetAsset( geoSeries, datasetMetadata );
-        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, asset.getId(), true );
+        // downloads are keyed on the version ID, not on the identifier the caller passed
+        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetMetadata.getId(), asset.getId(), true );
     }
 
     /**
      * Download a specific dataset from CELLxGENE that is linked to a GEO series.
      *
      * @param collectionId a CELLxGENE collection identifier
-     * @param datasetId    a CELLxGENE dataset identifier
+     * @param datasetId    a CELLxGENE permanent dataset ID, dataset version ID or dataset title
      */
     public Path downloadSingleCellDataInCellXGene( GeoSeries geoSeries, String collectionId, String datasetId, String assetId ) throws IOException, NoSingleCellDataFoundException {
         Assert.notNull( cellXGeneFetcher, "A CELLxGENE fetcher must be configured." );
@@ -986,7 +987,7 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         if ( !CellXGeneUtils.isAnnData( datasetAsset ) ) {
             throw new IllegalArgumentException( "Dataset asset " + assetId + " is not AnnData." );
         }
-        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetId, assetId, true );
+        return downloadSingleCellDataInCellXGeneInternal( geoSeries, datasetMetadata.getId(), assetId, true );
     }
 
     private boolean isGeneExpressionAssay( OntologyTerm ontologyTerm ) {
@@ -1039,12 +1040,8 @@ public class GeoSingleCellDetector implements SingleCellDetector, ArchiveBasedSi
         if ( !match( geoSeries, cm ) ) {
             throw new IllegalArgumentException( "CELLxGENE collection " + collectionId + " does not appear to be linked to " + geoSeries + "." );
         }
-        assert cm.getDatasets() != null;
-        DatasetMetadata dm = cm.getDatasets().stream()
-                .filter( dm2 -> datasetId.equals( dm2.getId() ) )
-                .findFirst()
-                .orElseThrow( () -> new NoSingleCellDataFoundException( String.format( "No single-cell data found in CELLxGENE for %s in collection %s with dataset ID %s.",
-                        geoSeries, collectionId, datasetId ) ) );
+        assert cellXGeneFetcher != null;
+        DatasetMetadata dm = CellXGeneUtils.getDatasetMetadata( cm, cellXGeneFetcher.resolveDataset( collectionId, datasetId ) );
         if ( !hasSingleCellData( dm ) ) {
             throw new IllegalArgumentException();
         }

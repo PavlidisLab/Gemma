@@ -1,5 +1,7 @@
 package ubic.gemma.core.loader.expression.cellxgene;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,11 +14,17 @@ import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.mapper.EnsemblIdDesignElementMapper;
 import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -47,6 +55,8 @@ import java.util.stream.Stream;
 @Transactional(propagation = Propagation.NEVER)
 public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderService {
 
+    private static final Log log = LogFactory.getLog( CellXGeneDataLoaderServiceImpl.class );
+
     private final CellXGeneFetcher cellXGeneFetcher;
     private final CellXGeneConverter cellXGeneConverter;
     private final Persister persister;
@@ -56,13 +66,14 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
     private final SingleCellDataTransformationFactory singleCellDataTransformationFactory;
     private final Path cellXGeneTransposedPath;
     private final TransactionTemplate transactionTemplate;
+    private final DatabaseEntryService databaseEntryService;
 
     @Autowired
     public CellXGeneDataLoaderServiceImpl(
             Persister persister, ArrayDesignService arrayDesignService,
             ExpressionExperimentService expressionExperimentService,
             SingleCellExpressionExperimentService singleCellExpressionExperimentService,
-            ExternalDatabaseService externalDatabaseService, TaxonReadService taxonReadService,
+            ExternalDatabaseService externalDatabaseService, DatabaseEntryService databaseEntryService, TaxonReadService taxonReadService,
             SingleCellDataTransformationFactory singleCellDataTransformationFactory,
             PlatformTransactionManager transactionManager,
             @Value("${cellxgene.local.singleCellData.basepath}") Path cellXGeneDownloadPath,
@@ -78,6 +89,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         this.singleCellExpressionExperimentService = singleCellExpressionExperimentService;
         this.cellXGeneTransposedPath = cellXGeneTransposedPath;
         this.transactionTemplate = new TransactionTemplate( transactionManager );
+        this.databaseEntryService = databaseEntryService;
     }
 
     @Override
@@ -88,34 +100,21 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
         }
 
         CollectionMetadata cm = cellXGeneFetcher.fetchCollectionMetadata( collectionId );
-
-        DatasetMetadata metadata;
-        if ( datasetId == null ) {
-            assert cm.getDatasets() != null;
-            if ( cm.getDatasets().isEmpty() ) {
-                throw new IllegalStateException( "CELLxGENE collection " + collectionId + " does not contain any datasets." );
-            } else if ( cm.getDatasets().size() > 1 ) {
-                throw new IllegalStateException( "CELLxGENE collection " + collectionId + " has more than one dataset." );
-            }
-            metadata = cm.getDatasets().iterator().next();
-        } else {
-            assert cm.getDatasets() != null;
-            metadata = cm.getDatasets().stream()
-                    .filter( dm -> dm.getId().equals( datasetId ) )
-                    .findFirst()
-                    .orElseThrow( () -> new IllegalStateException( "Dataset " + datasetId + " does not exist." ) );
-        }
+        DatasetVersion version = cellXGeneFetcher.resolveDataset( collectionId, datasetId );
+        DatasetMetadata metadata = CellXGeneUtils.getDatasetMetadata( cm, version );
+        log.info( String.format( "Resolved CELLxGENE dataset %s (version %s): %s", version.getDatasetId(),
+                version.getDatasetVersionId(), version.getTitle() ) );
         DatasetAsset asset;
         if ( assetId != null ) {
             asset = metadata.getDatasetAssets().stream()
                     .filter( asset2 -> asset2.getId().equals( assetId ) )
                     .findFirst()
-                    .orElseThrow( () -> new IllegalStateException( "CELLxGENE dataset " + datasetId + " does not have an asset with ID " + assetId + "." ) );
+                    .orElseThrow( () -> new IllegalStateException( "CELLxGENE dataset " + version.getDatasetId() + " does not have an asset with ID " + assetId + "." ) );
         } else {
             asset = metadata.getDatasetAssets().stream()
                     .filter( CellXGeneUtils::isAnnData )
                     .findFirst()
-                    .orElseThrow( () -> new IllegalStateException( "CELLxGENE dataset " + datasetId + " does not have any H6AD asset." ) );
+                    .orElseThrow( () -> new IllegalStateException( "CELLxGENE dataset " + version.getDatasetId() + " does not have any H5AD asset." ) );
         }
 
         Assert.isTrue( CellXGeneUtils.isAnnData( asset ), "Only H5AD assets can be loaded." );
@@ -139,7 +138,7 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
             dataLoader.setDesignElementToGeneMapper( new EnsemblIdDesignElementMapper( designElementMapping ) );
             // Never ask the converter to collect vectors — that would load the entire dataset into heap.
             // Vectors are streamed directly to the DB below.
-            ee = cellXGeneConverter.convert( cm, metadata, platform, designElementMapping.keySet(), datasetShortName, dataLoader, false );
+            ee = cellXGeneConverter.convert( cm, metadata, version, platform, designElementMapping.keySet(), datasetShortName, dataLoader, false );
 
             Collection<CompositeSequence> compositeSequences = designElementMapping.keySet();
 
@@ -194,6 +193,29 @@ public class CellXGeneDataLoaderServiceImpl implements CellXGeneDataLoaderServic
                 }
             }
         }
+    }
+
+    @Override
+    @Transactional
+    @Audited(value = CommentedEvent.class, messageSpel = "'Replaced the CELLxGENE accession ' + #result.accessionVersion + ' (a dataset version ID) by the permanent dataset ID ' + #datasetId + ', keeping ' + #result.accessionVersion + ' as its accession version.'")
+    public DatabaseEntry replaceVersionAccession( ExpressionExperiment ee, String datasetId ) {
+        ee = expressionExperimentService.loadOrFail( ee.getId() );
+        DatabaseEntry previous = ee.getAccession();
+        if ( previous == null || !ExternalDatabases.CELLXGENE.equals( previous.getExternalDatabase().getName() ) ) {
+            throw new IllegalStateException( ee + " does not have a CELLxGENE accession." );
+        }
+        if ( previous.getAccessionVersion() != null ) {
+            throw new IllegalStateException( ee + " already has a versioned CELLxGENE accession: " + previous.getAccession()
+                    + " version " + previous.getAccessionVersion() + "." );
+        }
+        // DatabaseEntry is immutable, so the entry is replaced rather than modified
+        DatabaseEntry replacement = DatabaseEntry.Factory.newInstance( datasetId, previous.getExternalDatabase() );
+        replacement.setAccessionVersion( previous.getAccession() );
+        replacement.setUri( previous.getUri() );
+        ee.setAccession( replacement );
+        expressionExperimentService.update( ee );
+        databaseEntryService.remove( previous );
+        return replacement;
     }
 
     @Override

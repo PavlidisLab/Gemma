@@ -2,7 +2,7 @@
 .claude/
 scripts/__pycache__/
 handoffs/
-
+*.Rproj
 # CVS/git global ignores
 RCS
 SCCS

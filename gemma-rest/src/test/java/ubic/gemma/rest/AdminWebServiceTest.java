@@ -134,6 +134,8 @@ public class AdminWebServiceTest {
     private ubic.gemma.core.analysis.report.ArrayDesignReportService arrayDesignReportService;
     @Mock
     private ubic.gemma.core.ontology.OntologyService ontologyFacade;
+    @Mock
+    private ubic.gemma.persistence.service.common.auditAndSecurity.curation.CurationLockService curationLockService;
 
     private AdminWebService webService;
 
@@ -150,7 +152,7 @@ public class AdminWebServiceTest {
         webService = new AdminWebService( cacheManager, sessionFactory, taskRunningService, sessionRegistry,
                 Collections.emptyList(), ontologyFacade, dataSource, userManager, annotationSetService, ticketService,
                 taxonArgService, blacklistedEntityService, externalDatabaseReadService, geoScrapeService,
-                indexerService, platformArgService, arrayDesignReportService );
+                indexerService, platformArgService, arrayDesignReportService, curationLockService );
     }
 
     /* ===== /admin/caches ===== */
@@ -390,6 +392,63 @@ public class AdminWebServiceTest {
 
     private SessionInformation sessionInfo( Object principal, String sessionId, Date lastRequest ) {
         return new SessionInformation( principal, sessionId, lastRequest );
+    }
+
+    /* ===== /admin/curation-locks ===== */
+
+    @Test
+    public void getCurationLocksReturnsEmptyWhenNothingIsLocked() {
+        when( curationLockService.allActive() ).thenReturn( Collections.emptyList() );
+
+        ResponseDataObject<List<AdminWebService.CurationLockValueObject>> resp = webService.getAllCurationLocks();
+
+        assertThat( resp.getData() ).isEmpty();
+    }
+
+    @Test
+    public void getCurationLocksReportsDatasetIdentityAndHolderNewestFirst() {
+        ubic.gemma.model.expression.experiment.ExpressionExperiment ee1 =
+                org.mockito.Mockito.mock( ubic.gemma.model.expression.experiment.ExpressionExperiment.class );
+        when( ee1.getShortName() ).thenReturn( "GSE1" );
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationLock older =
+                org.mockito.Mockito.mock( ubic.gemma.model.common.auditAndSecurity.curation.CurationLock.class );
+        when( older.getInvestigationId() ).thenReturn( 1L );
+        when( older.getInvestigation() ).thenReturn( ee1 );
+        when( older.getLockedBy() ).thenReturn( "alice" );
+        when( older.getLockedAt() ).thenReturn( new Date( 1_000L ) );
+        when( older.getExpiresAt() ).thenReturn( new Date( 61_000L ) );
+
+        ubic.gemma.model.expression.experiment.ExpressionExperiment ee2 =
+                org.mockito.Mockito.mock( ubic.gemma.model.expression.experiment.ExpressionExperiment.class );
+        when( ee2.getShortName() ).thenReturn( "GSE2" );
+        ubic.gemma.model.common.auditAndSecurity.curation.CurationLock newer =
+                org.mockito.Mockito.mock( ubic.gemma.model.common.auditAndSecurity.curation.CurationLock.class );
+        when( newer.getInvestigationId() ).thenReturn( 2L );
+        when( newer.getInvestigation() ).thenReturn( ee2 );
+        when( newer.getLockedBy() ).thenReturn( "bob" );
+        when( newer.getLockedAt() ).thenReturn( new Date( 5_000L ) );
+        when( newer.getExpiresAt() ).thenReturn( new Date( 65_000L ) );
+        when( newer.getRunId() ).thenReturn( "run-42" );
+        when( newer.getAgentName() ).thenReturn( "curation-agent" );
+
+        when( curationLockService.allActive() ).thenReturn( Arrays.asList( older, newer ) );
+
+        ResponseDataObject<List<AdminWebService.CurationLockValueObject>> resp = webService.getAllCurationLocks();
+        List<AdminWebService.CurationLockValueObject> rows = resp.getData();
+
+        assertThat( rows ).extracting( vo -> vo.datasetId ).containsExactly( 2L, 1L );
+
+        AdminWebService.CurationLockValueObject bobVo = rows.get( 0 );
+        assertThat( bobVo.datasetShortName ).isEqualTo( "GSE2" );
+        assertThat( bobVo.lockedBy ).isEqualTo( "bob" );
+        assertThat( bobVo.runId ).isEqualTo( "run-42" );
+        assertThat( bobVo.agentName ).isEqualTo( "curation-agent" );
+
+        AdminWebService.CurationLockValueObject aliceVo = rows.get( 1 );
+        assertThat( aliceVo.datasetShortName ).isEqualTo( "GSE1" );
+        assertThat( aliceVo.lockedBy ).isEqualTo( "alice" );
+        assertThat( aliceVo.runId ).isNull();
+        assertThat( aliceVo.agentName ).isNull();
     }
 
     private SubmittedTask mockTask( String id, SubmittedTask.Status status, Date submittedAt ) {

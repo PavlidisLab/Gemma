@@ -161,6 +161,16 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
             return mock( GeneService.class );
         }
 
+        /**
+         * NCBI fallback for the {@code /annotations/term} gene branch. A mock: the field it wires into
+         * is {@code @Autowired(required = false)}, so this bean only needs to exist for a test to
+         * exercise the NCBI-fallback path at all — {@code findByNCBIId}-only tests never touch it.
+         */
+        @Bean
+        public ubic.gemma.core.ontology.ncbi.NcbiGeneResolver ncbiGeneResolver() {
+            return mock( ubic.gemma.core.ontology.ncbi.NcbiGeneResolver.class );
+        }
+
         @Bean
         public AnnotationsWebService annotationsWebService( OntologyService ontologyService, SearchService searchService,
                 CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
@@ -220,6 +230,9 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
     @Autowired
     private GeneService geneService;
 
+    @Autowired
+    private ubic.gemma.core.ontology.ncbi.NcbiGeneResolver ncbiGeneResolver;
+
     @BeforeEach
     public void setUpMocks() {
         Taxon taxon = Taxon.Factory.newInstance();
@@ -233,7 +246,7 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
 
     @AfterEach
     public void resetMocks() {
-        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService, annotationRelationService );
+        reset( searchService, taxonService, ontologyService, expressionExperimentService, characteristicService, geneService, annotationRelationService, ncbiGeneResolver );
     }
 
     @Test
@@ -1775,6 +1788,111 @@ public class AnnotationsWebServiceTest extends BaseJerseyTest5 {
                 .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
 
         verify( characteristicService, never() ).countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() );
+    }
+
+    /**
+     * A gene value URI Gemma's own gene table carries is answered from there — no ontology, no NCBI
+     * call. Regression for the gap FRB found: curation preflight accepted this exact URI while this
+     * route 404'd, because it never consulted {@code GeneService} at all.
+     */
+    @Test
+    public void testGetAnnotationTermServesAGeneUriFromGemmasOwnGeneTable() throws TimeoutException {
+        String uri = "http://purl.org/commons/record/ncbi_gene/7422";
+        ubic.gemma.model.genome.Gene vegfa = mock( ubic.gemma.model.genome.Gene.class );
+        when( vegfa.getOfficialSymbol() ).thenReturn( "Vegfa" );
+        when( vegfa.getOfficialName() ).thenReturn( "vascular endothelial growth factor A" );
+        ubic.gemma.model.genome.Taxon mouse = mock( ubic.gemma.model.genome.Taxon.class );
+        when( mouse.getCommonName() ).thenReturn( "mouse" );
+        when( vegfa.getTaxon() ).thenReturn( mouse );
+        when( geneService.findByNCBIId( 7422 ) ).thenReturn( vegfa );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.singletonMap( uri, 4L ) );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.uri", uri )
+                .hasFieldOrPropertyWithValue( "data.label", "Vegfa [mouse] vascular endothelial growth factor A" )
+                .hasFieldOrPropertyWithValue( "data.obsolete", false )
+                .hasFieldOrPropertyWithValue( "data.usageCount", 4 );
+
+        verify( ontologyService, never() ).getTerm( any(), anyLong(), any() );
+        verifyNoInteractions( ncbiGeneResolver );
+    }
+
+    /** A gene Gemma does not carry but NCBI still has live is accepted, grounded through NCBI. */
+    @Test
+    public void testGetAnnotationTermServesALiveGeneUriFromNcbiWhenGemmaLacksIt() throws Exception {
+        String uri = "http://purl.org/commons/record/ncbi_gene/850270";
+        when( geneService.findByNCBIId( 850270 ) ).thenReturn( null );
+        ubic.gemma.core.ontology.ncbi.NcbiGeneRecord record = new ubic.gemma.core.ontology.ncbi.NcbiGeneRecord(
+                850270, "SET2", "histone-lysine N-methyltransferase, H3 lysine-36 specific SET2",
+                "Saccharomyces cerevisiae", true, true );
+        when( ncbiGeneResolver.resolve( 850270 ) ).thenReturn( record );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.uri", uri )
+                .hasFieldOrPropertyWithValue( "data.label", "SET2 [Saccharomyces cerevisiae] histone-lysine N-methyltransferase, H3 lysine-36 specific SET2" )
+                .hasFieldOrPropertyWithValue( "data.obsolete", false )
+                .hasFieldOrPropertyWithValue( "data.usageCount", 0 );
+    }
+
+    /** A withdrawn NCBI record resolves rather than 404s — same "real but retired" shape as an obsolete ontology term. */
+    @Test
+    public void testGetAnnotationTermReportsAWithdrawnGeneAsObsoleteRatherThanMissing() throws Exception {
+        String uri = "http://purl.org/commons/record/ncbi_gene/918";
+        when( geneService.findByNCBIId( 918 ) ).thenReturn( null );
+        ubic.gemma.core.ontology.ncbi.NcbiGeneRecord record = new ubic.gemma.core.ontology.ncbi.NcbiGeneRecord(
+                918, "CD3W", null, null, true, false );
+        when( ncbiGeneResolver.resolve( 918 ) ).thenReturn( record );
+        when( characteristicService.countExperimentsByUris( anySet(), anyBoolean(), anyBoolean(), anyBoolean(), any(), anySet() ) )
+                .thenReturn( Collections.emptyMap() );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.uri", uri )
+                .hasFieldOrPropertyWithValue( "data.label", "CD3W" )
+                .hasFieldOrPropertyWithValue( "data.obsolete", true );
+    }
+
+    /** A gene id neither Gemma nor NCBI has anything for is the ordinary 404. */
+    @Test
+    public void testGetAnnotationTermStill404sForAGeneIdNobodyHas() throws Exception {
+        String uri = "http://purl.org/commons/record/ncbi_gene/999999999";
+        when( geneService.findByNCBIId( 999999999 ) ).thenReturn( null );
+        when( ncbiGeneResolver.resolve( 999999999 ) )
+                .thenReturn( ubic.gemma.core.ontology.ncbi.NcbiGeneRecord.notFound( 999999999 ) );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    /** NCBI unreachable is reported as unknown (503, retryable), not silently accepted or rejected. */
+    @Test
+    public void testGetAnnotationTermIsServiceUnavailableWhenNcbiIsUnreachableForAnUngroundedGene() throws Exception {
+        String uri = "http://purl.org/commons/record/ncbi_gene/12345";
+        when( geneService.findByNCBIId( 12345 ) ).thenReturn( null );
+        when( ncbiGeneResolver.resolve( 12345 ) )
+                .thenThrow( new ubic.gemma.core.ontology.ncbi.NcbiUnavailableException( "NCBI is down" ) );
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.SERVICE_UNAVAILABLE );
+    }
+
+    /** A malformed gene URI (non-numeric id) is a 404, the same as any other URI nobody has. */
+    @Test
+    public void testGetAnnotationTermStill404sForAMalformedGeneUri() throws Exception {
+        String uri = "http://purl.org/commons/record/ncbi_gene/not-a-number";
+
+        assertThat( target( "/annotations/term" ).queryParam( "uri", uri ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+
+        verifyNoInteractions( geneService, ncbiGeneResolver );
     }
 
     @Test

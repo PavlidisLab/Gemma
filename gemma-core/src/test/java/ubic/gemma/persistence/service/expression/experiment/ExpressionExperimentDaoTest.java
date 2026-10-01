@@ -1510,6 +1510,125 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         assertThat( ee.getQuantitationTypes() )
                 .hasSize( 2 )
                 .contains( newQt );
+        // the vectors are persisted in batches and evicted, the initialized collection is repopulated from the database
+        assertThat( newVectors )
+                .allSatisfy( v -> {
+                    assertNotNull( v.getId() );
+                    assertFalse( sessionFactory.getCurrentSession().contains( v ) );
+                } );
+        assertThat( ee.getProcessedExpressionDataVectors() )
+                .hasSize( 10 )
+                .allSatisfy( v -> assertTrue( sessionFactory.getCurrentSession().contains( v ) ) )
+                .containsExactlyInAnyOrderElementsOf( newVectors );
+    }
+
+    /**
+     * An experiment whose processed vectors collection was never initialized is checked for existing vectors by query,
+     * and its collection is left uninitialized after the vectors are persisted, loading them from the database when
+     * accessed.
+     */
+    @Test
+    public void testCreateProcessedDataVectorsWhenCollectionIsNotInitialized() {
+        ee = createExpressionExperimentWithRawVectors();
+        QuantitationType newQt = createProcessedQuantitationType();
+        List<CompositeSequence> designElements = ee.getRawExpressionDataVectors().stream()
+                .map( RawExpressionDataVector::getDesignElement )
+                .collect( Collectors.toList() );
+        BioAssayDimension bad = ee.getRawExpressionDataVectors().iterator().next().getBioAssayDimension();
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ee = expressionExperimentDao.load( ee.getId() );
+        assertNotNull( ee );
+        assertFalse( Hibernate.isInitialized( ee.getProcessedExpressionDataVectors() ) );
+        Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        for ( CompositeSequence cs : designElements ) {
+            ProcessedExpressionDataVector newVector = new ProcessedExpressionDataVector();
+            newVector.setExpressionExperiment( ee );
+            newVector.setDesignElement( cs );
+            newVector.setBioAssayDimension( bad );
+            newVector.setQuantitationType( newQt );
+            newVector.setData( new byte[0] );
+            newVectors.add( newVector );
+        }
+        assertEquals( 10, expressionExperimentDao.createProcessedDataVectors( ee, newVectors ) );
+        assertFalse( Hibernate.isInitialized( ee.getProcessedExpressionDataVectors() ) );
+        assertThat( ee.getProcessedExpressionDataVectors() )
+                .hasSize( 10 )
+                .containsExactlyInAnyOrderElementsOf( newVectors );
+        // a second creation is refused, whether the collection is initialized or not
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        ExpressionExperiment reloaded = expressionExperimentDao.load( ee.getId() );
+        assertNotNull( reloaded );
+        assertThatThrownBy( () -> expressionExperimentDao.createProcessedDataVectors( reloaded, Collections.singleton( newVector( reloaded, designElements.get( 0 ), bad, newQt ) ) ) )
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessageContaining( "already has processed vectors" );
+    }
+
+    /**
+     * More vectors than fit in a single batch, each with a number of cells: every vector and its number of cells must
+     * be persisted.
+     */
+    @Test
+    public void testCreateProcessedDataVectorsInSeveralBatchesWithNumberOfCells() {
+        ee = createExpressionExperiment();
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ArrayDesign platform = new ArrayDesign();
+        platform.setPrimaryTaxon( taxon );
+        for ( int i = 0; i < 1234; i++ ) {
+            CompositeSequence cs = new CompositeSequence();
+            cs.setName( "cs" + i );
+            cs.setArrayDesign( platform );
+            platform.getCompositeSequences().add( cs );
+        }
+        sessionFactory.getCurrentSession().persist( platform );
+        BioAssayDimension bad = new BioAssayDimension();
+        sessionFactory.getCurrentSession().persist( bad );
+        QuantitationType newQt = createProcessedQuantitationType();
+        Collection<ProcessedExpressionDataVector> newVectors = new ArrayList<>();
+        for ( CompositeSequence cs : platform.getCompositeSequences() ) {
+            ProcessedExpressionDataVector v = newVector( ee, cs, bad, newQt );
+            v.setNumberOfCells( new int[] {} );
+            newVectors.add( v );
+        }
+        assertEquals( 1234, expressionExperimentDao.createProcessedDataVectors( ee, newVectors ) );
+        assertEquals( 1234, ee.getNumberOfDataVectors().intValue() );
+        assertThat( ee.getProcessedExpressionDataVectors() )
+                .hasSize( 1234 )
+                .allSatisfy( v -> assertNotNull( v.getNumberOfCells() ) );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+        assertEquals( 1234L, sessionFactory.getCurrentSession()
+                .createQuery( "select count(v) from ProcessedExpressionDataVector v where v.expressionExperiment.id = :eeId" )
+                .setParameter( "eeId", ee.getId() )
+                .uniqueResult() );
+        assertEquals( 1234L, sessionFactory.getCurrentSession()
+                .createQuery( "select count(v) from ProcessedExpressionDataVectorNumberOfCells v where v.vector.expressionExperiment.id = :eeId" )
+                .setParameter( "eeId", ee.getId() )
+                .uniqueResult() );
+    }
+
+    private QuantitationType createProcessedQuantitationType() {
+        QuantitationType newQt = new QuantitationType();
+        newQt.setName( "log2cpm - Processed version" );
+        newQt.setGeneralType( GeneralType.QUANTITATIVE );
+        newQt.setType( StandardQuantitationType.AMOUNT );
+        newQt.setScale( ScaleType.LOG2 );
+        newQt.setRepresentation( PrimitiveType.DOUBLE );
+        newQt.setIsMaskedPreferred( true );
+        sessionFactory.getCurrentSession().persist( newQt );
+        return newQt;
+    }
+
+    private static ProcessedExpressionDataVector newVector( ExpressionExperiment ee, CompositeSequence cs, BioAssayDimension bad, QuantitationType qt ) {
+        ProcessedExpressionDataVector v = new ProcessedExpressionDataVector();
+        v.setExpressionExperiment( ee );
+        v.setDesignElement( cs );
+        v.setBioAssayDimension( bad );
+        v.setQuantitationType( qt );
+        v.setData( new byte[0] );
+        return v;
     }
 
     @Test

@@ -56,7 +56,7 @@ public class CellXGeneDataAdderCli extends AbstractAuthenticatedCLI {
     @Override
     protected void buildOptions( Options options ) {
         options.addRequiredOption( "collectionId", "collection-id", true, "CELLxGENE collection identifier." );
-        options.addOption( "datasetId", "dataset-id", true, "CELLxGENE dataset identifier." );
+        options.addOption( "datasetId", "dataset-id", true, "CELLxGENE dataset, given as its permanent dataset ID, a dataset version ID or its title within the collection. Required if the collection holds more than one dataset." );
         options.addOption( "assetId", "asset-id", true, "CELLxGENE asset identifier." );
         addGenericPlatformOption( options, "a", "array", "Target platform to use for the dataset. Note that Ensembl IDs will be used to match design elements, so the platform must have genes with Ensembl IDs." );
         options.addRequiredOption( "shortName", "short-name", true, "Short name to use for the resulting dataset." );

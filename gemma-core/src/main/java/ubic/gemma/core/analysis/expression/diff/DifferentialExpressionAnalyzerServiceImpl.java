@@ -46,8 +46,9 @@ import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysi
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.*;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -79,6 +80,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Autowired
     private DifferentialExpressionResultCache differentialExpressionResultCache;
 
+    /**
+     * Archive writes scheduled by {@link #saveAnalysis}, by analysis ID, so that deleting an analysis can wait for its
+     * own write first; see {@link #awaitPendingArchiveWrite}.
+     */
+    private final Map<Long, Future<Path>> pendingArchiveWrites = new ConcurrentHashMap<>();
+
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> diffAnalysis = differentialExpressionAnalysisService
@@ -99,6 +106,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             // Capture result-set ids while the entity is still attached so we can clean their
             // per-result-set TSV caches after the DB delete commits.
             List<Long> resultSetIds = collectResultSetIds( de );
+            awaitPendingArchiveWrite( de );
             differentialExpressionAnalysisService.remove( de );
 
             this.deleteStatistics( expressionExperiment, de );
@@ -137,6 +145,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // Capture result-set ids while the entity is still attached so we can clean their
         // per-result-set TSV caches after the DB delete commits.
         List<Long> resultSetIds = collectResultSetIds( existingAnalysis );
+        awaitPendingArchiveWrite( existingAnalysis );
         differentialExpressionAnalysisService.remove( existingAnalysis );
 
         this.deleteStatistics( expressionExperiment, existingAnalysis );
@@ -314,11 +323,16 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // submission fails or the executor queue is saturated. helperService.persistStub
         // above committed in its own @Transactional(REQUIRED) — outer class is
         // Propagation.NEVER — so the freshly-persisted analysis is visible to the async
-        // task with no extra synchronization required.
+        // task with no extra synchronization required. Deleting the analysis does need to
+        // wait for the task: see awaitPendingArchiveWrite.
         if ( config.isMakeArchiveFile() ) {
             final DifferentialExpressionAnalysis analysisRef = analysis;
             try {
-                expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileAsync( analysisRef, true );
+                Future<Path> write = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileAsync( analysisRef, true );
+                pendingArchiveWrites.values().removeIf( Future::isDone );
+                if ( write != null && analysisRef.getId() != null ) {
+                    pendingArchiveWrites.put( analysisRef.getId(), write );
+                }
             } catch ( RejectedExecutionException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log
                         .warn( "expressionDataFileTaskExecutor rejected archive-write for analysis " + analysisRef.getId()
@@ -433,6 +447,33 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         config.addFactorsToInclude( factorsFromOldExp );
         config.addInteractionsToInclude( interactionsFromOldExp );
         return config;
+    }
+
+    /**
+     * Wait for the archive write {@link #saveAnalysis} scheduled for this analysis, if it has not finished yet.
+     * <p>
+     * That write reads the analysis in its own transaction. If it is still running when the analysis is removed, it can
+     * load the analysis after the delete has committed and evicted it -- its MySQL snapshot predates the delete -- and
+     * put it back in the second-level cache ({@code Analysis} is {@code NONSTRICT_READ_WRITE}) and in the ACL cache.
+     * {@code load(id)} then returns the deleted analysis until those entries expire. A re-run on the same factors
+     * deletes the analysis it replaces moments after its write was scheduled, so this is the usual case, not a corner.
+     */
+    private void awaitPendingArchiveWrite( DifferentialExpressionAnalysis analysis ) {
+        Future<Path> write = analysis.getId() != null ? pendingArchiveWrites.remove( analysis.getId() ) : null;
+        if ( write == null ) {
+            return;
+        }
+        try {
+            write.get( 10, TimeUnit.MINUTES );
+        } catch ( ExecutionException | CancellationException e ) {
+            log.warn( "Archive write for " + analysis + " failed; deleting it anyway.", e );
+        } catch ( TimeoutException e ) {
+            log.warn( "Archive write for " + analysis + " is still running after 10 minutes; deleting it anyway,"
+                    + " a stale copy may stay in the second-level cache." );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( "Interrupted while waiting for the archive write for " + analysis, e );
+        }
     }
 
     /**
