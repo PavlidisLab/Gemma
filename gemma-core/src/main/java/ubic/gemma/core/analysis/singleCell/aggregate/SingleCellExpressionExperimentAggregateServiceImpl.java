@@ -33,7 +33,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
 import static ubic.gemma.core.analysis.singleCell.CellLevelCharacteristicsMappingUtils.createMappingByFactorValueCharacteristics;
 import static ubic.gemma.model.common.DescribableUtils.getNextAvailableName;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.*;
@@ -192,8 +191,25 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         Map<BioAssay, Integer> sourceSampleToIndex = ListUtils.indexOfElements( scd.getBioAssays() );
         int numSourceSamples = sourceSampleToIndex.size();
 
-        int[] sourceSampleStarts = new int[numSourceSamples];
-        int[] sourceSampleEnds = new int[numSourceSamples];
+        // Group the pseudo-bulk output columns (cellBAs) by (source sample, cell type) so that each vector's
+        // per-source-sample cell range is scanned once, not once per cell type sharing that sample. A source
+        // sample split into K cell types previously had its data for every gene scanned K times over (and,
+        // with sparsity metrics on, 4K times -- see aggregateData). Almost always one column per cell per
+        // (source sample, cell type) pair; the list accommodates more without changing behaviour if that ever
+        // isn't true.
+        int numCellTypes = cellLevelCharacteristics.getCharacteristics().size();
+        @SuppressWarnings("unchecked")
+        List<Integer>[][] columnsBySourceSampleAndCellType = new List[numSourceSamples][numCellTypes];
+        for ( int i = 0; i < cellBAs.size(); i++ ) {
+            BioAssay sample = cellBAs.get( i );
+            int sourceSampleIndex = sourceSampleToIndex.get( sourceBioAssayMap.get( sample ) );
+            int cellTypeIndex = cellTypeIndices.get( sample );
+            List<Integer>[] row = columnsBySourceSampleAndCellType[sourceSampleIndex];
+            if ( row[cellTypeIndex] == null ) {
+                row[cellTypeIndex] = new ArrayList<>( 1 );
+            }
+            row[cellTypeIndex].add( i );
+        }
 
         double[] normalizationFactor;
         double[] librarySize;
@@ -211,8 +227,8 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 librarySize = computeLibrarySize( libStream::iterator, numVecs, newBad, cellLevelCharacteristics,
                         // when including masked cells, do not allow the calculation to consider the mask
                         config.isIncludeMaskedCellsInLibrarySize() ? null : mask,
-                        sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments, cellTypeIndices,
-                        method, config.isAdjustLibrarySizes(), sourceSampleStarts, sourceSampleEnds, config.getConsole() );
+                        sourceBioAssayMap, sourceSampleToIndex, sourceSampleLibrarySizeAdjustments,
+                        method, config.isAdjustLibrarySizes(), columnsBySourceSampleAndCellType, config.getConsole() );
             }
             for ( int i = 0; i < librarySize.length; i++ ) {
                 if ( librarySize[i] == 0 ) {
@@ -256,9 +272,9 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 rawVector.setBioAssayDimension( newBad );
                 rawVector.setDesignElement( v.getDesignElement() );
                 int[] numberOfCells = new int[cellBAs.size()];
-                rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, sourceBioAssayMap,
-                        sourceSampleToIndex, cellTypeIndices, method, expressedCells, designElementsByBioAssay,
-                        cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, sourceSampleStarts, sourceSampleEnds, numberOfCells ) );
+                rawVector.setDataAsDoubles( aggregateData( v, newBad, cellLevelCharacteristics, mask, columnsBySourceSampleAndCellType,
+                        method, expressedCells, designElementsByBioAssay,
+                        cellByDesignElementByBioAssay, canLog2cpm, normalizationFactor, librarySize, numberOfCells ) );
                 rawVector.setNumberOfCells( numberOfCells );
                 rawVectors.add( rawVector );
                 if ( rawVectors.size() % 100 == 0 ) {
@@ -437,35 +453,33 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             BioAssayDimension bad, CellLevelCharacteristics cta,
             @Nullable boolean[] mask,
             Map<BioAssay, BioAssay> sourceBioAssayMap, Map<BioAssay, Integer> sourceSampleToIndex,
-            Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments, Map<BioAssay, Integer> cellTypeIndices,
+            Map<BioAssay, Double> sourceSampleLibrarySizeAdjustments,
             SingleCellExpressionAggregationMethod method,
             boolean adjustLibrarySizes,
-            int[] sourceSampleStarts, int[] sourceSampleEnds,
+            List<Integer>[][] columnsBySourceSampleAndCellType,
             @Nullable Console console ) throws IllegalStateException {
         StopWatch timer = StopWatch.createStarted();
         log.info( "Computing library sizes for " + bad.getBioAssays().size() + " pseudo-bulk assays..." );
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
-        int numSourceSamples = sourceSampleToIndex.size();
+        int numSourceSamples = columnsBySourceSampleAndCellType.length;
         // library sizes of the sub-assays
         double[] librarySize = new double[numSamples];
         // library sizes of the source assays
         double[] sourceLibrarySize = new double[numSourceSamples];
+        // allocated once, reset per vector below -- one pass per source sample per vector, not one per
+        // (source sample, cell type) pseudo-bulk column.
+        int[] sourceSampleStarts = new int[numSourceSamples];
+        int[] sourceSampleEnds = new int[numSourceSamples];
         int w = 0;
         for ( SingleCellExpressionDataVector scv : vectors ) {
             Arrays.fill( sourceSampleStarts, -1 );
             Arrays.fill( sourceSampleEnds, -1 );
             PrimitiveType representation = scv.getQuantitationType().getRepresentation();
             Buffer scrv = scv.getDataAsBuffer();
-            for ( int i = 0; i < numSamples; i++ ) {
-                BioAssay sample = samples.get( i );
-                BioAssay sourceSample = sourceBioAssayMap.get( sample );
-                // comparing index is *much* faster than checking for equality
-                int cellTypeIndex = cellTypeIndices.get( sample );
-                int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
-                        () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
+            for ( int sourceSampleIndex = 0; sourceSampleIndex < numSourceSamples; sourceSampleIndex++ ) {
+                List<Integer>[] byCellType = columnsBySourceSampleAndCellType[sourceSampleIndex];
                 int start, end;
-                // samples are not necessarily ordered, so we cannot use the start=end trick
                 if ( sourceSampleStarts[sourceSampleIndex] != -1 ) {
                     start = sourceSampleStarts[sourceSampleIndex];
                 } else {
@@ -497,10 +511,21 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
                     }
-                    if ( cellTypeIndex == cta.getIndices()[cellIndex] ) {
-                        librarySize[i] += unscaledValue;
-                    }
+                    // Every cell in this source sample's range contributes to the SOURCE sample's total
+                    // exactly once per vector, regardless of how many cell-type columns the sample fans out
+                    // into. The previous per-column loop added this sample's full per-gene sum once per cell
+                    // type sharing it, over-counting sourceLibrarySize by that factor whenever a sample had
+                    // more than one cell type -- i.e. essentially always. Only live with -adjustLibrarySizes.
                     sourceLibrarySize[sourceSampleIndex] += unscaledValue;
+                    // a cell with no assigned cell type reads as CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC
+                    // (-1): it never matches a real column, same as the old per-column `==` comparison skipped it.
+                    int cellType = cta.getIndices()[cellIndex];
+                    List<Integer> cols = cellType >= 0 && cellType < byCellType.length ? byCellType[cellType] : null;
+                    if ( cols != null ) {
+                        for ( int col : cols ) {
+                            librarySize[col] += unscaledValue;
+                        }
+                    }
                 }
             }
             w++;
@@ -549,6 +574,16 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
 
     /**
      * Aggregate the single-cell data to match the target BAD.
+     * <p>
+     * One pass per source sample, not one per (source sample, cell type) output column: a cell is read and
+     * classified once, and its contribution (sum, expressed-cell count, sparsity bookkeeping) is applied
+     * directly to whichever column its cell type maps to. The previous version re-scanned a source sample's
+     * entire per-gene range once per cell type sharing it -- and, with sparsity metrics on
+     * ({@code cellsByBioAssay}/{@code designElementsByBioAssay}/{@code cellByDesignElementByBioAssay} all
+     * non-null, the default for a preferred QT), did so FOUR separate times per column (the sum loop plus
+     * three independent {@link SingleCellSparsityMetrics} re-scans that each repeated the same start/end
+     * lookup and cell-by-cell filtering). A source sample split into K cell types was ~4K scans of its data
+     * per gene instead of one.
      *
      * @param performLog2cpm whether to perform log2cpm transformation or not, if provided librarySize must be set
      * @param librarySize    library size for each sample, used for log2cpm transformation
@@ -558,9 +593,7 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             BioAssayDimension bad,
             CellLevelCharacteristics cta,
             @Nullable boolean[] mask,
-            Map<BioAssay, BioAssay> sourceBioAssayMap,
-            Map<BioAssay, Integer> sourceSampleToIndex,
-            Map<BioAssay, Integer> cellTypeIndices,
+            List<Integer>[][] columnsBySourceSampleAndCellType,
             SingleCellExpressionAggregationMethod method,
             @Nullable boolean[] cellsByBioAssay,
             @Nullable Map<BioAssay, Integer> designElementsByBioAssay,
@@ -568,7 +601,6 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             boolean performLog2cpm,
             @Nullable double[] normalizationFactor,
             @Nullable double[] librarySize,
-            int[] sourceSampleStarts, int[] sourceSampleEnds,
             int[] numberOfCells ) {
         Assert.isTrue( !performLog2cpm || ( normalizationFactor != null && librarySize != null ),
                 "Normalization factors and library size must be provided for log2cpm transformation." );
@@ -576,18 +608,22 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
         List<BioAssay> samples = bad.getBioAssays();
         int numSamples = samples.size();
         double[] rv = new double[numSamples];
+        // per-vector, per-column: was at least one expressed cell of this column's type seen for this gene?
+        // (designElementsByBioAssay contributes 0 or 1 per vector per column, never a within-vector count)
+        boolean[] designElementSeen = new boolean[numSamples];
+        // per-vector, per-column: how many of this column's cells expressed this gene
+        int[] cellsByDesignElementCount = new int[numSamples];
         Buffer scrv = scv.getDataAsBuffer();
         PrimitiveType representation = scv.getQuantitationType().getRepresentation();
+
+        int numSourceSamples = columnsBySourceSampleAndCellType.length;
+        int[] sourceSampleStarts = new int[numSourceSamples];
+        int[] sourceSampleEnds = new int[numSourceSamples];
         Arrays.fill( sourceSampleStarts, -1 );
         Arrays.fill( sourceSampleEnds, -1 );
-        for ( int i = 0; i < numSamples; i++ ) {
-            BioAssay sample = samples.get( i );
-            BioAssay sourceSample = sourceBioAssayMap.get( sample );
-            int sourceSampleIndex = requireNonNull( sourceSampleToIndex.get( sourceSample ),
-                    () -> "Could not locate the source sample of " + sample + " (" + sourceSample + ") in " + scv.getSingleCellDimension() + "." );
-            Integer cellTypeIndex = cellTypeIndices.get( sample );
+        for ( int sourceSampleIndex = 0; sourceSampleIndex < numSourceSamples; sourceSampleIndex++ ) {
+            List<Integer>[] byCellType = columnsBySourceSampleAndCellType[sourceSampleIndex];
             int start, end;
-            // samples are not necessarily ordered, so we cannot use the start=end trick
             if ( sourceSampleStarts[sourceSampleIndex] != -1 ) {
                 start = sourceSampleStarts[sourceSampleIndex];
             } else {
@@ -604,29 +640,44 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
             } else {
                 end = sourceSampleEnds[sourceSampleIndex] = getSampleEnd( scv, sourceSampleIndex, start );
             }
-            rv[i] = 0;
             for ( int k = start; k < end; k++ ) {
                 int cellIndex = scv.getDataIndices()[k];
                 if ( mask != null && mask[cellIndex] ) {
                     continue;
                 }
-                if ( cellTypeIndex == cta.getIndices()[cellIndex] ) {
-                    double d = getDouble( scrv, k, representation );
+                // a cell with no assigned cell type reads as CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC
+                // (-1): it never matches a real column, same as the old per-column `==` comparison skipped it.
+                int cellType = cta.getIndices()[cellIndex];
+                List<Integer> cols = cellType >= 0 && cellType < byCellType.length ? byCellType[cellType] : null;
+                if ( cols == null ) {
+                    // no requested column pulls cells of this type from this sample
+                    continue;
+                }
+                double d = getDouble( scrv, k, representation );
+                boolean expressed = SingleCellSparsityMetrics.isExpressed( d, scaleType );
+                for ( int col : cols ) {
                     if ( method == SingleCellExpressionAggregationMethod.SUM ) {
-                        rv[i] += d;
+                        rv[col] += d;
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG_SUM ) {
-                        rv[i] += Math.exp( d );
+                        rv[col] += Math.exp( d );
                     } else if ( method == SingleCellExpressionAggregationMethod.LOG1P_SUM ) {
-                        rv[i] += Math.expm1( d );
+                        rv[col] += Math.expm1( d );
                     } else {
                         throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
                     }
-                    if ( SingleCellSparsityMetrics.isExpressed( d, scaleType ) ) {
-                        numberOfCells[i]++;
+                    if ( expressed ) {
+                        numberOfCells[col]++;
+                        designElementSeen[col] = true;
+                        cellsByDesignElementCount[col]++;
                     }
                 }
+                if ( expressed && cellsByBioAssay != null && !cellsByBioAssay[cellIndex] ) {
+                    cellsByBioAssay[cellIndex] = true;
+                }
             }
+        }
 
+        for ( int i = 0; i < numSamples; i++ ) {
             if ( performLog2cpm ) {
                 if ( librarySize[i] == 0 ) {
                     // this is technically a 0/0 situation
@@ -642,16 +693,16 @@ public class SingleCellExpressionExperimentAggregateServiceImpl implements Singl
                 throw new UnsupportedOperationException( "Unsupported aggregation method: " + method );
             }
 
-            if ( cellsByBioAssay != null ) {
-                SingleCellSparsityMetrics.addExpressedCells( scv, sourceSampleIndex, cta, cellTypeIndex, mask, cellsByBioAssay );
-            }
             if ( designElementsByBioAssay != null ) {
-                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + SingleCellSparsityMetrics.getNumberOfDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
+                BioAssay sample = samples.get( i );
+                int seen = designElementSeen[i] ? 1 : 0;
+                designElementsByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + seen );
             }
             if ( cellByDesignElementByBioAssay != null ) {
-                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + SingleCellSparsityMetrics.getNumberOfCellsByDesignElements( Collections.singleton( scv ), sourceSampleIndex, cta, cellTypeIndex, mask ) );
+                BioAssay sample = samples.get( i );
+                int count = cellsByDesignElementCount[i];
+                cellByDesignElementByBioAssay.compute( sample, ( k, v ) -> ( v != null ? v : 0 ) + count );
             }
-
         }
 
         return rv;

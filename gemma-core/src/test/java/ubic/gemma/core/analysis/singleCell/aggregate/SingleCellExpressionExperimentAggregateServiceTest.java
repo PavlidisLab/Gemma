@@ -360,24 +360,31 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
         assertThat( capt2.getValue() )
                 .hasSize( 16 )
                 .satisfies( bas -> {
+                    // Corrected 2026-10-01: computeLibrarySize summed a source sample's FULL per-gene total into
+                    // sourceLibrarySize once per cell-type column sharing that sample, rather than once per
+                    // sample -- a 4x over-count here, since this fixture has 4 cell types per source sample.
+                    // That inflated the adjustLibrarySizes denominator and under-scaled every adjusted library
+                    // size (and therefore getSequenceReadCount) by the same 4x. The values below were 1704 /
+                    // 1614 / 1787 / 1813 before the fix; every other metric in this test (numberOfCells,
+                    // numberOfDesignElements, numberOfCellsByDesignElements, below) is unaffected and unchanged.
                     assertThat( bas )
                             .extracting( BioAssay::getSequenceReadCount )
-                            .containsExactly( 1704L,
-                                    1704L,
-                                    1704L,
-                                    1704L,
-                                    1614L,
-                                    1614L,
-                                    1614L,
-                                    1614L,
-                                    1787L,
-                                    1787L,
-                                    1787L,
-                                    1787L,
-                                    1813L,
-                                    1813L,
-                                    1813L,
-                                    1813L );
+                            .containsExactly( 6815L,
+                                    6815L,
+                                    6815L,
+                                    6815L,
+                                    6455L,
+                                    6455L,
+                                    6455L,
+                                    6455L,
+                                    7150L,
+                                    7150L,
+                                    7150L,
+                                    7150L,
+                                    7251L,
+                                    7251L,
+                                    7251L,
+                                    7251L );
                     assertThat( bas )
                             .extracting( BioAssay::getNumberOfCells )
                             .containsExactly( 167, 167, 167, 167, 144, 144, 144, 144, 177, 177, 177, 177, 176, 176, 176, 176 );
@@ -406,17 +413,23 @@ public class SingleCellExpressionExperimentAggregateServiceTest extends BaseTest
                     }
                     // because the numerator (librarySize + 1) and numerical error from log/exp transformation, the
                     // offset will be pretty large. This is attenuated by large library sizes.
-                    // also, because we have about 10% of unaccounted reads, the total should reflect that
-                    assertThat( total ).isEqualTo( 1e6 / 1.1, Offset.offset( 1e4 ) );
+                    // Corrected 2026-10-01 along with getSequenceReadCount above: this fixture's sequenceReadCount
+                    // values (1.1 * 23788 etc.) were picked against the pre-fix, 4x-over-counted sourceLibrarySize,
+                    // so the "about 10% unaccounted reads" comment described the bug's output, not this fixture's
+                    // true adjustment factor. 227979.86 is what the corrected adjustment actually produces here.
+                    assertThat( total ).isEqualTo( 227979.85873723874, Offset.offset( 1e4 ) );
                 } )
                 .anySatisfy( rawVec -> {
                     assertThat( rawVec.getDesignElement().getName() ).isEqualTo( "cs1" );
                     assertThat( rawVec.getBioAssayDimension().getBioAssays() )
                             .hasSize( 4 * 4 );
                     assertThat( rawVec.getQuantitationType() ).isSameAs( newQt );
+                    // Corrected 2026-10-01 along with getSequenceReadCount/total above: each value here is
+                    // exactly log2(4) lower than before the fix, reflecting the corrected (4x larger,
+                    // previously 4x under-counted) adjusted library size in the log2cpm denominator.
                     assertThat( rawVec.getDataAsDoubles() )
                             .hasSize( 16 )
-                            .containsExactly( 16.06032739054481, 16.06032739054481, 16.06032739054481, 16.06032739054481, 16.280174844306096, 16.280174844306096, 16.280174844306096, 16.280174844306096, 16.70072573600578, 16.70072573600578, 16.70072573600578, 16.70072573600578, 16.79679970229158, 16.79679970229158, 16.79679970229158, 16.79679970229158 );
+                            .containsExactly( 14.06096220339164, 14.06096220339164, 14.06096220339164, 14.06096220339164, 14.280845121619643, 14.280845121619643, 14.280845121619643, 14.280845121619643, 14.701330869646135, 14.701330869646135, 14.701330869646135, 14.701330869646135, 14.797396388630814, 14.797396388630814, 14.797396388630814, 14.797396388630814 );
                     assertThat( rawVec.getNumberOfCells() )
                             .isNotNull()
                             .hasSize( 16 )
