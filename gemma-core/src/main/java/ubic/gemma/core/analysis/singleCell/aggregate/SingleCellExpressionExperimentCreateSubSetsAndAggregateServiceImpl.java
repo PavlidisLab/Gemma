@@ -50,9 +50,9 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
     /**
-     * Not transactional: {@link #createSubSets} commits the subset/BioAssay/BioMaterial rows it
+     * Not transactional: {@link SingleCellExpressionExperimentSubSetService#createSubSets} commits the subset/BioAssay/BioMaterial rows it
      * creates — and with them the ACL rows {@code AclEventListener} inserts alongside each —
-     * BEFORE {@link #aggregateVectors} opens its own, separate, potentially hour-long transaction
+     * BEFORE {@link SingleCellExpressionExperimentAggregateService#aggregateVectors} opens its own, separate, potentially hour-long transaction
      * to stream and aggregate the single-cell data.
      * <p>
      * Wrapping both in one transaction (as this method did until 2026-09-30) holds those ACL
@@ -66,8 +66,8 @@ public class SingleCellExpressionExperimentCreateSubSetsAndAggregateServiceImpl 
      * <p>
      * {@code Propagation.NEVER} rather than simply dropping {@code @Transactional}: it fails loudly
      * if this is ever called from within an existing transaction instead of silently joining one and
-     * reintroducing the problem. {@link #createSubSets}, {@link #aggregateVectors} and
-     * {@link #aggregateVectorsByCellType} remain independently {@code @Transactional} — each opens
+     * reintroducing the problem. {@link SingleCellExpressionExperimentSubSetService#createSubSets}, {@link SingleCellExpressionExperimentAggregateService#aggregateVectors} and
+     * {@link SingleCellExpressionExperimentAggregateService#aggregateVectorsByCellType} remain independently {@code @Transactional} — each opens
      * its own transaction exactly as it already does when called directly from outside this class.
      */
     @Override
