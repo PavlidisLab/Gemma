@@ -3,6 +3,7 @@ package ubic.gemma.persistence.util;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import org.hibernate.SessionFactory;
@@ -18,8 +19,14 @@ import org.hibernate.SessionFactory;
  * <p>{@code jakarta.annotation.PostConstruct} isn't on the gemma-core classpath
  * (the {@code @PostConstruct} dep was dropped in the Phase 3 Jakarta cleanup);
  * Spring's {@link InitializingBean} provides the same lifecycle slot.
+ *
+ * <p>{@code @Lazy(false)} is required: nothing injects this bean, so under the CLI's
+ * {@link ubic.gemma.core.context.LazyInitByDefaultPostProcessor} it would be defined but never
+ * instantiated, and the first ACL-filtered query would fail with "AclQueryUtils.sessionFactory
+ * not set". Same reasoning as {@code AclEventListenerConfig}.
  */
 @Component
+@Lazy(false)
 public class AclClassIdInitializer implements InitializingBean {
 
     private final SessionFactory sessionFactory;
