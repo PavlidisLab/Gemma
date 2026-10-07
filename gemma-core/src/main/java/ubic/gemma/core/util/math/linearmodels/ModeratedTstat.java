@@ -248,6 +248,17 @@ public class ModeratedTstat {
         double dfPrior = fit[1];
 
         //   out$var.post <- (df*var + out$df.prior*out$var.prior) / df.total
+        //   (from limma .squeezeVar.R)
+
+        /*
+         * Infinite df.prior means the residual variances carry no usable spread (evar <= 0 in fitFDist), so the
+         * posterior collapses to the prior entirely. Naively evaluating the formula yields Inf/Inf = NaN, which
+         * is exactly what limma guards against in .squeezeVar: "m <- max(df.prior); if (is.finite(m)) return(...)".
+         * Gemma's dfPrior is a scalar, so the only case is all-infinite.
+         */
+        if (Double.isInfinite( dfPrior )) {
+            return var.copy().assign( varPrior );
+        }
 
         DoubleMatrix1D dfTotal = df.copy().assign(Functions.plus(dfPrior));
 

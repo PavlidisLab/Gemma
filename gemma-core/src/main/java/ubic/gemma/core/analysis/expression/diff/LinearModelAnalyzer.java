@@ -21,6 +21,7 @@ package ubic.gemma.core.analysis.expression.diff;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -766,17 +767,87 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
         ExperimentalFactor interceptFactor = this.determineInterceptFactor( factors, quantitationType );
 
         /*
+         * A blocking factor keeps its columns in the design (that is what makes the other factors' contrasts
+         * within-subject comparisons) but is never reported: its subject-to-subject differences are nuisance.
+         * Leaving it out of label2Factors is the whole suppression -- everything downstream (result sets,
+         * contrasts, ANOVA rows) is driven off that map.
+         *
+         * With estimateBlockingCorrelation the blocking factor is not a design column at all: it lives in the
+         * inter-block correlation (mixed model), so it is also dropped from the design.
+         */
+        Set<ExperimentalFactor> blockingFactors = new LinkedHashSet<>();
+        for ( ExperimentalFactor bf : config.getBlockingFactors() ) {
+            if ( !factors.contains( bf ) ) {
+                if ( config.isEstimateBlockingCorrelation() ) {
+                    throw new IllegalArgumentException(
+                            "Blocking factor " + bf
+                                    + " is missing an assigned value for at least one sample; a mixed model needs every sample in a block. "
+                                    + "Either complete the design, drop the affected samples, or use the fixed-effect blocking fit instead." );
+                }
+                LinearModelAnalyzer.log.warn( bf + " is set as a blocking factor but is not in factorsToInclude; ignoring." );
+                continue;
+            }
+            if ( config.isEstimateBlockingCorrelation() && bf.getType().equals( FactorType.CONTINUOUS ) ) {
+                throw new IllegalArgumentException( "A continuous factor cannot be a blocking factor: " + bf );
+            }
+            blockingFactors.add( bf );
+        }
+        boolean mixedModel = config.isEstimateBlockingCorrelation();
+        if ( mixedModel && blockingFactors.isEmpty() ) {
+            throw new IllegalArgumentException(
+                    "estimateBlockingCorrelation requires at least one blocking factor (setBlockingFactors)." );
+        }
+        if ( mixedModel && config.isUseWeights() ) {
+            throw new UnsupportedOperationException(
+                    "A mixed model (estimated blocking correlation) is not supported with voom weights yet: the "
+                            + "per-observation gls.series branch is not ported. Run without weights, or use the "
+                            + "fixed-effect blocking fit (estimateBlockingCorrelation = false)." );
+        }
+
+        if ( mixedModel && blockingFactors.size() > 1 ) {
+            throw new UnsupportedOperationException(
+                    "Only one blocking factor is supported per mixed model (got " + blockingFactors + "); "
+                            + "a crossed random effects model is a different, larger animal." );
+        }
+
+        List<ExperimentalFactor> designFactors = new ArrayList<>( factors );
+        if ( mixedModel ) {
+            designFactors.removeIf( blockingFactors::contains );
+        }
+        if ( factors.stream().allMatch( blockingFactors::contains ) ) {
+            throw new IllegalArgumentException(
+                    "Nothing left to model: the blocking factor(s) " + blockingFactors
+                            + " cannot be the only factors" + ( mixedModel ? " in a mixed model." : "." ) );
+        }
+
+        /*
          * Build our factor terms, with interactions handled specially
          */
         List<String[]> interactionFactorLists = new ArrayList<>();
         ObjectMatrix<String, String, Object> designMatrix = DiffExAnalyzerUtils
-                .buildRDesignMatrix( factors, samplesUsed, baselineConditions, false );
+                .buildRDesignMatrix( designFactors, samplesUsed, baselineConditions, false );
 
-        final Map<String, Collection<ExperimentalFactor>> label2Factors = this.getRNames( factors );
+        final Map<String, Collection<ExperimentalFactor>> label2Factors = this
+                .getRNames( factors.stream().filter( f -> !blockingFactors.contains( f ) ).collect( Collectors.toList() ) );
 
         boolean oneSampleTTest = interceptFactor != null && factors.size() == 1;
         if ( !oneSampleTTest ) {
             this.buildModelFormula( config, label2Factors, interactionFactorLists );
+        }
+
+        /*
+         * Interactions with a blocking factor are refused at the config level (see
+         * DifferentialExpressionAnalysisConfig.addInteractionToInclude); belt and braces here, because a config
+         * could also be assembled field-by-field.
+         */
+        for ( Set<ExperimentalFactor> interaction : config.getInteractionsToInclude() ) {
+            if ( interaction.stream().anyMatch( blockingFactors::contains ) ) {
+                throw new IllegalArgumentException(
+                        "Blocking factor " + blockingFactors.stream().filter( interaction::contains )
+                                .findFirst().orElse( null ) + " cannot also be in an interaction: subject-by-treatment "
+                                + "terms need a mixed model, which is not supported. Model the treatment effect with "
+                                + "the subject as a pure block." );
+            }
         }
 
         DifferentialExpressionAnalysisFilter filter = new DifferentialExpressionAnalysisFilter( config );
@@ -802,12 +873,42 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * PREPARATION FOR 'NATIVE' FITTING
          */
         DoubleMatrix<String, String> finalDataMatrix = makeDataMatrix( designMatrix, bareFilteredDataMatrix );
-        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions, config );
+        // a blocking factor fitted as a random intercept has no design columns, so no baseline to set on it
+        Map<ExperimentalFactor, FactorValue> designBaselines = new LinkedHashMap<>( baselineConditions );
+        designBaselines.keySet().retainAll( designFactors );
+        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, designBaselines, config );
+
+        /*
+         * Block assignment for a mixed model: the blocking factor's FactorValue per sample, in data-column
+         * order. A sample carrying more than one value is ambiguous and refused; the earlier completeness
+         * check (dropIncompleteFactors) already guarantees at least one.
+         */
+        String[] blockIds = null;
+        if ( mixedModel ) {
+            ExperimentalFactor bf = blockingFactors.iterator().next();
+            blockIds = new String[samplesUsed.size()];
+            for ( int i = 0; i < samplesUsed.size(); i++ ) {
+                List<FactorValue> fvs = samplesUsed.get( i ).getAllFactorValues().stream()
+                        .filter( fv -> fv.getExperimentalFactor().equals( bf ) )
+                        .collect( Collectors.toList() );
+                if ( fvs.isEmpty() ) {
+                    throw new IllegalArgumentException(
+                            samplesUsed.get( i ) + " has no value for blocking factor " + bf
+                                    + "; a mixed model needs every sample in a block." );
+                }
+                if ( fvs.size() > 1 ) {
+                    throw new IllegalArgumentException(
+                            samplesUsed.get( i ) + " carries more than one value for blocking factor " + bf
+                                    + "; the block assignment is ambiguous." );
+                }
+                blockIds[i] = DiffExAnalyzerUtils.nameForR( fvs.get( 0 ), false );
+            }
+        }
 
         /*
          * Run the analysis
          */
-        final Map<String, LinearModelSummary> rawResults = runAnalysisInBackground( finalDataMatrix, properDesignMatrix, librarySizes, config );
+        final Map<String, LinearModelSummary> rawResults = runAnalysisInBackground( finalDataMatrix, properDesignMatrix, librarySizes, config, blockIds );
 
         assert rawResults.size() == bareFilteredDataMatrix.rows() : "expected " + bareFilteredDataMatrix.rows() + " results, got " + rawResults.size();
 
@@ -1505,9 +1606,10 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * long.
      */
     private Map<String, LinearModelSummary> runAnalysisInBackground( DoubleMatrix<String, String> sNamedMatrix,
-            DesignMatrix designMatrix, DoubleMatrix1D librarySize, DifferentialExpressionAnalysisConfig config ) {
+            DesignMatrix designMatrix, DoubleMatrix1D librarySize, DifferentialExpressionAnalysisConfig config,
+            @Nullable String[] blockIds ) {
 
-        Future<Map<String, LinearModelSummary>> f = taskExecutor.submit( () -> runAnalysis( sNamedMatrix, designMatrix, librarySize, config ) );
+        Future<Map<String, LinearModelSummary>> f = taskExecutor.submit( () -> runAnalysis( sNamedMatrix, designMatrix, librarySize, config, blockIds ) );
 
         StopWatch timer = StopWatch.createStarted();
 
@@ -1556,11 +1658,34 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
      * @return results
      */
     private Map<String, LinearModelSummary> runAnalysis( DoubleMatrix<String, String> sNamedMatrix,
-            DesignMatrix designMatrix, DoubleMatrix1D librarySize, DifferentialExpressionAnalysisConfig config ) {
+            DesignMatrix designMatrix, DoubleMatrix1D librarySize, DifferentialExpressionAnalysisConfig config,
+            @Nullable String[] blockIds ) {
         StopWatch timer = new StopWatch();
         timer.start();
         LeastSquaresFit fit;
-        if ( config.isUseWeights() ) {
+        if ( blockIds != null ) {
+            /*
+             * Mixed model: estimate the inter-block correlation (limma duplicateCorrelation), then fit by
+             * GLS (limma gls.series). The estimation is a per-probe REML variance decomposition and is the
+             * bulk of the added cost; it runs here inside the background task so the watchdog covers it.
+             */
+            MixedModelFit mmf = new MixedModelFit().estimateCorrelation( designMatrix.getDoubleMatrix(), blockIds,
+                    new DenseDoubleMatrix2D( sNamedMatrix.asArray() ), null );
+            if ( mmf.isDegenerateToZero() ) {
+                LinearModelAnalyzer.log.info(
+                        "Intrablock correlation degenerated to zero (all blocks of size one, or the block span is inside the design); fitting by ordinary least squares." );
+            } else {
+                LinearModelAnalyzer.log.info( String.format(
+                        "Estimated intrablock correlation: %.4f (%d ms, from %d probes)",
+                        mmf.getConsensusCorrelation(), timer.getTime(),
+                        ( int ) Arrays.stream( mmf.getAtanhCorrelations() ).filter( Double::isFinite ).count() ) );
+            }
+            cern.colt.matrix.DoubleMatrix2D correlation = MixedModelFit
+                    .blockCorrelationMatrix( blockIds, mmf.getConsensusCorrelation() );
+            timer.reset();
+            timer.start();
+            fit = new LeastSquaresFit( designMatrix, correlation, sNamedMatrix );
+        } else if ( config.isUseWeights() ) {
             MeanVarianceEstimator mv;
             try {
                 mv = new MeanVarianceEstimator( designMatrix, sNamedMatrix, librarySize );

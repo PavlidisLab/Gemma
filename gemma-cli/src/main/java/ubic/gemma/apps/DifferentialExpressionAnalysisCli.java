@@ -114,6 +114,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private String subsetFactorIdentifier;
 
     /**
+     * Identifiers of factors to treat as blocking terms (subjects of a paired design).
+     */
+    @Nullable
+    private List<String> blockingFactorIdentifiers;
+
+    /**
      * Whether batch factors should be included (if they exist)
      */
     private boolean ignoreBatch = true;
@@ -203,6 +209,18 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                         + "This is incompatible with -redo,--redo, -redoAnalysis,--redo-analysis or -redoSubset,--redo-subset." ).get() );
 
         options.addOption( "usebatch", "use-batch-factor", false, "If a batch factor is available, use it. Otherwise, batch information can/will be ignored in the analysis. This is incompatible with " + formatOption( options, "factors" ) + ", -redo,--redo, -redoAnalysis,--redo-analysis and -redoSubset,--redo-subset." );
+        addSingleExperimentOption( options, Option.builder( "blockingFactors" ).longOpt( "blocking-factors" )
+                .hasArgs()
+                .argName( "ID, name, category" )
+                .valueSeparator( ',' )
+                .desc( "ID numbers, categories or names of factor(s) to treat as blocking terms, comma-delimited "
+                        + "(e.g. the subject identifier of a paired or repeated-measures design). "
+                        + "Their columns stay in the model so the other factors' contrasts are adjusted for them "
+                        + "(within-subject comparisons), but no differential expression results are reported for "
+                        + "the blocking factor itself. Each must also be listed in " + formatOption( options, "factors" )
+                        + ". Blocking factors cannot be used in interactions -- subject-by-treatment terms are a "
+                        + "mixed model, which is not supported. Requires " + formatOption( options, "factors" ) + "." )
+                .get() );
         options.addOption( "nobayes", "no-bayes", false, "Do not apply empirical-Bayes moderated statistics. Default is to use eBayes." );
         options.addOption( "ignoreFailingSubsets", "ignore-failing-subsets", false, "Ignore failing subsets and continue processing other subsets. Requires the " + formatOption( options, "subset" ) + " option to be set or -redo,--redo option with existing subset analyses." );
 
@@ -360,6 +378,14 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         this.subsetFactorIdentifier = getOptionValue( commandLine, "subset", requires( allOf( toBeUnset( "redo" ), toBeUnset( "redoAnalysis" ), toBeUnset( "redoSubset" ) ) ) );
         // we can only force the use of a batch factor during automatic selection
         this.ignoreBatch = !hasOption( commandLine, "usebatch", requires( allOf( toBeUnset( "factors" ), toBeUnset( "redo" ), toBeUnset( "redoAnalysis" ), toBeUnset( "redoSubset" ) ) ) );
+        // blocking factors only make sense in manual mode: the user names the subject factor alongside the
+        // factors of interest, the same way interactions are specified
+        if ( commandLine.hasOption( "blockingFactors" ) ) {
+            this.blockingFactorIdentifiers = Arrays.asList( commandLine.getOptionValues( "blockingFactors" ) );
+            hasOption( commandLine, "blockingFactors", requires( allOf( toBeSet( "factors" ), toBeUnset( "redo" ), toBeUnset( "redoAnalysis" ), toBeUnset( "redoSubset" ) ) ) );
+        } else {
+            this.blockingFactorIdentifiers = null;
+        }
         this.moderateStatistics = !commandLine.hasOption( "nobayes" );
         this.persist = !commandLine.hasOption( "nodb" );
         this.makeArchiveFiles = !hasOption( commandLine, "nofiles", requires( toBeUnset( "nodb" ) ) );
@@ -549,6 +575,30 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             config.setSubsetFactor( subsetFactor );
             config.addFactorsToInclude( factors );
             config.addInteractionsToInclude( factorInteractions );
+
+            if ( this.blockingFactorIdentifiers != null ) {
+                Set<ExperimentalFactor> blocking = new HashSet<>();
+                for ( String identifier : this.blockingFactorIdentifiers ) {
+                    ExperimentalFactor bf = locateExperimentalFactor( identifier, factorsById, factorsByName );
+                    if ( bf.getType() != FactorType.CATEGORICAL ) {
+                        throw new IllegalArgumentException( bf + " is not categorical. A blocking factor must be categorical." );
+                    }
+                    if ( !factors.contains( bf ) ) {
+                        throw new IllegalArgumentException( "Blocking factor " + bf
+                                + " must also be listed in -factors,--factors: its columns are part of the model even though no results are reported for it." );
+                    }
+                    if ( factorInteractions.stream().anyMatch( i -> i.contains( bf ) ) ) {
+                        throw new IllegalArgumentException( "Blocking factor " + bf
+                                + " cannot be used in an interaction: subject-by-treatment terms are a mixed model, which is not supported." );
+                    }
+                    if ( bf.equals( subsetFactor ) ) {
+                        throw new IllegalArgumentException( "Blocking factor " + bf + " cannot also be the subset factor." );
+                    }
+                    blocking.add( bf );
+                }
+                config.setBlockingFactors( blocking );
+                log.info( "Treating " + blocking + " as blocking factor(s); no results will be reported for them." );
+            }
         }
 
         Collection<DifferentialExpressionAnalysis> results;

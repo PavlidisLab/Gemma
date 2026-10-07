@@ -22,14 +22,20 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
+import cern.colt.matrix.linalg.CholeskyDecomposition;
 import cern.jet.math.Functions;
 import cern.jet.stat.Descriptive;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.FDistribution;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.apache.commons.math3.special.Beta;
+import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -214,7 +220,7 @@ public class LeastSquaresFit {
      * Weighted least squares fit between two matrices
      *
      * @param designMatrix
-     * @param data
+     * @param data         the data
      * @param weights      to be used in modifying the influence of the observations in data.
      */
     public LeastSquaresFit(DesignMatrix designMatrix, DoubleMatrix<String, String> data,
@@ -230,6 +236,85 @@ public class LeastSquaresFit {
         this.hasIntercept = designMatrix.hasIntercept();
         assert hasInterceptTerm == this.hasIntercept : diagnosis(null);
         this.weights = weights;
+        fit();
+    }
+
+    /**
+     * Generalized least squares fit with an observation correlation structure: the mixed-model fit for a
+     * blocking factor (limma gls.series with a block-derived correlation). The design and data are whitened
+     * by the Cholesky factor of the correlation matrix and everything downstream (coefficients, stdev
+     * unscaled, sigma, ANOVA, eBayes) runs in the whitened space, exactly as gls.series does -- the
+     * coefficients are the GLS estimates and sigma carries the correlation's variance inflation implicitly.
+     * <p>
+     * The correlation must have been estimated first, typically {@link MixedModelFit#estimateCorrelation}
+     * on a design that EXCLUDES the blocking factor (its columns would soak up the correlation and the
+     * estimate degenerates to zero; see the "block factor already encoded in the design" gate there).
+     * <p>
+     * Not supported (and rejected loudly, not silently ignored) in combination with weights or missing
+     * values: those make the whitening per-probe rather than shared, which is limma's per-observation
+     * gls.series branch. In limma that path is what voom + duplicateCorrelation runs; until it is ported,
+     * a mixed model requires complete, unweighted data.
+     *
+     * @param designMatrix design matrix (the blocking factor must NOT have columns in it)
+     * @param correlation  samples x samples correlation matrix, e.g.
+     *                     {@link MixedModelFit#blockCorrelationMatrix(String[], double)}; parameter order
+     *                     differs from the weights constructor only because Java cannot overload two
+     *                     {@code (DesignMatrix, DoubleMatrix<String,String>, DoubleMatrix2D)} signatures
+     * @param data         expression data, one row per probe
+     */
+    public LeastSquaresFit(DesignMatrix designMatrix, DoubleMatrix2D correlation, DoubleMatrix<String, String> data) {
+        this.designMatrix = designMatrix;
+        this.assign = designMatrix.getAssign();
+        this.terms = designMatrix.getTerms();
+        this.rowNames = data.getRowNames();
+        boolean hasInterceptTerm = this.terms.contains( LinearModelSummary.INTERCEPT_COEFFICIENT_NAME);
+        this.hasIntercept = designMatrix.hasIntercept();
+        assert hasInterceptTerm == this.hasIntercept : diagnosis(null);
+
+        String firstProbeWithMissing = null;
+        double[][] raw = data.asArray();
+        scan:
+        for ( int i = 0; i < raw.length; i++ ) {
+            for ( double v : raw[i] ) {
+                if ( Double.isNaN( v ) || Double.isInfinite( v ) ) {
+                    firstProbeWithMissing = data.getRowName( i );
+                    break scan;
+                }
+            }
+        }
+        if ( firstProbeWithMissing != null ) {
+            throw new UnsupportedOperationException(
+                    "A mixed-model (correlated) fit is not supported with missing values; drop or impute first. Probe: "
+                            + firstProbeWithMissing );
+        }
+
+        if ( correlation.rows() != data.columns() || correlation.columns() != data.columns() ) {
+            throw new IllegalArgumentException( "Correlation matrix is " + correlation.rows() + "x"
+                    + correlation.columns() + " but there are " + data.columns() + " samples." );
+        }
+
+        /*
+         * Whiten: X* = L^{-1} X, y* = L^{-1} y where L is the LOWER Cholesky factor of V (V = L L').
+         * R's chol() returns the UPPER factor R (V = R'R), and gls.series whitens with
+         * backsolve(cholV, X, transpose=TRUE) = solve(t(R), X) = L^{-1} X. Solving against the transpose
+         * factor instead would give X'(L'L)^{-1}X, which is not the GLS normal matrix X'V^{-1}X.
+         */
+        Algebra solver = new Algebra();
+        CholeskyDecomposition chol = new CholeskyDecomposition( correlation );
+        if ( !chol.isSymmetricPositiveDefinite() ) {
+            throw new IllegalArgumentException(
+                    "Correlation matrix is not positive definite (|rho| must be < 1); cannot whiten." );
+        }
+        DoubleMatrix2D L = chol.getL();
+
+        this.A = solver.solve( L, designMatrix.getDoubleMatrix() );
+        // b arrives probes x samples; whiten each probe's column vector: b' (samples x probes) is solved
+        // against L^{-1}, then transposed back to probes x samples for the standard fit machinery.
+        DoubleMatrix2D bTransposed = solver.transpose( new DenseDoubleMatrix2D( data.asArray() ) );
+        DoubleMatrix2D whitenedColumns = solver.solve( L, bTransposed );
+        this.b = new DenseDoubleMatrix2D( solver.transpose( whitenedColumns ).toArray() ); // probes x samples
+
+        this.weights = null;
         fit();
     }
 
@@ -828,7 +913,7 @@ public class LeastSquaresFit {
     private void addDerivedLevelContrast(DoubleMatrix<String, String> summaryTable, int summaryRow,
                                          List<Integer> factorColumns, int[] estimatedIndexForColumn,
                                          DoubleMatrix1D estCoef, DoubleMatrix2D XtXi, double resvar, int row,
-                                         TDistribution tdist) {
+                                         RealDistribution tdist) {
         int[] idx = new int[factorColumns.size()];
         for (int k = 0; k < factorColumns.size(); k++) {
             int col = factorColumns.get(k);
@@ -878,7 +963,8 @@ public class LeastSquaresFit {
         // "Std. Error" holds the UNSCALED value for the estimated coefficients too; matched deliberately
         summaryTable.set(summaryRow, 1, sdUnscaled);
         summaryTable.set(summaryRow, 2, tstat);
-        summaryTable.set(summaryRow, 3, 2.0 * (1.0 - tdist.cumulativeProbability(Math.abs(tstat))));
+        // lower-tail form (see the comment in summarize): 2 * (1 - CDF) floors at 2 * 2^-53 in the far tail
+        summaryTable.set(summaryRow, 3, 2.0 * tdist.cumulativeProbability( -Math.abs( tstat ) ));
     }
 
     LinearModelSummaryImpl summarize(int i) {
@@ -1025,7 +1111,7 @@ public class LeastSquaresFit {
          */
 
         DoubleMatrix1D tstats;
-        TDistribution tdist;
+        RealDistribution tdist;
         if (this.hasBeenShrunken) {
             /*
              * moderated t-statistic
@@ -1044,8 +1130,22 @@ public class LeastSquaresFit {
 
             double dfTotal = rdf + this.dfPrior;
 
+            /*
+             * df.total <- pmin(df.total, df.pooled) (limma .ebayes): the pooled residual dof across genes is a
+             * hard ceiling on the borrowed information. Without the cap an infinite dfPrior would leave
+             * df.total infinite.
+             */
+            if ( this.residualDofs.isEmpty() ) {
+                dfTotal = Math.min( dfTotal, ( double ) this.residualDof * this.coefficients.columns() );
+            } else {
+                dfTotal = Math.min( dfTotal, this.residualDofs.stream().mapToInt( Integer::intValue ).sum() );
+            }
+
             assert !Double.isNaN(dfTotal);
-            tdist = new TDistribution(dfTotal);
+            // df.total = Inf would happen without the cap above (see ModeratedTstat.squeezeVariances); pt(t, Inf)
+            // is the standard normal in R, and commons-math TDistribution cannot evaluate the incomplete beta
+            // with an infinite parameter. The cap normally makes this unreachable, keep the guard anyway.
+            tdist = Double.isInfinite( dfTotal ) ? new NormalDistribution() : new TDistribution( dfTotal );
         } else {
             /*
              * Or we could get these from
@@ -1085,7 +1185,13 @@ public class LeastSquaresFit {
             summaryTable.set(ti, 1, sdUnscaled.get(j));
             summaryTable.set(ti, 2, tstats.get(j));
 
-            double pval = 2.0 * (1.0 - tdist.cumulativeProbability(Math.abs(tstats.get(j))));
+            /*
+             * 2 * CDF(-|t|), not 2 * (1 - CDF(|t|)): they are the same mathematically (the distributions
+             * here are symmetric), but the latter cancels catastrophically in the far tail -- for p below
+             * ~2.2e-16 (1 - 1 - eps) every p-value came out as exactly 2*2^-53, which real data (e.g.
+             * t = 10.5 at 79 df on GSE17183) actually produces.
+             */
+            double pval = 2.0 * tdist.cumulativeProbability( -Math.abs( tstats.get( j ) ) );
             summaryTable.set(ti, 3, pval);
 
             j++;
@@ -1303,8 +1409,32 @@ public class LeastSquaresFit {
 
                 fStats.set(i, j, fStats.get(i, j) / denominator.get(i));
                 try {
-                    FDistribution pf = new FDistribution(ndof, rdof + this.dfPrior);
-                    pvalues.set(i, j, 1.0 - pf.cumulativeProbability(fStats.get(i, j)));
+                    /*
+                     * Mirror limma's df.total = pmin(df.residual + df.prior, df.pooled): the pooled residual
+                     * dof is a hard ceiling on the borrowed information, and without the cap an infinite
+                     * dfPrior (fitFDist evar <= 0, variances carry no usable spread) would hand the F
+                     * distribution an infinite second dof. commons-math's continued fraction diverges to NaN
+                     * for those; in R pf(f, d1, Inf) is exactly chi-square with d1 dof (F -> d1*F), so use
+                     * that when the cap still leaves infinity.
+                     */
+                    double df2 = rdof + this.dfPrior;
+                    if ( this.residualDofs.isEmpty() ) {
+                        df2 = Math.min( df2, ( double ) this.residualDof * this.coefficients.columns() );
+                    } else {
+                        df2 = Math.min( df2, this.residualDofs.stream().mapToInt( Integer::intValue ).sum() );
+                    }
+                    if ( Double.isInfinite( df2 ) ) {
+                        ChiSquaredDistribution chi = new ChiSquaredDistribution( ndof );
+                        // upper tail directly (1 - CDF cancels in the far tail, as for the t p-values)
+                        double chiStat = ndof * fStats.get( i, j );
+                        pvalues.set( i, j, chiStat <= 0 ? 1.0 : Gamma.regularizedGammaQ( ndof / 2.0, chiStat / 2.0 ) );
+                    } else {
+                        new FDistribution( ndof, df2 ); // validates the dofs (throws NotStrictlyPositiveException)
+                        // P(F > f) = I_x(df2/2, ndof/2), x = df2 / (df2 + ndof f): the upper tail without the
+                        // 1 - CDF cancellation, which floors p at ~1e-16
+                        double f = fStats.get( i, j );
+                        pvalues.set( i, j, f <= 0 ? 1.0 : Beta.regularizedBeta( df2 / ( df2 + ndof * f ), df2 / 2.0, ndof / 2.0 ) );
+                    }
                 } catch (NotStrictlyPositiveException e) {
                     if (timesWarned < 10) {
                         log.warn("Pvalue could not be computed for F=" + fStats.get(i, j) + "; denominator was="
@@ -1343,6 +1473,18 @@ public class LeastSquaresFit {
      *
      */
     private void fit() {
+        /*
+         * More coefficients than samples means the QR's Householder loop reads past the matrix (colt indexes
+         * the full n x n span) and dies with an ArrayIndexOutOfBoundsException before the rank check can
+         * speak. Every such design has residual dof <= 0, which the existing checks reject -- so refusing
+         * here changes only the exception, never a fit that would have succeeded. A singleton-subject paired
+         * design (each subject one arm) hits exactly this shape: k-1 subject columns plus treatment can
+         * exceed the sample count.
+         */
+        if ( this.A != null && this.A.rows() < this.A.columns() ) {
+            throw new IllegalArgumentException( "No residual degrees of freedom to fit the model"
+                    + diagnosis( null ) );
+        }
         if (this.weights == null) {
             lsf();
             return;

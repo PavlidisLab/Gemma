@@ -78,6 +78,19 @@ public class DifferentialExpressionAnalysisConfig {
     private final Set<Set<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
 
     /**
+     * Factors whose levels are blocking terms (e.g. subjects in a paired or repeated-measures design). Their
+     * columns stay in the design so every other factor's contrasts are adjusted for them, but the blocking
+     * factor itself gets no result set: the subject-to-subject differences are nuisance, not findings.
+     * <p>
+     * Categorical factors only. The factor must still be in {@link #factorsToInclude}; a factor here but not
+     * there is ignored with a warning. Explicit config overrides any curator hint the factor carries, and no
+     * blocking factor is guessed automatically.
+     *
+     * @see #setBlockingFactors(Collection)
+     */
+    private final Set<ExperimentalFactor> blockingFactors = new HashSet<>();
+
+    /**
      * Indicate if this analysis should be persisted.
      */
     private boolean persist = true;
@@ -195,6 +208,8 @@ public class DifferentialExpressionAnalysisConfig {
         this.analysisType = baseConfig.getAnalysisType();
         this.moderateStatistics = baseConfig.isModerateStatistics();
         this.factorsToInclude.addAll( baseConfig.getFactorsToInclude() );
+        this.blockingFactors.addAll( baseConfig.getBlockingFactors() );
+        this.estimateBlockingCorrelation = baseConfig.isEstimateBlockingCorrelation();
         this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
         this.persist = baseConfig.isPersist();
         this.deleteOtherAnalyses = baseConfig.isDeleteOtherAnalyses();
@@ -237,11 +252,45 @@ public class DifferentialExpressionAnalysisConfig {
     }
 
     /**
+     * Mark factors as blocking terms (subjects of a paired design). Categorical factors only; each must also be
+     * in {@link #factorsToInclude} to reach the model.
+     */
+    public void setBlockingFactors( Collection<ExperimentalFactor> factors ) {
+        for ( ExperimentalFactor f : factors ) {
+            Assert.isTrue( f.getType() != FactorType.CONTINUOUS,
+                    "A continuous factor has one column and no subject levels to block on: " + f );
+        }
+        blockingFactors.clear();
+        blockingFactors.addAll( factors );
+    }
+
+    /**
+     * Fit the blocking factor as a random intercept (mixed model) instead of fixed-effect columns: the
+     * inter-block correlation is estimated from the data (limma {@code duplicateCorrelation}) and the fit
+     * runs by GLS (limma {@code gls.series}). The blocking factor then has NO columns in the design -- it
+     * lives in the correlation structure -- so its factor values are only used to assign samples to blocks.
+     * <p>
+     * Requires {@link #blockingFactors} to be non-empty and the data to be complete and unweighted: the
+     * per-observation gls.series branch (voom weights + correlation, or missing values + correlation) is not
+     * ported yet and the analyzer rejects the combination. Consensus correlation only (limma's default), not
+     * per-probe correlations.
+     */
+    private boolean estimateBlockingCorrelation = false;
+
+    /**
      * Add an interaction of two factors to include in the analysis.
+     * <p>
+     * A blocking factor (a paired-design subject term) cannot take part: subject-by-treatment terms are exactly
+     * what a mixed model is for, and this analyzer does not support those. Model the treatment effect with the
+     * subject as a pure block instead.
      */
     public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
         HashSet<ExperimentalFactor> fs = new HashSet<>( factors );
         Assert.isTrue( fs.size() == 2, "An interaction must have two factors." );
+        Set<ExperimentalFactor> clash = new HashSet<>( fs );
+        clash.retainAll( blockingFactors );
+        Assert.isTrue( clash.isEmpty(), "Blocking factor(s) " + clash
+                + " cannot also be in an interaction: subject-by-treatment terms need a mixed model, which is not supported." );
         interactionsToInclude.add( fs );
     }
 

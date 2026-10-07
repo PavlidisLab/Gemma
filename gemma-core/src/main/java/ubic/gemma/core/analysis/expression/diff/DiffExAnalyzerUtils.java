@@ -23,6 +23,19 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DiffExAnalyzerUtils {
 
+    /**
+     * The prefix written before the comma-separated list of blocking factors in the protocol description, and
+     * parsed back by {@code DifferentialExpressionAnalyzerServiceImpl.extendConfig} on redo. Keep the two strings
+     * in sync.
+     */
+    public static final String BLOCKING_FACTORS_PROTOCOL_PREFIX = "# Blocking factors (no results reported for them): ";
+
+    /**
+     * Written when the blocking factors were fitted as a random intercept (estimated inter-block correlation)
+     * rather than as design columns; parsed back on redo so the redo uses the same model.
+     */
+    public static final String ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE = "# Blocking correlation estimated (mixed model)";
+
     public static final String BIO_MATERIAL_RNAME_PREFIX = "biomat_";
     public static final String FACTOR_RNAME_PREFIX = "fact.";
     public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
@@ -462,6 +475,18 @@ public class DiffExAnalyzerUtils {
             writer.append( "\n" );
         } else {
             writer.append( "# No interactions defined.\n" );
+        }
+
+        if ( !config.getBlockingFactors().isEmpty() ) {
+            writer.append( BLOCKING_FACTORS_PROTOCOL_PREFIX )
+                    .append( config.getBlockingFactors().stream()
+                            .sorted( ExperimentalFactor.COMPARATOR )
+                            .map( f -> formatFactor( f, true ) )
+                            .collect( Collectors.joining( ", " ) ) )
+                    .append( "\n" );
+            if ( config.isEstimateBlockingCorrelation() ) {
+                writer.append( ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE ).append( "\n" );
+            }
         }
 
         if ( !baselineFactorValues.isEmpty() ) {

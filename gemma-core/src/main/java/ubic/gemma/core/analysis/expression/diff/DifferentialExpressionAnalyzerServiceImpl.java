@@ -45,6 +45,9 @@ import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpre
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.BLOCKING_FACTORS_PROTOCOL_PREFIX;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE;
+
 import java.io.File;
 import java.nio.file.Path;
 import java.util.*;
@@ -446,6 +449,51 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         config.addFactorsToInclude( factorsFromOldExp );
         config.addInteractionsToInclude( interactionsFromOldExp );
+
+        /*
+         * Recover blocking factors. A paired analysis reports no result set for the blocking factor (its
+         * subject-to-subject differences are nuisance), so the result-set walk above never sees it -- without
+         * this recovery a redo of a paired analysis would silently refit UNPAIRED, quietly discarding the
+         * subject adjustment that was the point of the design. The protocol description is the only carrier:
+         * createProtocolForConfig writes one "Blocking factors (no results reported for them):"
+         * line when any are set. Tokens are the factor toString, resolved against the design of the
+         * experiment the analysis belongs to; nothing matching is left out of the redo rather than guessed.
+         */
+        if ( dea.getProtocol() != null && dea.getProtocol().getDescription() != null ) {
+            // A subset analysis has no design of its own; its factors live on the source experiment.
+            BioAssaySet analyzed = ( BioAssaySet ) Hibernate.unproxy( dea.getExperimentAnalyzed() );
+            ExpressionExperiment designOwner = analyzed instanceof ExpressionExperimentSubSet
+                    ? ( ( ExpressionExperimentSubSet ) analyzed ).getSourceExperiment()
+                    : analyzed instanceof ExpressionExperiment ? ( ExpressionExperiment ) analyzed : null;
+            Collection<ExperimentalFactor> designFactors = designOwner != null && designOwner.getExperimentalDesign() != null
+                    ? designOwner.getExperimentalDesign().getExperimentalFactors()
+                    : Collections.<ExperimentalFactor>emptySet();
+            Collection<ExperimentalFactor> blockingFromOldExp = new HashSet<>();
+            for ( String line : dea.getProtocol().getDescription().split( "\n" ) ) {
+                if ( line.equals( ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE ) ) {
+                    config.setEstimateBlockingCorrelation( true );
+                    continue;
+                }
+                if ( !line.startsWith( BLOCKING_FACTORS_PROTOCOL_PREFIX ) ) {
+                    continue;
+                }
+                // Factors are matched whole against the ", "-joined list rather than by splitting it, so a factor
+                // name containing ", " cannot be cut in two.
+                String list = ", " + line.substring( BLOCKING_FACTORS_PROTOCOL_PREFIX.length() ) + ", ";
+                for ( ExperimentalFactor f : designFactors ) {
+                    if ( list.contains( ", " + f + ", " ) ) {
+                        blockingFromOldExp.add( f );
+                    }
+                }
+            }
+            if ( !blockingFromOldExp.isEmpty() ) {
+                // the blocking factor has no result set, so the walk above did not add it, and the analyzer drops a
+                // blocking factor that is not among the factors to include
+                config.addFactorsToInclude( blockingFromOldExp );
+                config.setBlockingFactors( blockingFromOldExp );
+            }
+        }
+
         return config;
     }
 

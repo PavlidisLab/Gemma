@@ -1,0 +1,27 @@
+# GSE55468 (Gemma REST /datasets/GSE55468/samples): 26 samples, every individual measured once: no repeated measures
+sample	block	cond
+GSM1337422	patient_9	
+GSM1337426	patient_13	
+GSM1337425	patient_12	
+GSM1337428	patient_15	
+GSM1337427	patient_14	
+GSM1337430	patient_17	
+GSM1337429	patient_16	
+GSM1337432	patient_19	
+GSM1337431	patient_18	
+GSM1337424	patient_11	
+GSM1337423	patient_10	
+GSM1337437	patient_24	
+GSM1337418	patient_5	
+GSM1337436	patient_23	
+GSM1337419	patient_6	
+GSM1337439	patient_26	
+GSM1337420	patient_7	
+GSM1337438	patient_25	
+GSM1337421	patient_8	
+GSM1337414	patient_1	
+GSM1337415	patient_2	
+GSM1337416	patient_3	
+GSM1337433	patient_20	
+GSM1337435	patient_22	
+GSM1337434	patient_21	
