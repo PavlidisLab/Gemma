@@ -282,6 +282,24 @@
     </servlet-mapping>
 
     <!--
+        TGEMO term IRIs (http://gemma.msl.ubc.ca/ont/TGEMO_*), served by gemma-web's
+        OntologyController until it was retired. A plain servlet rather than a Jersey
+        resource: the gemma-rest servlet package-scans all of ubic.gemma.rest, so a
+        resource would also show up under /rest/v2/. /ont/** is outside the
+        /rest/v2/** security chain, which is fine since TGEMO is public. Apache
+        proxies /ont/ here unchanged. See ubic.gemma.rest.servlet.GemmaOntologyServlet.
+    -->
+    <servlet>
+        <servlet-name>gemma-ontology</servlet-name>
+        <servlet-class>ubic.gemma.rest.servlet.GemmaOntologyServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>gemma-ontology</servlet-name>
+        <url-pattern>/ont/*</url-pattern>
+    </servlet-mapping>
+
+    <!--
         Static asset serving for the Swagger UI assets bundled under /resources/restapidocs/
         (see gemma-rest/pom.xml's gemma-rest-war profile webResources block). Tomcat's
         DefaultServlet handles the actual file I/O; the precompressed init-param lets it
