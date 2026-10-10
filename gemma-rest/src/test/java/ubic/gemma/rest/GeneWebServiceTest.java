@@ -18,6 +18,7 @@ import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
+import static org.assertj.core.api.InstanceOfAssertFactories.map;
 import static ubic.gemma.rest.util.Assertions.assertThat;
 
 public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
@@ -83,6 +84,44 @@ public class GeneWebServiceTest extends BaseJerseyIntegrationTest5 {
                 .extracting( "data", list( Map.class ) )
                 .singleElement()
                 .satisfies( m -> assertThat( m.get( "aliases" ) ).asInstanceOf( list( String.class ) ).containsExactly( geneAlias ) );
+    }
+
+    @Test
+    public void testGeneByInternalId() {
+        assertThat( target( "/genes/internalId/" + gene.getId() ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", map( String.class, Object.class ) )
+                .satisfies( m -> {
+                    assertThat( m.get( "officialSymbol" ) ).isEqualTo( gene.getOfficialSymbol() );
+                    assertThat( m.get( "aliases" ) ).asInstanceOf( list( String.class ) ).containsExactly( geneAlias );
+                } );
+    }
+
+    @Test
+    public void testGeneByInternalIdIsNotReadAsNcbiId() {
+        // gene2's NCBI ID equals gene's Gemma ID: /genes/{n} must keep reading n as an NCBI ID, and
+        // /genes/internalId/{n} as a Gemma ID.
+        gene2 = new Gene();
+        gene2.setOfficialSymbol( "official_symbol_" + RandomStringUtils.insecure().nextAlphabetic( 10 ) );
+        gene2.setNcbiGeneId( gene.getId().intValue() );
+        gene2 = geneService.create( gene2 );
+        assertThat( target( "/genes/internalId/" + gene.getId() ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.id", gene.getId().intValue() );
+        assertThat( target( "/genes/" + gene.getId() ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .extracting( "data", list( Map.class ) )
+                .singleElement()
+                .satisfies( m -> assertThat( m.get( "officialSymbol" ) ).isEqualTo( gene2.getOfficialSymbol() ) );
+    }
+
+    @Test
+    public void testGeneByInternalIdWhenMissing() {
+        assertThat( target( "/genes/internalId/" + ( gene.getId() + 1_000_000L ) ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
     }
 
     @Test

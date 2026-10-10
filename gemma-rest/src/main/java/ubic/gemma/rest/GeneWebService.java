@@ -425,6 +425,33 @@ public class GeneWebService {
     }
 
     /**
+     * Retrieves a gene by its Gemma ID. This lives on its own route because {@link GeneArg} reads a bare number as an
+     * NCBI ID, and the two ID spaces overlap.
+     */
+    @GET
+    @Path("/internalId/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Retrieve a gene by its internal Gemma identifier",
+            description = "Gemma IDs and NCBI gene IDs are both integers and overlap, so other gene endpoints always read a number as an NCBI ID. Use this endpoint to look up a gene by the `id` field returned elsewhere in the API.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "The gene with the given Gemma identifier.", useReturnTypeSchema = true, content = @Content()),
+                    @ApiResponse(responseCode = "404", description = "Gene not found",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ResponseErrorObject.class)))
+            })
+    public ResponseDataObject<GeneValueObject> getGeneByInternalId( // Params:
+            @Parameter(description = "Internal Gemma gene identifier.") @PathParam("id") Long id // Required
+    ) {
+        GeneValueObject gvo = geneService.loadValueObjectById( id );
+        if ( gvo == null ) {
+            throw new NotFoundException( "No gene found with id=" + id );
+        }
+        List<GeneValueObject> vos = Collections.singletonList( gvo );
+        geneService.populateAssociatedExperimentCount( vos );
+        geneService.populateAliases( vos );
+        return respond( gvo );
+    }
+
+    /**
      * Retrieves the physical location of the given gene.
      *
      * @param geneArg can either be the NCBI ID, Ensembl ID or official symbol. NCBI ID is most efficient (and
