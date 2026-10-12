@@ -29,6 +29,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayFieldCountValueObject;
 import ubic.gemma.model.expression.bioAssay.ExtractedMolecule;
+import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -948,6 +950,60 @@ public class ExpressionExperimentDaoTest extends BaseDatabaseTest5 {
         // No SingleCellDimensionExperiment row here, and deliberately still single-cell: 29 datasets on prod
         // are in exactly this state. The count is unknown, the modality is not.
         assertNull( eevo.getNumberOfCellIds() );
+    }
+
+    /**
+     * The protocol of a cell type assignment has to arrive initialized: {@code Analysis.protocol} is lazy and the
+     * value object leaves an uninitialized proxy out, which had /datasets/{id}/cellTypeAssignment answering
+     * {@code "protocol": null} for an assignment that was found by that very protocol (issue 1697).
+     */
+    @Test
+    @WithMockUser
+    public void testGetCellTypeAssignmentCarriesItsProtocol() {
+        Taxon taxon = new Taxon();
+        sessionFactory.getCurrentSession().persist( taxon );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "counts" );
+        qt.setGeneralType( GeneralType.QUANTITATIVE );
+        qt.setType( StandardQuantitationType.COUNT );
+        qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setScale( ScaleType.COUNT );
+        qt.setIsSingleCellPreferred( true );
+        ee.getQuantitationTypes().add( qt );
+        sessionFactory.getCurrentSession().persist( ee );
+        Protocol protocol = new Protocol();
+        protocol.setName( "author-submitted" );
+        sessionFactory.getCurrentSession().persist( protocol );
+        SingleCellDimension scd = new SingleCellDimension();
+        scd.setCellIds( Arrays.asList( "A", "B" ) );
+        CellTypeAssignment cta = new CellTypeAssignment();
+        cta.setName( "lee-psychad-subclass" );
+        cta.setProtocol( protocol );
+        cta.setCellTypeIndices( new int[] { 0, 1 } );
+        cta.setNumberOfAssignedCells( 2 );
+        cta.setCellTypes( Arrays.asList( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "X", null ),
+                Characteristic.Factory.newInstance( Categories.CELL_TYPE, "Y", null ) ) );
+        cta.setNumberOfCellTypes( 2 );
+        scd.getCellTypeAssignments().add( cta );
+        sessionFactory.getCurrentSession().persist( scd );
+        SingleCellDimensionExperiment link = new SingleCellDimensionExperiment();
+        link.setExpressionExperiment( ee );
+        link.setQuantitationType( qt );
+        link.setSingleCellDimension( scd );
+        sessionFactory.getCurrentSession().persist( link );
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        CellTypeAssignment byName = expressionExperimentDao.getCellTypeAssignment( ee, qt, "lee-psychad-subclass" );
+        assertNotNull( byName );
+        assertTrue( Hibernate.isInitialized( byName.getProtocol() ) );
+        assertEquals( "author-submitted", new CellTypeAssignmentValueObject( byName, true ).getProtocol().getName() );
+
+        sessionFactory.getCurrentSession().clear();
+        Collection<CellTypeAssignment> byProtocol = expressionExperimentDao.getCellTypeAssignmentByProtocol( ee, qt, "author-submitted" );
+        assertEquals( 1, byProtocol.size() );
+        assertTrue( Hibernate.isInitialized( byProtocol.iterator().next().getProtocol() ) );
     }
 
     /**

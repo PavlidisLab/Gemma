@@ -3980,6 +3980,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select distinct cta from SingleCellDimensionExperiment e "
                         + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
+                        + "left join fetch cta.protocol "
                         + "where e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -3993,6 +3994,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select cta from SingleCellDimensionExperiment e "
                         + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
+                        + "left join fetch cta.protocol "
                         + "where e.expressionExperiment = :ee and e.quantitationType = :qt" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
@@ -4019,6 +4021,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select cta from SingleCellDimensionExperiment e "
                         + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
+                        + "left join fetch cta.protocol "
                         + "where e.quantitationType = :qt and cta.preferred = true and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
@@ -4045,6 +4048,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select cta from SingleCellDimensionExperiment e "
                         + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
+                        + "left join fetch cta.protocol "
                         + "where e.quantitationType = :qt and cta.id = :ctaId and e.expressionExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
@@ -4073,6 +4077,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select cta from SingleCellDimensionExperiment e "
                         + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
+                        + "left join fetch cta.protocol "
                         + "where e.quantitationType = :qt and cta.name = :ctaName and e.expressionExperiment = :ee" )
                 .setParameter( "ee", expressionExperiment )
                 .setParameter( "qt", qt )
@@ -4097,7 +4102,7 @@ public class ExpressionExperimentDaoImpl
                 .createQuery( "select cta from SingleCellDimensionExperiment e "
                         + "join e.singleCellDimension scd "
                         + "join scd.cellTypeAssignments cta "
-                        + "join cta.protocol protocol "
+                        + "join fetch cta.protocol protocol "
                         + "where e.quantitationType = :qt and protocol.name = :protocolName and e.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .setParameter( "qt", qt )
