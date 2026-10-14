@@ -192,7 +192,7 @@ public class MixedModelEdgeCasesTest {
     }
 
     /**
-     * Fewer samples than the per-probe gate allows (nobs <= nbeta + 2): nothing estimable, rho = 0.
+     * Fewer samples than the per-probe gate allows ({@code nobs <= nbeta + 2}): nothing estimable, rho = 0.
      */
     @Test
     public void tooFewSamplesForTheDesignGivesZero() {

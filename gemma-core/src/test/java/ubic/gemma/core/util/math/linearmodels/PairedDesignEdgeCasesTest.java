@@ -69,7 +69,7 @@ public class PairedDesignEdgeCasesTest {
      * All-singleton subjects (every subject has exactly one arm) make the treatment effect unidentifiable:
      * each single-arm subject indicator spans the rows of its arm, so subject columns are collinear with
      * intercept + treatment. The fit must not throw -- rank-deficiency is handled downstream -- but the
-     * residual dof must make the degeneracy visible (n - rank <= 0 territory).
+     * residual dof must make the degeneracy visible ({@code n - rank <= 0} territory).
      */
     @Test
     public void allSingletonSubjectsAreRankDeficient() {
