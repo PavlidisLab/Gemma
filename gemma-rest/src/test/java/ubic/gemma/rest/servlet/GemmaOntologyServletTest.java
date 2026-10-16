@@ -38,8 +38,9 @@ public class GemmaOntologyServletTest {
         when( term.getAnnotations() ).thenReturn( Collections.singleton( definition ) );
         when( term.getParents( true ) ).thenReturn( Collections.singleton( parent ) );
         when( parent.getChildren( true ) ).thenReturn( Collections.singleton( term ) );
+        // the real URI set contains null (owl:Restriction class expressions) next to IRIs from other ontologies
         when( gemmaOntologyService.getAllURIs() ).thenReturn( new HashSet<>( Arrays.asList(
-                PREFIX + "TGEMO_00001", PREFIX + "TGEMO_00184", "http://purl.obolibrary.org/obo/UBERON_0000955" ) ) );
+                PREFIX + "TGEMO_00001", PREFIX + "TGEMO_00184", "http://purl.obolibrary.org/obo/UBERON_0000955", null ) ) );
         servlet = new GemmaOntologyServlet( gemmaOntologyService, new OntologyExternalLinks( false ), "https://gemma.msl.ubc.ca" );
     }
 

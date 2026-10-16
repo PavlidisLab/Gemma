@@ -107,8 +107,9 @@ public class GemmaOntologyServlet extends HttpServlet {
     }
 
     private void writeHome( String ontBase, HttpServletResponse resp ) throws IOException {
+        // listClasses() includes anonymous class expressions (owl:Restriction), whose URI is null
         List<OntologyTerm> terms = gemmaOntologyService.getAllURIs().stream()
-                .filter( uri -> uri.startsWith( TGEMO_URI_PREFIX ) )
+                .filter( uri -> uri != null && uri.startsWith( TGEMO_URI_PREFIX ) )
                 .map( gemmaOntologyService::getTerm )
                 .filter( Objects::nonNull )
                 .sorted( Comparator.comparing( OntologyTerm::getLabel, Comparator.nullsFirst( Comparator.naturalOrder() ) ) )
