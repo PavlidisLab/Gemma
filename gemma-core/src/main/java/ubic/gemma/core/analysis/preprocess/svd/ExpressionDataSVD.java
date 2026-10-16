@@ -248,15 +248,10 @@ public class ExpressionDataSVD {
      */
     public Double[] getVarianceFractions() {
         double[] singularValues = svd.getSingularValues();
-        // d should be be square roots of the eigenvalues scaled by number of variables: check
-
-        int numVariables = this.getNumVariables();
-
+        // the eigenvalues are d^2 / (numVariables - 1); the scale cancels in the fraction
         double sum = 0;
         for ( double d : singularValues ) {
-
-            double d2 = d * d / ( numVariables - 1 );
-            sum += d2;
+            sum += d * d;
         }
         Double[] answer = new Double[singularValues.length];
         for ( int i = 0; i < singularValues.length; i++ ) {

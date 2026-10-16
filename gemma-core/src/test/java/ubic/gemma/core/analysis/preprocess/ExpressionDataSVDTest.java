@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -236,25 +237,34 @@ public class ExpressionDataSVDTest extends BaseTest5 {
     }
 
     /*
-     * See testEigenvalues
+     * Same double-standardized matrix as testEigenvalues (testdata.s there); fractions are d^2 / sum(d^2):
      *
      * <pre>
-     * cat( signif( p$sdev &circ; 2 / sum( p$sdev &circ; 2 ), 3 ), sep = &quot;,\n&quot; )
+     * s <- svd(testdata.s)
+     * cat(signif(s$d^2 / sum(s$d^2), 3), sep = ", ")
      * </pre>
      */
     @Test
-    public void testVarianceFractions() {
+    public void testVarianceFractions() throws SVDException {
+        svd = new ExpressionDataSVD( testData, true );
         Double[] varianceFractions = svd.getVarianceFractions();
 
-        double[] actualVarFractions = new double[] { 0.181, 0.161, 0.124, 0.0838, 0.0577, 0.0481, 0.0394, 0.0346,
-                0.0304, 0.0258, 0.024, 0.0181, 0.0174, 0.0158, 0.0128, 0.0107, 0.0102, 0.00906, 0.00814, 0.00764,
-                0.00625, 0.0059, 0.00508, 0.00486, 0.00444, 0.00395, 0.00371, 0.00342, 0.00336, 0.00294, 0.00278,
-                0.00273, 0.00256, 0.00232, 0.00211, 0.00197, 0.00191, 0.00179, 0.00158, 0.00153, 0.00146, 0.00136,
-                0.00119, 0.00116, 0.00104, 0.000962, 0.000918, 0.000915, 0.000822, 0.00076, 0.000702, 0.000678,
-                0.000557, 0.000529, 0.000469, 0.000384, 0.000367, 0.000324, 5.99e-34 };
+        double[] expectedVarFractions = new double[] { 0.169, 0.151, 0.14, 0.0878, 0.0574, 0.0495, 0.0367, 0.0346,
+                0.0271, 0.0238, 0.0226, 0.0188, 0.0166, 0.0148, 0.0136, 0.0115, 0.0107, 0.00926, 0.00879, 0.0081,
+                0.00722, 0.00643, 0.00535, 0.00518, 0.00453, 0.00422, 0.00402, 0.00398, 0.00337, 0.00327, 0.00311,
+                0.00294, 0.00264, 0.00243, 0.00231, 0.00227, 0.00211, 0.00197, 0.00189, 0.00171, 0.0016, 0.00152,
+                0.00135, 0.00125, 0.00122, 0.00118, 0.00109, 0.00105, 0.00096, 0.000924, 0.000817, 0.000788,
+                0.000694, 0.000624, 0.000575, 0.000477, 0.000406, 0.000304, 3.75e-33 };
 
         assertEquals( 59, varianceFractions.length );
-        assertTrue( RegressionTesting.closeEnough( actualVarFractions, actualVarFractions, 0.01 ) );
+        // expected values carry 3 significant digits, so the largest rounding error is 0.0005
+        assertTrue( RegressionTesting.closeEnough( expectedVarFractions, ArrayUtils.toPrimitive( varianceFractions ),
+                0.001 ) );
+        double total = 0;
+        for ( Double f : varianceFractions ) {
+            total += f;
+        }
+        assertEquals( 1.0, total, 1e-12 );
     }
 
     /*
