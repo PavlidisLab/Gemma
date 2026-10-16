@@ -29,6 +29,7 @@ public class EntityUrlBuilderTest {
         assertEquals( "/expressionExperiment/showAllExpressionExperiments.html?id=1,2,3", entityUrlBuilder.fromHostUrl().some( ExpressionExperiment.class, Arrays.asList( 1L, 2L, 3L ) ).web().toUriString() );
         assertEquals( "/expressionExperiment/showAllExpressionExperiments.html?id=12", entityUrlBuilder.fromHostUrl().some( Collections.singletonList( ee ) ).web().toUriString() );
         assertEquals( "/rest/v2/datasets/12", entityUrlBuilder.fromHostUrl().entity( ee ).rest().toUriString() );
+        assertEquals( "/#/dataset/12", entityUrlBuilder.fromHostUrl().entity( ee ).ui().toString() );
         ArrayDesign ad = new ArrayDesign();
         ad.setId( 3L );
         ad.setShortName( "GPL10920" );

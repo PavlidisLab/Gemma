@@ -282,12 +282,12 @@
     </servlet-mapping>
 
     <!--
-        TGEMO term IRIs (http://gemma.msl.ubc.ca/ont/TGEMO_*), served by gemma-web's
-        OntologyController until it was retired. A plain servlet rather than a Jersey
-        resource: the gemma-rest servlet package-scans all of ubic.gemma.rest, so a
-        resource would also show up under /rest/v2/. /ont/** is outside the
-        /rest/v2/** security chain, which is fine since TGEMO is public. Apache
-        proxies /ont/ here unchanged. See ubic.gemma.rest.servlet.GemmaOntologyServlet.
+        TGEMO and TGFVO IRIs (http://gemma.msl.ubc.ca/ont/TGEMO_*, .../ont/TGFVO/*),
+        served by gemma-web's OntologyController until it was retired. A plain servlet
+        rather than a Jersey resource: the gemma-rest servlet package-scans all of
+        ubic.gemma.rest, so a resource would also show up under /rest/v2/. /ont/** has
+        its own anonymous-only security chain (OntologySecurityConfig). Apache proxies
+        /ont/ here unchanged. See ubic.gemma.rest.servlet.GemmaOntologyServlet.
     -->
     <servlet>
         <servlet-name>gemma-ontology</servlet-name>

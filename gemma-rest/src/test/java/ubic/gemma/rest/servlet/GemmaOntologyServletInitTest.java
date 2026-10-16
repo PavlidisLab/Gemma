@@ -10,8 +10,11 @@ import org.springframework.mock.web.MockServletConfig;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import ubic.gemma.core.ontology.FactorValueOntologyService;
 import ubic.gemma.core.ontology.OntologyExternalLinks;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -47,6 +50,21 @@ class GemmaOntologyServletInitTest {
             when( s.isOntologyLoaded() ).thenReturn( true );
             when( s.getAllURIs() ).thenReturn( Collections.emptySet() );
             return s;
+        }
+
+        @Bean
+        FactorValueOntologyService factorValueOntologyService() {
+            return mock( FactorValueOntologyService.class );
+        }
+
+        @Bean
+        ExpressionExperimentService expressionExperimentService() {
+            return mock( ExpressionExperimentService.class );
+        }
+
+        @Bean
+        EntityUrlBuilder entityUrlBuilder() {
+            return new EntityUrlBuilder( "https://staging-gemma.msl.ubc.ca" );
         }
 
         @Bean
