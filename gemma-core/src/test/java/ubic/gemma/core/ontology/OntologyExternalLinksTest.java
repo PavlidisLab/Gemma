@@ -21,6 +21,8 @@ public class OntologyExternalLinksTest {
         assertEquals( "https://gemma.msl.ubc.ca/ont/TGFVO/1/2", ontologyExternalLinks.getExternalLink( new OntologyTermSimple( "http://gemma.msl.ubc.ca/ont/TGFVO/1/2", "" ) ) );
         assertEquals( "https://www.ncbi.nlm.nih.gov/gene/123", ontologyExternalLinks.getExternalLink( new OntologyTermSimple( "http://purl.org/commons/record/ncbi_gene/123", "" ) ) );
         assertEquals( "https://www.ncbi.nlm.nih.gov/gene/123", ontologyExternalLinks.getExternalLink( new OntologyTermSimple( "http://purl.org/commons/record/ncbi_gene/123", "" ) ) );
+        // no local name (a factor's category, as TGFVO builds it): taken from the URI rather than written as "null"
+        assertEquals( "https://www.ebi.ac.uk/ols4/ontologies/efo/classes/?short_form=EFO_0000513", ontologyExternalLinks.getExternalLink( new OntologyTermSimple( "http://www.ebi.ac.uk/efo/EFO_0000513", "genotype" ) ) );
         OntologyTerm goTerm = mock();
         AnnotationProperty ap = mock();
         when( ap.getProperty() ).thenReturn( "http://www.geneontology.org/formats/oboInOwl#id" );

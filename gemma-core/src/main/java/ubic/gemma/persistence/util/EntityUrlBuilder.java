@@ -209,6 +209,15 @@ public class EntityUrlBuilder {
         public ExpressionExperimentWebUrl web() {
             return new ExpressionExperimentWebUrl( baseUrl, entity );
         }
+
+        /**
+         * The dataset page of gemma-ui, the browser app hosted alongside the REST API.
+         * <p>
+         * {@link #web()} still points at the retired gemma-web pages.
+         */
+        public URI ui() {
+            return URI.create( baseUrl + "/#/dataset/" + entity.getId() );
+        }
     }
 
     /**
