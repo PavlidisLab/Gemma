@@ -1,5 +1,6 @@
 package ubic.gemma.rest.servlet;
 
+import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import ubic.gemma.core.ontology.OntologyExternalLinks;
@@ -67,7 +68,9 @@ public class GemmaOntologyServlet extends HttpServlet {
             WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext( getServletContext() );
             gemmaOntologyService = ctx.getBean( GemmaOntologyService.class );
             ontologyExternalLinks = ctx.getBean( OntologyExternalLinks.class );
-            hostUrl = ctx.getEnvironment().getRequiredProperty( "gemma.hosturl" );
+            // Gemma's settings reach the placeholder configurer (SettingsConfig), not the Environment, so resolve the
+            // placeholder as @Value would; getEnvironment().getProperty() does not see it
+            hostUrl = ( ( ConfigurableWebApplicationContext ) ctx ).getBeanFactory().resolveEmbeddedValue( "${gemma.hosturl}" );
         }
     }
 
