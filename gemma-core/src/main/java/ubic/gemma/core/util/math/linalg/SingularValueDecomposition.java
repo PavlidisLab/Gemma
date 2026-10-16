@@ -49,7 +49,7 @@ public class SingularValueDecomposition<R, C> {
 
     private DoubleMatrix<R, Integer> uMatrix;
 
-    private DoubleMatrix<Integer, C> vMatrix;
+    private DoubleMatrix<C, Integer> vMatrix;
 
     /**
      * @param matrix
@@ -87,8 +87,8 @@ public class SingularValueDecomposition<R, C> {
         uMatrix.setColumnNames( componentIds );
 
         this.vMatrix = new DenseDoubleMatrix<>( svd.getV().toArray() );
-        vMatrix.setRowNames( componentIds );
-        vMatrix.setColumnNames( this.columnNames );
+        vMatrix.setRowNames( this.columnNames );
+        vMatrix.setColumnNames( componentIds );
 
         this.sMatrix = new DenseDoubleMatrix<>( svd.getS().toArray() );
         sMatrix.setRowNames( componentIds );
@@ -132,7 +132,7 @@ public class SingularValueDecomposition<R, C> {
      * @return
      * @see    cern.colt.matrix.linalg.SingularValueDecomposition#getV()
      */
-    public DoubleMatrix<Integer, C> getV() {
+    public DoubleMatrix<C, Integer> getV() {
         return this.vMatrix;
     }
 

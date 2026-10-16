@@ -34,7 +34,7 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
-            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad, int numComponentsToStore,
+            double[] eigenvalues, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad, int numComponentsToStore,
             int numLoadingsToStore );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -54,7 +54,7 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
-            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad, int numComponentsToStore,
+            double[] eigenvalues, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad, int numComponentsToStore,
             int numLoadingsToStore );
 
     @Nullable

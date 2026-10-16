@@ -183,7 +183,7 @@ public class SVDServiceImpl implements SVDService {
         /*
          * Save the results
          */
-        DoubleMatrix<Integer, BioMaterial> v = svd.getV();
+        DoubleMatrix<BioMaterial, Integer> v = svd.getV();
 
         BioAssayDimension b = mat.getBioAssayDimension();
 

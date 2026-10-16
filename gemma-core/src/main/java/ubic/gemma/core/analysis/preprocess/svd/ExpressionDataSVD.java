@@ -244,7 +244,7 @@ public class ExpressionDataSVD {
      * @return the right singular vectors. The column indices are of the eigengenes (starting from 0). The row indices
      * are of the original samples in the given ExpressionDataDoubleMatrix.
      */
-    public DoubleMatrix<Integer, BioMaterial> getV() {
+    public DoubleMatrix<BioMaterial, Integer> getV() {
         return svd.getV();
     }
 
@@ -335,7 +335,7 @@ public class ExpressionDataSVD {
                 result.set( i, j, Math.abs( rawUMatrix.get( i, j ) ) );
             }
         }
-        List<BioMaterial> colNames = svd.getV().getColNames();
+        List<BioMaterial> colNames = svd.getV().getRowNames();
 
         result.setColumnNames( colNames );
         result.setRowNames( rawUMatrix.getRowNames() );
