@@ -54,6 +54,14 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
     public PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
             double[] eigenvalues, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad, int numComponentsToStore,
             int numLoadingsToStore ) {
+        return create( ee, u, eigenvalues, sum( eigenvalues ), v, bad, numComponentsToStore, numLoadingsToStore );
+    }
+
+    @Override
+    @Transactional
+    public PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
+            double[] eigenvalues, double eigenvalueSum, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad,
+            int numComponentsToStore, int numLoadingsToStore ) {
 
         PrincipalComponentAnalysis pca = PrincipalComponentAnalysis.Factory.newInstance();
         int actualNumberOfComponentsStored = Math.min( numComponentsToStore, v.columns() );
@@ -88,13 +96,12 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
         }
 
         /*
-         * Deal with eigenvalues; note we store all of them.
+         * Deal with eigenvalues; note we store all we are given. The fractions divide by the sum over every
+         * component, which a truncated SVD supplies without having computed them all.
          */
-        double sum = 0.0;
         List<Eigenvalue> eigv = new ArrayList<>();
         for ( int i = 0; i < eigenvalues.length; i++ ) {
             double d = eigenvalues[i];
-            sum += d;
             Eigenvalue ev = Eigenvalue.Factory.newInstance();
             ev.setComponentNumber( i + 1 );
             ev.setValue( d );
@@ -103,7 +110,7 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
 
         for ( int i = 0; i < eigenvalues.length; i++ ) {
             Eigenvalue eigenvalue = eigv.get( i );
-            eigenvalue.setVarianceFraction( eigenvalue.getValue() / sum );
+            eigenvalue.setVarianceFraction( eigenvalue.getValue() / eigenvalueSum );
             pca.getEigenValues().add( eigenvalue );
         }
 
@@ -136,8 +143,25 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
     public PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
             double[] eigenvalues, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad, int numComponentsToStore,
             int numLoadingsToStore ) {
+        return replaceForExperiment( ee, u, eigenvalues, sum( eigenvalues ), v, bad, numComponentsToStore,
+                numLoadingsToStore );
+    }
+
+    @Override
+    @Transactional
+    public PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
+            double[] eigenvalues, double eigenvalueSum, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad,
+            int numComponentsToStore, int numLoadingsToStore ) {
         removeForExperiment( ee );
-        return create( ee, u, eigenvalues, v, bad, numComponentsToStore, numLoadingsToStore );
+        return create( ee, u, eigenvalues, eigenvalueSum, v, bad, numComponentsToStore, numLoadingsToStore );
+    }
+
+    private static double sum( double[] values ) {
+        double sum = 0.0;
+        for ( double d : values ) {
+            sum += d;
+        }
+        return sum;
     }
 
     @Override

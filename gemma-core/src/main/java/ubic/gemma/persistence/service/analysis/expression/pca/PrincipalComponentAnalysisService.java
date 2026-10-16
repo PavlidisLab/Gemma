@@ -37,6 +37,18 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
             double[] eigenvalues, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad, int numComponentsToStore,
             int numLoadingsToStore );
 
+    /**
+     * As {@link #create(ExpressionExperiment, DoubleMatrix, double[], DoubleMatrix, BioAssayDimension, int, int)}, for
+     * a decomposition that may hold only the leading components.
+     *
+     * @param eigenvalueSum the sum of every component's eigenvalue, the denominator of the variance fractions; the
+     *                      overload without it uses the sum of {@code eigenvalues}
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
+            double[] eigenvalues, double eigenvalueSum, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad,
+            int numComponentsToStore, int numLoadingsToStore );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
 
@@ -56,6 +68,15 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
     PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
             double[] eigenvalues, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad, int numComponentsToStore,
             int numLoadingsToStore );
+
+    /**
+     * As {@link #replaceForExperiment(ExpressionExperiment, DoubleMatrix, double[], DoubleMatrix, BioAssayDimension, int, int)},
+     * with the eigenvalue sum given separately; see {@link #create(ExpressionExperiment, DoubleMatrix, double[], double, DoubleMatrix, BioAssayDimension, int, int)}.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
+            double[] eigenvalues, double eigenvalueSum, DoubleMatrix<BioMaterial, Integer> v, BioAssayDimension bad,
+            int numComponentsToStore, int numLoadingsToStore );
 
     @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })

@@ -18,9 +18,6 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import no.uib.cipr.matrix.DenseMatrix;
-import no.uib.cipr.matrix.DenseVectorSub;
-import no.uib.cipr.matrix.sparse.ArpackSym;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,7 +62,6 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,7 +77,7 @@ public class ExpressionDataSVDTest extends BaseTest5 {
     private static final Log log = LogFactory.getLog( ExpressionDataSVDTest.class );
 
     /**
-     * Components the top-k tests compute; asking for more than {@link #COMPONENTS_USED} keeps the used ones
+     * Components the truncated tests compute; asking for more than {@link #COMPONENTS_USED} keeps the used ones
      * away from the edge of the requested set, where Lanczos converges last.
      */
     private static final int TOP_K = 10;
@@ -298,36 +294,45 @@ public class ExpressionDataSVDTest extends BaseTest5 {
     }
 
     /**
-     * The top-k path for large datasets: the k largest eigenpairs of XᵀX, from MTJ's {@link ArpackSym}, must reproduce
-     * the leading components of the full SVD on the same double-standardized matrix, and R's values for this fixture.
-     * <p>
-     * With X = U S Vᵀ, XᵀX = V S² Vᵀ, so the eigenvalues are the squared singular values, the eigenvectors are the
-     * columns of V, and u_i = X v_i / s_i. Variance fractions divide by ‖X‖_F², which equals the sum of all s² without
-     * computing them.
+     * The truncated path for large datasets must reproduce the leading components of the full SVD on the same
+     * double-standardized matrix, and R's values for this fixture. The variance fractions, eigenvalue sum included,
+     * must not depend on how many components were computed.
      */
     @Test
-    public void testTopKEigenpairsMatchFullSvd() throws SVDException {
-        svd = new ExpressionDataSVD( testData, true );
-        assertEquals( 200, svd.getNumVariables(), "no rows should be filtered from this fixture" );
-        double[][] x = MatrixStats.doubleStandardize( testData.getMatrix() ).getRawMatrix();
-        assertEquals( 0, maxReconstructionError( x, svd.getU().getRawMatrix(), svd.getSingularValues(),
-                svd.getV().getRawMatrix() ), 1e-10, "X must be the matrix the full SVD decomposed" );
+    public void testTruncatedSvdMatchesFullSvd() throws SVDException {
+        ExpressionDataSVD full = new ExpressionDataSVD( testData, true );
+        ExpressionDataSVD top = new ExpressionDataSVD( testData, true, TOP_K );
+        assertEquals( 200, full.getNumVariables(), "no rows should be filtered from this fixture" );
+        assertFalse( full.isTruncated() );
+        assertTrue( top.isTruncated() );
+        assertEquals( TOP_K, top.getSingularValues().length );
+        assertEquals( 200, top.getU().rows() );
+        assertEquals( TOP_K, top.getU().columns() );
+        assertEquals( 59, top.getV().rows() );
+        assertEquals( TOP_K, top.getV().columns() );
+        assertEquals( full.getV().getRowNames(), top.getV().getRowNames() );
 
-        double[] s = assertTopKMatchesFullSvd( x, svd.getSingularValues(), svd.getU().getRawMatrix(),
-                svd.getV().getRawMatrix(), TOP_K );
+        assertLeadingComponentsMatch( top.getSingularValues(), top.getU().getRawMatrix(), top.getV().getRawMatrix(),
+                full.getSingularValues(), full.getU().getRawMatrix(), full.getV().getRawMatrix() );
 
-        double totalSq = sumOfSquares( x );
-        Double[] fullFractions = svd.getVarianceFractions();
+        assertEquals( full.getEigenvalueSum(), top.getEigenvalueSum(), 1e-12 * full.getEigenvalueSum() );
+        assertEquals( Arrays.stream( full.getEigenvalues() ).sum(), full.getEigenvalueSum(),
+                1e-12 * full.getEigenvalueSum() );
+        Double[] fullFractions = full.getVarianceFractions();
+        Double[] topFractions = top.getVarianceFractions();
+        double[] topEigenvalues = top.getEigenvalues();
+        double[] fullEigenvalues = full.getEigenvalues();
         for ( int i = 0; i < TOP_K; i++ ) {
             // R prints 7 significant digits
-            assertEquals( R_SINGULAR_VALUES[i], s[i], 1e-5, "singular value " + ( i + 1 ) + " vs R" );
-            double fraction = s[i] * s[i] / totalSq;
-            // s² doubles the relative error of s (1e-8, see assertTopKMatchesFullSvd), so components past the used
+            assertEquals( R_SINGULAR_VALUES[i], top.getSingularValues()[i], 1e-5, "singular value " + ( i + 1 ) + " vs R" );
+            // s² doubles the relative error of s (1e-8, see assertLeadingComponentsMatch), so components past the used
             // ones, which converge last, are held to that; the used ones agree to rounding
-            double tolerance = i < COMPONENTS_USED ? 1e-12 : 2e-8 * fraction;
-            assertEquals( fullFractions[i], fraction, tolerance, "variance fraction " + ( i + 1 ) + " vs full SVD" );
+            double tolerance = i < COMPONENTS_USED ? 1e-12 : 2e-8 * topFractions[i];
+            assertEquals( fullFractions[i], topFractions[i], tolerance, "variance fraction " + ( i + 1 ) + " vs full SVD" );
+            assertEquals( fullEigenvalues[i], topEigenvalues[i], tolerance * full.getEigenvalueSum(),
+                    "eigenvalue " + ( i + 1 ) + " vs full SVD" );
             // R values carry 3 significant digits
-            assertEquals( R_VARIANCE_FRACTIONS[i], fraction, 5e-4, "variance fraction " + ( i + 1 ) + " vs R" );
+            assertEquals( R_VARIANCE_FRACTIONS[i], topFractions[i], 5e-4, "variance fraction " + ( i + 1 ) + " vs R" );
         }
     }
 
@@ -336,7 +341,7 @@ public class ExpressionDataSVDTest extends BaseTest5 {
      * leading components must still match the full SVD.
      */
     @Test
-    public void testTopKEigenpairsMatchFullSvdWithNearTiedComponents() throws TimeoutException {
+    public void testTruncatedSvdMatchesFullSvdWithNearTiedComponents() throws Exception {
         Random r = new Random( 42L );
         int genes = 400, samples = 100;
         DoubleMatrix<Integer, Integer> noise = new DenseDoubleMatrix<>( genes, samples );
@@ -354,45 +359,56 @@ public class ExpressionDataSVDTest extends BaseTest5 {
         noise.setColumnNames( colNames );
         DoubleMatrix<Integer, Integer> std = MatrixStats.doubleStandardize( noise );
         SingularValueDecomposition<Integer, Integer> full = new SingularValueDecomposition<>( std );
+        SingularValueDecomposition<Integer, Integer> top = SingularValueDecomposition.truncated( std, TOP_K );
 
-        assertTopKMatchesFullSvd( std.getRawMatrix(), full.getSingularValues(), full.getU().getRawMatrix(),
-                full.getV().getRawMatrix(), TOP_K );
+        assertLeadingComponentsMatch( top.getSingularValues(), top.getU().getRawMatrix(), top.getV().getRawMatrix(),
+                full.getSingularValues(), full.getU().getRawMatrix(), full.getV().getRawMatrix() );
+        assertEquals( full.getTotalSumOfSquares(), top.getTotalSumOfSquares(), 1e-12 * full.getTotalSumOfSquares() );
     }
 
     /**
-     * Compare the top-k eigenpairs of XᵀX with the full SVD of X. Singular values must agree for all k; the singular
+     * Rebuilding the matrix needs every component, so a truncated SVD must refuse rather than return a partial
+     * reconstruction.
+     */
+    @Test
+    public void testTruncatedSvdRefusesWholeMatrixMethods() throws SVDException {
+        svd = new ExpressionDataSVD( testData, true, TOP_K );
+        assertThrows( IllegalStateException.class, () -> svd.equalize() );
+        assertThrows( IllegalStateException.class, () -> svd.removeHighestComponents( 1 ) );
+        assertThrows( IllegalStateException.class, () -> svd.winnow( 0.5 ) );
+        assertThrows( IllegalStateException.class, () -> svd.uMatrixAsExpressionData() );
+    }
+
+    /**
+     * ARPACK needs fewer components than samples; asking for as many computes the full decomposition instead.
+     */
+    @Test
+    public void testNumComponentsAtLeastSamplesComputesFullSvd() throws SVDException {
+        svd = new ExpressionDataSVD( testData, true, 59 );
+        assertFalse( svd.isTruncated() );
+        assertEquals( 59, svd.getSingularValues().length );
+    }
+
+    /**
+     * Compare a truncated decomposition with the full one. Singular values must agree for all k; the singular
      * vectors (up to sign) for the {@link #COMPONENTS_USED} components that PCA consumers read.
      *
+     * @param vTop  samples × k
      * @param vFull samples × components, as Colt returns it
-     * @return the top-k singular values from the eigenpairs, largest first
      */
-    private static double[] assertTopKMatchesFullSvd( double[][] x, double[] sFull, double[][] uFull, double[][] vFull,
-            int k ) {
-        int genes = x.length, samples = x[0].length;
-        Map<Double, DenseVectorSub> eig = topKEigenpairs( x, k );
-        // ArpackSym keys its result by eigenvalue, so tied eigenvalues would collapse into one entry
-        assertEquals( k, eig.size(), "distinct eigenvalues returned" );
-        List<Double> lambdas = new ArrayList<>( eig.keySet() );
-        lambdas.sort( Comparator.reverseOrder() );
-
-        double[] sTop = new double[k];
-        for ( int i = 0; i < k; i++ ) {
-            double s = Math.sqrt( lambdas.get( i ) );
-            sTop[i] = s;
-            DenseVectorSub v = eig.get( lambdas.get( i ) );
+    private static void assertLeadingComponentsMatch( double[] sTop, double[][] uTop, double[][] vTop, double[] sFull,
+            double[][] uFull, double[][] vFull ) {
+        int genes = uTop.length, samples = vTop.length;
+        for ( int i = 0; i < sTop.length; i++ ) {
             double vDot = 0;
             for ( int j = 0; j < samples; j++ ) {
-                vDot += v.get( j ) * vFull[j][i];
+                vDot += vTop[j][i] * vFull[j][i];
             }
             double uDot = 0;
             for ( int g = 0; g < genes; g++ ) {
-                double u = 0;
-                for ( int j = 0; j < samples; j++ ) {
-                    u += x[g][j] * v.get( j );
-                }
-                uDot += u / s * uFull[g][i];
+                uDot += uTop[g][i] * uFull[g][i];
             }
-            double sErr = Math.abs( s - sFull[i] ) / sFull[i];
+            double sErr = Math.abs( sTop[i] - sFull[i] ) / sFull[i];
             log.info( String.format( "PC %2d: s = %.6f, relative gap to next %.2e, |Δs|/s = %.2e, 1 - |v·v'| = %.2e, 1 - |u·u'| = %.2e",
                     i + 1, sFull[i], ( sFull[i] - sFull[i + 1] ) / sFull[i], sErr, 1 - Math.abs( vDot ), 1 - Math.abs( uDot ) ) );
             assertEquals( 0, sErr, 1e-8, "singular value " + ( i + 1 ) );
@@ -401,38 +417,6 @@ public class ExpressionDataSVDTest extends BaseTest5 {
                 assertEquals( 1, Math.abs( uDot ), 1e-10, "U column " + ( i + 1 ) );
             }
         }
-        return sTop;
-    }
-
-    private static Map<Double, DenseVectorSub> topKEigenpairs( double[][] x, int k ) {
-        DenseMatrix xm = new DenseMatrix( x );
-        DenseMatrix gram = new DenseMatrix( xm.numColumns(), xm.numColumns() );
-        xm.transAmult( xm, gram );
-        return new ArpackSym( gram ).solve( k, ArpackSym.Ritz.LA );
-    }
-
-    private static double sumOfSquares( double[][] x ) {
-        double total = 0;
-        for ( double[] row : x ) {
-            for ( double v : row ) {
-                total += v * v;
-            }
-        }
-        return total;
-    }
-
-    private static double maxReconstructionError( double[][] x, double[][] u, double[] s, double[][] v ) {
-        double max = 0;
-        for ( int g = 0; g < x.length; g++ ) {
-            for ( int j = 0; j < x[0].length; j++ ) {
-                double xr = 0;
-                for ( int c = 0; c < s.length; c++ ) {
-                    xr += u[g][c] * s[c] * v[j][c];
-                }
-                max = Math.max( max, Math.abs( x[g][j] - xr ) );
-            }
-        }
-        return max;
     }
 
     /*
