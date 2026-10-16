@@ -8,4 +8,8 @@ public class SVDException extends Exception {
     public SVDException( String message ) {
         super( message );
     }
+
+    public SVDException( String message, Throwable cause ) {
+        super( message, cause );
+    }
 }

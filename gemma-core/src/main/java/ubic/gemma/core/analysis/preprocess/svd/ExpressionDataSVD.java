@@ -44,6 +44,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Perform SVD on an expression data matrix, E = U S V'. The rows of the input matrix are probes (genes), following the
@@ -137,7 +138,11 @@ public class ExpressionDataSVD {
             matrix = MatrixStats.doubleStandardize( matrix );
         }
 
-        this.svd = new SingularValueDecomposition<>( matrix );
+        try {
+            this.svd = new SingularValueDecomposition<>( matrix );
+        } catch ( TimeoutException e ) {
+            throw new SVDException( e.getMessage(), e );
+        }
     }
 
     /**

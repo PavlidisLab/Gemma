@@ -65,6 +65,7 @@ import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -335,7 +336,7 @@ public class ExpressionDataSVDTest extends BaseTest5 {
      * leading components must still match the full SVD.
      */
     @Test
-    public void testTopKEigenpairsMatchFullSvdWithNearTiedComponents() {
+    public void testTopKEigenpairsMatchFullSvdWithNearTiedComponents() throws TimeoutException {
         Random r = new Random( 42L );
         int genes = 400, samples = 100;
         DoubleMatrix<Integer, Integer> noise = new DenseDoubleMatrix<>( genes, samples );

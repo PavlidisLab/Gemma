@@ -53,14 +53,24 @@ public class SingularValueDecomposition<R, C> {
 
     /**
      * @param matrix
+     * @throws TimeoutException if the decomposition does not finish within two hours
      */
-    public SingularValueDecomposition( DoubleMatrix<R, C> matrix ) {
+    public SingularValueDecomposition( DoubleMatrix<R, C> matrix ) throws TimeoutException {
+        this( matrix, MAX_COMPUTE_TIME );
+    }
+
+    /**
+     * @param matrix
+     * @param maxComputeTimeMillis how long the decomposition may run before it is cancelled
+     * @throws TimeoutException if the decomposition does not finish within {@code maxComputeTimeMillis}
+     */
+    public SingularValueDecomposition( DoubleMatrix<R, C> matrix, long maxComputeTimeMillis ) throws TimeoutException {
         double[][] mat = matrix.getRawMatrix();
         final DoubleMatrix2D dm = new DenseDoubleMatrix2D( mat );
         this.rowNames = matrix.getRowNames();
         this.columnNames = matrix.getColNames();
 
-        computeSVD( dm );
+        computeSVD( dm, maxComputeTimeMillis );
 
         List<Integer> componentIds = new ArrayList<>();
 
@@ -153,8 +163,9 @@ public class SingularValueDecomposition<R, C> {
 
     /**
      * @param dm
+     * @param maxComputeTimeMillis
      */
-    private void computeSVD( final DoubleMatrix2D dm ) {
+    private void computeSVD( final DoubleMatrix2D dm, long maxComputeTimeMillis ) throws TimeoutException {
         /*
          * Colt's SVD occasionally fails to converge on degenerate matrices; run it on a worker thread so we can bail
          * via a wall-clock timeout. The executor MUST be shut down on every path (success, timeout, exception) — the
@@ -165,10 +176,10 @@ public class SingularValueDecomposition<R, C> {
             Future<cern.colt.matrix.linalg.SingularValueDecomposition> svdFuture = executor.submit(
                     () -> new cern.colt.matrix.linalg.SingularValueDecomposition( dm ) );
             try {
-                this.svd = svdFuture.get( MAX_COMPUTE_TIME, TimeUnit.MILLISECONDS );
+                this.svd = svdFuture.get( maxComputeTimeMillis, TimeUnit.MILLISECONDS );
             } catch ( TimeoutException te ) {
                 svdFuture.cancel( true );
-                throw new RuntimeException( "SVD failed to converge within " + MAX_COMPUTE_TIME + "ms, bailing", te );
+                throw new TimeoutException( "SVD did not finish within " + maxComputeTimeMillis + " ms" );
             } catch ( InterruptedException e ) {
                 svdFuture.cancel( true );
                 Thread.currentThread().interrupt();
