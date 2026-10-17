@@ -18,6 +18,9 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.util.math.MatrixStats;
+import ubic.gemma.core.util.math.linalg.SingularValueDecomposition;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.util.RegressionTesting;
@@ -55,9 +61,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,6 +73,19 @@ import static org.mockito.Mockito.when;
  */
 @ContextConfiguration
 public class ExpressionDataSVDTest extends BaseTest5 {
+
+    private static final Log log = LogFactory.getLog( ExpressionDataSVDTest.class );
+
+    /**
+     * Components the truncated tests compute; asking for more than {@link #COMPONENTS_USED} keeps the used ones
+     * away from the edge of the requested set, where Lanczos converges last.
+     */
+    private static final int TOP_K = 10;
+
+    /**
+     * Components PCA consumers read (SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST).
+     */
+    private static final int COMPONENTS_USED = 5;
 
     @Configuration
     @TestComponent
@@ -114,6 +131,29 @@ public class ExpressionDataSVDTest extends BaseTest5 {
             return mock();
         }
     }
+
+    /**
+     * Singular values of the double-standardized fixture, from R; see {@link #testEigenvalues()}.
+     */
+    private static final double[] R_SINGULAR_VALUES = new double[] {
+            44.33292, 41.91284, 40.28428, 31.91613, 25.80453, 23.97011,
+            20.62388, 20.02206, 17.71859, 16.61712, 16.19350, 14.76118, 13.87069, 13.10054, 12.54802, 11.52781,
+            11.11996, 10.36422, 10.09994, 9.691179, 9.153403, 8.634105, 7.881425, 7.754466, 7.245502, 6.993059,
+            6.832636, 6.797229, 6.250005, 6.155713, 6.007695, 5.841762, 5.530337, 5.307789, 5.175314, 5.135153,
+            4.951609, 4.775425, 4.68693, 4.447738, 4.302409, 4.195906, 3.964473, 3.808823, 3.75757, 3.701613,
+            3.558042, 3.48766, 3.337000, 3.274710, 3.079108, 3.023564, 2.837062, 2.690218, 2.582036, 2.351277,
+            2.171346, 1.877483, 2.745043e-15 };
+
+    /**
+     * Variance fractions of the double-standardized fixture, from R; see {@link #testVarianceFractions()}.
+     */
+    private static final double[] R_VARIANCE_FRACTIONS = new double[] {
+            0.169, 0.151, 0.14, 0.0878, 0.0574, 0.0495, 0.0367, 0.0346,
+            0.0271, 0.0238, 0.0226, 0.0188, 0.0166, 0.0148, 0.0136, 0.0115, 0.0107, 0.00926, 0.00879, 0.0081,
+            0.00722, 0.00643, 0.00535, 0.00518, 0.00453, 0.00422, 0.00402, 0.00398, 0.00337, 0.00327, 0.00311,
+            0.00294, 0.00264, 0.00243, 0.00231, 0.00227, 0.00211, 0.00197, 0.00189, 0.00171, 0.0016, 0.00152,
+            0.00135, 0.00125, 0.00122, 0.00118, 0.00109, 0.00105, 0.00096, 0.000924, 0.000817, 0.000788,
+            0.000694, 0.000624, 0.000575, 0.000477, 0.000406, 0.000304, 3.75e-33 };
 
     @Autowired
     private SimpleExpressionDataLoaderService service;
@@ -210,17 +250,10 @@ public class ExpressionDataSVDTest extends BaseTest5 {
 
         double[] singularValues = svd.getSingularValues();
 
-        double[] expectedSingularValues = new double[] { 44.33292, 41.91284, 40.28428, 31.91613, 25.80453, 23.97011,
-                20.62388, 20.02206, 17.71859, 16.61712, 16.19350, 14.76118, 13.87069, 13.10054, 12.54802, 11.52781,
-                11.11996, 10.36422, 10.09994, 9.691179, 9.153403, 8.634105, 7.881425, 7.754466, 7.245502, 6.993059,
-                6.832636, 6.797229, 6.250005, 6.155713, 6.007695, 5.841762, 5.530337, 5.307789, 5.175314, 5.135153,
-                4.951609, 4.775425, 4.68693, 4.447738, 4.302409, 4.195906, 3.964473, 3.808823, 3.75757, 3.701613,
-                3.558042, 3.48766, 3.337000, 3.274710, 3.079108, 3.023564, 2.837062, 2.690218, 2.582036, 2.351277,
-                2.171346, 1.877483, 2.745043e-15 };
 
         assertEquals( 59, singularValues.length );
 
-        assertTrue( RegressionTesting.closeEnough( expectedSingularValues, singularValues, 0.05 ) );
+        assertTrue( RegressionTesting.closeEnough( R_SINGULAR_VALUES, singularValues, 0.05 ) );
 
         double[] eigenvalues = svd.getEigenvalues();
 
@@ -236,25 +269,154 @@ public class ExpressionDataSVDTest extends BaseTest5 {
     }
 
     /*
-     * See testEigenvalues
+     * Same double-standardized matrix as testEigenvalues (testdata.s there); fractions are d^2 / sum(d^2):
      *
      * <pre>
-     * cat( signif( p$sdev &circ; 2 / sum( p$sdev &circ; 2 ), 3 ), sep = &quot;,\n&quot; )
+     * s <- svd(testdata.s)
+     * cat(signif(s$d^2 / sum(s$d^2), 3), sep = ", ")
      * </pre>
      */
     @Test
-    public void testVarianceFractions() {
+    public void testVarianceFractions() throws SVDException {
+        svd = new ExpressionDataSVD( testData, true );
         Double[] varianceFractions = svd.getVarianceFractions();
 
-        double[] actualVarFractions = new double[] { 0.181, 0.161, 0.124, 0.0838, 0.0577, 0.0481, 0.0394, 0.0346,
-                0.0304, 0.0258, 0.024, 0.0181, 0.0174, 0.0158, 0.0128, 0.0107, 0.0102, 0.00906, 0.00814, 0.00764,
-                0.00625, 0.0059, 0.00508, 0.00486, 0.00444, 0.00395, 0.00371, 0.00342, 0.00336, 0.00294, 0.00278,
-                0.00273, 0.00256, 0.00232, 0.00211, 0.00197, 0.00191, 0.00179, 0.00158, 0.00153, 0.00146, 0.00136,
-                0.00119, 0.00116, 0.00104, 0.000962, 0.000918, 0.000915, 0.000822, 0.00076, 0.000702, 0.000678,
-                0.000557, 0.000529, 0.000469, 0.000384, 0.000367, 0.000324, 5.99e-34 };
 
         assertEquals( 59, varianceFractions.length );
-        assertTrue( RegressionTesting.closeEnough( actualVarFractions, actualVarFractions, 0.01 ) );
+        // expected values carry 3 significant digits, so the largest rounding error is 0.0005
+        assertTrue( RegressionTesting.closeEnough( R_VARIANCE_FRACTIONS, ArrayUtils.toPrimitive( varianceFractions ),
+                0.001 ) );
+        double total = 0;
+        for ( Double f : varianceFractions ) {
+            total += f;
+        }
+        assertEquals( 1.0, total, 1e-12 );
+    }
+
+    /**
+     * The truncated path for large datasets must reproduce the leading components of the full SVD on the same
+     * double-standardized matrix, and R's values for this fixture. The variance fractions, eigenvalue sum included,
+     * must not depend on how many components were computed.
+     */
+    @Test
+    public void testTruncatedSvdMatchesFullSvd() throws SVDException {
+        ExpressionDataSVD full = new ExpressionDataSVD( testData, true );
+        ExpressionDataSVD top = new ExpressionDataSVD( testData, true, TOP_K );
+        assertEquals( 200, full.getNumVariables(), "no rows should be filtered from this fixture" );
+        assertFalse( full.isTruncated() );
+        assertTrue( top.isTruncated() );
+        assertEquals( TOP_K, top.getSingularValues().length );
+        assertEquals( 200, top.getU().rows() );
+        assertEquals( TOP_K, top.getU().columns() );
+        assertEquals( 59, top.getV().rows() );
+        assertEquals( TOP_K, top.getV().columns() );
+        assertEquals( full.getV().getRowNames(), top.getV().getRowNames() );
+
+        assertLeadingComponentsMatch( top.getSingularValues(), top.getU().getRawMatrix(), top.getV().getRawMatrix(),
+                full.getSingularValues(), full.getU().getRawMatrix(), full.getV().getRawMatrix() );
+
+        assertEquals( full.getEigenvalueSum(), top.getEigenvalueSum(), 1e-12 * full.getEigenvalueSum() );
+        assertEquals( Arrays.stream( full.getEigenvalues() ).sum(), full.getEigenvalueSum(),
+                1e-12 * full.getEigenvalueSum() );
+        Double[] fullFractions = full.getVarianceFractions();
+        Double[] topFractions = top.getVarianceFractions();
+        double[] topEigenvalues = top.getEigenvalues();
+        double[] fullEigenvalues = full.getEigenvalues();
+        for ( int i = 0; i < TOP_K; i++ ) {
+            // R prints 7 significant digits
+            assertEquals( R_SINGULAR_VALUES[i], top.getSingularValues()[i], 1e-5, "singular value " + ( i + 1 ) + " vs R" );
+            // s² doubles the relative error of s (1e-8, see assertLeadingComponentsMatch), so components past the used
+            // ones, which converge last, are held to that; the used ones agree to rounding
+            double tolerance = i < COMPONENTS_USED ? 1e-12 : 2e-8 * topFractions[i];
+            assertEquals( fullFractions[i], topFractions[i], tolerance, "variance fraction " + ( i + 1 ) + " vs full SVD" );
+            assertEquals( fullEigenvalues[i], topEigenvalues[i], tolerance * full.getEigenvalueSum(),
+                    "eigenvalue " + ( i + 1 ) + " vs full SVD" );
+            // R values carry 3 significant digits
+            assertEquals( R_VARIANCE_FRACTIONS[i], topFractions[i], 5e-4, "variance fraction " + ( i + 1 ) + " vs R" );
+        }
+    }
+
+    /**
+     * The hard case for Lanczos: pure noise, where neighbouring singular values differ by well under 1%. The
+     * leading components must still match the full SVD.
+     */
+    @Test
+    public void testTruncatedSvdMatchesFullSvdWithNearTiedComponents() throws Exception {
+        Random r = new Random( 42L );
+        int genes = 400, samples = 100;
+        DoubleMatrix<Integer, Integer> noise = new DenseDoubleMatrix<>( genes, samples );
+        List<Integer> rowNames = new ArrayList<>(), colNames = new ArrayList<>();
+        for ( int g = 0; g < genes; g++ ) {
+            rowNames.add( g );
+            for ( int j = 0; j < samples; j++ ) {
+                noise.set( g, j, r.nextGaussian() );
+            }
+        }
+        for ( int j = 0; j < samples; j++ ) {
+            colNames.add( j );
+        }
+        noise.setRowNames( rowNames );
+        noise.setColumnNames( colNames );
+        DoubleMatrix<Integer, Integer> std = MatrixStats.doubleStandardize( noise );
+        SingularValueDecomposition<Integer, Integer> full = new SingularValueDecomposition<>( std );
+        SingularValueDecomposition<Integer, Integer> top = SingularValueDecomposition.truncated( std, TOP_K );
+
+        assertLeadingComponentsMatch( top.getSingularValues(), top.getU().getRawMatrix(), top.getV().getRawMatrix(),
+                full.getSingularValues(), full.getU().getRawMatrix(), full.getV().getRawMatrix() );
+        assertEquals( full.getTotalSumOfSquares(), top.getTotalSumOfSquares(), 1e-12 * full.getTotalSumOfSquares() );
+    }
+
+    /**
+     * Rebuilding the matrix needs every component, so a truncated SVD must refuse rather than return a partial
+     * reconstruction.
+     */
+    @Test
+    public void testTruncatedSvdRefusesWholeMatrixMethods() throws SVDException {
+        svd = new ExpressionDataSVD( testData, true, TOP_K );
+        assertThrows( IllegalStateException.class, () -> svd.equalize() );
+        assertThrows( IllegalStateException.class, () -> svd.removeHighestComponents( 1 ) );
+        assertThrows( IllegalStateException.class, () -> svd.winnow( 0.5 ) );
+        assertThrows( IllegalStateException.class, () -> svd.uMatrixAsExpressionData() );
+    }
+
+    /**
+     * ARPACK needs fewer components than samples; asking for as many computes the full decomposition instead.
+     */
+    @Test
+    public void testNumComponentsAtLeastSamplesComputesFullSvd() throws SVDException {
+        svd = new ExpressionDataSVD( testData, true, 59 );
+        assertFalse( svd.isTruncated() );
+        assertEquals( 59, svd.getSingularValues().length );
+    }
+
+    /**
+     * Compare a truncated decomposition with the full one. Singular values must agree for all k; the singular
+     * vectors (up to sign) for the {@link #COMPONENTS_USED} components that PCA consumers read.
+     *
+     * @param vTop  samples × k
+     * @param vFull samples × components, as Colt returns it
+     */
+    private static void assertLeadingComponentsMatch( double[] sTop, double[][] uTop, double[][] vTop, double[] sFull,
+            double[][] uFull, double[][] vFull ) {
+        int genes = uTop.length, samples = vTop.length;
+        for ( int i = 0; i < sTop.length; i++ ) {
+            double vDot = 0;
+            for ( int j = 0; j < samples; j++ ) {
+                vDot += vTop[j][i] * vFull[j][i];
+            }
+            double uDot = 0;
+            for ( int g = 0; g < genes; g++ ) {
+                uDot += uTop[g][i] * uFull[g][i];
+            }
+            double sErr = Math.abs( sTop[i] - sFull[i] ) / sFull[i];
+            log.info( String.format( "PC %2d: s = %.6f, relative gap to next %.2e, |Δs|/s = %.2e, 1 - |v·v'| = %.2e, 1 - |u·u'| = %.2e",
+                    i + 1, sFull[i], ( sFull[i] - sFull[i + 1] ) / sFull[i], sErr, 1 - Math.abs( vDot ), 1 - Math.abs( uDot ) ) );
+            assertEquals( 0, sErr, 1e-8, "singular value " + ( i + 1 ) );
+            if ( i < COMPONENTS_USED ) {
+                assertEquals( 1, Math.abs( vDot ), 1e-10, "V column " + ( i + 1 ) );
+                assertEquals( 1, Math.abs( uDot ), 1e-10, "U column " + ( i + 1 ) );
+            }
+        }
     }
 
     /*

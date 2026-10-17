@@ -148,18 +148,14 @@ public class DatasetsDiagnosticsRestTest extends BaseJerseyIntegrationTest5 {
             u.set( i, 1, -0.4 + 0.1 * i );
         }
 
-        // V: components × biomaterials (assays.size() × 2)
+        // V: biomaterials × components (assays.size() × 2)
         List<BioMaterial> bioMaterials = new ArrayList<>();
         for ( BioAssay ba : assays ) {
             bioMaterials.add( ba.getSampleUsed() );
         }
-        DoubleMatrix<Integer, BioMaterial> v = new DenseDoubleMatrix<>( bioMaterials.size(), 2 );
-        List<Integer> vRows = new ArrayList<>();
-        for ( int i = 0; i < bioMaterials.size(); i++ ) {
-            vRows.add( i );
-        }
-        v.setRowNames( vRows );
-        v.setColumnNames( bioMaterials );
+        DoubleMatrix<BioMaterial, Integer> v = new DenseDoubleMatrix<>( bioMaterials.size(), 2 );
+        v.setRowNames( bioMaterials );
+        v.setColumnNames( Arrays.asList( 0, 1 ) );
         for ( int i = 0; i < bioMaterials.size(); i++ ) {
             v.set( i, 0, 0.1 * ( i + 1 ) );
             v.set( i, 1, 0.05 * ( i + 1 ) );

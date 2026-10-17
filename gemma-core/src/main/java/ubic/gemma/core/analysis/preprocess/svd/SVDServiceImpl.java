@@ -164,6 +164,14 @@ public class SVDServiceImpl implements SVDService {
     @Transactional(propagation = Propagation.NEVER)
     @Audited(value = PCAAnalysisEvent.class, message = "SVD computation")
     public SVDResult svd( ExpressionExperiment ee ) throws SVDException {
+        return this.svd( ee, 0 );
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.NEVER)
+    @Audited(value = PCAAnalysisEvent.class, message = "SVD computation",
+            messageSpel = "#numComponents > 0 ? 'SVD computation, top ' + #numComponents + ' components requested' : 'SVD computation'")
+    public SVDResult svd( ExpressionExperiment ee, int numComponents ) throws SVDException {
         assert ee != null;
 
         Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
@@ -175,20 +183,20 @@ public class SVDServiceImpl implements SVDService {
 
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, vectors );
 
-        SVDServiceImpl.log.info( "Starting SVD" );
-        ExpressionDataSVD svd = new ExpressionDataSVD( mat );
+        SVDServiceImpl.log.info( numComponents > 0 ? "Starting SVD, top " + numComponents + " components" : "Starting SVD" );
+        ExpressionDataSVD svd = new ExpressionDataSVD( mat, true, numComponents );
 
         SVDServiceImpl.log.info( "SVD done, postprocessing and storing results." );
 
         /*
          * Save the results
          */
-        DoubleMatrix<Integer, BioMaterial> v = svd.getV();
+        DoubleMatrix<BioMaterial, Integer> v = svd.getV();
 
         BioAssayDimension b = mat.getBioAssayDimension();
 
         PrincipalComponentAnalysis pca = principalComponentAnalysisService
-                .replaceForExperiment( ee, svd.getU(), svd.getEigenvalues(), v, b,
+                .replaceForExperiment( ee, svd.getU(), svd.getEigenvalues(), svd.getEigenvalueSum(), v, b,
                         SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST, SVDServiceImpl.MAX_LOADINGS_TO_PERSIST );
 
         return self.getSvdFactorAnalysis( pca );

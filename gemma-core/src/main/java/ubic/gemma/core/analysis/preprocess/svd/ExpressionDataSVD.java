@@ -26,6 +26,7 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
+import no.uib.cipr.matrix.NotConvergedException;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
@@ -44,6 +45,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Perform SVD on an expression data matrix, E = U S V'. The rows of the input matrix are probes (genes), following the
@@ -80,6 +82,25 @@ public class ExpressionDataSVD {
      */
     @LongComputation("Singular value decomposition of the whole expression matrix.")
     public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix ) throws SVDException {
+        this( expressionData, normalizeMatrix, 0 );
+    }
+
+    /**
+     * @param expressionData  Note that this may be modified!
+     * @param normalizeMatrix If true, the data matrix will be rescaled and centred to mean zero, variance one, for both
+     *                        rows and columns ("double-standardized")
+     * @param numComponents   how many leading components to compute; 0, or at least the number of samples, computes
+     *                        the full decomposition. Fewer components are much faster on large matrices, and the
+     *                        methods that rebuild the whole matrix ({@link #equalize()},
+     *                        {@link #removeHighestComponents(int)}, {@link #winnow(double)},
+     *                        {@link #uMatrixAsExpressionData()}) then refuse to run.
+     */
+    @LongComputation("Singular value decomposition of the whole expression matrix.")
+    public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix, int numComponents )
+            throws SVDException {
+        if ( numComponents < 0 ) {
+            throw new IllegalArgumentException( "numComponents must not be negative, got " + numComponents + "." );
+        }
         this.expressionData = expressionData;
 
         ArrayDesign arrayDesign = expressionData.getRowElement( 0 ).getDesignElement().getArrayDesign();
@@ -137,7 +158,15 @@ public class ExpressionDataSVD {
             matrix = MatrixStats.doubleStandardize( matrix );
         }
 
-        this.svd = new SingularValueDecomposition<>( matrix );
+        try {
+            if ( numComponents > 0 && numComponents < matrix.columns() ) {
+                this.svd = SingularValueDecomposition.truncated( matrix, numComponents );
+            } else {
+                this.svd = new SingularValueDecomposition<>( matrix );
+            }
+        } catch ( TimeoutException | NotConvergedException e ) {
+            throw new SVDException( e.getMessage(), e );
+        }
     }
 
     /**
@@ -147,6 +176,7 @@ public class ExpressionDataSVD {
      * @return the reconstructed matrix; values that were missing before are re-masked.
      */
     public ExpressionDataDoubleMatrix equalize() {
+        this.requireFullDecomposition( "equalize" );
         DoubleMatrix<Integer, Integer> copy = svd.getS().copy();
 
         for ( int i = 0; i < copy.columns(); i++ ) {
@@ -210,6 +240,21 @@ public class ExpressionDataSVD {
     }
 
     /**
+     * @return the sum of all eigenvalues, including those a truncated decomposition did not compute; the denominator
+     * of each component's variance fraction.
+     */
+    public double getEigenvalueSum() {
+        return svd.getTotalSumOfSquares() / ( this.getNumVariables() - 1 );
+    }
+
+    /**
+     * @return true if only the leading components were computed
+     */
+    public boolean isTruncated() {
+        return svd.isTruncated();
+    }
+
+    /**
      * @return how many rows the U matrix has.
      */
     public int getNumVariables() {
@@ -239,7 +284,7 @@ public class ExpressionDataSVD {
      * @return the right singular vectors. The column indices are of the eigengenes (starting from 0). The row indices
      * are of the original samples in the given ExpressionDataDoubleMatrix.
      */
-    public DoubleMatrix<Integer, BioMaterial> getV() {
+    public DoubleMatrix<BioMaterial, Integer> getV() {
         return svd.getV();
     }
 
@@ -248,16 +293,9 @@ public class ExpressionDataSVD {
      */
     public Double[] getVarianceFractions() {
         double[] singularValues = svd.getSingularValues();
-        // d should be be square roots of the eigenvalues scaled by number of variables: check
-
-        int numVariables = this.getNumVariables();
-
-        double sum = 0;
-        for ( double d : singularValues ) {
-
-            double d2 = d * d / ( numVariables - 1 );
-            sum += d2;
-        }
+        // the eigenvalues are d^2 / (numVariables - 1); the scale cancels in the fraction. The total covers every
+        // component, including those a truncated decomposition did not compute.
+        double sum = svd.getTotalSumOfSquares();
         Double[] answer = new Double[singularValues.length];
         for ( int i = 0; i < singularValues.length; i++ ) {
             answer[i] = singularValues[i] * singularValues[i] / sum;
@@ -275,6 +313,7 @@ public class ExpressionDataSVD {
      * @return the reconstructed matrix; values that were missing before are re-masked.
      */
     public ExpressionDataDoubleMatrix removeHighestComponents( int numComponentsToRemove ) {
+        this.requireFullDecomposition( "removeHighestComponents" );
         DoubleMatrix<Integer, Integer> copy = svd.getS().copy();
 
         for ( int i = 0; i < numComponentsToRemove; i++ ) {
@@ -319,6 +358,7 @@ public class ExpressionDataSVD {
      * </p>
      */
     public ExpressionDataDoubleMatrix uMatrixAsExpressionData() {
+        this.requireFullDecomposition( "uMatrixAsExpressionData" );
 
         if ( !normalized ) {
             throw new IllegalStateException( "You must do SVD on the normalized matrix" );
@@ -335,7 +375,7 @@ public class ExpressionDataSVD {
                 result.set( i, j, Math.abs( rawUMatrix.get( i, j ) ) );
             }
         }
-        List<BioMaterial> colNames = svd.getV().getColNames();
+        List<BioMaterial> colNames = svd.getV().getRowNames();
 
         result.setColumnNames( colNames );
         result.setRowNames( rawUMatrix.getRowNames() );
@@ -352,6 +392,7 @@ public class ExpressionDataSVD {
      * @return a filtered matrix
      */
     public ExpressionDataDoubleMatrix winnow( double thresholdQuantile ) {
+        this.requireFullDecomposition( "winnow" );
 
         if ( thresholdQuantile <= 0 || thresholdQuantile >= 1 ) {
             throw new IllegalArgumentException( "Threshold quantile should be a value between 0 and 1 exclusive" );
@@ -433,6 +474,13 @@ public class ExpressionDataSVD {
      * imputed values of zero are defensible. However, because at this point the matrix has probably already been
      * filtered, the row mean is better.
      */
+    private void requireFullDecomposition( String what ) {
+        if ( svd.isTruncated() ) {
+            throw new IllegalStateException( what + " needs every component; this SVD computed only the leading "
+                    + svd.getSingularValues().length + "." );
+        }
+    }
+
     private void imputeMissing( DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
         /*
          * keep track of the missing values so they can be re-masked later.
