@@ -15,6 +15,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import ubic.gemma.core.context.TestComponent;
 
 import jakarta.servlet.FilterChain;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OntologySecurityConfigTest {
 
     @Configuration
+    @TestComponent
     @EnableWebSecurity
     @Import(OntologySecurityConfig.class)
     static class Config {
