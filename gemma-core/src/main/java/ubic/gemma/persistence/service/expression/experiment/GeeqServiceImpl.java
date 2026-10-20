@@ -180,7 +180,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
 
         // Quality score calculation
         DoubleMatrix<BioAssay, BioAssay> cormat = this.getCormat( ee, gq );
-        double[] cormatLTri = this.getLowerTriCormat( cormat );
+        double[] cormatLTri = getLowerTriCormat( cormat );
 
         this.scoreOutliers( gq, cormat );
         this.scoreSampleMeanCorrelation( gq, cormatLTri );
@@ -244,7 +244,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
             hasCorrMat = false;
         } else {
             // Check if cormat has NaNs (diagonal is not checked, but there really should not be NaNs on the diagonal)
-            Double[] doubleArray = ArrayUtils.toObject( this.getLowerTriangle( cormat.getRawMatrix() ) );
+            Double[] doubleArray = ArrayUtils.toObject( getLowerTriangle( cormat.getRawMatrix() ) );
             List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
             hasNaNs = list.contains( Double.NaN );
 
@@ -456,21 +456,22 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         return cormat;
     }
 
-    private double[] getLowerTriCormat( @Nullable DoubleMatrix<BioAssay, BioAssay> cormat ) {
+    /**
+     * The lower triangle of the correlation matrix, without its NaNs (some cormats have them; the outlier score notes
+     * it).
+     * <p>
+     * One pass. This used to remove the NaNs from a list one {@code remove} at a time, each scanning and shifting the
+     * whole list: quadratic in the number of NaNs. Pseudo-bulk samples with no cells correlate as NaN with every
+     * other sample, so RADC_Cohort (3,800 samples, 599 empty) has about 2 million of them among 7.2 million values,
+     * and GEEQ spent 12 hours here, inside its transaction, until the database dropped the connection.
+     */
+    static double[] getLowerTriCormat( @Nullable DoubleMatrix<BioAssay, BioAssay> cormat ) {
         if ( cormat == null || cormat.rows() == 0 ) {
             return new double[] {};
         }
-        double[] corTri = this.getLowerTriangle( cormat.getRawMatrix() );
-
-        // We have to remove NaNs, some cormats have them (we notify user about this in the outlier score)
-        // this is not very efficient, but the DoubleMatrix does not have a method to get an array of Doubles (not doubles)
-        Double[] doubleArray = ArrayUtils.toObject( corTri );
-        List<Double> list = new ArrayList<>( Arrays.asList( doubleArray ) );
-        //noinspection StatementWithEmptyBody // because java standard libraries suck, we have to iterate like this to remove all NaNs, not just the first one.
-        while ( list.remove( Double.NaN ) ) {
-        }
-
-        return ArrayUtils.toPrimitive( list.toArray( new Double[0] ) );
+        return Arrays.stream( getLowerTriangle( cormat.getRawMatrix() ) )
+                .filter( d -> !Double.isNaN( d ) )
+                .toArray();
     }
 
     private void cormatOps( Geeq gq, double[] cormatLTri, CormatOpsType type ) {
@@ -538,7 +539,7 @@ public class GeeqServiceImpl extends AbstractVoEnabledService<Geeq, GeeqValueObj
         return StatUtils.variance( arr );
     }
 
-    private double[] getLowerTriangle( double[][] mat ) {
+    private static double[] getLowerTriangle( double[][] mat ) {
         // half of the square, minus half of one row (the diagonal)
         double[] tri = new double[( ( mat.length * mat[0].length ) / 2 ) - ( mat.length / 2 )];
 
