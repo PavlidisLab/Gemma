@@ -60,9 +60,10 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
         options.addOption( Option.builder( COMPONENTS_OPTION ).longOpt( "components" )
                 .hasArg().type( Number.class )
                 .desc( "Compute only this many leading components instead of the full decomposition, for datasets "
-                        + "too large for it (e.g. single-cell pseudo-bulks with thousands of samples). PCA consumers "
-                        + "read the first 5; asking for 10 keeps those exact. The stored PCA then has this many "
-                        + "eigenvalues rather than one per sample. By default the full decomposition is computed." )
+                        + "too large for it (e.g. single-cell pseudo-bulks with thousands of samples); they match "
+                        + "the full decomposition to rounding. PCA consumers read the first 5. The stored PCA then has "
+                        + "this many eigenvalues rather than one per sample, and the computation has no time limit. "
+                        + "By default the full decomposition is computed." )
                 .get() );
     }
 
