@@ -5,7 +5,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +49,12 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String property ) {
+    public boolean isFilterablePropertyUsingSubquery( String property ) {
+        throw new UnsupportedOperationException( message );
+    }
+
+    @Override
+    public boolean isFilterablePropertyDeprecated( String property ) throws IllegalArgumentException {
         throw new UnsupportedOperationException( message );
     }
 
@@ -61,6 +66,11 @@ public abstract class AbstractNoopFilteringVoEnabledDao<O extends Identifiable, 
     @Override
     public Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) {
         throw new UnsupportedOperationException( message );
+    }
+
+    @Override
+    public Filter getFilter( List<ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) {
+        throw new UnsupportedOperationException( "This entity does not support filtering." );
     }
 
     @Override

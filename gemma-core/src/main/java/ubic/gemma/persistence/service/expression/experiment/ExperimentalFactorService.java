@@ -21,16 +21,14 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
-
-import java.util.Collection;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseVoEnabledService;
 
 /**
  * @author paul
  */
 public interface ExperimentalFactorService
-        extends BaseService<ExperimentalFactor>, BaseVoEnabledService<ExperimentalFactor, ExperimentalFactorValueObject> {
+        extends SecurableBaseService<ExperimentalFactor>, SecurableBaseVoEnabledService<ExperimentalFactor, ExperimentalFactorValueObject> {
 
     /**
      * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
@@ -40,42 +38,6 @@ public interface ExperimentalFactorService
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( ExperimentalFactor experimentalFactor );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void remove( Collection<ExperimentalFactor> entities );
-
-    @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalFactor find( ExperimentalFactor experimentalFactor );
-
-    @Override
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExperimentalFactor> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExperimentalFactor load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExperimentalFactor> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ExperimentalFactor experimentalFactor );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    void update( Collection<ExperimentalFactor> entities );
 
     ExperimentalFactor thaw( ExperimentalFactor ef );
 }

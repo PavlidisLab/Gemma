@@ -16,4 +16,14 @@
         name='org.hibernate.Session java.lang.Object get(java.lang.String, java.io.Serializable, org.hibernate.LockOptions)'>
         <annotation name='javax.annotation.Nullable'/>
     </item>
+    <item name='org.hibernate.SessionFactory org.hibernate.metadata.ClassMetadata getClassMetadata(java.lang.Class)'>
+        <annotation name='javax.annotations.Nullable'/>
+    </item>
+    <item name='org.hibernate.SessionFactory org.hibernate.metadata.ClassMetadata getClassMetadata(java.lang.String)'>
+        <annotation name='javax.annotations.Nullable'/>
+    </item>
+    <item
+        name='org.hibernate.SessionFactory org.hibernate.metadata.CollectionMetadata getCollectionMetadata(java.lang.String)'>
+        <annotation name='javax.annotations.Nullable'/>
+    </item>
 </root>

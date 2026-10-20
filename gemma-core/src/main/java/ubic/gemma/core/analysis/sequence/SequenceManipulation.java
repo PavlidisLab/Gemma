@@ -37,6 +37,16 @@ import java.util.HashSet;
  */
 @SuppressWarnings("unused") // Possible external use
 public class SequenceManipulation {
+
+    /**
+     * Suffix appended to a {@link ubic.gemma.model.expression.designElement.CompositeSequence}'s
+     * name to name the {@link ubic.gemma.model.genome.biosequence.SequenceType#AFFY_COLLAPSED}
+     * BioSequence built from its reporters. Applied by
+     * {@code ArrayDesignSequenceProcessingServiceImpl}; stripped again by {@code BlatResult2Psl},
+     * because UCSC renders the query-sequence name as the visible item label of a custom track and
+     * the suffix names an internal shape rather than the probe the visitor clicked.
+     */
+    public static final String COLLAPSED_NAME_SUFFIX = "_collapsed";
     private static final Log log = LogFactory.getLog( SequenceManipulation.class );
 
     private static final int BIN_FIRST_SHIFT = 17; /* How much to shift to get to finest bin. */

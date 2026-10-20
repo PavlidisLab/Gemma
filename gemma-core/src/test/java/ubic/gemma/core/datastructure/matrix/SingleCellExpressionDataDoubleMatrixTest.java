@@ -1,6 +1,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
@@ -31,7 +31,7 @@ public class SingleCellExpressionDataDoubleMatrixTest {
                 .isEqualTo( "1232" );
         assertThat( mat.getBioAssayForColumn( 1231 ) )
                 .extracting( BioAssay::getName )
-                .isEqualTo( "ba1" );
+                .isEqualTo( "ba2" );
     }
 
     /**

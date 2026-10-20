@@ -14,11 +14,13 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterResult;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -44,21 +46,33 @@ public interface ExpressionDataMatrixService {
      * @return data matrix
      * @throws IllegalStateException if there are no processed vectors
      */
-    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig ) throws FilteringException;
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, ExpressionExperimentFilterConfig filterConfig ) throws FilteringException;
 
     /**
      * Provide a filtered expression data matrix.
      *
      * @param ee           the expression experiment.
-     * @param filterConfig the configuration.
      * @param dataVectors  data vectors
+     * @param filterConfig the configuration.
+     * @param logTransform perform a log transformation on the data, this is ignored if the data is already on a log
+     *                     scale, the default is to return the data as is.
      * @return data matrix
      */
-    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException;
 
-    ExpressionDataDoubleMatrix getFilteredMatrix( String arrayDesignName, FilterConfig filterConfig,
-            Collection<ProcessedExpressionDataVector> dataVectors ) throws FilteringException;
+    /**
+     * Provide a filtered expression data matrix, reporting the per-stage attrition into a caller-supplied result.
+     * <p>
+     * The other overloads discard that result. Use this one when the attrition is wanted as well as the matrix --
+     * the sample-correlation run records it on the audit event so a curator can see how many design elements each
+     * filter removed.
+     *
+     * @param result populated in place as each filter runs; untouched if filtering throws
+     * @see ubic.gemma.core.security.audit.payload.SampleCorrelationAnalysisPayload
+     */
+    ExpressionDataDoubleMatrix getFilteredMatrix( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> dataVectors, ExpressionExperimentFilterConfig filterConfig, boolean logTransform, ExpressionExperimentFilterResult result ) throws FilteringException;
+
+    ExpressionDataDoubleMatrix getFilteredMatrix( Collection<ProcessedExpressionDataVector> dataVectors, ArrayDesign arrayDesign, ExpressionExperimentFilterConfig filterConfig, boolean logTransform ) throws FilteringException;
 
     /**
      * Obtain the processed expression data matrix for a given experiment.
@@ -66,9 +80,9 @@ public interface ExpressionDataMatrixService {
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee );
 
     /**
-     * @param ee the expression experiment.
-     * @return matrix of preferred data, with all missing values masked
+     * @param ee         the expression experiment.
      * @param thawAssays whether to thaw the assays or not using {@link ubic.gemma.persistence.util.Thaws#thawBioAssayDimension(BioAssayDimension)}
+     * @return matrix of preferred data, with all missing values masked
      */
     ExpressionDataDoubleMatrix getProcessedExpressionDataMatrix( ExpressionExperiment ee, boolean thawAssays );
 
@@ -76,6 +90,7 @@ public interface ExpressionDataMatrixService {
 
     /**
      * Obtain a raw expression data matrix for a given quantitation type
+     *
      * @throws IllegalStateException if there are no raw vectors for the given quantitation type
      */
     ExpressionDataDoubleMatrix getRawExpressionDataMatrix( ExpressionExperiment ee, QuantitationType quantitationType );

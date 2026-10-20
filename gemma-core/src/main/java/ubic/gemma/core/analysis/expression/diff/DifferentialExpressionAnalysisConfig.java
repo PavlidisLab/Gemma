@@ -20,17 +20,20 @@ package ubic.gemma.core.analysis.expression.diff;
 
 import lombok.Data;
 import org.springframework.util.Assert;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.util.math.linearmodels.ContrastCoding;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.*;
-
-import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.writeConfig;
+import org.springframework.lang.Nullable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Holds the settings used for differential expression analysis, and defines some defaults.
@@ -51,11 +54,6 @@ public class DifferentialExpressionAnalysisConfig {
     private AnalysisType analysisType;
 
     /**
-     * For each categorical factor, indicate the baseline factor value to use.
-     */
-    private final Map<ExperimentalFactor, FactorValue> baselineFactorValues = new HashMap<>();
-
-    /**
      * Whether moderated test statistics should be used.
      * <p>
      * This is usually done with the empirical Bayes method.
@@ -64,12 +62,48 @@ public class DifferentialExpressionAnalysisConfig {
 
     private final Set<ExperimentalFactor> factorsToInclude = new HashSet<>();
 
+    /**
+     * How each categorical factor's levels are coded in the design matrix, which decides what its coefficients
+     * mean. A factor absent from this map is {@link ContrastCoding#TREATMENT}.
+     * <p>
+     * Per factor rather than per analysis because the two codings answer different questions and a single model
+     * can want both: a genotype factor with a wild-type control is read against that control, while a tissue
+     * factor in the same design has no control to be read against and wants
+     * {@link ContrastCoding#SUM_TO_ZERO}, where every level is reported against the mean of the level means.
+     *
+     * @see #setContrastCoding(ExperimentalFactor, ContrastCoding)
+     */
+    private final Map<ExperimentalFactor, ContrastCoding> contrastCoding = new HashMap<>();
+
     private final Set<Set<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
+
+    /**
+     * Factors whose levels are blocking terms (e.g. subjects in a paired or repeated-measures design). Their
+     * columns stay in the design so every other factor's contrasts are adjusted for them, but the blocking
+     * factor itself gets no result set: the subject-to-subject differences are nuisance, not findings.
+     * <p>
+     * Categorical factors only. The factor must still be in {@link #factorsToInclude}; a factor here but not
+     * there is ignored with a warning. Explicit config overrides any curator hint the factor carries, and no
+     * blocking factor is guessed automatically.
+     *
+     * @see #setBlockingFactors(Collection)
+     */
+    private final Set<ExperimentalFactor> blockingFactors = new HashSet<>();
 
     /**
      * Indicate if this analysis should be persisted.
      */
     private boolean persist = true;
+
+    /**
+     * After the new analyses are saved, delete the experiment's other analyses on the same subset factor: without a
+     * subset factor, every other analysis that is not a subset analysis; with one, every other analysis of that
+     * factor's subsets.
+     * <p>
+     * Only a fresh run honours this, and only when {@code persist} is set. Nothing is deleted before the new analyses
+     * are saved, so a run that fails leaves the existing analyses in place.
+     */
+    private boolean deleteOtherAnalyses = false;
 
     /**
      * Factor to subset the analysis on, if non-null.
@@ -88,8 +122,10 @@ public class DifferentialExpressionAnalysisConfig {
     /**
      * Keep processing other subsets when encountering an {@link AnalysisException} on a subset.
      * <p>
-     * If all subset fails, an {@link AllSubSetAnalysesFailedException} will be raised which will contain individual
-     * subset failures.
+     * This is about carrying on when SOME subsets succeed. If no subset yields an analysis, an
+     * {@link AllSubSetAnalysesFailedException} is raised regardless of this setting — it carries whichever subset
+     * failures were collected, and a subset can also leave the loop skipped rather than failed (DE_Exclude, no
+     * samples left to analyze, or no factor the subset can model).
      */
     private boolean ignoreFailingSubsets = false;
 
@@ -97,6 +133,60 @@ public class DifferentialExpressionAnalysisConfig {
      * Set true for RNA-seq data sets
      */
     private boolean useWeights = false;
+
+    /**
+     * Override the minimum number of cells for a particular sample to be included in the analysis.
+     * <p>
+     * This is only applied if {@link ExpressionDataDoubleMatrix#getNumberOfCells()} or {@link BioAssay#getNumberOfCells()}
+     * is populated. Note that the {@link BioAssay}-level number of cells is only considered for preferred QTs.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE}.
+     */
+    @Nullable
+    private Integer minimumNumberOfCellsPerSample = null;
+
+    /**
+     * Override the minimum number of cells for a particular gene  to be included in the analysis.
+     * <p>
+     * This is only applied if {@link ExpressionDataDoubleMatrix#getNumberOfCells()} is populated.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE}.
+     */
+    @Nullable
+    private Integer minimumNumberOfCellsPerGene = null;
+
+    /**
+     * Override the default mode of operation for the {@link RepetitiveValuesFilter}.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_REPETITIVE_VALUES_FILTER_MODE}
+     */
+    @Nullable
+    private DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode repetitiveValuesFilterMode = null;
+
+    /**
+     * Override the minimum number of samples to apply the repetitive value filter.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_REPETITIVE_VALUES_FILTER}
+     */
+    @Nullable
+    private Integer minimumNumberOfSamplesToApplyRepetitiveValuesFilter = null;
+
+    /**
+     * Override the minimum number of unique values (as a fraction of the number of assays) for a particular design
+     * element to be included in the analysis.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES}.
+     */
+    @Nullable
+    private Double minimumFractionOfUniqueValues = null;
+
+    /**
+     * Override the minimum variance for a particular design element to be included in the analysis.
+     * <p>
+     * Defaults to {@link DifferentialExpressionAnalysisFilter#DEFAULT_MINIMUM_VARIANCE}.
+     */
+    @Nullable
+    private Double minimumVariance = null;
 
     /**
      * Whether to create archive files.
@@ -116,64 +206,97 @@ public class DifferentialExpressionAnalysisConfig {
      */
     public DifferentialExpressionAnalysisConfig( DifferentialExpressionAnalysisConfig baseConfig ) {
         this.analysisType = baseConfig.getAnalysisType();
-        this.baselineFactorValues.putAll( baseConfig.getBaselineFactorValues() );
         this.moderateStatistics = baseConfig.isModerateStatistics();
         this.factorsToInclude.addAll( baseConfig.getFactorsToInclude() );
+        this.blockingFactors.addAll( baseConfig.getBlockingFactors() );
+        this.estimateBlockingCorrelation = baseConfig.isEstimateBlockingCorrelation();
         this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
         this.persist = baseConfig.isPersist();
+        this.deleteOtherAnalyses = baseConfig.isDeleteOtherAnalyses();
         this.subsetFactor = baseConfig.getSubsetFactor();
         this.subsetFactorValue = baseConfig.getSubsetFactorValue();
         this.ignoreFailingSubsets = baseConfig.isIgnoreFailingSubsets();
         this.useWeights = baseConfig.isUseWeights();
         this.makeArchiveFile = baseConfig.isMakeArchiveFile();
         this.maxAnalysisTimeMillis = baseConfig.getMaxAnalysisTimeMillis();
+        this.repetitiveValuesFilterMode = baseConfig.getRepetitiveValuesFilterMode();
+        this.minimumFractionOfUniqueValues = baseConfig.getMinimumFractionOfUniqueValues();
+        this.minimumNumberOfSamplesToApplyRepetitiveValuesFilter = baseConfig.getMinimumNumberOfSamplesToApplyRepetitiveValuesFilter();
+        this.minimumNumberOfCellsPerSample = baseConfig.getMinimumNumberOfCellsPerSample();
+        this.minimumNumberOfCellsPerGene = baseConfig.getMinimumNumberOfCellsPerGene();
+        this.minimumVariance = baseConfig.getMinimumVariance();
     }
 
     /**
      * Add a collection of factors to include in the analysis.
      */
+    /**
+     * Choose how one factor's levels are coded. Continuous factors have no levels and are rejected.
+     */
+    public void setContrastCoding( ExperimentalFactor factor, ContrastCoding coding ) {
+        Assert.notNull( coding, "Contrast coding cannot be null." );
+        Assert.isTrue( factor.getType() != FactorType.CONTINUOUS,
+                "A continuous factor has one column and no levels, so it has no contrast coding: " + factor );
+        this.contrastCoding.put( factor, coding );
+    }
+
+    /**
+     * How the given factor's levels are coded; {@link ContrastCoding#TREATMENT} unless set.
+     */
+    public ContrastCoding getContrastCoding( ExperimentalFactor factor ) {
+        return this.contrastCoding.getOrDefault( factor, ContrastCoding.TREATMENT );
+    }
+
     public void addFactorsToInclude( Collection<ExperimentalFactor> factors ) {
         factorsToInclude.addAll( factors );
     }
 
     /**
+     * Mark factors as blocking terms (subjects of a paired design). Categorical factors only; each must also be
+     * in {@link #factorsToInclude} to reach the model.
+     */
+    public void setBlockingFactors( Collection<ExperimentalFactor> factors ) {
+        for ( ExperimentalFactor f : factors ) {
+            Assert.isTrue( f.getType() != FactorType.CONTINUOUS,
+                    "A continuous factor has one column and no subject levels to block on: " + f );
+        }
+        blockingFactors.clear();
+        blockingFactors.addAll( factors );
+    }
+
+    /**
+     * Fit the blocking factor as a random intercept (mixed model) instead of fixed-effect columns: the
+     * inter-block correlation is estimated from the data (limma {@code duplicateCorrelation}) and the fit
+     * runs by GLS (limma {@code gls.series}). The blocking factor then has NO columns in the design -- it
+     * lives in the correlation structure -- so its factor values are only used to assign samples to blocks.
+     * <p>
+     * Requires {@link #blockingFactors} to be non-empty and the data to be complete and unweighted: the
+     * per-observation gls.series branch (voom weights + correlation, or missing values + correlation) is not
+     * ported yet and the analyzer rejects the combination. Consensus correlation only (limma's default), not
+     * per-probe correlations.
+     */
+    private boolean estimateBlockingCorrelation = false;
+
+    /**
      * Add an interaction of two factors to include in the analysis.
+     * <p>
+     * A blocking factor (a paired-design subject term) cannot take part: subject-by-treatment terms are exactly
+     * what a mixed model is for, and this analyzer does not support those. Model the treatment effect with the
+     * subject as a pure block instead.
      */
     public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
         HashSet<ExperimentalFactor> fs = new HashSet<>( factors );
         Assert.isTrue( fs.size() == 2, "An interaction must have two factors." );
+        Set<ExperimentalFactor> clash = new HashSet<>( fs );
+        clash.retainAll( blockingFactors );
+        Assert.isTrue( clash.isEmpty(), "Blocking factor(s) " + clash
+                + " cannot also be in an interaction: subject-by-treatment terms need a mixed model, which is not supported." );
         interactionsToInclude.add( fs );
     }
 
     public void addInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactions ) {
         for ( Collection<ExperimentalFactor> interaction : interactions ) {
             addInteractionToInclude( interaction );
-        }
-    }
-
-    public void addBaseLineFactorValues( Map<ExperimentalFactor, FactorValue> baselineConditions ) {
-        baselineFactorValues.putAll( baselineConditions );
-    }
-
-    /**
-     * @return representation of this analysis with populated protocol holding information from this.
-     */
-    public DifferentialExpressionAnalysis toAnalysis() {
-        DifferentialExpressionAnalysis analysis = DifferentialExpressionAnalysis.Factory.newInstance();
-        Protocol protocol = Protocol.Factory.newInstance();
-        protocol.setName( "Differential expression analysis settings" );
-        protocol.setDescription( this.toString() );
-        analysis.setProtocol( protocol );
-        return analysis;
-    }
-
-    @Override
-    public String toString() {
-        try ( StringWriter buf = new StringWriter() ) {
-            writeConfig( this, buf );
-            return buf.toString();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
         }
     }
 }

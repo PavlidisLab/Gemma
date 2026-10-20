@@ -21,17 +21,18 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
+import ubic.gemma.core.util.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
+import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils;
+import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.analysis.preprocess.filter.RepetitiveValuesFilter;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.security.audit.Audited;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MeanVarianceUpdateEvent;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.filterAndLog2Transform;
 
 /**
  * Manage the mean-variance relationship.
@@ -47,11 +48,10 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Override
     @Transactional
+    @Audited(value = MeanVarianceUpdateEvent.class, message = "Mean-variance has been updated.")
     public MeanVarianceRelation create( ExpressionExperiment ee, boolean forceRecompute ) {
         if ( ee == null ) {
             log.warn( "Experiment is null" );
@@ -75,9 +75,11 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
             throw new IllegalStateException( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
         }
         try {
-            intensities = filterAndLog2Transform( intensities );
+            intensities = new RepetitiveValuesFilter().filter( QuantitationTypeConversionUtils.ensureLog2Scale( intensities ) );
         } catch ( QuantitationTypeConversionException e ) {
-            log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
+            log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is.", e );
+        } catch ( FilteringException e ) {
+            log.warn( "Problem filtering data. Check that the appropriate log scale is used. Mean-variance will be computed as is.", e );
         }
 
         if ( intensities.rows() < 3 ) {
@@ -87,7 +89,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
         mvr = expressionExperimentService.updateMeanVarianceRelation( ee, calculateMeanVariance( intensities ) );
 
-        auditTrailService.addUpdateEvent( ee, MeanVarianceUpdateEvent.class, "Mean-variance has been updated." );
+        // Audit event written by @Audited on this method via AuditedAspect.
 
         log.info( "Mean-variance computation is complete" );
 

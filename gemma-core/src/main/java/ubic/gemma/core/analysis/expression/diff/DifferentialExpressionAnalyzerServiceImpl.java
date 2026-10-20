@@ -18,17 +18,20 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.basecode.math.distribution.Histogram;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.security.audit.AuditedOnError;
+import ubic.gemma.core.security.audit.payload.DifferentialExpressionAnalysisPayload;
+import ubic.gemma.core.util.math.distribution.Histogram;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -38,13 +41,17 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpr
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultCache;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.BLOCKING_FACTORS_PROTOCOL_PREFIX;
+import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE;
+
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -55,13 +62,14 @@ import java.util.*;
  * @author keshav
  */
 @Component
+@Transactional(propagation = Propagation.NEVER)
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
-    private AuditTrailService auditTrailService = null;
+    private DifferentialExpressionAnalyzerAuditService differentialExpressionAnalyzerAuditService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     @Autowired
@@ -72,6 +80,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
+    @Autowired
+    private DifferentialExpressionResultCache differentialExpressionResultCache;
+
+    /**
+     * Archive writes scheduled by {@link #saveAnalysis}, by analysis ID, so that deleting an analysis can wait for its
+     * own write first; see {@link #awaitPendingArchiveWrite}.
+     */
+    private final Map<Long, Future<Path>> pendingArchiveWrites = new ConcurrentHashMap<>();
 
     @Override
     public int deleteAnalyses( ExpressionExperiment expressionExperiment ) {
@@ -90,10 +106,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             DifferentialExpressionAnalyzerServiceImpl.log
                     .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
                             .getShortName() + ": Analysis ID=" + de.getId() );
+            // Capture result-set ids while the entity is still attached so we can clean their
+            // per-result-set TSV caches after the DB delete commits.
+            List<Long> resultSetIds = collectResultSetIds( de );
+            awaitPendingArchiveWrite( de );
             differentialExpressionAnalysisService.remove( de );
 
             this.deleteStatistics( expressionExperiment, de );
             this.deleteAnalysisFiles( de );
+            deleteResultSetTsvCaches( resultSetIds );
             result++;
         }
 
@@ -101,15 +122,38 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    public int deleteAnalyses( ExpressionExperiment ee, Collection<DifferentialExpressionAnalysis> analysesToDelete ) {
+        int deleted = 0;
+        for ( DifferentialExpressionAnalysis analysis : analysesToDelete ) {
+            deleteAnalysis( ee, analysis );
+            deleted++;
+        }
+        return deleted;
+    }
+
+    /**
+     * {@code SUPPORTS} overrides the class-level {@code NEVER} so a caller that is already in a transaction --
+     * {@link ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService#applyDesignChange}
+     * cascading invalidated analyses -- can route through here instead of calling
+     * {@code differentialExpressionAnalysisService.remove}, which is database-only and leaves the archive and
+     * result-set TSV caches on the deployment volume. Callers outside a transaction are unaffected.
+     */
+    @Override
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void deleteAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis existingAnalysis ) {
         DifferentialExpressionAnalyzerServiceImpl.log
                 .info( "Deleting old differential expression analysis for experiment " + expressionExperiment
                         .getShortName() + " Analysis ID=" + existingAnalysis.getId() );
+        // Capture result-set ids while the entity is still attached so we can clean their
+        // per-result-set TSV caches after the DB delete commits.
+        List<Long> resultSetIds = collectResultSetIds( existingAnalysis );
+        awaitPendingArchiveWrite( existingAnalysis );
         differentialExpressionAnalysisService.remove( existingAnalysis );
 
         this.deleteStatistics( expressionExperiment, existingAnalysis );
         expressionDataFileService.deleteDiffExArchiveFile( existingAnalysis );
+        deleteResultSetTsvCaches( resultSetIds );
     }
 
     @Override
@@ -136,7 +180,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment ) {
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = differentialExpressionAnalysisService
-                .getAnalyses( expressionExperiment, true );
+                .findByExperiment( expressionExperiment, true );
         return differentialExpressionAnalysisService.thaw( expressionAnalyses );
     }
 
@@ -148,6 +192,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis dea, DifferentialExpressionAnalysisConfig config ) {
+        Assert.isTrue( !config.isDeleteOtherAnalyses(), "Deleting the other analyses is only supported for a fresh run, not a redo." );
 
         if ( !differentialExpressionAnalysisService.canDelete( dea ) ) {
             throw new IllegalArgumentException(
@@ -162,7 +207,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         Collection<DifferentialExpressionAnalysis> results = this.redoWithoutSave( ee, dea, newConfig );
 
         if ( config.isPersist() ) {
-            return this.persistAnalyses( ee, results, newConfig );
+            // false: a redo re-persists each existing analysis in turn, so replacing a narrower one here would delete
+            // an analysis the same loop has yet to redo.
+            return this.persistAnalyses( ee, results, newConfig, false );
         }
         return results;
     }
@@ -190,33 +237,37 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @AuditedOnError(FailedDifferentialExpressionAnalysisEvent.class)
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
-        try {
-            // This might be redundant in some cases.
-            boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
-            config.setUseWeights( rnaSeq );
+        // Failure audit event written by @AuditedOnError on this method (REQUIRES_NEW
+        // via the 4-arg Throwable overload of AuditTrailService.addUpdateEvent; the
+        // full stack trace lands in AUDIT_EVENT.DETAIL, and the exception's short
+        // message in AUDIT_EVENT.NOTE via the default messageSpel="#exception.message".
+        // Previously the stack trace was crammed into NOTE via the 3-arg form and
+        // truncated to MAX_NOTE_LENGTH; DETAIL is the correct column for it).
+        //
+        // This might be redundant in some cases.
+        boolean rnaSeq = this.expressionExperimentService.isRNASeq( expressionExperiment );
+        config.setUseWeights( rnaSeq );
 
-            Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
-                    .analyze( expressionExperiment, config );
+        // resolved before the analysis runs, so an analysis that cannot be deleted refuses the run before any work
+        Collection<DifferentialExpressionAnalysis> others = config.isDeleteOtherAnalyses()
+                ? this.getAnalysesToDeleteAfterSaving( expressionExperiment, config )
+                : null;
 
-            if ( config.isPersist() ) {
-                diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
-            } else {
-                DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
-            }
+        Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
+                .analyze( expressionExperiment, config );
 
-            return diffExpressionAnalyses;
-        } catch ( Exception e ) {
-            try {
-                auditTrailService.addUpdateEvent( expressionExperiment,
-                        FailedDifferentialExpressionAnalysisEvent.class,
-                        ExceptionUtils.getStackTrace( e ) );
-            } catch ( Exception e2 ) {
-                DifferentialExpressionAnalyzerServiceImpl.log.error( "Could not attach failure audit event", e2 );
-            }
-            throw e;
+        if ( others != null ) {
+            diffExpressionAnalyses = this.saveAnalysesThenDelete( expressionExperiment, diffExpressionAnalyses, config, others );
+        } else if ( config.isPersist() ) {
+            diffExpressionAnalyses = this.persistAnalyses( expressionExperiment, diffExpressionAnalyses, config, true );
+        } else {
+            DifferentialExpressionAnalyzerServiceImpl.log.info( "Will not persist results" );
         }
+
+        return diffExpressionAnalyses;
     }
 
     /**
@@ -230,8 +281,26 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
+        return this.persistAnalysis( expressionExperiment, analysis, config, true );
+    }
 
-        this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude() );
+    /**
+     * @param replaceSuperseded also delete an existing non-subset analysis whose factors this one covers — see
+     *                          {@link #deleteOldAnalyses}
+     */
+    private DifferentialExpressionAnalysis persistAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config,
+            boolean replaceSuperseded ) {
+
+        this.deleteOldAnalyses( expressionExperiment, analysis, config.getFactorsToInclude(), replaceSuperseded );
+        return this.saveAnalysis( expressionExperiment, analysis, config );
+    }
+
+    /**
+     * Save an analysis, schedule its archive file and audit it, without deleting any existing analysis.
+     */
+    private DifferentialExpressionAnalysis saveAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -248,23 +317,45 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         DifferentialExpressionAnalyzerServiceImpl.log.info( "Saving results" );
         analysis = helperService.persistStub( analysis );
 
-        log.info( "Done persisting, creating archive file" );
+        log.info( "Done persisting, scheduling archive file write" );
 
         // we do this here because now we have IDs for everything.
+        // Best-effort async write via the service-level Async ingress: the DEA task slot is
+        // freed 5-20s sooner; the archive gets rebuilt next time someone calls
+        // writeOrLocateDiffExAnalysisArchiveFile (the only downstream ingress) if this
+        // submission fails or the executor queue is saturated. helperService.persistStub
+        // above committed in its own @Transactional(REQUIRED) — outer class is
+        // Propagation.NEVER — so the freshly-persisted analysis is visible to the async
+        // task with no extra synchronization required. Deleting the analysis does need to
+        // wait for the task: see awaitPendingArchiveWrite.
         if ( config.isMakeArchiveFile() ) {
-            try ( LockedPath lockedPath = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFile( analysis, true ) ) {
-                log.info( "Create archive file at " + lockedPath.getPath() );
-            } catch ( IOException e ) {
+            final DifferentialExpressionAnalysis analysisRef = analysis;
+            try {
+                Future<Path> write = expressionDataFileService.writeOrLocateDiffExAnalysisArchiveFileAsync( analysisRef, true );
+                pendingArchiveWrites.values().removeIf( Future::isDone );
+                if ( write != null && analysisRef.getId() != null ) {
+                    pendingArchiveWrites.put( analysisRef.getId(), write );
+                }
+            } catch ( RejectedExecutionException e ) {
                 DifferentialExpressionAnalyzerServiceImpl.log
-                        .error( "Unable to save the data to a file: " + e.getMessage() );
+                        .warn( "expressionDataFileTaskExecutor rejected archive-write for analysis " + analysisRef.getId()
+                                + " (queue full); archive will be rebuilt on next read: " + e.getMessage() );
             }
         }
 
-        // final transaction: audit.
+        // final transaction: audit. Phase C bucket 2f -- typed payload via the
+        // AuditedAspect (the @Audited annotation on
+        // DifferentialExpressionAnalyzerAuditService#recordAnalysisPersisted
+        // writes the audit row; the co-bean hop is required because this class
+        // is Propagation.NEVER and Spring AOP can't intercept self-invocations).
+        // Defensive try/catch is retained so a transient audit failure does not
+        // poison the persisted analysis -- this is best-effort post-persist
+        // bookkeeping.
         try {
-            auditTrailService
-                    .addUpdateEvent( expressionExperiment, DifferentialExpressionAnalysisEvent.class,
-                            analysis.getDescription() + "; analysis id=" + analysis.getId() );
+            DifferentialExpressionAnalysisPayload payload = new DifferentialExpressionAnalysisPayload(
+                    analysis.getDescription() );
+            differentialExpressionAnalyzerAuditService.recordAnalysisPersisted(
+                    expressionExperiment, analysis.toString(), payload );
         } catch ( Exception e ) {
             DifferentialExpressionAnalyzerServiceImpl.log
                     .error( "Error while trying to add audit event: " + e.getMessage(), e );
@@ -338,10 +429,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         Collection<ExpressionAnalysisResultSet> resultSets = dea.getResultSets();
         Collection<ExperimentalFactor> factorsFromOldExp = new HashSet<>();
         Collection<Collection<ExperimentalFactor>> interactionsFromOldExp = new HashSet<>();
+        Map<ExperimentalFactor, FactorValue> baselinesFromOldExp = new HashMap<>();
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             factorsFromOldExp.addAll( rs.getExperimentalFactors() );
-            // if we included the interaction before, include it again.
-            if ( rs.getExperimentalFactors().size() >= 2 ) {
+            if ( rs.getExperimentalFactors().size() == 1 ) {
+                if ( rs.getBaselineGroup() != null ) {
+                    baselinesFromOldExp.put( rs.getExperimentalFactors().iterator().next(), rs.getBaselineGroup() );
+                }
+            } else if ( rs.getExperimentalFactors().size() >= 2 ) {
+                // if we included the interaction before, include it again.
                 DifferentialExpressionAnalyzerServiceImpl.log.info( "Including interaction term" );
                 interactionsFromOldExp.add( rs.getExperimentalFactors() );
             }
@@ -353,7 +449,79 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         config.addFactorsToInclude( factorsFromOldExp );
         config.addInteractionsToInclude( interactionsFromOldExp );
+
+        /*
+         * Recover blocking factors. A paired analysis reports no result set for the blocking factor (its
+         * subject-to-subject differences are nuisance), so the result-set walk above never sees it -- without
+         * this recovery a redo of a paired analysis would silently refit UNPAIRED, quietly discarding the
+         * subject adjustment that was the point of the design. The protocol description is the only carrier:
+         * createProtocolForConfig writes one "Blocking factors (no results reported for them):"
+         * line when any are set. Tokens are the factor toString, resolved against the design of the
+         * experiment the analysis belongs to; nothing matching is left out of the redo rather than guessed.
+         */
+        if ( dea.getProtocol() != null && dea.getProtocol().getDescription() != null ) {
+            // A subset analysis has no design of its own; its factors live on the source experiment.
+            BioAssaySet analyzed = ( BioAssaySet ) Hibernate.unproxy( dea.getExperimentAnalyzed() );
+            ExpressionExperiment designOwner = analyzed instanceof ExpressionExperimentSubSet
+                    ? ( ( ExpressionExperimentSubSet ) analyzed ).getSourceExperiment()
+                    : analyzed instanceof ExpressionExperiment ? ( ExpressionExperiment ) analyzed : null;
+            Collection<ExperimentalFactor> designFactors = designOwner != null && designOwner.getExperimentalDesign() != null
+                    ? designOwner.getExperimentalDesign().getExperimentalFactors()
+                    : Collections.<ExperimentalFactor>emptySet();
+            Collection<ExperimentalFactor> blockingFromOldExp = new HashSet<>();
+            for ( String line : dea.getProtocol().getDescription().split( "\n" ) ) {
+                if ( line.equals( ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE ) ) {
+                    config.setEstimateBlockingCorrelation( true );
+                    continue;
+                }
+                if ( !line.startsWith( BLOCKING_FACTORS_PROTOCOL_PREFIX ) ) {
+                    continue;
+                }
+                // Factors are matched whole against the ", "-joined list rather than by splitting it, so a factor
+                // name containing ", " cannot be cut in two.
+                String list = ", " + line.substring( BLOCKING_FACTORS_PROTOCOL_PREFIX.length() ) + ", ";
+                for ( ExperimentalFactor f : designFactors ) {
+                    if ( list.contains( ", " + f + ", " ) ) {
+                        blockingFromOldExp.add( f );
+                    }
+                }
+            }
+            if ( !blockingFromOldExp.isEmpty() ) {
+                // the blocking factor has no result set, so the walk above did not add it, and the analyzer drops a
+                // blocking factor that is not among the factors to include
+                config.addFactorsToInclude( blockingFromOldExp );
+                config.setBlockingFactors( blockingFromOldExp );
+            }
+        }
+
         return config;
+    }
+
+    /**
+     * Wait for the archive write {@link #saveAnalysis} scheduled for this analysis, if it has not finished yet.
+     * <p>
+     * That write reads the analysis in its own transaction. If it is still running when the analysis is removed, it can
+     * load the analysis after the delete has committed and evicted it -- its MySQL snapshot predates the delete -- and
+     * put it back in the second-level cache ({@code Analysis} is {@code NONSTRICT_READ_WRITE}) and in the ACL cache.
+     * {@code load(id)} then returns the deleted analysis until those entries expire. A re-run on the same factors
+     * deletes the analysis it replaces moments after its write was scheduled, so this is the usual case, not a corner.
+     */
+    private void awaitPendingArchiveWrite( DifferentialExpressionAnalysis analysis ) {
+        Future<Path> write = analysis.getId() != null ? pendingArchiveWrites.remove( analysis.getId() ) : null;
+        if ( write == null ) {
+            return;
+        }
+        try {
+            write.get( 10, TimeUnit.MINUTES );
+        } catch ( ExecutionException | CancellationException e ) {
+            log.warn( "Archive write for " + analysis + " failed; deleting it anyway.", e );
+        } catch ( TimeoutException e ) {
+            log.warn( "Archive write for " + analysis + " is still running after 10 minutes; deleting it anyway,"
+                    + " a stale copy may stay in the second-level cache." );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException( "Interrupted while waiting for the archive write for " + analysis, e );
+        }
     }
 
     /**
@@ -363,8 +531,39 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         expressionDataFileService.deleteDiffExArchiveFile( analysis );
     }
 
+    /**
+     * Collect the result-set ids associated with an analysis so its per-result-set TSV caches can be cleaned
+     * up after the entity is removed. Thaws the analysis first because callers may pass a lazy graph and this
+     * service runs at {@code Propagation.NEVER}, so the lazy {@code resultSets} collection cannot be
+     * initialized on demand from here.
+     */
+    private List<Long> collectResultSetIds( DifferentialExpressionAnalysis analysis ) {
+        DifferentialExpressionAnalysis thawed = differentialExpressionAnalysisService.thaw( analysis );
+        List<Long> ids = new ArrayList<>( thawed.getResultSets().size() );
+        for ( ExpressionAnalysisResultSet rs : thawed.getResultSets() ) {
+            if ( rs.getId() != null ) {
+                ids.add( rs.getId() );
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Clear the per-result-set TSV caches under {@code <dataDir>/resultSets/} AND the in-memory
+     * counts snapshot used by {@code /datasets/{id}/analyses/differential} enrichment.
+     * Best-effort; cache misses are silent and any IO failure is logged downstream by
+     * {@code ExpressionDataFileService}.
+     */
+    private void deleteResultSetTsvCaches( List<Long> resultSetIds ) {
+        for ( Long rsId : resultSetIds ) {
+            expressionDataFileService.deleteDifferentialExpressionResultSetTsvFile( rsId );
+            differentialExpressionResultCache.clearResultSetCountsCache( rsId );
+        }
+    }
+
     private void deleteOldAnalyses( ExpressionExperiment expressionExperiment,
-            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
+            DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors,
+            boolean replaceSuperseded ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByExperiment( expressionExperiment, true );
         int numDeleted = 0;
@@ -389,9 +588,18 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             /*
              * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
              */
-            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors ) && (
-                    subsetFactorValueForExisting == null || subsetFactorValueForExisting
-                            .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
+            boolean sameAnalysis = factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors )
+                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting
+                    .equals( newAnalysis.getSubsetFactorValue() ) );
+            /*
+             * Or, on a fresh run, if a non-subset run covers every factor of a non-subset analysis (Paul's ruling,
+             * 2026-09-13). GSE107259 kept 264375 on {genotype} beside 432412 on {genotype, treatment}, because the
+             * sets differed.
+             */
+            boolean superseded = replaceSuperseded
+                    && subsetFactorValueForExisting == null && newAnalysis.getSubsetFactorValue() == null
+                    && !factorsInAnalysis.isEmpty() && factors.containsAll( factorsInAnalysis );
+            if ( sameAnalysis || superseded ) {
 
                 DifferentialExpressionAnalyzerServiceImpl.log
                         .info( "Deleting analysis with ID=" + existingAnalysis.getId() );
@@ -474,13 +682,70 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     private Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, boolean replaceSuperseded ) {
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : diffExpressionAnalyses ) {
             DifferentialExpressionAnalysis persistentAnalysis = this
-                    .persistAnalysis( expressionExperiment, analysis, config );
+                    .persistAnalysis( expressionExperiment, analysis, config, replaceSuperseded );
             results.add( persistentAnalysis );
+        }
+        return results;
+    }
+
+    /**
+     * The analyses {@code deleteOtherAnalyses} will delete: the experiment's analyses on the same subset factor as this
+     * run, as they stand before it. Without a subset factor, those are the analyses that are not subset analyses.
+     * <p>
+     * Paul, 2026-09-15: "don't replace analyses that don't need to be updated."
+     *
+     * @throws IllegalStateException if one of them cannot be deleted
+     */
+    private Collection<DifferentialExpressionAnalysis> getAnalysesToDeleteAfterSaving( ExpressionExperiment ee,
+            DifferentialExpressionAnalysisConfig config ) {
+        Assert.isTrue( config.isPersist(), "Other analyses can only be deleted when the new analyses are persisted." );
+        Long subsetFactorId = config.getSubsetFactor() != null ? config.getSubsetFactor().getId() : null;
+        Collection<DifferentialExpressionAnalysis> others = new ArrayList<>();
+        for ( DifferentialExpressionAnalysis existing : differentialExpressionAnalysisService
+                .thaw( differentialExpressionAnalysisService.findByExperiment( ee, true ) ) ) {
+            FactorValue subsetFactorValue = existing.getSubsetFactorValue();
+            Long existingSubsetFactorId = subsetFactorValue != null
+                    ? subsetFactorValue.getExperimentalFactor().getId()
+                    : null;
+            if ( !Objects.equals( existingSubsetFactorId, subsetFactorId ) ) {
+                continue;
+            }
+            if ( !differentialExpressionAnalysisService.canDelete( existing ) ) {
+                throw new IllegalStateException( "Cannot delete " + existing + " after the run: it is tied up with "
+                        + "another entity, such as a meta-analysis. Delete the constraining entity first." );
+            }
+            others.add( existing );
+        }
+        return others;
+    }
+
+    /**
+     * Save the new analyses, then delete {@code others}.
+     * <p>
+     * Unlike {@link #persistAnalyses}, nothing is deleted before saving, not even an analysis on the same factors, so
+     * the experiment keeps its analyses until the new ones exist. If no analysis was produced, or a save fails, nothing
+     * is deleted.
+     */
+    private Collection<DifferentialExpressionAnalysis> saveAnalysesThenDelete( ExpressionExperiment ee,
+            Collection<DifferentialExpressionAnalysis> analyses, DifferentialExpressionAnalysisConfig config,
+            Collection<DifferentialExpressionAnalysis> others ) {
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+            results.add( this.saveAnalysis( ee, analysis, config ) );
+        }
+        if ( results.isEmpty() ) {
+            log.warn( "No analysis was produced for " + ee.getShortName() + "; its " + others.size()
+                    + " existing analyses are kept." );
+            return results;
+        }
+        for ( DifferentialExpressionAnalysis other : others ) {
+            log.info( "Deleting " + other + ", which is not one of the " + results.size() + " analyses just saved." );
+            this.deleteAnalysis( ee, other );
         }
         return results;
     }
@@ -510,7 +775,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
 
-        BioAssaySet experimentAnalyzed = copyMe.getExperimentAnalyzed();
+        // unproxy before the tests below: a subset reached through getExperimentAnalyzed() arrives as a
+        // BioAssaySet proxy, matches neither ee nor `instanceof ExpressionExperimentSubSet`, and lands in
+        // the else -- so redoing a subset analysis reports "Cannot redo an analysis for one experiment
+        // if the analysis is for another" about its own subset.
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( copyMe.getExperimentAnalyzed() );
         assert experimentAnalyzed != null;
         if ( experimentAnalyzed.equals( ee ) ) {
             results = analysisSelectionAndExecutionService.analyze( ee, config );

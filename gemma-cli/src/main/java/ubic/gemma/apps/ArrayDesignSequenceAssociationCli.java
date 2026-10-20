@@ -24,16 +24,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
+import org.springframework.lang.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.addTaxonOption;
 
@@ -47,7 +49,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     @Autowired
     private ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
     @Autowired
-    private TaxonService taxonService;
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private boolean force = false;
     private String idFile = null;
@@ -67,10 +69,9 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
 
-        Option fileOption = Option.builder( "f" ).argName( "Input sequence file" ).hasArg()
+        Option fileOption = Option.builder( "file" ).argName( "Input sequence file" ).hasArg()
                 .desc( "Path to file (FASTA for cDNA or three-column format for OLIGO). If the FASTA file doesn't have " +
                         "probe identifiers included, provide identifiers via the -i option." ).longOpt( "file" ).build();
 
@@ -105,15 +106,13 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
-
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'y' ) ) {
             sequenceType = commandLine.getOptionValue( 'y' );
         }
 
-        if ( commandLine.hasOption( 'f' ) ) {
-            this.sequenceFile = commandLine.getOptionValue( 'f' );
+        if ( commandLine.hasOption( "file" ) ) {
+            this.sequenceFile = commandLine.getOptionValue( "file" );
         }
 
         if ( commandLine.hasOption( 's' ) ) {
@@ -134,28 +133,31 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         if ( commandLine.hasOption( "force" ) ) {
             this.force = true;
         }
-
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         // this is kind of an oddball function of this tool.
         if ( this.sequenceId != null ) {
+            String[] databases = new String[] { "nt", "est_others", "est_human", "est_mouse" };
             BioSequence updated = arrayDesignSequenceProcessingService.processSingleAccession( this.sequenceId,
-                    new String[] { "nt", "est_others", "est_human", "est_mouse" }, force );
+                    databases, force );
             if ( updated != null ) {
                 log.info( "Updated or created " + updated );
+                addSuccessObject( this.sequenceId, "Updated or created " + updated );
+            } else {
+                addErrorObject( this.sequenceId, "Not found in the BLAST databases " + String.join( ", ", databases ) );
             }
             return;
         }
 
-        if ( getArrayDesignsToProcess().size() > 1 ) {
+        if ( arrayDesignsToProcess.size() > 1 ) {
             throw new IllegalStateException( "Only one platform can be processed by this CLI" );
         }
 
-        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
+        ArrayDesign arrayDesign = arrayDesignsToProcess.iterator().next();
 
-        arrayDesign = getArrayDesignService().thaw( arrayDesign );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         SequenceType sequenceTypeEn = SequenceType.valueOf( sequenceType );
 
@@ -163,7 +165,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         if ( this.taxonName != null ) {
             taxon = entityLocator.locateTaxon( this.taxonName );
         } else {
-            taxon = this.getArrayDesignService().getTaxon( arrayDesign.getId() );
+            taxon = arrayDesign.getPrimaryTaxon();
             // could still be null
         }
 
@@ -193,6 +195,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 }
 
                 this.audit( arrayDesign, "Sequences read from file: " + sequenceFile );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
             }
         } else if ( this.idFile != null ) {
             try ( InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile ) ) {
@@ -209,6 +213,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                         databases, taxon, force );
 
                 this.audit( arrayDesign, "Sequences identifiers from file: " + idFile );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
             }
         } else {
             log.info( "Retrieving sequences from BLAST databases" );
@@ -221,14 +227,21 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         }
     }
 
+    @Override
+    protected boolean selectsOwnPlatforms() {
+        // -s updates a single sequence and needs no platform
+        return sequenceId != null;
+    }
+
     /**
+     *
      */
-    private String[] chooseBLASTdbs( Taxon taxon ) {
+    private String[] chooseBLASTdbs( @Nullable Taxon taxon ) {
         String[] databases;
 
-        if ( taxon != null && taxon.getCommonName().equals( "mouse" ) ) {
+        if ( taxon != null && "mouse".equals( taxon.getCommonName() ) ) {
             databases = new String[] { "est_mouse", "nt" };
-        } else if ( taxon != null && taxon.getCommonName().equals( "human" ) ) {
+        } else if ( taxon != null && "human".equals( taxon.getCommonName() ) ) {
             databases = new String[] { "est_human", "nt" };
         } else {
             databases = new String[] { "nt", "est_others", "est_human", "est_mouse" };
@@ -238,7 +251,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     private void audit( ArrayDesign arrayDesign, String note ) {
         // minor : don't add audit event if no sequences were changed, or --force.
-        this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceUpdateEvent.class, note );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        cliArrayDesignAuditService.recordSequenceUpdate( arrayDesign, note );
     }
 }

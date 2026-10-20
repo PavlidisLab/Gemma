@@ -20,14 +20,12 @@ package ubic.gemma.persistence.service.analysis.expression;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -35,7 +33,7 @@ import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
@@ -58,11 +56,11 @@ public class ExpressionExperimentSetDaoImpl
     }
 
     @Override
-    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
+    public Collection<ExpressionExperimentSet> find( ExpressionExperiment ee ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ees from ExpressionExperimentSet ees inner join ees.experiments e where e = :ee" )
-                .setParameter( "ee", bioAssaySet ).list();
+                .setParameter( "ee", ee ).list();
     }
 
     @Override
@@ -101,8 +99,9 @@ public class ExpressionExperimentSetDaoImpl
     @Override
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperimentSet.class )
-                .add( Restrictions.isNotNull( "taxon" ) ).list();
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select s from ExpressionExperimentSet s where s.taxon is not null" )
+                .list();
     }
 
     @Override
@@ -167,17 +166,11 @@ public class ExpressionExperimentSetDaoImpl
 
         StopWatch timer = new StopWatch();
         timer.start();
-        //noinspection unchecked
-        List<Object[]> withCoexp = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an join e.experiments ea "
-                                + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
-                .setParameterList( "ids", optimizeParameterList( idMap.keySet() ) ).list();
 
-        for ( Object[] oa : withCoexp ) {
-            Long id = ( Long ) oa[0];
-            Integer c = ( ( Long ) oa[1] ).intValue();
-            idMap.get( id ).setNumWithCoexpressionAnalysis( c );
-        }
+        // CoexpressionAnalysis subclass was retired; the previous HQL counting
+        // e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an
+        // returned zero unconditionally and has been removed. numWithCoexpressionAnalysis
+        // on the VO retains its default of 0.
 
         /*
          * We're counting the number of data sets that have analyses, not the number of analyses (since a data set can
@@ -208,13 +201,18 @@ public class ExpressionExperimentSetDaoImpl
             throw new IllegalArgumentException( "If provided ids cannot be empty" );
         }
 
+        // LEFT join on the taxon: a set may legitimately have none (see
+        // ExpressionExperimentSetValueObjectHelperImpl.create -- members that disagree leave it
+        // unset so the set can span taxa). An inner join dropped every such set from the result,
+        // which surfaced as a 404 on POST /experiment-sets: the create succeeded and the read-back
+        // that composes the 201 body found nothing.
         String queryString = "select eeset.id , " // 0
                 + "eeset.name, " // 1
                 + "eeset.description, " // 2
                 + "taxon.commonName," // 3
                 + "taxon.id," // 4
                 + "count(ees) " // 5
-                + "from ExpressionExperimentSet as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
+                + "from ExpressionExperimentSet as eeset left join eeset.taxon taxon inner join eeset.experiments ees "
                 + ( ids != null ? "where eeset.id in (:ids) " : "" ) + "group by eeset.id ";
 
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );

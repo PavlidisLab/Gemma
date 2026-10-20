@@ -3,6 +3,7 @@ package ubic.gemma.cli.batch;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.Closeable;
+import java.io.Flushable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,9 +22,32 @@ public class TextBatchTaskSummaryWriter implements BatchTaskSummaryWriter {
         this.dest = dest;
     }
 
+    /**
+     * Record the result for the grouped summary, <b>and emit it immediately</b>.
+     * <p>
+     * 🛑 The grouped summary can only be written at {@link #close()} — it counts and sections the results, so
+     * it cannot exist until they all do. That made this writer the one format whose entire record lived in
+     * memory until the end of the run, which was survivable only as long as the JVM always reached the end.
+     * It no longer does: the CLI runs with {@code -XX:+ExitOnOutOfMemoryError}, and that calls
+     * {@code os::exit()} — no {@code close()}, no shutdown hook, nothing. A sweep that OOM'd on item 7 of 22
+     * would have lost the record of the six that succeeded, which is worse than the hung JVM the flag was
+     * added to prevent.
+     * <p>
+     * TEXT is the default format (anything without {@code -batchOutputFile}), so this was the default
+     * exposure. TSV never had it — {@link TsvBatchTaskSummaryWriter} flushes each row as it is printed.
+     * <p>
+     * The per-result line is the same {@link #formatResult} the summary uses, so the two agree; the summary
+     * still follows at close with the counts and the grouping.
+     */
     @Override
-    public void write( BatchTaskProcessingResult result ) {
+    public void write( BatchTaskProcessingResult result ) throws IOException {
         batchProcessingResults.add( result );
+        dest.append( result.getResultType().name() ).append( "\t" ).append( formatResult( result ) ).append( "\n" );
+        if ( dest instanceof Flushable ) {
+            // An OutputStreamWriter over stdout buffers; unflushed is indistinguishable from unwritten when
+            // the JVM exits abruptly, which is the whole case this exists for.
+            ( ( Flushable ) dest ).flush();
+        }
     }
 
     @Override

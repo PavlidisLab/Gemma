@@ -20,8 +20,8 @@ package ubic.gemma.core.ontology.providers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -31,15 +31,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
-import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
 import java.io.IOException;
@@ -47,16 +45,16 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.asRegularGoId;
 
 /**
  * @author Paul
  */
-@Category(SlowTest.class)
+@Tag("slow")
 @ContextConfiguration
-public class GeneOntologyServiceTest extends BaseTest implements InitializingBean {
+public class GeneOntologyServiceTest extends BaseTest5 implements InitializingBean {
     private static final Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
     @Configuration
@@ -79,8 +77,8 @@ public class GeneOntologyServiceTest extends BaseTest implements InitializingBea
         }
 
         @Bean
-        public Gene2GOAssociationService gene2GOAssociationService() {
-            return mock( Gene2GOAssociationService.class );
+        public Gene2GOAssociationReadService gene2GOAssociationReadService() {
+            return mock( Gene2GOAssociationReadService.class );
         }
 
         @Bean
@@ -110,6 +108,11 @@ public class GeneOntologyServiceTest extends BaseTest implements InitializingBea
         }
     }
 
+    // Phase 3 search/ontology Step 3 (2026-05-19): re-enabled. The baseCode
+    // ontology classes are now in-tree under
+    // ubic.gemma.core.ontology.* and OntologyIndexer builds a real
+    // Lucene 9 in-memory index over the in-memory OntModel via
+    // LuceneOntologySearchIndex, so gos.findTerm() actually returns hits.
     @Test
     public void testFindTerm() throws OntologySearchException {
         Collection<OntologySearchResult<OntologyTerm>> matches = gos.findTerm( "toxin", 500 );
@@ -122,9 +125,9 @@ public class GeneOntologyServiceTest extends BaseTest implements InitializingBea
         assertEquals( 1, matches.size() );
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testFindTermWithEmptyQuery() throws OntologySearchException {
-        gos.findTerm( " ", 500 );
+    @Test
+    public void testFindTermWithEmptyQuery() {
+        assertThrows( IllegalArgumentException.class, () -> gos.findTerm( " ", 500 ) );
     }
 
     @Test

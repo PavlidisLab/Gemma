@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    SpotBugs exclude filter for Gemma.
+
+    Wired via spotbugs-maven-plugin in the parent pom.xml. Invoked on-demand
+    with `mvn spotbugs:spotbugs` or `mvn spotbugs:check`; NOT bound to the
+    default verify phase (kept off the hot path).
+
+    Suppression rationale lives next to each Match block. Add new blocks
+    narrowly — never blanket-suppress a Bug pattern across the whole tree.
+-->
+<FindBugsFilter>
+
+    <!--
+        ubic.gemma.model.* entity classes inherit equals + hashCode from
+        AbstractIdentifiable / AbstractDescribable, which declare both methods
+        abstract. SpotBugs flags each subclass individually for "equals
+        without hashCode" / "doesn't override equals" because it inspects only
+        the subclass bytecode; the contract is honoured via the abstract
+        declaration. ~33 false positives suppressed here.
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.model\..*"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS,HE_EQUALS_USE_HASHCODE,HE_INHERITS_EQUALS_USE_HASHCODE,HE_HASHCODE_NO_EQUALS,HE_EQUALS_NO_HASHCODE"/>
+    </Match>
+
+    <!--
+        Test sources are not on the static-analysis hot path. Surefire / JUnit
+        idioms (deliberate nulls, fake credentials, swallowed exceptions in
+        @Test stubs) generate too much noise to be useful.
+    -->
+    <Match>
+        <Source name="~.*/src/test/.*"/>
+    </Match>
+    <Match>
+        <Class name="~.*Test$"/>
+    </Match>
+    <Match>
+        <Class name="~.*Tests$"/>
+    </Match>
+
+    <!--
+        ubic.gemma.model.* entity classes throw IllegalArgumentException /
+        IllegalStateException from constructors as input validation. The
+        Hibernate-3-era concern was about partially-constructed Serializable
+        instances being attack vectors via finalizers — irrelevant since
+        JDK 17's finaliser deprecation and not actually triggered by
+        HibernateProxy interception. Suppress so the priority-1 list focuses
+        on real bugs. See SPOTBUGS_FIRST_PASS.md (114 findings).
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.model\..*"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!--
+        SQL_INJECTION_HIBERNATE findings in *DaoImpl classes are exclusively
+        safe-by-construction:
+          - Class.getSimpleName() / SessionFactory.getMetamodel().entity(class).getName()
+            type dispatch
+          - private static final String HQL constants
+          - asc/desc literals from typed booleans
+          - column names validated by FilterArg.getFilterableProperties()
+            (throws on unknown)
+        See SQL_INJECTION_HIBERNATE_TRIAGE.md for the full per-finding analysis
+        (80/80 of DAO-layer findings reviewed). Suppressing at the DAO layer
+        keeps any NEW SQL_INJECTION_HIBERNATE finding visible (most likely
+        candidates: gemma-rest layer, which has 0 today).
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.persistence\.service\..*DaoImpl"/>
+        <Bug pattern="SQL_INJECTION_HIBERNATE"/>
+    </Match>
+    <!--
+        AclLinterServiceImpl concatenates metamodel entity names into HQL
+        (4 hits) — same safe-by-construction pattern as the DAO layer.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.security.acl.AclLinterServiceImpl"/>
+        <Bug pattern="SQL_INJECTION_HIBERNATE"/>
+    </Match>
+
+    <!--
+        Entity getters/setters expose mutable collections (Set, List, Map)
+        because Hibernate's PersistentSet/Bag/Map wrappers REQUIRE that
+        reference identity for lazy-init and dirty tracking. Defensive copy /
+        Collections.unmodifiableX wrapping breaks Hibernate semantics. The
+        findings are correct from a pure-Java OOP standpoint but inapplicable
+        to JPA entities. ~1,475 combined findings (SPOTBUGS_FIRST_PASS.md).
+    -->
+    <Match>
+        <Class name="~ubic\.gemma\.model\..*"/>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+        Lombok @Value (+ @EqualsAndHashCode) on persistence.util value classes
+        emits equals/hashCode/getters/ctor with redundant null-checks and direct
+        collection storage that SpotBugs flags as RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE
+        and EI_EXPOSE_REP/EI_EXPOSE_REP2. Well-known Lombok patterns; nothing
+        to fix at source level without dropping @Value. Scope: the @Value-
+        carrying classes only.
+    -->
+    <Match>
+        <Or>
+            <Class name="ubic.gemma.persistence.util.Subquery"/>
+            <Class name="ubic.gemma.persistence.util.Subquery$Alias"/>
+            <Class name="ubic.gemma.persistence.util.Filter"/>
+            <Class name="ubic.gemma.persistence.util.Sort"/>
+        </Or>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE,EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+        Filter.getConversionService() returns the static ConversionService
+        singleton wired via Spring at application startup. Wrapping or copying
+        the service would defeat its purpose (it's the shared converter
+        registry every Filter uses to parse string operand values). The
+        MS_EXPOSE_REP finding is by-design infrastructure exposure.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.util.Filter"/>
+        <Method name="getConversionService"/>
+        <Bug pattern="MS_EXPOSE_REP"/>
+    </Match>
+
+    <!--
+        Slice is an AbstractList wrapper that shares its underlying List by
+        design — callers (pagination consumers) expect to see the same list
+        the slice was built over, not a defensive copy. EI_EXPOSE_REP2 on the
+        constructor reflects that contract.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.util.Slice"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+        OBJECT_DESERIALIZATION: every ObjectInputStream.readObject() call in
+        these classes installs an ObjectInputFilter via the canonical
+        allow-list (`ubic.gemma.**;java.util.**;java.lang.**;...;!*`) BEFORE
+        readObject() — see the GEO_DESERIALIZATION_FILTER / REPORT_DESERIALIZATION_FILTER /
+        GENE2CS_DESERIALIZATION_FILTER constants in each class. SpotBugs flags
+        any readObject() regardless of filter; this is a true false positive
+        once the filter is in place. The 3 sites:
+          - ArrayDesignReportServiceImpl x2
+          - TableMaintenanceUtilImpl
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.analysis.report.ArrayDesignReportServiceImpl"/>
+        <Bug pattern="OBJECT_DESERIALIZATION"/>
+    </Match>
+    <Match>
+        <Class name="ubic.gemma.persistence.service.maintenance.TableMaintenanceUtilImpl"/>
+        <Bug pattern="OBJECT_DESERIALIZATION"/>
+    </Match>
+
+    <!--
+        ES_COMPARING_PARAMETER_STRING_WITH_EQ: 3 findings, all Lombok @With-
+        generated wither methods. Lombok emits `if (this.field == newField)
+        return this;` as a reference-equality short-circuit to avoid
+        unnecessary copy. Cannot be fixed at source level without dropping
+        @With. Suppression scope: the specific classes that carry @With.
+    -->
+    <Match>
+        <Or>
+            <Class name="ubic.gemma.model.common.search.SearchSettings"/>
+            <Class name="~ubic\.gemma\.persistence\.service\.AbstractFilteringVoEnabledDao\$FilterablePropertyMeta.*"/>
+        </Or>
+        <Bug pattern="ES_COMPARING_PARAMETER_STRING_WITH_EQ"/>
+    </Match>
+
+    <!--
+        SpecFunc / PolyGamma carry R-derived numerics (dbinom/dpois sentinel
+        checks, polygamma asymptotic expansions). The `x == y` and `s1 == s`
+        idioms are intentional tests for "term was effectively zero" / "exact
+        sferr table hit" — Catherine Loader's R sources use the same pattern.
+        Changing == to an epsilon comparison would alter convergence behaviour
+        and break parity with R. PolyGamma is bytecode-only on the analysis
+        classpath (no source under gemma-core), so per-line @SuppressFBWarnings
+        is not available; suppress at the class level here.
+    -->
+    <Match>
+        <Or>
+            <Class name="ubic.gemma.core.util.math.SpecFunc"/>
+            <Class name="ubic.gemma.core.util.math.PolyGamma"/>
+        </Or>
+        <Bug pattern="FE_FLOATING_POINT_EQUALITY"/>
+    </Match>
+    <!--
+        PolyGamma is upstream baseCode bytecode; the UC_USELESS_CONDITION at
+        dpsifn lines 486/489 and the RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT at
+        line 470 mirror the R reference verbatim. Not editable from this repo.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.util.math.PolyGamma"/>
+        <Bug pattern="UC_USELESS_CONDITION,RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
+
+    <!--
+        DatasetCombiner.findBestSampleHit uses `distance == minDistance` (exact
+        equality on integer-valued Hamming distances cast to double) to detect
+        ties in GEO sample-to-sample alignment. An epsilon comparison here
+        would silently merge near-ties and change the deterministic
+        tie-resolution that the surrounding prefix/suffix weighted-distance
+        cascade depends on. Intentional sentinel comparison.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.loader.expression.geo.DatasetCombiner"/>
+        <Method name="findBestSampleHit"/>
+        <Bug pattern="FE_FLOATING_POINT_EQUALITY"/>
+    </Match>
+
+    <!--
+        ColorMap exposes three Color[] palette constants as part of its public
+        API (consumed by ColorMatrix, MatrixDisplay, and visualization
+        services that pass them through to AWT Color[]-taking constructors).
+        Wrapping in Collections.unmodifiableList would break the API contract
+        and force every callsite to convert back to Color[]. The arrays
+        themselves are not mutated in practice.
+    -->
+    <Match>
+        <Class name="ubic.gemma.core.util.graphics.ColorMap"/>
+        <Bug pattern="MS_MUTABLE_ARRAY"/>
+    </Match>
+
+    <!--
+        HibernateConfig.resolveSearchIndexBase guards against Spring @Value
+        leaving `raw` blank or as an unresolved ${...} placeholder when
+        gemma.search.dir is missing from the environment (Mac dev / CI without
+        Gemma.properties). SpotBugs reads the @NonNullApi package annotation
+        and treats `raw` as never-null at the warn-log site; the defensive
+        null branch is the whole point of the helper. See commit 04d720c666.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.hibernate.HibernateConfig"/>
+        <Method name="resolveSearchIndexBase"/>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+    </Match>
+
+    <!--
+        GeneSearchServiceImpl.searchGenesAndGeneGroups carries `taxon` as a
+        nullable optimisation: when the caller does not supply a taxonId, or
+        when taxonService.load(taxonId) returns null, taxon stays null all the
+        way through to the no-results log line. SpotBugs infers non-null after
+        the earlier getGOGroupResults(query, taxon) call because that method's
+        package is @NonNullApi, but its body explicitly handles taxon == null.
+        The defensive check at the log site documents the dual-path intent.
+    -->
+    <Match>
+        <Class name="ubic.gemma.persistence.service.genome.gene.GeneSearchServiceImpl"/>
+        <Method name="searchGenesAndGeneGroups"/>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    </Match>
+
+    <!--
+        NM_SAME_SIMPLE_NAME_AS_SUPERCLASS: Gemma deliberately shadows the
+        simple name of several upstream classes (Spring Security, Hibernate,
+        Colt) where the subclass is a project-local extension/replacement that
+        callers should reach via the Gemma package. The simple-name collision
+        is the whole point — callers import the Gemma type and inherit
+        upstream behaviour. Concrete sites:
+          - Spring Security ACL afterinvocation + voter extensions
+            (afterinvocation, authorization.acl, voter subpackages)
+          - Spring Security DelegatingSecurityContext* executor wrappers
+          - Colt's DenseDoubleMatrix1D subclassed for fast getQuick
+          - Hibernate H2Dialect preserved as a subclass for wiring continuity
+    -->
+    <Match>
+        <Or>
+            <Class name="~ubic\.gemma\.core\.security\.acl\.afterinvocation\..*"/>
+            <Class name="~ubic\.gemma\.core\.security\.acl\.voter\..*"/>
+            <Class name="~ubic\.gemma\.core\.security\.authorization\.acl\..*"/>
+            <Class name="~ubic\.gemma\.core\.security\.concurrent\..*"/>
+            <Class name="ubic.gemma.core.util.matrix.DenseDoubleMatrix1D"/>
+            <Class name="ubic.gemma.persistence.hibernate.H2Dialect"/>
+        </Or>
+        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
+    </Match>
+
+</FindBugsFilter>

@@ -14,20 +14,18 @@ public class StopWatchUtils {
     /**
      * Create a measured region by a {@link StopWatch}, which can be used with a try-with-resource statement to
      * {@link StopWatch#start()} and {@link StopWatch#suspend()} when entering and leaving the region.
-     *
+     * <p>
      * If the stop watch is suspended, let's say from a previous call to this function, it will be resumed, allowing for
      * a cumulative measurement of time usage.
-     *
+     * <p>
      * This is really handy to measure code regions and report time usage.
-     *
-     * @author poirigui
      */
     public static StopWatchRegion measuredRegion( StopWatch stopWatch ) {
         return new StopWatchRegion( stopWatch );
     }
 
     public static String getMinutesElapsed( StopWatch overallWatch ) {
-        Long overallElapsed = overallWatch.getTime();
+        long overallElapsed = overallWatch.getTime();
         NumberFormat nf = new DecimalFormat();
         nf.setMaximumFractionDigits( 2 );
         return nf.format( overallElapsed / ( 60.0 * 1000.0 ) );

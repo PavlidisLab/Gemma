@@ -21,7 +21,7 @@ public class RenamingBioAssayMapper implements BioAssayMapper {
      * @param sampleNames   the corresponding sample identifiers to use
      */
     public RenamingBioAssayMapper( BioAssayMapper delegate, String[] bioAssayNames, String[] sampleNames ) {
-        Assert.isTrue( bioAssayNames.length == sampleNames.length );
+        Assert.isTrue( bioAssayNames.length == sampleNames.length , "expected true");
         this.delegate = delegate;
         this.sampleNameToBioAssayName = new HashMap<>();
         for ( int i = 0; i < bioAssayNames.length; i++ ) {

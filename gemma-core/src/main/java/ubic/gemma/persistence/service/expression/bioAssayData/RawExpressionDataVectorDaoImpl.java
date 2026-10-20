@@ -10,8 +10,6 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -20,8 +18,11 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
@@ -39,10 +40,14 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
 
     @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch both to
+        // avoid one follow-up SELECT per vector. (quantitationType is pinned by the parameter
+        // but join-fetch initializes the proxy so downstream consumers don't hit it lazily.)
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dev from RawExpressionDataVector dev "
                                 + "join fetch dev.bioAssayDimension bd "
+                                + "join fetch dev.quantitationType qt "
                                 + "join dev.designElement de "
                                 + "where de.arrayDesign = :ad and dev.quantitationType = :quantitationType" )
                 .setParameter( "quantitationType", quantitationType )
@@ -56,13 +61,47 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
         if ( designElements == null || designElements.size() == 0 )
             return new HashSet<>();
 
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch both so
+        // downstream consumers don't fall back to per-row lazy initialization.
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dev from RawExpressionDataVector as dev "
-                                // no need for the fetch jointures since the design elements and biological characteristics are already in the session
+                                // design elements + biological characteristics are already in the session
+                                + "join fetch dev.bioAssayDimension "
+                                + "join fetch dev.quantitationType "
                                 + "where dev.designElement in (:des) and dev.quantitationType = :qt" )
                 .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
                 .setParameter( "qt", quantitationType )
+                .list();
+    }
+
+    @Override
+    public Collection<RawExpressionDataVector> getRandomRawVectors( QuantitationType quantitationType, int limit ) {
+        if ( limit <= 0 ) {
+            return new HashSet<>();
+        }
+        // (1) cheap id-only scan, (2) shuffle in Java + pick N, (3) fetch only the chosen vectors by id with
+        // the same join fetches as find(...). Mirrors ProcessedExpressionDataVectorDaoImpl.sampleVectorsByRank
+        // so we avoid an ORDER BY RAND() sort and a whole-matrix load. See HQL_SQL_AUDIT P2.
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dev.id from RawExpressionDataVector dev where dev.quantitationType = :qt" )
+                .setParameter( "qt", quantitationType )
+                .list();
+        if ( ids.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Collections.shuffle( ids );
+        List<Long> picked = ids.size() > limit ? ids.subList( 0, limit ) : ids;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dev from RawExpressionDataVector dev "
+                                + "join fetch dev.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dev.bioAssayDimension "
+                                + "join fetch dev.quantitationType "
+                                + "where dev.id in (:ids)" )
+                .setParameterList( "ids", picked )
                 .list();
     }
 
@@ -71,19 +110,20 @@ public class RawExpressionDataVectorDaoImpl extends AbstractDesignElementDataVec
 
         BusinessKey.checkKey( designElementDataVector );
 
-        DetachedCriteria crit = DetachedCriteria.forClass( RawExpressionDataVector.class );
-
-        crit.createCriteria( "designElement" )
-                .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
-                .createCriteria( "arrayDesign" ).add( Restrictions
-                        .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
-
-        crit.createCriteria( "quantitationType" )
-                .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
-
-        crit.createCriteria( "expressionExperiment" )
-                .add( Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
-
-        return ( RawExpressionDataVector ) crit.getExecutableCriteria( getSessionFactory().getCurrentSession() ).uniqueResult();
+        return ( RawExpressionDataVector ) getSessionFactory().getCurrentSession()
+                .createQuery( "select dev from RawExpressionDataVector dev "
+                        + "join dev.designElement de "
+                        + "join de.arrayDesign ad "
+                        + "join dev.quantitationType qt "
+                        + "join dev.expressionExperiment ee "
+                        + "where de.name = :deName "
+                        + "and ad.name = :adName "
+                        + "and qt.name = :qtName "
+                        + "and ee.name = :eeName" )
+                .setParameter( "deName", designElementDataVector.getDesignElement().getName() )
+                .setParameter( "adName", designElementDataVector.getDesignElement().getArrayDesign().getName() )
+                .setParameter( "qtName", designElementDataVector.getQuantitationType().getName() )
+                .setParameter( "eeName", designElementDataVector.getExpressionExperiment().getName() )
+                .uniqueResult();
     }
 }

@@ -19,17 +19,14 @@
 
 package ubic.gemma.persistence.service.blacklist;
 
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
-import ubic.gemma.model.blacklist.BlacklistedValueObject;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.blacklist.BlacklistedPlatform;
+import ubic.gemma.model.blacklist.BlacklistedValueObject;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractVoEnabledDao;
 
@@ -53,6 +50,14 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
         super( BlacklistedEntity.class, sessionFactory );
     }
 
+    @Override
+    public BlacklistedEntity findByShortName( String shortName ) {
+        return ( BlacklistedEntity ) this.getSessionFactory().getCurrentSession().createQuery(
+                        "select b from BlacklistedEntity b where b.shortName = :shortName" )
+                .setParameter( "shortName", shortName )
+                .uniqueResult();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -69,18 +74,21 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
     @Override
     public boolean isBlacklisted( ArrayDesign platform ) {
         Set<String> accessions = platform.getExternalReferences().stream().map( DatabaseEntry::getAccession ).collect( Collectors.toSet() );
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( BlacklistedPlatform.class );
+        Long count;
         if ( accessions.isEmpty() ) {
-            criteria.add( Restrictions.eq( "shortName", platform.getShortName() ) );
+            count = ( Long ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select count(distinct bp.id) from BlacklistedPlatform bp where bp.shortName = :shortName" )
+                    .setParameter( "shortName", platform.getShortName() )
+                    .uniqueResult();
         } else {
-            criteria.createAlias( "externalAccessions", "ea" )
-                    .add( Restrictions.or(
-                            Restrictions.eq( "shortName", platform.getShortName() ),
-                            Restrictions.in( "ea.accession", accessions ) ) );
+            count = ( Long ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select count(distinct bp.id) from BlacklistedPlatform bp "
+                            + "left join bp.externalAccession ea "
+                            + "where bp.shortName = :shortName or ea.accession in :accessions" )
+                    .setParameter( "shortName", platform.getShortName() )
+                    .setParameterList( "accessions", accessions )
+                    .uniqueResult();
         }
-        Long count = ( Long ) criteria
-                .setProjection( Projections.countDistinct( "id" ) )
-                .uniqueResult();
         return count > 0;
     }
 
@@ -122,12 +130,13 @@ public class BlacklistedEntityDaoImpl extends AbstractVoEnabledDao<BlacklistedEn
     public Collection<ExpressionExperiment> getNonBlacklistedExpressionExperiments( ArrayDesign arrayDesign ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct ee from ExpressionExperiment ee "
-                                + "inner join ee.bioAssays bas "
-                                + "inner join bas.arrayDesignUsed ad "
+                        "select ee from ExpressionExperiment ee "
+                                + "join ee.bioAssays bas "
+                                + "join bas.arrayDesignUsed ad "
                                 + "where ad = :ad "
                                 + "and (ee.shortName not in (select be.externalAccession.accession from BlacklistedExperiment be)  "
-                                + "or ee.accession.accession in (select be.shortName from BlacklistedExperiment be))" )
+                                + "or ee.accession.accession in (select be.shortName from BlacklistedExperiment be)) "
+                                + "group by ee" )
                 .setParameter( "ad", arrayDesign )
                 .list();
     }

@@ -18,21 +18,23 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.core.loader.util.TestUtils;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 /**
@@ -40,16 +42,18 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
  *
  * @author pavlidis
  */
+@ExtendWith(NetworkAvailableExtension.class)
 public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesignProcessingTest {
 
     public static final String FASTA_CMD_CONFIG_NAME = "fastaCmd.exe";
     public static final String FASTA_CMD_EXE = Settings.getString( FASTA_CMD_CONFIG_NAME );
 
     @Autowired
-    ArrayDesignSequenceProcessingService app;
+    private ArrayDesignSequenceProcessingService app;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testProcessArrayDesignWithFastaCmdFetch() throws Exception {
         assumeThatExecutableExists( FASTA_CMD_EXE );
 

@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactoryImpl;
 

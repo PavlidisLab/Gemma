@@ -18,11 +18,20 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
+@Entity
+@DiscriminatorValue("BlatAssociation")
 public class BlatAssociation extends BioSequence2GeneProduct {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BLAT_RESULT_FK", columnDefinition = "BIGINT")
     private BlatResult blatResult;
 
     public BlatResult getBlatResult() {

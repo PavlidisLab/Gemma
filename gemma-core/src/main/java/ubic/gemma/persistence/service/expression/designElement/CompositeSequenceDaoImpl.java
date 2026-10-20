@@ -19,13 +19,11 @@
 
 package ubic.gemma.persistence.service.expression.designElement;
 
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -38,18 +36,17 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneReferenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.service.AbstractQueryFilteringVoEnabledDao;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_BATCH_SIZE;
-import static ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil.GENE2CS_QUERY_SPACE;
 import static ubic.gemma.persistence.util.QueryUtils.batchIdentifiableParameterList;
-import static ubic.gemma.persistence.util.QueryUtils.batchParameterList;
 
 /**
  * @author pavlidis
@@ -65,35 +62,21 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
      * millions of records (some sequences are repeats and can have >200,000 records.
      */
     private static final int MAX_CS_RECORDS = 10000;
+
     /**
-     * Add your 'where' clause to this.
+     * Select clause for querying {@link CompositeSequence} by {@link Gene}.
+     * <p>
+     * TODO: add a fast flavour of this query based on the GENE2CS table.
      */
+    //language=HQL
+    private static final String CS_BY_GENE_QUERY = "from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene "
+            + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs";
+
     //language=MySQL
-    private static final String nativeBaseSummaryQueryString = "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
-            + "geneProductRNA.ID as gpId, geneProductRNA.NAME as gpName, geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
-            + "gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc, "
-            + " ssr.TARGET_CHROMOSOME_FK as chrom, ssr.TARGET_START as tgst, ssr.TARGET_END as tgend, ssr.TARGET_STARTS as tgstarts, ssr.QUERY_SEQUENCE_FK as bsId, ad.NAME as adName "
-            + " from " + "COMPOSITE_SEQUENCE cs "
-            + "left join BIO_SEQUENCE bs on cs.BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-            + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=cs.BIOLOGICAL_CHARACTERISTIC_FK "
-            + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
-            + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-            + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-            + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
-            + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) ";
-    /**
-     * Add your 'where' clause to this. returns much less stuff.
-     */
-    //language=MySQL
-    private static final String nativeBaseSummaryShorterQueryString = "SELECT cs.ID AS deID, cs.NAME AS deName, bs.NAME AS bsName, bsDb.ACCESSION AS bsdbacc, ssr.ID AS ssrid,"
-            + " gene.ID AS gId,gene.OFFICIAL_SYMBOL AS gSymbol FROM COMPOSITE_SEQUENCE cs "
-            + "LEFT JOIN BIO_SEQUENCE bs ON BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-            + "LEFT JOIN SEQUENCE_SIMILARITY_SEARCH_RESULT ssr ON ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
-            + "LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON BIO_SEQUENCE_FK=bs.ID "
-            + "LEFT JOIN DATABASE_ENTRY bsDb ON SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
-            + "LEFT JOIN CHROMOSOME_FEATURE geneProductRNA ON (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
-            + "LEFT JOIN CHROMOSOME_FEATURE gene ON (geneProductRNA.GENE_FK=gene.ID)"
-            + " LEFT JOIN ARRAY_DESIGN ad ON (cs.ARRAY_DESIGN_FK=ad.ID) ";
+    private static final String CS_BY_GENE_GENE2CS_QUERY = "from GENE2CS "
+            + "join COMPOSITE_SEQUENCE cs on cs.ID = GENE2CS.CS "
+            + "join CHROMOSOME_FEATURE gene on gene.ID = GENE2CS.GENE "
+            + "join ARRAY_DESIGN ad on ad.ID = GENE2CS.AD";
 
     @Autowired
     public CompositeSequenceDaoImpl( SessionFactory sessionFactory ) {
@@ -163,62 +146,272 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
     @Override
     public Collection<CompositeSequence> findByBioSequenceName( String name ) {
-        //language=HQL
-        final String queryString = "select cs from CompositeSequence cs "
-                + "join cs.biologicalCharacteristic b "
-                + "where b.name = :name "
-                + "group by cs";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( queryString )
+                .createQuery( "select cs from CompositeSequence cs "
+                        + "join cs.biologicalCharacteristic b "
+                        + "where b.name = :name "
+                        + "group by cs" )
                 .setParameter( "name", name )
                 .list();
     }
 
-    //language=HQL
-    private static final String CS_BY_GENE_QUERY = "from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, GeneProduct gp, Gene gene "
-            + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp and ba.bioSequence=bs and gene = :gene";
-
     @Override
-    public Collection<CompositeSequence> findByGene( Gene gene ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select cs "
-                        + CS_BY_GENE_QUERY + " "
-                        + "group by cs" )
-                .setParameter( "gene", gene )
-                .list();
+    public Collection<CompositeSequence> findByGene( Gene gene, boolean useGene2Cs ) {
+        if ( useGene2Cs ) {
+            //noinspection unchecked
+            return this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY + " and gene.ID = :gene group by cs.ID" )
+                    .addEntity( "cs", CompositeSequence.class )
+                    .setParameter( "gene", gene.getId() )
+                    .list();
+        } else {
+            //noinspection unchecked
+            return this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs "
+                            + CS_BY_GENE_QUERY + " "
+                            + "and gene = :gene "
+                            + "group by cs" )
+                    .setParameter( "gene", gene )
+                    .list();
+        }
     }
 
     @Override
-    public Slice<CompositeSequence> findByGene( Gene gene, int start, int limit ) {
-        //noinspection unchecked
-        List<CompositeSequence> list = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select cs "
-                        + CS_BY_GENE_QUERY + " "
-                        + "group by cs" )
-                .setFirstResult( start )
-                .setMaxResults( limit )
-                .setParameter( "gene", gene )
-                .list();
-        Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
-                .createQuery( "select count(distinct cs) " + CS_BY_GENE_QUERY )
-                .setParameter( "gene", gene )
-                .uniqueResult();
-        return new Slice<>( list, null, start, limit, totalElements );
+    public Slice<CompositeSequence> findByGene( Gene gene, int start, int limit, boolean useGene2Cs ) {
+        if ( useGene2Cs ) {
+            //noinspection unchecked
+            List<CompositeSequence> list = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {cs.*} "
+                            + CS_BY_GENE_GENE2CS_QUERY + " "
+                            + "and gene = :gene "
+                            + "group by cs.ID" )
+                    .addEntity( "cs", CompositeSequence.class )
+                    .setFirstResult( start )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                    .setParameter( "gene", gene.getId() )
+                    .list();
+            Long totalElements = ( ( Number ) getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select count(distinct cs.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and gene.ID = :gene" )
+                    .setParameter( "gene", gene.getId() )
+                    .uniqueResult() ).longValue();
+            return new Slice<>( list, null, start, limit, totalElements );
+        } else {
+            //noinspection unchecked
+            List<CompositeSequence> list = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs "
+                            + CS_BY_GENE_QUERY + " "
+                            + "and gene = :gene "
+                            + "group by cs" )
+                    .setFirstResult( start )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                    .setParameter( "gene", gene )
+                    .list();
+            Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select count(distinct cs) " + CS_BY_GENE_QUERY + " and gene = :gene" )
+                    .setParameter( "gene", gene )
+                    .uniqueResult();
+            return new Slice<>( list, null, start, limit, totalElements );
+        }
     }
 
     @Override
-    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select cs "
-                        + CS_BY_GENE_QUERY + " "
-                        + "and cs.arrayDesign=:arrayDesign "
-                        + "group by cs" )
-                .setParameter( "gene", gene )
-                .setParameter( "arrayDesign", arrayDesign )
-                .list();
+    public CursorPage<CompositeSequence> findByGeneByCursor( Gene gene, @Nullable Cursor cursor, int limit, boolean useGene2Cs ) {
+        if ( limit <= 0 ) {
+            throw new IllegalArgumentException( "Cursor page limit must be > 0." );
+        }
+        // Cursors carry their sort spec so the client can't silently switch sorts between
+        // pages — step 1b convention. The only sort we support here is ascending cs.id
+        // (the primary key, indexed and unique); see the doLoadValueObjectsByCursor
+        // restriction in AbstractQueryFilteringVoEnabledDao step 1b. Symmetric to
+        // getGenesByCursor (which keysets on gene.id under the same join).
+        String expectedSortSpec = "+id";
+        Sort sort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+            try {
+                lastSeenId = ( ( Number ) key[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '" + expectedSortSpec + "'.", e );
+            }
+        }
+        // ASC forward → id > :lastId; ASC backward → id < :lastId ORDER BY id DESC (then reversed
+        // for client-visible order). Mirrors AbstractQueryFilteringVoEnabledDao#doLoadValueObjectsByCursor.
+        String orderDirection;
+        boolean appendComparator = cursor != null;
+        if ( cursor == null || !backward ) {
+            orderDirection = "asc";
+        } else {
+            orderDirection = "desc";
+        }
+        List<CompositeSequence> rows;
+        if ( useGene2Cs ) {
+            // gets all kinds of associations, not just blat — same scope as the offset variant.
+            // Hibernate 6 NativeQuery can't auto-coerce an entity parameter to its identifier the way
+            // HB 5 did — bind the ID directly.
+            String comparator = appendComparator
+                    ? ( backward ? " and cs.ID < :cursorId" : " and cs.ID > :cursorId" )
+                    : "";
+            //noinspection unchecked
+            Query<CompositeSequence> q = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY
+                            + " and gene.ID = :geneId" + comparator
+                            + " group by cs.ID order by cs.ID " + orderDirection )
+                    .addEntity( "cs", CompositeSequence.class );
+            q.setParameter( "geneId", gene.getId() );
+            if ( lastSeenId != null ) {
+                q.setParameter( "cursorId", lastSeenId );
+            }
+            q.setMaxResults( limit + 1 );
+            rows = q.list();
+        } else {
+            String comparator = appendComparator
+                    ? ( backward ? " and cs.id < :cursorId" : " and cs.id > :cursorId" )
+                    : "";
+            //noinspection unchecked
+            Query<CompositeSequence> q = ( Query<CompositeSequence> ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs " + CS_BY_GENE_QUERY + " and gene = :gene" + comparator
+                            + " group by cs order by cs.id " + orderDirection );
+            q.setParameter( "gene", gene );
+            if ( lastSeenId != null ) {
+                q.setParameter( "cursorId", lastSeenId );
+            }
+            q.setMaxResults( limit + 1 );
+            rows = q.list();
+        }
+
+        boolean hasMore = rows.size() > limit;
+        if ( hasMore ) {
+            rows = new ArrayList<>( rows.subList( 0, limit ) );
+        }
+        if ( backward ) {
+            Collections.reverse( rows );
+        }
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !rows.isEmpty() ) {
+            Long lastId = rows.get( rows.size() - 1 ).getId();
+            Long firstId = rows.get( 0 ).getId();
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { lastId }, Cursor.Direction.FORWARD ).encode();
+            }
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { firstId }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+        return new CursorPage<>( rows, sort, limit, nextCursor, prevCursor, null );
+    }
+
+    @Override
+    public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        if ( useGene2Cs ) {
+            //noinspection unchecked
+            return this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {cs.*} " + CS_BY_GENE_GENE2CS_QUERY
+                            + " where gene.ID = :gene and ad.ID = :ad group by cs.ID" )
+                    .addEntity( "cs", CompositeSequence.class )
+                    .setParameter( "gene", gene.getId() )
+                    .setParameter( "ad", arrayDesign.getId() )
+                    .list();
+        } else {
+            //noinspection unchecked
+            return this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs "
+                            + CS_BY_GENE_QUERY + " "
+                            + "and gene = :gene "
+                            + "and cs.arrayDesign = :arrayDesign "
+                            + "group by cs" )
+                    .setParameter( "gene", gene )
+                    .setParameter( "arrayDesign", arrayDesign )
+                    .list();
+        }
+    }
+
+    @Override
+    public Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, boolean useGene2Cs ) {
+        if ( genes.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        Query query;
+        if ( useGene2Cs ) {
+            // Group by (cs.ID, gene.ID) so every (gene, cs) pair survives the GROUP BY — under
+            // ONLY_FULL_GROUP_BY (MySQL 5.7+ default sql_mode) grouping by cs.ID alone with
+            // {gene.*} in the select list is rejected; relaxed-mode behaviour silently dropped
+            // the additional genes a CS maps to (a CS can resolve to multiple genes via
+            // different gene products), which collapsed the Map<Gene, Collection<CS>>
+            // result by an unspecified amount.
+            query = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {gene.*}, {cs.*} "
+                            + CS_BY_GENE_GENE2CS_QUERY + " "
+                            + "and gene.ID in (:genes) "
+                            + "group by cs.ID, gene.ID" )
+                    .addEntity( "gene", Gene.class )
+                    .addEntity( "cs", CompositeSequence.class );
+            List<Long> geneIds = IdentifiableUtils.getIds( genes );
+            return QueryUtils.<Long, Object[]>streamByBatch( query, "genes", geneIds, 2048 )
+                    .collect( Collectors.groupingBy( row -> ( Gene ) row[0], Collectors.mapping( row -> ( CompositeSequence ) row[1], Collectors.toCollection( ArrayList::new ) ) ) );
+        } else {
+            query = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select gene, cs "
+                            + CS_BY_GENE_QUERY + " "
+                            + "and gene in (:genes) "
+                            + "group by cs" );
+            return QueryUtils.<Gene, Object[]>streamByIdentifiableBatch( query, "genes", genes, 2048 )
+                    .collect( Collectors.groupingBy( row -> ( Gene ) row[0], Collectors.mapping( row -> ( CompositeSequence ) row[1], Collectors.toCollection( ArrayList::new ) ) ) );
+        }
+    }
+
+    @Override
+    public Map<Gene, Collection<CompositeSequence>> findByGenes( Collection<Gene> genes, ArrayDesign arrayDesign, boolean useGene2Cs ) {
+        if ( genes.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        if ( useGene2Cs ) {
+            //noinspection unchecked
+            // Group by (cs.ID, gene.ID) — same ONLY_FULL_GROUP_BY rationale as the no-platform
+            // findByGenes variant above: grouping by cs.ID alone with {gene.*} in the select
+            // is strict-mode-illegal, and relaxed-mode behaviour silently dropped additional
+            // genes-per-cs from the result map.
+            List<Object[]> result = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {gene.*}, {cs.*} "
+                            + CS_BY_GENE_GENE2CS_QUERY + " "
+                            + "and gene.ID in (:genes) "
+                            + "and ad.ID = :arrayDesign "
+                            + "group by cs.ID, gene.ID" )
+                    .addEntity( "gene", Gene.class )
+                    .addEntity( "cs", CompositeSequence.class )
+                    .setParameterList( "genes", IdentifiableUtils.getIds( genes ) )
+                    .setParameter( "arrayDesign", arrayDesign.getId() )
+                    .list();
+            return result.stream()
+                    .collect( Collectors.groupingBy( row -> ( Gene ) row[0], Collectors.mapping( row -> ( CompositeSequence ) row[1], Collectors.toCollection( ArrayList::new ) ) ) );
+        } else {
+            //noinspection unchecked
+            List<Object[]> result = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select gene, cs "
+                            + CS_BY_GENE_QUERY + " "
+                            + "and gene in (:genes) "
+                            + "and cs.arrayDesign=:arrayDesign "
+                            + "group by cs" )
+                    .setParameterList( "genes", genes )
+                    .setParameter( "arrayDesign", arrayDesign )
+                    .list();
+            return result.stream()
+                    .collect( Collectors.groupingBy( row -> ( Gene ) row[0], Collectors.mapping( row -> ( CompositeSequence ) row[1], Collectors.toCollection( ArrayList::new ) ) ) );
+        }
     }
 
     @Override
@@ -238,132 +431,155 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
-    public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences ) {
-        Map<CompositeSequence, Collection<Gene>> returnVal = new HashMap<>();
-
-        if ( compositeSequences.isEmpty() )
-            return returnVal;
-
-        for ( CompositeSequence cs : compositeSequences ) {
-            returnVal.put( cs, new HashSet<>() );
+    public Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences, boolean useGene2Cs ) {
+        if ( useGene2Cs ) {
+            Query query = getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {cs.*}, {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID in (:cs) group by cs, gene" )
+                    .addEntity( "cs", CompositeSequence.class )
+                    .addEntity( "gene", Gene.class );
+            return QueryUtils.<Long, Object[]>streamByBatch( query, "cs", IdentifiableUtils.getIds( compositeSequences ), 2048 )
+                    .collect( Collectors.groupingBy( row -> ( CompositeSequence ) row[0], Collectors.mapping( row -> ( Gene ) row[1], Collectors.toCollection( ArrayList::new ) ) ) );
+        } else {
+            Query query = getSessionFactory().getCurrentSession()
+                    .createQuery( "select cs, gene " + CS_BY_GENE_QUERY + " and cs in (:cs) group by cs, gene" );
+            return QueryUtils.<CompositeSequence, Object[]>streamByIdentifiableBatch( query, "cs", compositeSequences, 2048 )
+                    .collect( Collectors.groupingBy( row -> ( CompositeSequence ) row[0], Collectors.mapping( row -> ( Gene ) row[1], Collectors.toCollection( ArrayList::new ) ) ) );
         }
-
-        /*
-         * Get the cs->gene mapping
-         */
-        List<Object> csGene = new ArrayList<>();
-        Query queryObject = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( "SELECT CS, GENE FROM GENE2CS WHERE CS IN (:csids)" )
-                .addScalar( "cs", StandardBasicTypes.LONG )
-                .addScalar( "gene", StandardBasicTypes.LONG )
-                .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
-                .addSynchronizedEntityClass( ArrayDesign.class )
-                .addSynchronizedEntityClass( CompositeSequence.class )
-                .addSynchronizedEntityClass( Gene.class );
-
-        for ( Collection<Long> csIdBatch : batchParameterList( IdentifiableUtils.getIds( compositeSequences ), GENE2CS_BATCH_SIZE ) ) {
-            queryObject.setParameterList( "csids", csIdBatch );
-            csGene.addAll( queryObject.list() );
-        }
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        int count = 0;
-        Collection<Long> genesToFetch = new HashSet<>();
-        Map<Long, Collection<Long>> cs2geneIds = new HashMap<>();
-
-        for ( Object object : csGene ) {
-            Object[] ar = ( Object[] ) object;
-            Long cs = ( Long ) ar[0];
-            Long gene = ( Long ) ar[1];
-            if ( !cs2geneIds.containsKey( cs ) ) {
-                cs2geneIds.put( cs, new HashSet<Long>() );
-            }
-            cs2geneIds.get( cs ).add( gene );
-            genesToFetch.add( gene );
-        }
-
-        // nothing found?
-        if ( genesToFetch.size() == 0 ) {
-            returnVal.clear();
-            return returnVal;
-        }
-
-        if ( log.isDebugEnabled() )
-            log.debug( "Built cs -> gene map in " + watch.getTime() + " ms; fetching " + genesToFetch.size()
-                    + " genes." );
-
-        // fetch the genes
-        Collection<Gene> genes = new HashSet<>();
-        String geneQuery = "from Gene g where g.id in ( :gs )";
-        org.hibernate.Query geneQueryObject = this.getSessionFactory().getCurrentSession()
-                .createQuery( geneQuery );
-        for ( Collection<Long> batch : batchParameterList( genesToFetch, GENE2CS_BATCH_SIZE ) ) {
-            log.debug( "Processing batch ... " );
-            geneQueryObject.setParameterList( "gs", batch );
-            //noinspection unchecked
-            genes.addAll( geneQueryObject.list() );
-        }
-
-        if ( log.isDebugEnabled() )
-            log.debug( "Got information on " + genes.size() + " genes in " + watch.getTime() + " ms" );
-
-        Map<Long, Gene> geneIdMap = new HashMap<>();
-        for ( Gene g : genes ) {
-            Hibernate.initialize( g );
-            Long id = g.getId();
-            geneIdMap.put( id, g );
-        }
-
-        // fill in the return value.
-        for ( CompositeSequence cs : compositeSequences ) {
-            Long csId = cs.getId();
-            assert csId != null;
-            Collection<Long> genesToAttach = cs2geneIds.get( csId );
-            if ( genesToAttach == null ) {
-                // this means there was no gene for that cs; we should remove it from the result
-                returnVal.remove( cs );
-                continue;
-            }
-            for ( Long geneId : genesToAttach ) {
-                returnVal.get( cs ).add( geneIdMap.get( geneId ) );
-            }
-            ++count;
-        }
-
-        if ( log.isDebugEnabled() )
-            log
-                    .debug( "Done, " + count + " result rows processed, " + returnVal.size() + "/" + compositeSequences
-                            .size() + " probes are associated with genes" );
-        return returnVal;
     }
 
-    //language=HQL
-    private static final String GENE_BY_CS_QUERY = "from CompositeSequence cs, BioSequence bs, BioSequence2GeneProduct ba, "
-            + "GeneProduct gp, Gene gene  "
-            + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
-            + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
+    @Override
+    public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit, boolean useGene2Cs ) {
+        if ( useGene2Cs ) {
+            // gets all kinds of associations, not just blat.
+            // Hibernate 6 NativeQuery can't auto-coerce an entity parameter to its identifier the way
+            // HB 5 did — bind the ID directly.
+            //noinspection unchecked
+            List<Gene> list = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {gene.*} " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :csId group by gene.ID" )
+                    .addEntity( "gene", Gene.class )
+                    .setParameter( "csId", compositeSequence.getId() )
+                    .setFirstResult( offset )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                    .list();
+            Long totalElements = ( ( Number ) getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select count(distinct gene.ID) " + CS_BY_GENE_GENE2CS_QUERY + " and cs.ID = :csId" )
+                    .setParameter( "csId", compositeSequence.getId() )
+                    .uniqueResult() ).longValue();
+            return new Slice<>( list, null, offset, limit, totalElements );
+        } else {
+            // gets all kinds of associations, not just blat.
+            //noinspection unchecked
+            List<Gene> list = this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select gene " + CS_BY_GENE_QUERY + " and cs = :cs group by gene" )
+                    .setParameter( "cs", compositeSequence )
+                    .setFirstResult( offset )
+                    // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                    .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                    .list();
+            Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
+                    .createQuery( "select count(distinct gene) " + CS_BY_GENE_QUERY + " and cs = :cs" )
+                    .setParameter( "cs", compositeSequence )
+                    .uniqueResult();
+            return new Slice<>( list, null, offset, limit, totalElements );
+        }
+    }
 
     @Override
-    public Slice<Gene> getGenes( CompositeSequence compositeSequence, int offset, int limit ) {
-        // gets all kinds of associations, not just blat.
-        //language=HQL
-        final String queryString = "select gene "
-                + GENE_BY_CS_QUERY + " "
-                + "group by gene";
-        //noinspection unchecked
-        List<Gene> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "cs", compositeSequence )
-                .setFirstResult( offset )
-                .setMaxResults( limit )
-                .list();
-        Long totalElements = ( Long ) getSessionFactory().getCurrentSession()
-                .createQuery( "select count(distinct gene) " + GENE_BY_CS_QUERY )
-                .setParameter( "cs", compositeSequence )
-                .uniqueResult();
-        return new Slice<>( list, null, offset, limit, totalElements );
+    public CursorPage<Gene> getGenesByCursor( CompositeSequence compositeSequence, @Nullable Cursor cursor, int limit, boolean useGene2Cs ) {
+        if ( limit <= 0 ) {
+            throw new IllegalArgumentException( "Cursor page limit must be > 0." );
+        }
+        // Cursors carry their sort spec so the client can't silently switch sorts between
+        // pages — step 1b convention. The only sort we support here is ascending gene.id
+        // (the primary key, indexed and unique); see the doLoadValueObjectsByCursor
+        // restriction in AbstractQueryFilteringVoEnabledDao step 1b.
+        String expectedSortSpec = "+id";
+        Sort sort = Sort.by( null, "id", Sort.Direction.ASC, Sort.NullMode.LAST, "id" );
+        boolean backward = cursor != null && cursor.getDirection() == Cursor.Direction.BACKWARD;
+        Long lastSeenId = null;
+        if ( cursor != null ) {
+            if ( !expectedSortSpec.equals( cursor.getSortSpec() ) ) {
+                throw new IllegalArgumentException( "Cursor sort spec '" + cursor.getSortSpec()
+                        + "' does not match the requested sort '" + expectedSortSpec + "'." );
+            }
+            Object[] key = cursor.getKeyTuple();
+            if ( key.length != 1 ) {
+                throw new IllegalArgumentException( "Cursor key tuple must have exactly 1 component for sort '"
+                        + expectedSortSpec + "'; got " + key.length + "." );
+            }
+            try {
+                lastSeenId = ( ( Number ) key[0] ).longValue();
+            } catch ( ClassCastException e ) {
+                throw new IllegalArgumentException( "Cursor key component must be numeric for sort '" + expectedSortSpec + "'.", e );
+            }
+        }
+        // ASC forward → id > :lastId; ASC backward → id < :lastId ORDER BY id DESC (then reversed
+        // for client-visible order). Mirrors AbstractQueryFilteringVoEnabledDao#doLoadValueObjectsByCursor.
+        String orderDirection;
+        boolean appendComparator = cursor != null;
+        if ( cursor == null || !backward ) {
+            orderDirection = "asc";
+        } else {
+            orderDirection = "desc";
+        }
+        List<Gene> rows;
+        if ( useGene2Cs ) {
+            // gets all kinds of associations, not just blat — same scope as the offset variant.
+            // Hibernate 6 NativeQuery can't auto-coerce an entity parameter to its identifier the way
+            // HB 5 did — bind the ID directly.
+            String comparator = appendComparator
+                    ? ( backward ? " and gene.ID < :cursorId" : " and gene.ID > :cursorId" )
+                    : "";
+            //noinspection unchecked
+            org.hibernate.query.Query<Gene> q = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( "select {gene.*} " + CS_BY_GENE_GENE2CS_QUERY
+                            + " and cs.ID = :csId" + comparator
+                            + " group by gene.ID order by gene.ID " + orderDirection )
+                    .addEntity( "gene", Gene.class );
+            q.setParameter( "csId", compositeSequence.getId() );
+            if ( lastSeenId != null ) {
+                q.setParameter( "cursorId", lastSeenId );
+            }
+            q.setMaxResults( limit + 1 );
+            rows = q.list();
+        } else {
+            String comparator = appendComparator
+                    ? ( backward ? " and gene.id < :cursorId" : " and gene.id > :cursorId" )
+                    : "";
+            //noinspection unchecked
+            org.hibernate.query.Query<Gene> q = ( org.hibernate.query.Query<Gene> ) this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select gene " + CS_BY_GENE_QUERY + " and cs = :cs" + comparator
+                            + " group by gene order by gene.id " + orderDirection );
+            q.setParameter( "cs", compositeSequence );
+            if ( lastSeenId != null ) {
+                q.setParameter( "cursorId", lastSeenId );
+            }
+            q.setMaxResults( limit + 1 );
+            rows = q.list();
+        }
 
+        boolean hasMore = rows.size() > limit;
+        if ( hasMore ) {
+            rows = new ArrayList<>( rows.subList( 0, limit ) );
+        }
+        if ( backward ) {
+            Collections.reverse( rows );
+        }
+
+        String nextCursor = null;
+        String prevCursor = null;
+        if ( !rows.isEmpty() ) {
+            Long lastId = rows.get( rows.size() - 1 ).getId();
+            Long firstId = rows.get( 0 ).getId();
+            if ( backward || hasMore ) {
+                nextCursor = new Cursor( expectedSortSpec, new Object[] { lastId }, Cursor.Direction.FORWARD ).encode();
+            }
+            if ( cursor != null ) {
+                prevCursor = new Cursor( expectedSortSpec, new Object[] { firstId }, Cursor.Direction.BACKWARD ).encode();
+            }
+        }
+        return new CursorPage<>( rows, sort, limit, nextCursor, prevCursor, null );
     }
 
     @Override
@@ -390,6 +606,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
     }
 
     @Override
+    @Nullable
     public Collection<Object[]> getRawSummary( @Nullable Collection<CompositeSequence> compositeSequences ) {
         if ( compositeSequences == null || compositeSequences.size() == 0 )
             return null;
@@ -408,9 +625,20 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         }
 
         // This uses the 'full' query, assuming that this list isn't too big.
-        String nativeQueryString = CompositeSequenceDaoImpl.nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                .createSQLQuery( nativeQueryString );
+        String nativeQueryString = "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
+                + "geneProductRNA.ID as gpId, geneProductRNA.NAME as gpName, geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
+                + "gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc, "
+                + " ssr.TARGET_CHROMOSOME_FK as chrom, ssr.TARGET_START as tgst, ssr.TARGET_END as tgend, ssr.TARGET_STARTS as tgstarts, ssr.QUERY_SEQUENCE_FK as bsId, ad.NAME as adName "
+                + " from " + "COMPOSITE_SEQUENCE cs "
+                + "left join BIO_SEQUENCE bs on cs.BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+                + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=cs.BIOLOGICAL_CHARACTERISTIC_FK "
+                + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
+                + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+                + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+                + "left join CHROMOSOME_FEATURE gene on (geneProductRNA.GENE_FK=gene.ID)"
+                + " left join ARRAY_DESIGN ad on (cs.ARRAY_DESIGN_FK=ad.ID) " + " WHERE cs.ID IN (" + buf.toString() + ")";
+        org.hibernate.query.NativeQuery<?> queryObject = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "gId" ).addScalar( "gSymbol" )
@@ -423,7 +651,7 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         queryObject.addScalar( "adName" );
         queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
         //noinspection unchecked
-        return queryObject.list();
+        return ( Collection<Object[]> ) ( Collection ) queryObject.list();
     }
 
     @SuppressWarnings("unchecked")
@@ -435,14 +663,23 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
         if ( numResults <= 0 ) {
             // get all probes. Uses a light-weight version of this query that omits as much as possible.
-            final String queryString = CompositeSequenceDaoImpl.nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign
+            final String queryString = "SELECT cs.ID AS deID, cs.NAME AS deName, bs.NAME AS bsName, bsDb.ACCESSION AS bsdbacc, ssr.ID AS ssrid,"
+                    + " gene.ID AS gId,gene.OFFICIAL_SYMBOL AS gSymbol FROM COMPOSITE_SEQUENCE cs "
+                    + "LEFT JOIN BIO_SEQUENCE bs ON BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+                    + "LEFT JOIN SEQUENCE_SIMILARITY_SEARCH_RESULT ssr ON ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+                    + "LEFT JOIN BIO_SEQUENCE2_GENE_PRODUCT bs2gp ON BIO_SEQUENCE_FK=bs.ID "
+                    + "LEFT JOIN DATABASE_ENTRY bsDb ON SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
+                    + "LEFT JOIN CHROMOSOME_FEATURE geneProductRNA ON (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
+                    + "LEFT JOIN CHROMOSOME_FEATURE gene ON (geneProductRNA.GENE_FK=gene.ID)"
+                    + " LEFT JOIN ARRAY_DESIGN ad ON (cs.ARRAY_DESIGN_FK=ad.ID) " + " where ad.id = " + arrayDesign
                     .getId();
-            org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( queryString );
+            org.hibernate.query.NativeQuery<?> queryObject = this.getSessionFactory().getCurrentSession()
+                    .createNativeQuery( queryString );
             queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                     .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
             queryObject.setMaxResults( CompositeSequenceDaoImpl.MAX_CS_RECORDS );
-            return queryObject.list();
+            //noinspection unchecked
+            return ( Collection<Object[]> ) ( Collection ) queryObject.list();
 
         }
         // just a chunk but get the full set of results.
@@ -510,13 +747,13 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
         if ( compositeSequence.getName() == null )
             return null;
 
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( CompositeSequence.class );
-
-        queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
-        queryObject.createCriteria( "arrayDesign" )
-                .add( Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
-
-        return ( CompositeSequence ) queryObject.uniqueResult();
+        return ( CompositeSequence ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs from CompositeSequence cs "
+                        + "join cs.arrayDesign ad "
+                        + "where cs.name = :csName and ad.name = :adName" )
+                .setParameter( "csName", compositeSequence.getName() )
+                .setParameter( "adName", compositeSequence.getArrayDesign().getName() )
+                .uniqueResult();
     }
 
     /**
@@ -580,5 +817,91 @@ public class CompositeSequenceDaoImpl extends AbstractQueryFilteringVoEnabledDao
 
         }
 
+    }
+
+    @Override
+    public Map<Long, CompositeSequenceDao.BioSequenceLite> getSequenceData( Collection<Long> compositeSequenceIds ) {
+        if ( compositeSequenceIds == null || compositeSequenceIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // HQL projection across the LAZY biologicalCharacteristic edge in a single
+        // statement so a 22k-element platform page doesn't trigger per-row lazy
+        // fetches. INNER JOIN drops probes with no biological characteristic
+        // mapping; the caller treats absent-from-map IDs as "no sequence
+        // recorded." Probes whose biological characteristic exists but has
+        // sequence/length nulls land in the map with the nullable fields null.
+        //language=HQL
+        @SuppressWarnings("unchecked")
+        java.util.List<Object[]> rows = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select cs.id, bs.sequence, bs.length "
+                        + "from CompositeSequence cs "
+                        + "join cs.biologicalCharacteristic bs "
+                        + "where cs.id in :ids" )
+                .setParameterList( "ids", compositeSequenceIds )
+                .list();
+        Map<Long, CompositeSequenceDao.BioSequenceLite> out = new java.util.HashMap<>( rows.size() );
+        for ( Object[] row : rows ) {
+            Long id = ( Long ) row[0];
+            String seq = ( String ) row[1];
+            Long len = ( Long ) row[2];
+            out.put( id, new CompositeSequenceDao.BioSequenceLite( seq, len ) );
+        }
+        return out;
+    }
+
+    @Override
+    public Map<Long, List<GeneReferenceValueObject>> getGeneData( Collection<Long> compositeSequenceIds ) {
+        if ( compositeSequenceIds == null || compositeSequenceIds.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // Column projection off GENE2CS, not an entity query: a 50-row element page renders three
+        // gene fields per row, so hydrating Gene entities (and their LAZY taxon / alias / product
+        // edges) to read three columns would be the expensive way to answer a cheap question.
+        // Batched because the caller's page size is user-controlled and MySQL's IN-list has to
+        // stay bounded; 2048 matches the batch width getGenes(Collection) already uses.
+        //language=MySQL
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select GENE2CS.CS as CS, gene.ID as GENE_ID, "
+                        + "gene.OFFICIAL_SYMBOL as OFFICIAL_SYMBOL, gene.NCBI_GENE_ID as NCBI_GENE_ID "
+                        + "from GENE2CS join CHROMOSOME_FEATURE gene on gene.ID = GENE2CS.GENE "
+                        + "where GENE2CS.CS in (:cs) "
+                        + "group by GENE2CS.CS, gene.ID" );
+        Map<Long, List<GeneReferenceValueObject>> out = new java.util.HashMap<>();
+        QueryUtils.<Long, Object[]>streamByBatch( query, "cs", compositeSequenceIds, 2048 )
+                .forEach( row -> {
+                    Long csId = ( ( Number ) row[0] ).longValue();
+                    Long geneId = row[1] != null ? ( ( Number ) row[1] ).longValue() : null;
+                    String symbol = ( String ) row[2];
+                    Integer ncbiId = row[3] != null ? ( ( Number ) row[3] ).intValue() : null;
+                    out.computeIfAbsent( csId, k -> new ArrayList<>() )
+                            .add( new GeneReferenceValueObject( geneId, symbol, ncbiId ) );
+                } );
+        // Stable order within a probe so a page render doesn't reshuffle between requests; the
+        // native query's group-by gives no ordering guarantee of its own.
+        for ( List<GeneReferenceValueObject> genes : out.values() ) {
+            genes.sort( Comparator.comparing( GeneReferenceValueObject::getOfficialSymbol,
+                            Comparator.nullsLast( String.CASE_INSENSITIVE_ORDER ) )
+                    .thenComparing( GeneReferenceValueObject::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+        }
+        return out;
+    }
+
+    @Override
+    public Set<Long> findIdsByGeneIds( Collection<Long> geneIds, Long arrayDesignId ) {
+        if ( geneIds == null || geneIds.isEmpty() || arrayDesignId == null ) {
+            return Collections.emptySet();
+        }
+        // GENE2CS carries (AD, GENE) as a composite index — gene2csgeneadindex — so this is an
+        // index-only seek per gene with no table joins at all. Deliberately NOT expressed through
+        // CS_BY_GENE_GENE2CS_QUERY: that select joins COMPOSITE_SEQUENCE, CHROMOSOME_FEATURE and
+        // ARRAY_DESIGN to project entities, none of which is needed to answer "which probe ids".
+        //language=MySQL
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createNativeQuery( "select distinct GENE2CS.CS from GENE2CS "
+                        + "where GENE2CS.AD = :ad and GENE2CS.GENE in (:genes)" )
+                .setParameter( "ad", arrayDesignId );
+        return QueryUtils.<Long, Object>streamByBatch( query, "genes", geneIds, 2048 )
+                .map( id -> ( ( Number ) id ).longValue() )
+                .collect( Collectors.toCollection( LinkedHashSet::new ) );
     }
 }

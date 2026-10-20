@@ -20,13 +20,12 @@ package ubic.gemma.persistence.service.analysis.expression;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -37,10 +36,10 @@ public interface ExpressionExperimentSetDao
         extends BaseVoEnabledDao<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
     /**
-     * @param bioAssaySet bio assay set
-     * @return expressionExperimentSets that contain the given bioAssaySet.
+     * @param ee bio assay set
+     * @return expressionExperimentSets that contain the given ee.
      */
-    Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
+    Collection<ExpressionExperimentSet> find( ExpressionExperiment ee );
 
     Collection<ExpressionExperimentSet> findByName( String name );
 

@@ -1,14 +1,20 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneAnnDataSingleCellDataConfigurer;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneAnnDataSingleCellDataLoaderConfig;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.mapper.*;
+import ubic.gemma.model.common.DescribableUtils;
+import ubic.gemma.model.common.NonUniqueDescribableByNameException;
 import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -25,6 +31,7 @@ import ubic.gemma.persistence.service.common.quantitationtype.NonUniqueQuantitat
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentGeoService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
@@ -38,7 +45,7 @@ import static java.util.Objects.requireNonNull;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.createStreamMonitor;
 
 @Service
-@CommonsLog
+@Slf4j
 public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderService {
 
     @Autowired
@@ -51,23 +58,24 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
+    private ExpressionExperimentGeoService expressionExperimentGeoService;
+
+    @Autowired
     private BioAssayService bioAssayService;
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
 
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+
     @Value("${gemma.download.path}/singleCellData")
     private Path singleCellDataBasePath;
-
-    @Value("${python.exe}")
-    private Path pythonExecutable;
-
-    @Value("${gemma.scratch.dir}")
-    private Path scratchDir;
 
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() , "must not be null");
         Assert.isNull( config.getDataPath(), "An explicit path cannot be provided when detecting the data type automatically." );
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
@@ -80,6 +88,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         if ( config.getDataPath() != null ) {
             log.info( "Loading single-cell data for " + ee + " from " + config.getDataPath() + "..." );
@@ -100,6 +109,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -111,6 +121,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellTypeAssignment> loadCellTypeAssignments( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
             return loadCellTypeAssignments( loader, ee, config );
@@ -122,51 +133,26 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     private Collection<CellTypeAssignment> loadCellTypeAssignments( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) throws IOException {
         QuantitationType qt = getQuantitationType( ee, config );
         SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-        Set<String> existingCtaNames = dimension.getCellTypeAssignments().stream()
-                .map( CellTypeAssignment::getName ).filter( Objects::nonNull )
-                .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
         Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dimension );
         applyPreferredCellTypeAssignment( ctas, config );
-        Set<CellTypeAssignment> set = new HashSet<>();
-        for ( CellTypeAssignment cta : ctas ) {
-            if ( cta.getName() != null && existingCtaNames.contains( cta.getName() ) ) {
-                if ( config.isReplaceExistingCellTypeAssignment() ) {
-                    log.info( "There is already a cell type assignment named " + cta.getName() + " in " + ee + ", replacing it..." );
-                    singleCellExpressionExperimentService.removeCellTypeAssignmentByName( ee, dimension, cta.getName() );
-                } else {
-                    log.warn( "Cell type assignment with name " + cta.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingCellTypeAssignment to replace it." );
-                    continue;
-                }
-            }
-            CellTypeAssignment cellTypeAssignment = singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta );
-            set.add( cellTypeAssignment );
+        try {
+            return DescribableUtils.addAllByName( dimension.getCellTypeAssignments(), ctas,
+                    // because we're dealing with a persistent dimension, we need to use the service to add/remove CTAs
+                    ( ignored, cta ) -> singleCellExpressionExperimentService.addCellTypeAssignment( ee, qt, dimension, cta, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() ),
+                    ( ignored, cta ) -> singleCellExpressionExperimentService.removeCellTypeAssignmentByName( ee, dimension, requireNonNull( cta.getName() ) ),
+                    config.isReplaceExistingCellTypeAssignment(), config.isReplaceExistingCellTypeAssignment() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellTypeAssignmentByNameException( e );
         }
-        return set;
     }
 
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-            Set<String> existingClcNames = dimension.getCellLevelCharacteristics().stream()
-                    .map( CellLevelCharacteristics::getName ).filter( Objects::nonNull )
-                    .collect( Collectors.toCollection( () -> new TreeSet<>( String.CASE_INSENSITIVE_ORDER ) ) );
-            Collection<CellLevelCharacteristics> created = new HashSet<>();
-            for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
-                if ( clc.getName() != null && existingClcNames.contains( clc.getName() ) ) {
-                    if ( config.isReplaceExistingOtherCellLevelCharacteristics() ) {
-                        log.info( "There is already a cell-level characteristics named " + clc.getName() + " in " + ee + ", replacing it..." );
-                        singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, clc.getName() );
-                    } else {
-                        log.warn( "Cell-level characteristics with name " + clc.getName() + " already exists in " + ee + ", ignoring. Specify replaceExistingOtherCellLevelCharacteristics to replace it." );
-                        continue;
-                    }
-                }
-                created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
-            }
-            return created;
+            return loadOtherCellLevelCharacteristics( loader, ee, config );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -175,16 +161,26 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     @Override
     @Transactional
     public Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( ExpressionExperiment ee, SingleCellDataType dataType, SingleCellDataLoaderConfig config ) {
+        Assert.notNull( ee.getId() , "must not be null");
         ee = expressionExperimentService.loadOrFail( ee.getId() );
         try ( SingleCellDataLoader loader = getLoader( ee, dataType, config ) ) {
-            SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
-            Collection<CellLevelCharacteristics> created = new HashSet<>();
-            for ( CellLevelCharacteristics clc : loader.getOtherCellLevelCharacteristics( dimension ) ) {
-                created.add( singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ) );
-            }
-            return created;
+            return loadOtherCellLevelCharacteristics( loader, ee, config );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
+        }
+    }
+
+    private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, ExpressionExperiment ee, SingleCellDataLoaderConfig config ) throws IOException {
+        SingleCellDimension dimension = getSingleCellDimension( ee, true, config );
+        Set<CellLevelCharacteristics> clcs = loader.getOtherCellLevelCharacteristics( dimension );
+        try {
+            return DescribableUtils.addAllByName( dimension.getCellLevelCharacteristics(), clcs,
+                    // because we're dealing with a persistent dimension, we need to use the service to add/remove CLCs
+                    ( ignored, clc ) -> singleCellExpressionExperimentService.addCellLevelCharacteristics( ee, dimension, clc ),
+                    ( ignored, clc ) -> singleCellExpressionExperimentService.removeCellLevelCharacteristicsByName( ee, dimension, requireNonNull( clc.getName() ) ),
+                    config.isReplaceExistingOtherCellLevelCharacteristics(), config.isIgnoreExistingOtherCellLevelCharacteristics() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellLevelCharacteristicsByNameException( e );
         }
     }
 
@@ -238,14 +234,23 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
     }
 
     private QuantitationType load( ExpressionExperiment ee, ArrayDesign platform, SingleCellDataLoader loader, SingleCellDataLoaderConfig config ) {
-        ee = requireNonNull( singleCellExpressionExperimentService.loadWithSingleCellVectors( ee.getId() ) );
+        ee = requireNonNull( singleCellExpressionExperimentService.loadAndInitializeSingleCellDimensions( ee.getId() ) );
         Assert.isTrue( platform.getPrimaryTaxon().equals( expressionExperimentService.getTaxon( ee ) ),
                 "Platform primary taxon does not match dataset." );
         SingleCellDimension dim = loadSingleCellDimension( loader, ee.getBioAssays() );
         QuantitationType qt = loadQuantitationType( loader, ee, config );
-        loadCellTypeAssignments( loader, dim, config );
-        loadCellLevelCharacteristics( loader, dim );
-        loadSequencingMetadata( loader, dim );
+        Collection<CellTypeAssignment> loadedCtas = loadCellTypeAssignments( loader, dim, config );
+        if ( !loadedCtas.isEmpty() ) {
+            log.info( "Loaded " + loadedCtas.size() + " cell type assignments." );
+        }
+        Collection<CellLevelCharacteristics> loadedClcs = loadOtherCellLevelCharacteristics( loader, dim, config );
+        if ( !loadedClcs.isEmpty() ) {
+            log.info( "Loaded " + loadedClcs.size() + " cell-level characteristics." );
+        }
+        Map<BioAssay, SequencingMetadata> loadedSm = loadSequencingMetadata( loader, dim );
+        if ( !loadedSm.isEmpty() ) {
+            log.info( "Loaded sequencing metadata for " + loadedSm.size() + " assays." );
+        }
         loadVectors( loader, ee, dim, qt, platform, config );
         return qt;
     }
@@ -272,11 +277,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
         QuantitationType qt;
         if ( qts.isEmpty() ) {
-            throw new IllegalArgumentException( String.format( "No quantitation available%s. Choose one among:\n\t%s",
+            throw new IllegalArgumentException( String.format( "No quantitation available%s. Choose one among:%n\t%s",
                     qtName != null ? " with name " + qtName : "",
                     availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         } else if ( qts.size() > 1 ) {
-            throw new IllegalArgumentException( String.format( "More than one available quantitation type%s. Choose one among:\n%s",
+            throw new IllegalArgumentException( String.format( "More than one available quantitation type%s. Choose one among:%n%s",
                     qtName != null ? " with name " + qtName : "",
                     availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
         } else {
@@ -303,7 +308,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 applyQuantitationTypeOverrides( qt, config );
             } else {
                 availableQts = singleCellExpressionExperimentService.getSingleCellQuantitationTypes( ee );
-                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:\n\t%s",
+                throw new IllegalArgumentException( String.format( "%s does not match any existing single-cell quantitation type. Choose one among:%n\t%s",
                         qt,
                         availableQts.stream().map( QuantitationType::toString ).collect( Collectors.joining( "\n\t" ) ) ) );
             }
@@ -314,6 +319,11 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
                 throw new IllegalArgumentException( ee + " already has a quantitation type matching " + qt + ". Set replaceExistingQuantitationType to replace existing vectors instead or use a different name by setting quantitationTypeNewName." );
             }
             log.info( "Data will be added for " + qt + "..." );
+        }
+
+        if ( config.isMarkQuantitationTypeAsRecomputedFromRawData() ) {
+            log.info( "Marking " + qt + " as recomputed from raw data." );
+            qt.setIsRecomputedFromRawData( true );
         }
 
         if ( config.isMarkQuantitationTypeAsPreferred() ) {
@@ -360,13 +370,19 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
     }
 
-    private void loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
+    private Collection<CellTypeAssignment> loadCellTypeAssignments( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
+        Assert.isNull( dim.getId(), "This method can only load a CTA in a non-persistent dimension." );
         try {
             Set<CellTypeAssignment> ctas = loader.getCellTypeAssignments( dim );
             applyPreferredCellTypeAssignment( ctas, config );
-            dim.getCellTypeAssignments().addAll( ctas );
+            return DescribableUtils.addAllByName( dim.getCellTypeAssignments(), ctas,
+                    config.isReplaceExistingCellTypeAssignment(),
+                    config.isIgnoreExistingCellTypeAssignment() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellTypeAssignmentByNameException( e );
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
+            return Collections.emptySet();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -402,11 +418,18 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         }
     }
 
-    private void loadCellLevelCharacteristics( SingleCellDataLoader loader, SingleCellDimension dim ) {
+    private Collection<CellLevelCharacteristics> loadOtherCellLevelCharacteristics( SingleCellDataLoader loader, SingleCellDimension dim, SingleCellDataLoaderConfig config ) {
+        Assert.isNull( dim.getId() , "must be null");
         try {
-            dim.getCellLevelCharacteristics().addAll( loader.getOtherCellLevelCharacteristics( dim ) );
+            return DescribableUtils.addAllByName( dim.getCellLevelCharacteristics(),
+                    loader.getOtherCellLevelCharacteristics( dim ),
+                    config.isReplaceExistingOtherCellLevelCharacteristics(),
+                    config.isIgnoreExistingOtherCellLevelCharacteristics() );
+        } catch ( NonUniqueDescribableByNameException e ) {
+            throw new NonUniqueCellLevelCharacteristicsByNameException( e );
         } catch ( UnsupportedOperationException e ) {
             log.info( e.getMessage() ); // no need for the stacktrace
+            return Collections.emptySet();
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -459,7 +482,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             log.info( mappingDetails );
             loader.setDesignElementToGeneMapper( mapper );
             vectors = loader.loadVectors( platform.getCompositeSequences(), dim, qt )
-                    .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, ( long ) ( stats.getCoverage() * platform.getCompositeSequences().size() ) ) )
+                    .peek( createStreamMonitor( ee, qt, getClass().getName(), 100, ( long ) ( stats.getCoverage() * platform.getCompositeSequences().size() ), config.getConsole() ) )
                     .collect( Collectors.toSet() );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -469,10 +492,10 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
             log.info( String.format( "Switched %d bioassays to %s.", switched, platform ) );
         }
         if ( config.isReplaceExistingQuantitationType() ) {
-            int replacedVectors = singleCellExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors, mappingDetails );
+            int replacedVectors = singleCellExpressionExperimentService.replaceSingleCellDataVectors( ee, qt, vectors, mappingDetails, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() );
             log.info( String.format( "Replaced %d single-cell vectors in %s.", replacedVectors, qt ) );
         } else {
-            int addedVectors = singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, mappingDetails );
+            int addedVectors = singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, vectors, mappingDetails, config.isRecreateCellTypeFactorIfNecessary(), config.isIgnoreCompatibleCellTypeFactor() );
             log.info( String.format( "Added %d single-cell vectors to %s in %s.", addedVectors, ee, qt ) );
         }
     }
@@ -491,7 +514,7 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
      */
     private DesignElementMapper createElementsMapping( ArrayDesign platform, Collection<String> geneIdentifiers ) {
         // create mapping by precedence of ID type
-        Map<CompositeSequence, Set<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform );
+        Map<CompositeSequence, Set<Gene>> cs2g = arrayDesignService.getGenesByCompositeSequence( platform, true );
         List<DesignElementMapper> mappers = new ArrayList<>();
         // highest precedence is the probe name
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
@@ -588,11 +611,20 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
 
     private SingleCellDataLoader getAnnDataLoader( ExpressionExperiment ee, SingleCellDataLoaderConfig config ) {
         BioAssayMapper bioAssayMapper = getBioAssayMapper( ee, config );
-        Path p = config.getDataPath() != null ? config.getDataPath() : getAnnDataFile( ee );
-        AnnDataSingleCellDataLoaderConfigurer annDataConfigurer = new AnnDataSingleCellDataLoaderConfigurer( p, ee.getBioAssays(), bioAssayMapper );
-        annDataConfigurer.setPythonExecutable( pythonExecutable );
-        annDataConfigurer.setScratchDir( scratchDir );
-        return configureLoader( annDataConfigurer, bioAssayMapper, config );
+        // Pin to a single local so SpotBugs sees a stable non-null binding (it cannot reason
+        // that the two getDataPath() reads in the ternary return the same reference).
+        Path configDataPath = config.getDataPath();
+        Path p = configDataPath != null ? configDataPath : getAnnDataFile( ee );
+        if ( config instanceof CellXGeneAnnDataSingleCellDataLoaderConfig ) {
+            log.info( "Loading single-cell data from " + p + " using the CELLxGENE preset." );
+            CellXGeneAnnDataSingleCellDataConfigurer annDataConfigurer = new CellXGeneAnnDataSingleCellDataConfigurer( p, singleCellDataTransformationFactory );
+            return configureLoader( annDataConfigurer, bioAssayMapper, config );
+        } else {
+            log.info( "Loading single-cell data from " + p + " using a generic preset." );
+            AnnDataSingleCellDataLoaderConfigurer annDataConfigurer = new AnnDataSingleCellDataLoaderConfigurer( p,
+                    ee.getBioAssays(), bioAssayMapper, singleCellDataTransformationFactory );
+            return configureLoader( annDataConfigurer, bioAssayMapper, config );
+        }
     }
 
     private SingleCellDataLoader getSeuratDiskLoader() {
@@ -607,7 +639,15 @@ public class SingleCellDataLoaderServiceImpl implements SingleCellDataLoaderServ
         } else {
             dir = getMexDir( ee );
         }
-        return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper ), bioAssayMapper, config );
+        GeoSeries geoSeries;
+        if ( ee.getAccession() != null && ee.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+            log.info( ee + " originates from GEO, will include its series metadata." );
+            geoSeries = expressionExperimentGeoService.getGeoSeries( ee );
+        } else {
+            geoSeries = null;
+        }
+
+        return configureLoader( new MexSingleCellDataLoaderConfigurer( dir, ee.getBioAssays(), bioAssayMapper, singleCellDataTransformationFactory, geoSeries ), bioAssayMapper, config );
     }
 
     private SingleCellDataLoader getLoomLoader() {

@@ -18,12 +18,12 @@
  */
 package ubic.gemma.core.job.progress;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.job.progress.ProgressData;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author klc
@@ -33,7 +33,7 @@ public class ProgressDataTest {
 
     private ProgressData pd;
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         pd = new ProgressData( "12344", 1, "test", false );
@@ -79,7 +79,7 @@ public class ProgressDataTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         pd = null;
     }

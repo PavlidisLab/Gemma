@@ -36,8 +36,10 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -73,9 +75,7 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
+    protected void buildArrayDesignOptions( Options options ) {
         Option justTestingOption = Option.builder( "dryrun" )
                 .desc( "Set to run without any database modifications" )
                 .build();
@@ -83,14 +83,14 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
 
         Option sequenceNameList = Option.builder( "b" )
                 .longOpt( "file" )
+                .hasArg().argName( "file" )
                 .desc( "File with list of biosequence ids to check; default: check all on provided platforms" )
                 .build();
         options.addOption( sequenceNameList );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( "dryrun" ) ) {
             this.justTesting = true;
             log.info( "TEST MODE: NO DATABASE UPDATES WILL BE PERFORMED" );
@@ -102,11 +102,17 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doAuthenticatedWork() {
+    protected boolean selectsOwnPlatforms() {
+        // -b checks the sequences listed in the file, with no platform
+        return file != null;
+    }
+
+    @Override
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
 
         Collection<ArrayDesign> ads;
-        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
-            ads = new HashSet<>( this.getArrayDesignsToProcess() );
+        if ( !arrayDesigns.isEmpty() ) {
+            ads = new HashSet<>( arrayDesigns );
         } else if ( file != null ) {
             try ( InputStream is = new FileInputStream( file );
                     BufferedReader br = new BufferedReader( new InputStreamReader( is ) ); ) {
@@ -124,14 +130,14 @@ public class BioSequenceCleanupCli extends ArrayDesignSequenceManipulatingCli {
                 bioSequences = bss.thaw( bioSequences );
                 processSequences( bioSequences );
                 return;
-            } catch ( Exception e ) {
-                return;
+            } catch ( IOException e ) {
+                throw new UncheckedIOException( "Failed to read biosequence IDs from " + file, e );
             }
         } else {
-            ads = this.getArrayDesignService().loadAll();
+            ads = arrayDesignService.loadAll();
         }
 
-        ads = getArrayDesignService().thaw( ads );
+        ads = arrayDesignService.thaw( ads );
         for ( ArrayDesign design : ads ) {
             log.info( design );
 

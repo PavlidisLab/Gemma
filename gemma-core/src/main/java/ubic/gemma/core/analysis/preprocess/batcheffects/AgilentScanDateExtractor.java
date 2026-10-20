@@ -27,6 +27,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -49,11 +50,22 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
     private static final Log log = LogFactory.getLog( AgilentScanDateExtractor.class );
 
-    public static DateFormat AGILENT_DATE_FORMAT = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss", Locale.ENGLISH ); // 10-18-2005 13:02:36
+    public static final String AGILENT_DATE_PATTERN = "MM-dd-yyyy hh:mm:ss"; // 10-18-2005 13:02:36
+
+    /**
+     * Each call returns a fresh {@link SimpleDateFormat}: SDF is not thread-safe and was previously a shared mutable
+     * static field (with per-call {@code setLenient(true)}) — a latent race when multiple platform loads ran
+     * concurrently. Allocation cost is negligible compared with the surrounding I/O.
+     */
+    public static DateFormat newAgilentDateFormat() {
+        DateFormat f = new SimpleDateFormat( AGILENT_DATE_PATTERN, Locale.ENGLISH );
+        f.setLenient( true );
+        return f;
+    }
 
     @Override
     public Date extract( InputStream is ) throws IOException, ParseException {
-        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( is ) ) ) {
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( is, StandardCharsets.US_ASCII ) ) ) {
             /*
              * Read the first three characters. IF they are ATF, it's a Axon file. If it's TYPE then it's probably an
              * agilent file.
@@ -90,8 +102,7 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
                     Date d;
 
-                    DateFormat f = AGILENT_DATE_FORMAT;
-                    f.setLenient( true );
+                    DateFormat f = newAgilentDateFormat();
                     d = f.parse( date );
 
                     return d;

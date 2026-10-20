@@ -19,12 +19,12 @@
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import ubic.gemma.core.analysis.sequence.SequenceBinUtils;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGene2Accession;
 import ubic.gemma.core.loader.genome.gene.ncbi.model.NCBIGeneInfo;
+import ubic.gemma.core.loader.util.GenBankUtils;
 import ubic.gemma.core.loader.util.converter.Converter;
 import ubic.gemma.core.util.concurrent.ThreadUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -40,9 +40,12 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Convert NCBIGene2Accession objects into Gemma Gene objects with associated GeneProducts. Genes without products are
@@ -59,19 +62,21 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     private static final ExternalDatabase ensembl;
 
     static {
-        genBank = ExternalDatabase.Factory.newInstance();
-        NcbiGeneConverter.genBank.setName( "Genbank" );
+        genBank = GenBankUtils.getGenBank();
         ensembl = ExternalDatabase.Factory.newInstance();
         NcbiGeneConverter.ensembl.setName( "Ensembl" );
     }
 
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean sourceDone = new AtomicBoolean( false );
+    private AtomicReference<Throwable> failure = new AtomicReference<>();
+    private volatile boolean stopped = false;
+    private Thread convertThread;
 
     /**
      * @return the genBank
      */
-    public static ExternalDatabase getGenbank() {
+    public static ExternalDatabase getGenBank() {
         return NcbiGeneConverter.genBank;
     }
 
@@ -122,7 +127,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             assert info.getHistory().getPreviousIds() != null;
             if ( !info.getHistory().getPreviousIds().isEmpty() ) {
                 String previousIds = StringUtils.join( info.getHistory().getPreviousIds(), "," );
-                gene.setPreviousNcbiId( previousIds );
+                gene.setPreviousNcbiGeneId( previousIds );
             }
 
         } else if ( StringUtils.isNotBlank( info.getDiscontinuedId() ) ) {
@@ -130,7 +135,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                 NcbiGeneConverter.log
                         .debug( "Gene matches a gene that was discontinued: " + gene + " matches gene that had id "
                                 + info.getDiscontinuedId() );
-            gene.setPreviousNcbiId( info.getDiscontinuedId() );
+            gene.setPreviousNcbiGeneId( info.getDiscontinuedId() );
         }
 
         gene.setDescription( "Imported from NCBI gene; Nomenclature status: " + info.getNomenclatureStatus() );
@@ -144,7 +149,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
          * We are going to stop maintaining this information
          */
         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
-        Chromosome chrom = new Chromosome( info.getChromosome(), t );
+        Chromosome chrom = Chromosome.Factory.newInstance( info.getChromosome(), t );
         pl.setChromosome( chrom );
 
         gene.setPhysicalLocation( pl );
@@ -156,10 +161,10 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             aliases.add( newAlias );
         }
 
-        for ( String dbname : info.getDbXrefs().keySet() ) {
-            if ( !dbname.equalsIgnoreCase( "Ensembl" ) )
+        for ( Map.Entry<String, String> dbEntry : info.getDbXrefs().entrySet() ) {
+            if ( !dbEntry.getKey().equalsIgnoreCase( "Ensembl" ) )
                 continue;
-            String identifier = info.getDbXrefs().get( dbname );
+            String identifier = dbEntry.getValue();
             DatabaseEntry crossref = DatabaseEntry.Factory.newInstance();
             crossref.setAccession( identifier );
             crossref.setExternalDatabase( NcbiGeneConverter.getEnsembl() );
@@ -241,13 +246,14 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
 
-        Thread convertThread = ThreadUtils.newThread( new Runnable() {
+        convertThread = ThreadUtils.newThread( new Runnable() {
             @Override
             @SuppressWarnings("synthetic-access")
             public void run() {
                 while ( !( sourceDone.get() && geneInfoQueue.isEmpty() ) ) {
+                    NcbiGeneData data = null;
                     try {
-                        NcbiGeneData data = geneInfoQueue.poll();
+                        data = geneInfoQueue.poll( 1, TimeUnit.SECONDS );
                         if ( data == null ) {
                             continue;
                         }
@@ -261,11 +267,17 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                         geneQueue.put( converted );
 
                     } catch ( InterruptedException e ) {
-                        NcbiGeneConverter.log.warn( "Interrupted" );
-                        break;
-                    } catch ( Exception e ) {
-                        NcbiGeneConverter.log.error( e, e );
-                        break;
+                        // stopped by the loader
+                        return;
+                    } catch ( Throwable e ) {
+                        // this used to log and 'break', which marked the conversion as complete: every later gene
+                        // was silently skipped. Throwable, so that an Error is recorded too instead of ending the
+                        // thread with nothing set.
+                        if ( !stopped ) {
+                            failure.compareAndSet( null, new RuntimeException( "Failed to convert NCBI gene "
+                                    + ( data != null && data.getGeneInfo() != null ? data.getGeneInfo().getGeneId() : "(unknown)" ) + ".", e ) );
+                        }
+                        return;
                     }
                 }
                 producerDone.set( true );
@@ -273,6 +285,23 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         }, "Converter" );
 
         convertThread.start();
+    }
+
+    /**
+     * Where the conversion thread records the exception that ended it; the loader waits on this.
+     */
+    public void setFailure( AtomicReference<Throwable> failure ) {
+        this.failure = failure;
+    }
+
+    /**
+     * Stop the conversion thread, if it is running.
+     */
+    public void stop() {
+        stopped = true;
+        if ( convertThread != null ) {
+            convertThread.interrupt();
+        }
     }
 
     public boolean isProducerDone() {
@@ -313,12 +342,6 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         dbe.setAccession( acc.getGenomicNucleotideAccession() );
         dbe.setAccessionVersion( acc.getGenomicNucleotideAccessionVersion() );
         chromSeq.setSequenceDatabaseEntry( dbe );
-        try {
-            FieldUtils.writeField( chrom, "sequence", chromSeq, true );
-        } catch ( IllegalAccessException e ) {
-            e.printStackTrace();
-        }
-
+        chrom.setSequence( chromSeq );
     }
-
 }

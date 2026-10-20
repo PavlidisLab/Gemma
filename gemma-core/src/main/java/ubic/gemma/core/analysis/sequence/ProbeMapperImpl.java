@@ -71,9 +71,10 @@ public class ProbeMapperImpl implements ProbeMapper {
         assert !biosequenceToBlatResults.isEmpty();
 
         // Do them one sequence at a time.
-        for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
+        for ( Map.Entry<BioSequence, Collection<BlatResult>> bbrEntry : biosequenceToBlatResults.entrySet() ) {
+            BioSequence sequence = bbrEntry.getKey();
 
-            Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
+            Collection<BlatResult> blatResultsForSequence = bbrEntry.getValue();
 
             if ( log.isDebugEnabled() ) {
                 log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );

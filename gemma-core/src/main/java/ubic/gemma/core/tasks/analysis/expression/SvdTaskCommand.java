@@ -14,6 +14,8 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -22,6 +24,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author paul
  */
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class SvdTaskCommand extends TaskCommand {
     private static final long serialVersionUID = 1L;
 
@@ -41,24 +45,8 @@ public class SvdTaskCommand extends TaskCommand {
         this.postProcessOnly = postProcessOnly;
     }
 
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
     @Override
     public Class<? extends Task<? extends TaskCommand>> getTaskClass() {
         return SvdTask.class;
-    }
-
-    public boolean isPostProcessOnly() {
-        return postProcessOnly;
-    }
-
-    public void setPostProcessOnly( boolean postProcessOnly ) {
-        this.postProcessOnly = postProcessOnly;
     }
 }

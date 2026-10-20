@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -32,6 +34,8 @@ import java.util.HashSet;
  * @author Paul
  */
 @SuppressWarnings("unused") // Possibly used in front end
+@Getter
+@Setter
 public class CompositeSequenceMapSummary {
 
     public static final String HEADER = "CompSeq\tBioSeq\t#BlatRes\tGeneProds\tGenes";
@@ -47,34 +51,6 @@ public class CompositeSequenceMapSummary {
         this.blatResults = new HashSet<>();
         this.geneProducts = new HashSet<>();
         this.genes = new HashSet<>();
-    }
-
-    public Collection<BlatResult> getBlatResults() {
-        return blatResults;
-    }
-
-    public void setBlatResults( Collection<BlatResult> blatResults ) {
-        this.blatResults = blatResults;
-    }
-
-    public CompositeSequence getCompositeSequence() {
-        return compositeSequence;
-    }
-
-    public Collection<GeneProduct> getGeneProducts() {
-        return geneProducts;
-    }
-
-    public void setGeneProducts( Collection<GeneProduct> geneProducts ) {
-        this.geneProducts = geneProducts;
-    }
-
-    public Collection<Gene> getGenes() {
-        return genes;
-    }
-
-    public void setGenes( Collection<Gene> genes ) {
-        this.genes = genes;
     }
 
     @Override

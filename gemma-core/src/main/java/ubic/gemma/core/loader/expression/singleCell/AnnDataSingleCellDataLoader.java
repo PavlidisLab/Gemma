@@ -1,9 +1,11 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import lombok.AccessLevel;
 import lombok.Setter;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.singleCell.SingleCellDescriptive;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
@@ -14,6 +16,7 @@ import ubic.gemma.core.loader.util.hdf5.H5Type;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.DesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.EntityMapper;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -30,7 +33,7 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -45,7 +48,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Setter
 public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
@@ -71,6 +74,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     private boolean ignoreUnmatchedDesignElements = true;
 
     /**
+     * Explicitly ignore data vectors.
+     */
+    private boolean ignoreDataVectors = false;
+
+    /**
      * The name of the sample factor under {@code /var}.
      */
     private String sampleFactorName;
@@ -80,6 +88,13 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      */
     @Nullable
     private String cellTypeFactorName;
+    /**
+     * The name of the cell type URI factor under {@code /var}.
+     * <p>
+     * This is optional. If set, it will be used to populate the characteristics' URIs.
+     */
+    @Nullable
+    private String cellTypeUriFactorName;
 
     /**
      * Ignore cell type assignment.
@@ -90,7 +105,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
      * An indicator for unknown cell type if the dataset uses something else than the {@code -1} code.
      */
     @Nullable
+    @Setter(AccessLevel.NONE)
     private String unknownCellTypeIndicator;
+
+    /**
+     * Whether {@link #unknownCellTypeIndicator} is a convention applied to every dataset a loader reads rather than a
+     * choice made for this particular dataset. See {@link #setDefaultUnknownCellTypeIndicator(String)}.
+     */
+    @Setter(AccessLevel.NONE)
+    private boolean unknownCellTypeIndicatorIsDefault;
 
     /**
      * Use or not the {@code raw.X} layer.
@@ -113,6 +136,30 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     public AnnDataSingleCellDataLoader( Path file ) {
         this.file = file;
+    }
+
+    /**
+     * Declare the category that marks cells whose type is unknown.
+     * <p>
+     * The indicator must occur in the data: if it does not, the wrong column or the wrong spelling was configured and
+     * every cell would silently keep a type it should not have, so {@link #getCellTypeAssignments(SingleCellDimension)}
+     * rejects the dataset. Use {@link #setDefaultUnknownCellTypeIndicator(String)} for a convention applied sight-unseen
+     * to a whole source, where absence carries no such implication.
+     */
+    public void setUnknownCellTypeIndicator( @Nullable String unknownCellTypeIndicator ) {
+        this.unknownCellTypeIndicator = unknownCellTypeIndicator;
+        this.unknownCellTypeIndicatorIsDefault = false;
+    }
+
+    /**
+     * Declare an indicator that a subclass applies by convention to every dataset it reads.
+     * <p>
+     * Unlike {@link #setUnknownCellTypeIndicator(String)}, absence is tolerated: the convention is chosen for a source
+     * without having seen the dataset, so a dataset in which no cell type is missing simply has no such category.
+     */
+    protected void setDefaultUnknownCellTypeIndicator( @Nullable String unknownCellTypeIndicator ) {
+        this.unknownCellTypeIndicator = unknownCellTypeIndicator;
+        this.unknownCellTypeIndicatorIsDefault = true;
     }
 
     @Override
@@ -196,7 +243,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             singleCellDimension.setBioAssays( bas );
             singleCellDimension.setBioAssaysOffset( basO );
             singleCellDimension.setCellIds( cellIdsL );
-            singleCellDimension.setNumberOfCells( cellIdsL.size() );
+            singleCellDimension.setNumberOfCellIds( cellIdsL.size() );
         }
         return singleCellDimension;
     }
@@ -352,10 +399,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     .map( e -> e.getKey() + ":\t" + e.getValue().stream().limit( 10 ).collect( Collectors.joining( ", " ) ) + ", ..." )
                     .collect( Collectors.joining( "\n\t" ) ) );
         }
+        // Pin to a local so SpotBugs can see the null-guard above carries forward (field reads
+        // through the try-with-resources scope otherwise look possibly-null to its flow analysis).
+        String cellTypeFactor = cellTypeFactorName;
         try ( AnnData h5File = AnnData.open( file ); Dataframe<?> var = getCellsDataframe( h5File ) ) {
             // TODO: support cell types encoded as string-array
-            CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactorName, String.class );
+            CategoricalArray<String> cellTypes = var.getCategoricalColumn( cellTypeFactor, String.class );
+            CategoricalArray<String> cellTypeUris = cellTypeUriFactorName != null ? var.getCategoricalColumn( cellTypeUriFactorName, String.class ) : null;
             CellTypeAssignment assignment = new CellTypeAssignment();
+            assignment.setName( cellTypeFactorName );
             int unknownCellTypeCode = CellTypeAssignment.UNKNOWN_CELL_TYPE;
             for ( int i = 0; i < cellTypes.getCategories().length; i++ ) {
                 String ct = cellTypes.getCategories()[i];
@@ -367,23 +419,29 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     unknownCellTypeCode = i;
                     continue;
                 }
-                assignment.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, ct, null ) );
+                String ctUri = cellTypeUris != null ? normalizeCellTypeUri( cellTypeUris.getCategories()[i], ct ) : null;
+                assignment.getCellTypes().add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, ct, ctUri ) );
             }
             assignment.setNumberOfCellTypes( assignment.getCellTypes().size() );
             if ( unknownCellTypeIndicator != null && unknownCellTypeCode == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
-                throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
-                        unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                if ( unknownCellTypeIndicatorIsDefault ) {
+                    log.debug( String.format( "%s has no %s category, so no cell type is marked unknown. Possible values are: %s.",
+                            h5File, unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                } else {
+                    throw new IllegalStateException( String.format( "The unknown cell type indicator %s was not found. Possible values are: %s. If none of these indicate a missing cell type, set the indicator to null.",
+                            unknownCellTypeIndicator, String.join( ", ", cellTypes.getCategories() ) ) );
+                }
             }
             // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
             // this column is indexed, so it's very fast to use indexOf
             Dataframe.Column<String, String> cellIds = var.getIndex( String.class );
-            int[] cellPositions = new int[dimension.getNumberOfCells()];
+            int[] cellPositions = new int[dimension.getNumberOfCellIds()];
             for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
                 cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
             }
             int[] codes = cellTypes.getCodes();
             // rewrite the original codes to match the cell positions in the dimension
-            int[] cellTypeIndices = new int[dimension.getNumberOfCells()];
+            int[] cellTypeIndices = new int[dimension.getNumberOfCellIds()];
             for ( int i = 0; i < cellTypeIndices.length; i++ ) {
                 if ( codes[cellPositions[i]] == unknownCellTypeCode ) {
                     cellTypeIndices[i] = CellTypeAssignment.UNKNOWN_CELL_TYPE;
@@ -397,9 +455,28 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         }
     }
 
+    /**
+     * Store a cell type's term as a URI, whichever spelling the file uses.
+     * <p>
+     * CELLxGENE writes {@code cell_type_ontology_term_id} as CURIEs ({@code CL:0000127}), and the value used to be
+     * stored as-is: HBCC_Cohort's reload on 2026-09-29 wrote 25 CURIEs into its cell type assignment and the cell type
+     * factor built from it, which then matched none of the pseudo-bulk samples' full URIs. The other ingestion paths
+     * normalize through {@link OntologyUtils#termIdOrUriToUri(String)} since f53b1f94fb; this is the same boundary.
+     * A value that is not an identifier at all is dropped with a warning rather than stored in a URI field, as the
+     * cell-level metadata parser does.
+     */
+    @Nullable
+    private String normalizeCellTypeUri( @Nullable String rawUri, String cellType ) {
+        String normalized = OntologyUtils.termIdOrUriToUri( rawUri );
+        if ( normalized == null && StringUtils.isNotBlank( rawUri ) ) {
+            log.warn( "Ignoring the term '" + rawUri + "' for cell type '" + cellType + "' in " + file
+                    + ": it is neither a URI nor a recognized term identifier, so it cannot be stored as one." );
+        }
+        return normalized;
+    }
+
     @Override
-    public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws
-            IOException {
+    public Set<CellLevelCharacteristics> getOtherCellLevelCharacteristics( SingleCellDimension dimension ) throws IOException {
         checkSampleFactorName();
         if ( cellTypeFactorName == null ) {
             log.warn( "No cell type factor name is set, cell types might be treated as \"other cell-level characteristics\"." );
@@ -431,8 +508,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             case FLOAT:
                                 values = Arrays.stream( vars.getArrayColumn( factorName ).toDoubleVector() ).mapToObj( Double::toString ).toArray( String[]::new );
                                 break;
+                            case ENUM:
+                                EnumArray vals = vars.getEnumArrayColumn( factorName );
+                                values = new String[vals.size()];
+                                for ( int i = 0; i < values.length; i++ ) {
+                                    values[i] = vals.get( i );
+                                }
+                                break;
                             default:
-                                log.warn( "Unsupported datatype for array encoding: " + vector.getType() );
+                                log.warn( "Unsupported datatype for array encoding: " + vector.getType() + ", skipping column: " + factorName + "." );
                                 continue;
                         }
                     }
@@ -459,14 +543,14 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 // remap cells from the dataframe to the single-cell dimension, this will account for any re-ordering or subsetting of samples/cells
                 // this column is indexed, so it's very fast to use indexOf
                 Dataframe.Column<String, String> cellIds = vars.getIndex( String.class );
-                int[] cellPositions = new int[dimension.getNumberOfCells()];
+                int[] cellPositions = new int[dimension.getNumberOfCellIds()];
                 for ( int i = 0; i < dimension.getCellIds().size(); i++ ) {
                     cellPositions[i] = cellIds.indexOf( dimension.getCellIds().get( i ) );
                 }
-                int[] indices = new int[dimension.getNumberOfCells()];
+                int[] indices = new int[dimension.getNumberOfCellIds()];
                 Map<String, Integer> valToIndex = new HashMap<>();
                 List<Characteristic> characteristics = new ArrayList<>();
-                for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+                for ( int i = 0; i < dimension.getNumberOfCellIds(); i++ ) {
                     String val = values[cellPositions[i]];
                     if ( val != null ) {
                         int j;
@@ -490,10 +574,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Set<ExperimentalFactor> getFactors
-            ( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws
-            IOException {
+    public Set<ExperimentalFactor> getFactors( Collection<BioAssay> samples, @Nullable Map<BioMaterial, Set<FactorValue>> factorValueAssignments ) throws IOException {
+        Assert.notNull( bioAssayToSampleNameMapper, "A sample name comparator is necessary to match samples to BioAssays." );
         checkSampleFactorName();
+        EntityMapper.StatefulEntityMapper<BioAssay> statefulMapper = bioAssayToSampleNameMapper.forCandidates( samples );
         Set<ExperimentalFactor> factors = new HashSet<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
             try ( Dataframe<?> vars = getCellsDataframe( h5File ) ) {
@@ -526,8 +610,16 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                                     values = Arrays.stream( vars.getArrayColumn( factorName ).toDoubleVector() ).mapToObj( Double::toString ).toArray( String[]::new );
                                     representation = PrimitiveType.DOUBLE;
                                     break;
+                                case ENUM:
+                                    EnumArray vals = vars.getEnumArrayColumn( factorName );
+                                    values = new String[vals.size()];
+                                    for ( int i = 0; i < values.length; i++ ) {
+                                        values[i] = vals.get( i );
+                                    }
+                                    representation = PrimitiveType.STRING;
+                                    break;
                                 default:
-                                    log.warn( "Unsupported datatype for array encoding: " + vector.getType() );
+                                    log.warn( "Unsupported datatype for array encoding: " + vector.getType() + ", skipping column: " + factorName + "." );
                                     continue;
                             }
                         }
@@ -561,7 +653,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                                 Map<String, FactorValue> fvByValue = factor.getFactorValues().stream()
                                         .collect( Collectors.toMap( FactorValue::getValue, fv -> fv ) );
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : bioAssayToSampleNameMapper.matchAll( samples, sn ) ) {
+                                    for ( BioAssay sample : statefulMapper.matchAll( sn ) ) {
                                         factorValueAssignments
                                                 .computeIfAbsent( sample.getSampleUsed(), k -> new HashSet<>() )
                                                 .add( fvByValue.get( v ) );
@@ -572,7 +664,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                             // measurement, no need to create any FVs since those are unique to each sample
                             if ( factorValueAssignments != null ) {
                                 sampleValues.forEach( ( sn, v ) -> {
-                                    for ( BioAssay sample : bioAssayToSampleNameMapper.matchAll( samples, sn ) ) {
+                                    for ( BioAssay sample : statefulMapper.matchAll( sn ) ) {
                                         FactorValue fvO = FactorValue.Factory.newInstance( factor );
                                         Measurement measurement = new Measurement();
                                         measurement.setRepresentation( representation );
@@ -596,9 +688,10 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     }
 
     @Override
-    public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws
-            IOException {
+    public Map<BioMaterial, Set<Characteristic>> getSamplesCharacteristics( Collection<BioAssay> samples ) throws IOException {
+        Assert.notNull( bioAssayToSampleNameMapper, "A sample name comparator is necessary to match samples to BioAssays." );
         checkSampleFactorName();
+        EntityMapper.StatefulEntityMapper<BioAssay> statefulMapper = bioAssayToSampleNameMapper.forCandidates( samples );
         Map<BioMaterial, Set<Characteristic>> result = new HashMap<>();
         try ( AnnData h5File = AnnData.open( file ) ) {
             try ( Dataframe<?> vars = getCellsDataframe( h5File ) ) {
@@ -627,8 +720,15 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                                 case FLOAT:
                                     values = Arrays.stream( vars.getArrayColumn( factorName ).toDoubleVector() ).mapToObj( Double::toString ).toArray( String[]::new );
                                     break;
+                                case ENUM:
+                                    EnumArray vals = vars.getEnumArrayColumn( factorName );
+                                    values = new String[vals.size()];
+                                    for ( int i = 0; i < values.length; i++ ) {
+                                        values[i] = vals.get( i );
+                                    }
+                                    break;
                                 default:
-                                    log.warn( "Unsupported datatype for array encoding: " + vector.getType() );
+                                    log.warn( "Unsupported datatype for array encoding: " + vector.getType() + ", skipping column: " + factorName + "." );
                                     continue;
                             }
                         }
@@ -645,7 +745,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                         continue;
                     }
                     extractSingleValueBySampleName( sampleNames, values )
-                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> bioAssayToSampleNameMapper.matchAll( samples, sampleName )
+                            .ifPresent( fvs -> fvs.forEach( ( sampleName, value ) -> statefulMapper.matchAll( sampleName )
                                     .forEach( ba -> result.computeIfAbsent( ba.getSampleUsed(), k -> new HashSet<>() )
                                             .add( createCharacteristic( h5File, factorName, value ) ) ) ) );
                 }
@@ -671,9 +771,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
     /**
      * Extract a single value by sample name if possible.
      */
-    private <
-            T> Optional<Map<String, T>> extractSingleValueBySampleName( Dataframe.Column<?, String> sampleNames, T[]
-            values ) {
+    private <T> Optional<Map<String, T>> extractSingleValueBySampleName( Dataframe.Column<?, String> sampleNames, T[] values ) {
         Map<String, T> cs = new HashMap<>();
         for ( int i = 0; i < sampleNames.size(); i++ ) {
             String sampleName = sampleNames.get( i );
@@ -758,7 +856,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             }
         }
 
-        Map<BioAssay, SequencingMetadata> result = new HashMap<>( scd.getBioAssays().size() );
+        Map<BioAssay, SequencingMetadata> result = HashMap.newHashMap( scd.getBioAssays().size() );
         for ( int i = 0; i < scd.getBioAssays().size(); i++ ) {
             result.put( scd.getBioAssays().get( i ), SequencingMetadata.builder().readCount( Math.round( librarySize[i] ) ).build() );
         }
@@ -797,6 +895,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
 
     /**
      * Load single-cell vectors from a particular layer in the AnnData file.
+     *
      * @param layerName the name of the layer to load under {@code layers/}, or null to load the {@code X}
      */
     private Stream<SingleCellExpressionDataVector> loadVectors(
@@ -804,6 +903,9 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             SingleCellDimension dimension,
             QuantitationType quantitationType,
             @Nullable String layerName ) throws IOException {
+        if ( ignoreDataVectors ) {
+            throw new UnsupportedOperationException( "Data vectors are ignored." );
+        }
         Assert.notNull( designElementToGeneMapper, "A design element mapper must be set to load vectors." );
         checkSampleFactorName();
         // we don't want to close it since it will be closed by the stream
@@ -880,7 +982,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 "The number of supplied genes does not match the number of rows in the sparse matrix." );
         Assert.isTrue( samples.size() == matrix.getShape()[1],
                 "The number of supplied samples does not match the number of columns in the sparse matrix." );
-        Assert.isTrue( scd.getNumberOfCells() <= matrix.getShape()[1],
+        Assert.isTrue( scd.getNumberOfCellIds() <= matrix.getShape()[1],
                 "The number of cells in the dimension cannot exceed the number of columns in the sparse matrix." );
 
         SampleMetadata m = createSampleMetadata( scd, samples );
@@ -940,7 +1042,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
         // build a sample offset index for efficiently selecting samples
         // if a sample does not have a corresponding BioAssay (i.e. an unwanted sample), it is set to null
         List<BioAssay> samplesBioAssay = new ArrayList<>( numberOfSamples );
-        Map<BioAssay, Integer> samplesBioAssayIndex = new HashMap<>( numberOfSamples );
+        Map<BioAssay, Integer> samplesBioAssayIndex = HashMap.newHashMap( numberOfSamples );
         List<String> samplesName = new ArrayList<>( numberOfSamples );
         int[] samplesBioAssayOffset = new int[numberOfSamples];
         int W = 0;
@@ -994,7 +1096,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
             try ( H5Dataset data = matrix.getData() ) {
                 long start = matrix.getIndptr()[i];
                 long end = matrix.getIndptr()[i + 1];
-                if ( end - start > scd.getNumberOfCells() ) {
+                if ( end - start > scd.getNumberOfCellIds() ) {
                     throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
                 }
                 switch ( vector.getQuantitationType().getRepresentation() ) {
@@ -1043,7 +1145,7 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                 sampleEnds[k] = end;
                 sampleIndices[k] = j;
             }
-            if ( nnz > scd.getNumberOfCells() ) {
+            if ( nnz > scd.getNumberOfCellIds() ) {
                 throw new IllegalStateException( "The number of non-zero entries for " + vector.getDesignElement() + " exceeds the number of cells." );
             }
             byte[] vectorData = new byte[vector.getQuantitationType().getRepresentation().getSizeInBytes() * nnz];
@@ -1059,7 +1161,11 @@ public class AnnDataSingleCellDataLoader implements SingleCellDataLoader {
                     continue;
                 }
                 try ( H5Dataset data = matrix.getData() ) {
-                    H5Dataset.H5Dataspace s = data.slice( start, end );
+                    // start and end are positions within this row's indices (IX), so the row's offset in the data
+                    // array must be added. Without it, every row took its values from the first rows of the matrix
+                    // while keeping its own indices (a44d9dbf98 through 2026-09).
+                    long rowOffset = matrix.getIndptr()[i];
+                    H5Dataset.H5Dataspace s = data.slice( rowOffset + start, rowOffset + end );
                     switch ( vector.getQuantitationType().getRepresentation() ) {
                         case FLOAT:
                             s.toByteVector( vectorData, sampleOffsetInVector, sampleOffsetInVector + sampleNnz, H5Type.IEEE_F32BE );

@@ -1,0 +1,52 @@
+/*
+ * The Gemma project.
+ *
+ * Copyright (c) 2026 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ */
+package ubic.gemma.model.common.auditAndSecurity.curation;
+
+/**
+ * Kind of a workflow event appended to a {@link Ticket}'s
+ * {@link Ticket#getEvents() events} log. Append-only; in-place edits are
+ * deferred per Decision 4 of {@code AUDIT_AS_WORKFLOW_RECCE.md}.
+ *
+ * @author paul
+ */
+public enum TicketEventType {
+    OPENED,
+    ASSIGNED,
+    COMMENTED,
+    STATE_CHANGED,
+    RESOLVED,
+    CANCELLED,
+    REOPENED,
+    /**
+     * One of the ticket's {@link TicketTarget}s changed status (NOT_DONE /
+     * UNDERWAY / DONE). Typical agent flow on a multi-target ticket emits
+     * one of these per target completion, alongside a
+     * {@code TicketTargetStatusChangedEvent} on the governance audit trail.
+     */
+    /**
+     * An experiment (or other target) was added to the ticket after it was opened — only possible on a
+     * ticket whose {@code acceptsTargets} flag is set.
+     */
+    TARGET_ADDED,
+    /**
+     * A target was removed from the ticket. On a scratchpad this is what "finished with it" looks like,
+     * so the event stays even though the membership does not — "this was here and someone took it out"
+     * has to remain answerable.
+     */
+    TARGET_REMOVED,
+    TARGET_STATUS_CHANGED,
+
+    /** One per screening decision recorded on a target (see {@code ScreeningResult}). */
+    SCREENING_RESULT_CHANGED,
+    /** Deferred — see Decision 4 in the recce doc. Provisioned in the enum so the column never has to grow. */
+    COMMENT_EDITED
+}

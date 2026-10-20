@@ -1,23 +1,22 @@
 package ubic.gemma.rest;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.rest.util.BaseJerseyIntegrationTest;
+import ubic.gemma.rest.util.BaseJerseyIntegrationTest5;
 import ubic.gemma.rest.util.ResponseDataObject;
 import ubic.gemma.rest.util.ResponseErrorObject;
 import ubic.gemma.rest.util.args.*;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,8 +29,9 @@ import static ubic.gemma.rest.util.Assertions.assertThat;
 /**
  * @author tesarst
  */
-@Category(SlowTest.class)
-public class DatasetsRestTest extends BaseJerseyIntegrationTest {
+@Tag("integration")
+@Tag("slow")
+public class DatasetsRestTest extends BaseJerseyIntegrationTest5 {
 
     @Autowired
     private DatasetsWebService datasetsWebService;
@@ -48,7 +48,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     /* fixtures */
     private final ArrayList<ExpressionExperiment> ees = new ArrayList<>( 10 );
 
-    @Before
+    @BeforeEach
     public void setUpMocks() {
         for ( int i = 0; i < 10; i++ ) {
             testHelper.resetSeed();
@@ -56,7 +56,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
         }
     }
 
-    @After
+    @AfterEach
     public void resetMocks() {
         expressionExperimentService.remove( ees );
     }
@@ -78,10 +78,15 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testSomeByShortName() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
-                        ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 )
-                                .getShortName() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        // The endpoint return type widened to Object in step 1w to support cursor mode; pass
+        // null for the new ?cursor= arg so we still get the offset-mode response shape (a
+        // FilteredAndInferredAndPaginatedResponseDataObject, a ResponseDataObject<List<...>>).
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response =
+                ( ResponseDataObject<List<ExpressionExperimentValueObject>> ) datasetsWebService.getDatasetsByIds(
+                        DatasetArrayArg.valueOf( ees.get( 0 ).getShortName() + ", BAD_NAME, " + ees.get( 2 ).getShortName() ),
+                        FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                        LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), null );
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
@@ -93,10 +98,12 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
 
     @Test
     public void testSomeById() {
-        ResponseDataObject<List<ExpressionExperimentValueObject>> response = datasetsWebService.getDatasetsByIds( DatasetArrayArg.valueOf(
-                        ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 )
-                                .getId() ), FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
-                LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ) );
+        @SuppressWarnings("unchecked")
+        ResponseDataObject<List<ExpressionExperimentValueObject>> response =
+                ( ResponseDataObject<List<ExpressionExperimentValueObject>> ) datasetsWebService.getDatasetsByIds(
+                        DatasetArrayArg.valueOf( ees.get( 0 ).getId() + ", 12310, " + ees.get( 2 ).getId() ),
+                        FilterArg.valueOf( "" ), OffsetArg.valueOf( "0" ),
+                        LimitArg.valueOf( "10" ), SortArg.valueOf( "+id" ), null );
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
@@ -246,6 +253,263 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
     }
 
     @Test
+    public void testGetDatasetAuditEvents() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsByShortName() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getShortName() + "/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetAuditEventsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/auditEvents" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetCurationDetails() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
+    public void testGetDatasetCurationDetailsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testUpdateDatasetCurationDetailsSetsTroubled() {
+        ExpressionExperiment ee = ees.get( 0 );
+        // Body: {"troubled": true, "note": "integration-test"}
+        String body = "{\"troubled\":true,\"note\":\"integration-test\"}";
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( body ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.troubled", true );
+
+        // Re-fetching reflects persisted state.
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.troubled", true );
+    }
+
+    @Test
+    public void testUpdateDatasetCurationDetailsWithEmptyBodyIs400() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/curationDetails" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testUpdateDatasetPermissionsMakesPublicThenPrivate() {
+        ExpressionExperiment ee = ees.get( 0 );
+
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", true );
+
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "{\"isPublic\":false}" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrPropertyWithValue( "data.isPublic", false );
+    }
+
+    @Test
+    public void testUpdateDatasetPermissionsReturnsStateWhenIsPublicOmitted() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrProperty( "data.isPublic" )
+                .hasFieldOrProperty( "data.isShared" );
+    }
+
+    @Test
+    public void testUpdateDatasetPermissionsWithEmptyBodyIs400() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/permissions" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testUpdateDatasetPermissionsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/permissions" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "{\"isPublic\":true}" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetPipelineStatus() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data.steps" )
+                .hasFieldOrPropertyWithValue( "data.experimentId", ee.getId().intValue() );
+    }
+
+    @Test
+    public void testGetDatasetPipelineStatusWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/pipelineStatus" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetGeeqWhenNotComputedIs404() {
+        // The dummy fixture does not compute GEEQ scores, so GET should 404.
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/geeq" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetGeeqWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/geeq" ).request().get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRecomputeDatasetGeeqWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/geeq" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRunDatasetPreprocessWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/preprocess" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRunDatasetDiagnosticsWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/diagnostics" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRunDatasetBatchInformationFetchWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/batchInfo" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRunDatasetDifferentialAnalysisWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/tasks/differential" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRedoDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/tasks/redo/9999999" ).request()
+                .post( jakarta.ws.rs.client.Entity.json( "" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testRemoveDatasetDifferentialAnalysisWithUnknownAnalysisIs404() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/tasks/differential/9999999" ).request().delete() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testGetDatasetDesignJson() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
+    public void testGetDatasetDesignDefaultIsJson() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request().get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( MediaType.APPLICATION_JSON_TYPE );
+    }
+
+    @Test
+    public void testGetDatasetDesignTsvViaAcceptHeader() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request( "text/tab-separated-values" ).get() )
+                .hasStatus( Response.Status.OK )
+                .hasMediaTypeCompatibleWith( new MediaType( "text", "tab-separated-values" ) );
+    }
+
+    @Test
+    public void testGetDatasetDesignJsonWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/design" ).request( MediaType.APPLICATION_JSON ).get() )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testReplaceDatasetDesignWithEmptyBodyIs400() {
+        ExpressionExperiment ee = ees.get( 0 );
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "null" ) ) )
+                .hasStatus( Response.Status.BAD_REQUEST );
+    }
+
+    @Test
+    public void testReplaceDatasetDesignWithUnknownDatasetIs404() {
+        assertThat( target( "/datasets/9999999/design" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( "{}" ) ) )
+                .hasStatus( Response.Status.NOT_FOUND );
+    }
+
+    @Test
+    public void testReplaceDatasetDesignNoOpEcho() {
+        // Fetch the current design then PUT it back unchanged; no blockers, no DEAs to delete, so should be 200.
+        ExpressionExperiment ee = ees.get( 0 );
+        Response getResponse = target( "/datasets/" + ee.getId() + "/design" ).request( MediaType.APPLICATION_JSON ).get();
+        assertThat( getResponse ).hasStatus( Response.Status.OK );
+        String body = getResponse.readEntity( String.class );
+        // The GET returns ResponseDataObject{data: ExperimentalDesignValueObject}; extract the data object as JSON.
+        int dataStart = body.indexOf( "\"data\":" );
+        org.assertj.core.api.Assertions.assertThat( dataStart ).isGreaterThanOrEqualTo( 0 );
+        // Trim trailing closing brace of the ResponseDataObject wrapper.
+        String designJson = body.substring( dataStart + "\"data\":".length(), body.lastIndexOf( '}' ) );
+
+        assertThat( target( "/datasets/" + ee.getId() + "/design" ).request()
+                .put( jakarta.ws.rs.client.Entity.json( designJson ) ) )
+                .hasStatus( Response.Status.OK )
+                .entity()
+                .hasFieldOrProperty( "data" );
+    }
+
+    @Test
     public void testGetDatasetRawExpression() {
         ExpressionExperiment ee = ees.get( 0 );
         assertThat( target( "/datasets/" + ee.getId() + "/data/raw" ).request().get() )
@@ -259,7 +523,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                 .asString( StandardCharsets.UTF_8 )
                 .contains( ee.getShortName() )
                 // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
-                .hasLineCount( 13 + 2 * testHelper.getTestElementCollectionSize() );
+                .hasLineCount( 14 + 2 * testHelper.getTestElementCollectionSize() );
 
         // as a download, the Content-Encoding is not set and the .gz extension is kept, the payload also remains
         // compressed
@@ -276,7 +540,7 @@ public class DatasetsRestTest extends BaseJerseyIntegrationTest {
                             .asString( StandardCharsets.UTF_8 )
                             .contains( ee.getShortName() )
                             // there's 7 comment lines, 1 header and then one line per raw EV (there are two platforms the default collection size in the fixture)
-                            .hasLineCount( 13 + 2 * testHelper.getTestElementCollectionSize() );
+                            .hasLineCount( 14 + 2 * testHelper.getTestElementCollectionSize() );
                 } );
     }
 }

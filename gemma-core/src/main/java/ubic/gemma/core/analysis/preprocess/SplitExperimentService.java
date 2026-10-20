@@ -44,5 +44,4 @@ public interface SplitExperimentService {
      */
     @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_EDIT" })
     ExpressionExperimentSet split( ExpressionExperiment expressionExperiment, ExperimentalFactor splitOn, boolean postProcess );
-
 }

@@ -1,13 +1,18 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.acls.model.MutableAclService;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
@@ -22,10 +27,12 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ContextConfiguration
-public class FactorValueDaoTest extends BaseDatabaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class FactorValueDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -39,6 +46,9 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
 
     @Autowired
     private FactorValueDao factorValueDao;
+
+    @Autowired
+    private MutableAclService aclService;
 
     @Test
     public void testFind() {
@@ -80,6 +90,30 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
     }
 
     @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void testFindByValueStartingWith() {
+        ExperimentalDesign ed = new ExperimentalDesign();
+        sessionFactory.getCurrentSession().persist( ed );
+
+        ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance( "test", FactorType.CATEGORICAL );
+        factor.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( factor );
+
+        FactorValue fv2 = FactorValue.Factory.newInstance( factor );
+        fv2.setValue( "foo" );
+        fv2 = factorValueDao.create( fv2 );
+
+        // for ACLs to work, we need an owning EE with an ACL identity
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setExperimentalDesign( ed );
+        sessionFactory.getCurrentSession().persist( ee );
+        aclService.createAcl( new AclObjectIdentity( ee ) );
+        sessionFactory.getCurrentSession().flush();
+
+        assertTrue( factorValueDao.findByValueStartingWith( "fo", -1 ).contains( fv2 ) );
+    }
+
+    @Test
     public void testFactorValueStatementsNotListedInOldStyleCharacteristics() {
         ExperimentalDesign ed = new ExperimentalDesign();
         sessionFactory.getCurrentSession().persist( ed );
@@ -99,9 +133,16 @@ public class FactorValueDaoTest extends BaseDatabaseTest {
         assertThat( fv.getId() ).isNotNull();
         assertThat( c1.getId() ).isNotNull();
         assertThat( c2.getId() ).isNotNull();
+        // Hibernate 6 is stricter about pending dirty-updates: factorValueDao.create persists the
+        // FactorValue + cascade-persists the two Statements, then queues a discriminator-aware
+        // UPDATE CHARACTERISTIC ... WHERE class='Statement' to wire FACTOR_VALUE_FK. Flush that
+        // pending update *before* the native SQL flips c2's discriminator to NULL — otherwise the
+        // deferred UPDATE runs after and fails its optimistic check (row count 0, class no
+        // longer matches 'Statement').
+        sessionFactory.getCurrentSession().flush();
         // make c2 an old-style characteristic
         sessionFactory.getCurrentSession()
-                .createSQLQuery( "update CHARACTERISTIC set class = null where ID = :id" )
+                .createNativeQuery( "update CHARACTERISTIC set class = null where ID = :id" )
                 .setParameter( "id", c2.getId() )
                 .executeUpdate();
         sessionFactory.getCurrentSession().flush();

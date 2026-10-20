@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -29,6 +31,8 @@ import java.util.Map;
 /**
  * @author jsantos
  */
+@Getter
+@Setter
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Frontend use
 public class CompositeSequenceMapValueObject implements Comparable<CompositeSequenceMapValueObject>, Serializable {
 
@@ -66,150 +70,6 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     @Override
     public int compareTo( CompositeSequenceMapValueObject o ) {
         return this.compositeSequenceName.compareTo( o.getCompositeSequenceName() );
-    }
-
-    public Long getArrayDesignId() {
-        return arrayDesignId;
-    }
-
-    public void setArrayDesignId( Long arrayDesignId ) {
-        this.arrayDesignId = arrayDesignId;
-    }
-
-    public String getArrayDesignName() {
-        return arrayDesignName;
-    }
-
-    public void setArrayDesignName( String arrayDesignName ) {
-        this.arrayDesignName = arrayDesignName;
-    }
-
-    public String getArrayDesignShortName() {
-        return arrayDesignShortName;
-    }
-
-    public void setArrayDesignShortName( String arrayDesignShortName ) {
-        this.arrayDesignShortName = arrayDesignShortName;
-    }
-
-    /**
-     * @return the bioSequenceId
-     */
-    public String getBioSequenceId() {
-        return bioSequenceId;
-    }
-
-    /**
-     * @param bioSequenceId the bioSequenceId to set
-     */
-    public void setBioSequenceId( String bioSequenceId ) {
-        this.bioSequenceId = bioSequenceId;
-    }
-
-    /**
-     * @return the bioSequenceName
-     */
-    public String getBioSequenceName() {
-        return bioSequenceName;
-    }
-
-    /**
-     * @param bioSequenceName the bioSequenceName to set
-     */
-    public void setBioSequenceName( String bioSequenceName ) {
-        this.bioSequenceName = bioSequenceName;
-    }
-
-    /**
-     * @return the bioSequenceNcbiId
-     */
-    public String getBioSequenceNcbiId() {
-        return bioSequenceNcbiId;
-    }
-
-    /**
-     * @param bioSequenceNcbiId the bioSequenceNcbiId to set
-     */
-    public void setBioSequenceNcbiId( String bioSequenceNcbiId ) {
-        this.bioSequenceNcbiId = bioSequenceNcbiId;
-    }
-
-    public String getCompositeSequenceDescription() {
-        return compositeSequenceDescription;
-    }
-
-    public void setCompositeSequenceDescription( String compositeSequenceDescription ) {
-        this.compositeSequenceDescription = compositeSequenceDescription;
-    }
-
-    /**
-     * @return the compositeSequenceId
-     */
-    public String getCompositeSequenceId() {
-        return compositeSequenceId;
-    }
-
-    /**
-     * @param compositeSequenceId the compositeSequenceId to set
-     */
-    public void setCompositeSequenceId( String compositeSequenceId ) {
-        this.compositeSequenceId = compositeSequenceId;
-    }
-
-    /**
-     * @return the compositeSequenceName
-     */
-    public String getCompositeSequenceName() {
-        return compositeSequenceName;
-    }
-
-    /**
-     * @param compositeSequenceName the compositeSequenceName to set
-     */
-    public void setCompositeSequenceName( String compositeSequenceName ) {
-        this.compositeSequenceName = compositeSequenceName;
-    }
-
-    /**
-     * @return the geneProducts
-     */
-    public Map<Long, GeneProductValueObject> getGeneProducts() {
-        return geneProducts;
-    }
-
-    /**
-     * @param geneProducts the geneProducts to set
-     */
-    public void setGeneProducts( Map<Long, GeneProductValueObject> geneProducts ) {
-        this.geneProducts = geneProducts;
-    }
-
-    /**
-     * @return the genes
-     */
-    public Map<Long, GeneValueObject> getGenes() {
-        return genes;
-    }
-
-    /**
-     * @param genes the genes to set
-     */
-    public void setGenes( Map<Long, GeneValueObject> genes ) {
-        this.genes = genes;
-    }
-
-    /**
-     * @return the numBlatHits
-     */
-    public Integer getNumBlatHits() {
-        return numBlatHits;
-    }
-
-    /**
-     * @param numBlatHits the numBlatHits to set
-     */
-    public void setNumBlatHits( Integer numBlatHits ) {
-        this.numBlatHits = numBlatHits;
     }
 
     @Override

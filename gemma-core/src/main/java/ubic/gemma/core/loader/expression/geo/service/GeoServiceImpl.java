@@ -25,21 +25,36 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.geo.*;
+import ubic.gemma.core.loader.expression.geo.fetcher2.GeoFetcher;
 import ubic.gemma.core.loader.expression.geo.model.*;
+import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.locking.FileLockManager;
+
+import java.nio.file.Path;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentUpdateFromGEOEvent;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabases;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationRole;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -47,17 +62,18 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.persister.ArrayDesignsForExperimentCache;
-import ubic.gemma.persistence.persister.PersisterHelper;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.persister.ArrayDesignPersister;
+import ubic.gemma.persistence.persister.GenomePersister;
 import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentPrePersistService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.File;
 import java.util.*;
 
@@ -72,9 +88,19 @@ import static java.util.Objects.requireNonNull;
 public class GeoServiceImpl implements GeoService, InitializingBean {
 
     static final Log log = LogFactory.getLog( GeoServiceImpl.class );
-    private static final String GEO_DB_NAME = "GEO";
     @Autowired
-    private PersisterHelper persisterHelper;
+    private GenomePersister genomePersister;
+    @Autowired
+    private ArrayDesignPersister arrayDesignPersister;
+    @Autowired
+    private EeWriteService eeWriteService;
+
+    /**
+     * Builds the schema-v1 upstream-metadata document. Constructed rather than injected, matching
+     * GeoScrapeServiceImpl: the mapper needs no shared configuration and the builder is stateless.
+     */
+    private final GeoSourceMetadataBuilder sourceMetadataBuilder =
+            new GeoSourceMetadataBuilder( new com.fasterxml.jackson.databind.ObjectMapper() );
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -96,18 +122,54 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
     @Autowired
     private BioMaterialService bioMaterialService;
     @Autowired
-    private AuditTrailService auditTrailService;
+    private BibliographicReferenceService bibliographicReferenceService;
+    @Autowired
+    private PublicationAssociationService publicationAssociationService;
+    @Autowired
+    private GeoUpdateAuditService geoUpdateAuditService;
+
+    @Autowired
+    private FTPClientFactory ftpClientFactory;
+    @Autowired
+    private FileLockManager fileLockManager;
+
+    /**
+     * This bean, through its proxy. Needed because {@link #fetchAndLoad} declares
+     * {@link Propagation#NEVER}: a self-invocation of {@link #loadPlatforms}/{@link #convertAndPersist}
+     * would bypass the proxy and, with no transaction inherited from the caller any more, run without
+     * one. {@code @Lazy} breaks the self-reference cycle at construction; the field is interface-typed, so
+     * the proxy is what arrives.
+     */
+    @Lazy
+    @Autowired
+    private GeoService self;
 
     @Value("${geo.minimumSamplesToLoad}")
     private int minimumSampleCountToLoad;
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
+    @Value("${geo.local.datafile.basepath}")
+    private Path geoSeriesDownloadPath;
 
     private GeoDomainObjectGenerator geoDomainObjectGenerator = new GeoDomainObjectGenerator();
 
     @Override
     public void afterPropertiesSet() throws Exception {
         geoDomainObjectGenerator.setNcbiApiKey( ncbiApiKey );
+        geoDomainObjectGenerator.setSeriesFamilySoftFetcher( buildSeriesFamilySoftFetcher() );
+    }
+
+    /**
+     * Build the resilient series-family SOFT downloader (FTP → HTTPS → GEO on-demand generator).
+     * NCBI has been deprecating anonymous FTP, so the legacy FTP-only fetcher fails on files that
+     * are still served over HTTPS. Mirrors the wiring in {@code ExpressionExperimentGeoServiceImpl}:
+     * same retry policy, download path, and shared FTP-client / file-lock infrastructure.
+     */
+    private GeoFetcher buildSeriesFamilySoftFetcher() {
+        GeoFetcher fetcher = new GeoFetcher( new SimpleRetryPolicy( 5, 500, 1.5 ), geoSeriesDownloadPath );
+        fetcher.setFtpClientFactory( ftpClientFactory );
+        fetcher.setFileLockManager( fileLockManager );
+        return fetcher;
     }
 
     @Override
@@ -127,7 +189,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
          */
-        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( true );
 
@@ -139,7 +201,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         for ( CompositeSequence cs : els ) {
             cs.setArrayDesign( targetPlatform );
             cs.setBiologicalCharacteristic(
-                    ( BioSequence ) persisterHelper.persist( cs.getBiologicalCharacteristic() ) );
+                    genomePersister.persistBioSequence( cs.getBiologicalCharacteristic() ) );
         }
 
         GeoServiceImpl.log.info( "Adding " + els.size() + " elements to " + targetPlatform );
@@ -153,11 +215,13 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         return targetPlatform;
     }
 
+    /** See the 6-arg overload for why this is {@code Propagation.NEVER} and routes through {@link #self}. */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
+    @Nullable
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform ) {
-        return this.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, splitByPlatform, true, true );
+        return self.fetchAndLoad( geoAccession, loadPlatformOnly, doSampleMatching, splitByPlatform, true, true );
     }
 
     /**
@@ -169,19 +233,25 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
      * </ol>
      */
+    /**
+     * 🛑 {@code Propagation.NEVER}: {@link GeoDomainObjectGenerator#generate} downloads and parses the
+     * series' SOFT file over the network — 36 MB for one series the size of GSE1024, proportionally more
+     * for a bigger one — and {@code hibernate.connection.handling_mode=DELAYED_ACQUISITION_AND_HOLD} means
+     * a transaction open around that fetch pins a pooled connection for its entire duration without
+     * issuing a statement. The blacklist/existence pre-checks above the fetch, and everything from
+     * conversion through the persist below it, are unchanged — each already runs as its own transaction
+     * (now reached through {@link #self}, since a self-invocation would not pass the proxy and this method
+     * no longer carries one of its own) or, for the pre-checks, through the callee's own.
+     */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
+    @Nullable
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
 
         if ( expressionExperimentService.isBlackListed( geoAccession ) ) {
             throw new IllegalArgumentException( "Entity with accession " + geoAccession + " is blacklisted" );
         }
-
-        /*
-         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
-         */
-        GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
 
         geoDomainObjectGenerator.setProcessPlatformsOnly( geoAccession.startsWith( "GPL" ) || loadPlatformOnly );
         geoDomainObjectGenerator.setDoSampleMatching( doSampleMatching && !splitByPlatform );
@@ -190,31 +260,62 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         this.checkForExisting( projectedAccessions );
 
         if ( loadPlatformOnly ) {
+            // the network fetch: no transaction open while this runs
             Collection<? extends GeoData> platforms = geoDomainObjectGenerator.generate( geoAccession );
             if ( platforms.isEmpty() ) {
                 GeoServiceImpl.log
                         .warn( "GeoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );t no results" );
                 return null;
             }
-            geoConverter.setForceConvertElements( true );
-
-            for ( GeoData d : platforms ) {
-                if ( d.getGeoAccession() != null && expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
-                    throw new IllegalArgumentException(
-                            "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
-                }
-            }
-
-            Collection<ArrayDesign> arrayDesigns = geoConverter.convert( platforms, ArrayDesign.class );
-            return persisterHelper.persist( arrayDesigns );
+            return self.loadPlatforms( geoAccession, platforms );
         }
 
+        // the network fetch: no transaction open while this runs
         Collection<? extends GeoData> parseResult = geoDomainObjectGenerator.generate( geoAccession );
         if ( parseResult.isEmpty() ) {
             GeoServiceImpl.log.warn( "Got no results" );
             return null;
         }
         GeoServiceImpl.log.debug( "Generated GEO domain objects for " + geoAccession );
+
+        return self.convertAndPersist( parseResult, doSampleMatching, splitByPlatform, allowSuperSeriesImport, allowSubSeriesImport );
+    }
+
+    @Override
+    @Transactional
+    public Collection<ArrayDesign> loadPlatforms( String geoAccession, Collection<? extends GeoData> platforms ) {
+        /*
+         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
+         */
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
+        geoConverter.setForceConvertElements( true );
+
+        for ( GeoData d : platforms ) {
+            if ( d.getGeoAccession() != null && expressionExperimentService.isBlackListed( d.getGeoAccession() ) ) {
+                throw new IllegalArgumentException(
+                        "Entity with accession " + d.getGeoAccession() + " is blacklisted" );
+            }
+        }
+
+        Collection<ArrayDesign> arrayDesigns = geoConverter.convert( platforms, ArrayDesign.class );
+        // Persister-shrink S3: was persisterHelper.persist(arrayDesigns) into the
+        // polymorphic ArrayDesign dispatch arm; now drive the typed bean directly.
+        Collection<ArrayDesign> persistedAds = new ArrayList<>( arrayDesigns.size() );
+        for ( ArrayDesign ad : arrayDesigns ) {
+            persistedAds.add( arrayDesignPersister.persistArrayDesign( ad ) );
+        }
+        return persistedAds;
+    }
+
+    @Override
+    @Transactional
+    @Nullable
+    public Collection<?> convertAndPersist( Collection<? extends GeoData> parseResult, boolean doSampleMatching,
+            boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
+        /*
+         * We do this to get a fresh instantiation of GeoConverter (prototype scope)
+         */
+        GeoConverter geoConverter = this.beanFactory.getBean( GeoConverter.class );
 
         Object obj = parseResult.iterator().next();
         if ( !( obj instanceof GeoSeries ) ) {
@@ -269,19 +370,118 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         this.getPubMedInfo( result );
 
         GeoServiceImpl.log.debug( "Converted " + seriesAccession );
-        assert persisterHelper != null;
+        assert eeWriteService != null;
+
+        // One harvest timestamp for the whole import, so sibling experiments from a split series agree
+        // on when Gemma read the source. This is our clock; GEO's own dates ride separately.
+        Date harvestedAt = new Date();
+        // A series that converts to more than one experiment has been split, so each one holds only a
+        // subset of the series' samples.
+        boolean split = result.size() > 1;
 
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
             c = expressionExperimentPrePersistService.prepare( ee, c );
-            ee = persisterHelper.persist( ee, c );
+            ee = eeWriteService.create( ee, c );
             persistedResult.add( ee );
             GeoServiceImpl.log.debug( "Persisted " + seriesAccession );
-
+            this.storeSourceMetadata( ee, series, split, harvestedAt );
+            this.recordGeoPublicationProvenance( ee );
         }
         this.updateReports( persistedResult );
 
         return persistedResult;
+    }
+
+    /**
+     * Store the verbatim upstream metadata document on a freshly persisted experiment.
+     * <p>
+     * This runs AFTER {@code create} because {@code experimentId} is part of the document and does not
+     * exist until the row is saved. The sample list is narrowed to this experiment's own GSM
+     * accessions: when a series is split, siblings share accession, title, summary and overall design,
+     * so serializing the series wholesale would give each one the other's samples with nothing in the
+     * document revealing it.
+     * <p>
+     * Never fails the import. The payload is a rebuildable cache of what GEO said; losing it costs a
+     * re-harvest, whereas failing here would cost the entire ingest.
+     */
+    /**
+     * Record where a freshly imported experiment's publications came from.
+     *
+     * <p>The links are set by {@link GeoConverterImpl#convertPubMedIds} straight from the series'
+     * {@code !Series_pubmed_id} values — the first becomes the primary, the rest other-relevant — and
+     * until now that provenance was lost the moment the experiment was persisted. Stating it here
+     * gives a later curator something to disagree with, and gives the rank rule something to compare
+     * against: a link recorded as GEO's can be overruled by a curator, whereas a link with no recorded
+     * authority at all is just a number in a column.</p>
+     *
+     * <p>Best-effort, like {@link #storeSourceMetadata}: an import that succeeded is not failed
+     * because the provenance note did not land.</p>
+     */
+    private void recordGeoPublicationProvenance( ExpressionExperiment ee ) {
+        String geoAccession = ee.getAccession() != null ? ee.getAccession().getAccession() : ee.getShortName();
+        try {
+            if ( ee.getPrimaryPublication() != null ) {
+                publicationAssociationService.assertAccepted( ee,
+                        geoSubmitterLinkAssertion( ee.getPrimaryPublication(), geoAccession ),
+                        PublicationAssociationRole.PRIMARY );
+            }
+            for ( BibliographicReference other : ee.getOtherRelevantPublications() ) {
+                publicationAssociationService.assertAccepted( ee,
+                        geoSubmitterLinkAssertion( other, geoAccession ),
+                        PublicationAssociationRole.OTHER_RELEVANT );
+            }
+        } catch ( Exception e ) {
+            GeoServiceImpl.log.warn( "Failed to record publication provenance for " + ee.getShortName()
+                    + "; the import and its publication links are unaffected.", e );
+        }
+    }
+
+    /**
+     * The claim GEO's own cross-link amounts to: the submitter said so in the series record.
+     * {@link GOEvidenceCode#TAS} rather than {@link GOEvidenceCode#IEA} because there is a traceable
+     * statement behind it — it is just not one anybody checked.
+     */
+    private PublicationAssertion geoSubmitterLinkAssertion( BibliographicReference ref, @Nullable String geoAccession ) {
+        return new PublicationAssertion( ref, PublicationAssociationSource.GEO_SUBMITTER_LINK,
+                "GEO !Series_pubmed_id" + ( geoAccession != null ? " on " + geoAccession : "" )
+                        + ", as written by the submitter; not independently checked against the paper.",
+                null, GOEvidenceCode.TAS, null, null );
+    }
+
+    /**
+     * Best-effort store at import time: a failure is logged and the import carries on.
+     */
+    private void storeSourceMetadata( ExpressionExperiment ee, GeoSeries series, boolean split, Date harvestedAt ) {
+        try {
+            writeSourceMetadata( ee, series, split, harvestedAt );
+        } catch ( Exception e ) {
+            GeoServiceImpl.log.warn( "Failed to store source metadata for " + ee.getShortName()
+                    + "; the import is unaffected and the document can be rebuilt from GEO.", e );
+        }
+    }
+
+    /**
+     * @return false when the builder produced no document, in which case nothing was written
+     */
+    private boolean writeSourceMetadata( ExpressionExperiment ee, @Nullable GeoSeries series, boolean split, Date harvestedAt ) {
+        Set<String> sampleAccessions = new HashSet<>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            if ( ba.getAccession() != null && ba.getAccession().getAccession() != null ) {
+                sampleAccessions.add( ba.getAccession().getAccession() );
+            }
+        }
+        GeoSourceMetadataBuilder.ExperimentIdentity identity = new GeoSourceMetadataBuilder.ExperimentIdentity(
+                ee.getShortName(), ee.getId(), split,
+                sampleAccessions.isEmpty() ? null : sampleAccessions );
+        String document = sourceMetadataBuilder.build( series, identity, harvestedAt );
+        if ( document == null ) {
+            return false;
+        }
+        ee.setSourceMetadata( document );
+        ee.setSourceMetadataSchemaVersion( GeoSourceMetadataBuilder.SCHEMA_VERSION );
+        expressionExperimentService.update( ee );
+        return true;
     }
 
     @Override
@@ -296,13 +496,18 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             log.info( "Updating " + ees.size() + " experiments from accession " + geoAccession );
         }
 
-        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+        GeoRefetch refetch = fetchFromGEO( geoAccession, geoUpdateConfig );
 
         // multi-species automatically split by Gemma at conversion stage so we may have >1
-        for ( ExpressionExperiment freshFromGEO : result ) {
+        for ( ExpressionExperiment freshFromGEO : refetch.experiments ) {
             // multi-species automatically split by Gemma at conversion stage so we may have >1
             for ( ExpressionExperiment ee : ees ) { // because it could be a split by us.
                 updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+            }
+        }
+        if ( geoUpdateConfig.sourceMetadata ) {
+            for ( ExpressionExperiment ee : ees ) {
+                refreshSourceMetadata( ee, refetch.series );
             }
         }
     }
@@ -314,15 +519,99 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 "This method is only for GEO experiments" );
 
         String geoAccession = ee.getAccession().getAccession();
-        Collection<ExpressionExperiment> result = fetchFromGEO( geoAccession, geoUpdateConfig );
+        GeoRefetch refetch = fetchFromGEO( geoAccession, geoUpdateConfig );
 
-        for ( ExpressionExperiment freshFromGEO : result ) {
+        for ( ExpressionExperiment freshFromGEO : refetch.experiments ) {
             updateFromGEO( ee, geoAccession, freshFromGEO, geoUpdateConfig );
+        }
+        if ( geoUpdateConfig.sourceMetadata ) {
+            refreshSourceMetadata( ee, refetch.series );
         }
     }
 
-    private Collection<ExpressionExperiment> fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
+    /**
+     * Store (or replace) the source metadata document for one experiment from a series just parsed.
+     * <p>
+     * Split-ness is DERIVED rather than passed: at import the caller knows whether it is splitting,
+     * but a backfill only has the result, and the result says it — an experiment holding fewer of
+     * the series' samples than the series has IS a split of it. Getting this wrong only mislabels
+     * the {@code isSplitSubseries} flag, but the sample list it travels with would then describe a
+     * whole series while claiming to be one part of it.
+     */
+    private void refreshSourceMetadata( ExpressionExperiment ee, @Nullable GeoSeries series ) {
+        ExpressionExperiment thawed = expressionExperimentService.thawLite( ee );
+        // Not the import path's best-effort store: storing this document is all a refresh asked for, so
+        // a failure propagates and a missing document is an error. Swallowed, the backfill CLI recorded
+        // "Stored the GEO source metadata document." for experiments where nothing was written.
+        if ( !writeSourceMetadata( thawed, series, isSplitOfItsSeries( thawed ), new Date() ) ) {
+            throw new IllegalStateException( "No source metadata document could be built for " + thawed.getShortName()
+                    + ( series == null ? ": GEO returned no series" : "" ) + "; nothing was stored." );
+        }
+    }
+
+    /**
+     * Whether this experiment is one of several Gemma made from one GEO series.
+     * <p>
+     * 🛑 NOT "does it hold fewer samples than the series". That was the first version and it is a
+     * different question: GSE8919 is one experiment holding 193 of its series' 200 samples, was
+     * never split, and was flagged as a sub-series on production because of it. Samples get dropped
+     * for reasons that have nothing to do with splitting.
+     * <p>
+     * The import path asks the real question — the conversion produced more than one experiment
+     * from the series — and a refresh has to ask the same one of the database, or the same
+     * experiment carries a different flag depending on which path last wrote its document.
+     */
+    private boolean isSplitOfItsSeries( ExpressionExperiment ee ) {
+        if ( ee.getAccession() == null || ee.getAccession().getAccession() == null ) {
+            return false;
+        }
+        return expressionExperimentService.findByAccession( ee.getAccession().getAccession() ).size() > 1;
+    }
+
+    /**
+     * Whether this refetch is only being asked for the source metadata document.
+     * <p>
+     * The other three flags all write GEO's opinion into Gemma's own fields, and each of them needs
+     * the converted experiment; {@code sourceMetadata} needs only the parsed series. Adding a flag
+     * to {@link GeoUpdateConfig} without adding it here would quietly take the metadata-only path
+     * for a caller that asked for more, so this reads every field rather than a stored count.
+     */
+    private boolean isSourceMetadataOnly( GeoUpdateConfig geoUpdateConfig ) {
+        return geoUpdateConfig.sourceMetadata
+                && !geoUpdateConfig.experimentTags
+                && !geoUpdateConfig.sampleCharacteristics
+                && !geoUpdateConfig.publications;
+    }
+
+    /**
+     * What one refetch produced: the parsed series and the experiments converted from it.
+     * <p>
+     * The series used to be dropped on the floor here. It is the only thing that can build a source
+     * metadata document, so a refetch that discards it cannot record what GEO said even though it
+     * just read it.
+     */
+    private static class GeoRefetch {
+        private final GeoSeries series;
+        private final Collection<ExpressionExperiment> experiments;
+
+        private GeoRefetch( GeoSeries series, Collection<ExpressionExperiment> experiments ) {
+            this.series = series;
+            this.experiments = experiments;
+        }
+    }
+
+    private GeoRefetch fetchFromGEO( String geoAccession, GeoUpdateConfig geoUpdateConfig ) {
         // other complications arise if this is a multiplatform data set that was switched/merged etc, but we will take the data for the corresponding GSMs.
+
+        if ( isSourceMetadataOnly( geoUpdateConfig ) ) {
+            // Nothing downstream reads an ExpressionExperiment on this path: the document is built
+            // from the parsed series alone. Converting anyway meant downloading the family SOFT file
+            // -- platform table and every sample's data table, 36 MB for GSE1024 -- and then building
+            // an experiment to discard it. The metadata-only records are two orders of magnitude
+            // smaller and the conversion is the only thing that needed the platform.
+            return new GeoRefetch( geoDomainObjectGenerator.generateSeriesMetadataOnly( geoAccession ),
+                    Collections.emptyList() );
+        }
 
         // fetch the experiment from GEO
         GeoConverter geoConverter = ( GeoConverter ) this.beanFactory.getBean( "geoConverter" );
@@ -345,7 +634,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
             this.getPubMedInfo( result );
         }
 
-        return result;
+        return new GeoRefetch( series, result );
     }
 
     /**
@@ -368,10 +657,22 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         ee = expressionExperimentService.thawLite( ee );
 
         if ( geoUpdateConfig.experimentTags ) {
-            // EE tags are often manually curated, so we don't want to overwrite them. Fortunately, the
-            // Characteristic.equals definition has really neat behavior for this
+            // EE tags are often manually curated, so we don't want to overwrite them: add only what is
+            // not already there.
+            // 🛑 The dedup is an explicit sameTag scan rather than Set.add's equals. Two reasons: the
+            // stored tags are persistent and the fresh ones transient, which is the mixed-collection
+            // hashCode trap, and Statement.equals returns false against a plain Characteristic — so once
+            // experiment tags are statements, an equals-based add would re-add every tag that is already
+            // there. sameTag compares content and is blind to both.
             for ( Characteristic newEeTag : freshFromGEO.getCharacteristics() ) {
-                if ( ee.getCharacteristics().add( newEeTag ) ) {
+                boolean present = false;
+                for ( Characteristic existing : ee.getCharacteristics() ) {
+                    if ( CharacteristicUtils.sameTag( existing, newEeTag ) ) {
+                        present = true;
+                        break;
+                    }
+                }
+                if ( !present && ee.getCharacteristics().add( newEeTag ) ) {
                     log.info( "Found a new experiment-level tag for " + geoAccession + ": " + newEeTag );
                     numNewCharacteristics++;
                 }
@@ -381,10 +682,26 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         if ( geoUpdateConfig.publications ) {
             BibliographicReference primaryPublication = freshFromGEO.getPrimaryPublication();
             if ( ee.getPrimaryPublication() == null && primaryPublication != null ) {
-                log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
-                primaryPublication = ( BibliographicReference ) persisterHelper.persist( primaryPublication );
-                ee.setPrimaryPublication( primaryPublication ); // persist first?
-                pubUpdate = true;
+                primaryPublication = bibliographicReferenceService.findOrCreate( primaryPublication );
+                // GEO's !Series_pubmed_id is usually right and occasionally is the wrong one of the
+                // submitter's own papers. When a curator has already read both and ruled this one out,
+                // taking it here is how the correction gets silently undone on the next refresh — so
+                // ask first. A rejection by an authority GEO does not outrank stands.
+                PublicationAssociation blocked = publicationAssociationService.findBlockingRejection(
+                        ee, primaryPublication, PublicationAssociationSource.GEO_SUBMITTER_LINK );
+                if ( blocked != null ) {
+                    log.info( "Leaving " + geoAccession + " without a primary publication: GEO links "
+                            + primaryPublication.getPubAccession() + ", which was rejected by "
+                            + blocked.getSource().getDbValue() + " on " + blocked.getAssertedAt()
+                            + ( blocked.getEvidence() != null ? " — " + blocked.getEvidence() : "" ) );
+                } else {
+                    log.info( "Found new primary publication for " + geoAccession + ": " + primaryPublication.getPubAccession() );
+                    ee.setPrimaryPublication( primaryPublication ); // persist first?
+                    publicationAssociationService.assertAccepted( ee,
+                            geoSubmitterLinkAssertion( primaryPublication, geoAccession ),
+                            PublicationAssociationRole.PRIMARY );
+                    pubUpdate = true;
+                }
             }
         }
 
@@ -398,7 +715,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
             for ( BioAssay ba : ee.getBioAssays() ) {
                 // this BA is from Gemma, it might lack an accession (although very unlikely!)
-                if ( ba.getAccession() == null || ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
+                if ( ba.getAccession() == null || !ba.getAccession().getExternalDatabase().getName().equals( ExternalDatabases.GEO ) ) {
                     log.warn( ba + " does not have a GEO accession, ignoring." );
                     continue;
                 }
@@ -430,8 +747,12 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                  */
                 Set<Characteristic> bmchars = bm.getCharacteristics();
                 int numOldChars = bmchars.size();
+                // Copied before the clear: remove() used to be handed the set after clear() had emptied
+                // it, so it deleted nothing. The mapping has no orphan removal, so the replaced rows
+                // stayed in CHARACTERISTIC with their biomaterial link nulled.
+                List<Characteristic> oldChars = new ArrayList<>( bmchars );
                 bmchars.clear();
-                characteristicService.remove( bmchars );
+                characteristicService.remove( oldChars );
                 Collection<Characteristic> freshCharacteristics = freshBAsByGSM.get( gsmID ).getSampleUsed().getCharacteristics();
                 if ( log.isDebugEnabled() )
                     log.debug( "Found " + freshCharacteristics.size() + " characteristics for " + gsmID + " replacing " + numOldChars + " old ones ..." );
@@ -443,22 +764,23 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         if ( numNewCharacteristics > 0 || pubUpdate ) {
             expressionExperimentService.update( ee );
-            String message = " Updated from GEO; " + numNewCharacteristics + " characteristics added/replaced" + ( pubUpdate ? "; Publication added" : "" );
-            log.info( ee.getShortName() + message );
-            auditTrailService.addUpdateEvent( ee, ExpressionExperimentUpdateFromGEOEvent.class, message );
+            log.info( ee.getShortName() + " updated from GEO" );
         } else {
             // that's okay but probably shouldn't do anything
             log.debug( "No new characteristics for " + ee );
         }
+        // Audit emission gated by @AuditedConditional's when= predicate on the helper -- a no-op call (both args zero/false) writes no audit row, mirroring the legacy guard.
+        geoUpdateAuditService.recordGeoUpdate( ee, numNewCharacteristics, pubUpdate );
     }
 
+    /** See {@link #fetchAndLoad} for why this is {@code Propagation.NEVER} and routes through {@link #self}. */
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.NEVER)
     public Collection<?> loadFromSoftFile( String accession, String softFile, boolean loadPlatformOnly, boolean doSampleMatching, boolean splitByPlatform ) {
         File f = new File( softFile );
         this.geoDomainObjectGenerator = new GeoDomainObjectGeneratorLocal( f.getParent() );
         this.geoDomainObjectGenerator.setNcbiApiKey( ncbiApiKey );
-        return fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, splitByPlatform );
+        return self.fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, splitByPlatform );
     }
 
     private void check( Collection<ExpressionExperiment> result ) {
@@ -516,7 +838,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         for ( GeoSample gs : toSkip ) {
             series.getSamples().remove( gs );
-            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            if ( series.getSampleCorrespondence() != null ) {
+                series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            }
         }
 
         for ( GeoDataset gds : series.getDataSets() ) {
@@ -573,7 +897,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
                 String sampleId = sample.getGeoAccession();
                 String existingAcc = acc.getAccession();
                 if ( existingAcc.equals( sampleId ) && acc.getExternalDatabase().getName()
-                        .equals( GeoServiceImpl.GEO_DB_NAME ) ) {
+                        .equals( ExternalDatabases.GEO ) ) {
                     GeoServiceImpl.log
                             .debug( sampleId + " appears in an expression experiment already in the system, skipping" );
                     toSkip.add( sample );
@@ -589,7 +913,9 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         for ( GeoSample gs : toSkip ) {
             series.getSamples().remove( gs );
-            series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            if ( series.getSampleCorrespondence() != null ) {
+                series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
+            }
         }
 
         for ( GeoDataset gds : series.getDataSets() ) {
@@ -763,10 +1089,10 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
 
         String bestCol = "";
         int bestMatchSize = 0;
-        for ( String colName : countMatches.keySet() ) {
-            if ( countMatches.get( colName ) > bestMatchSize ) {
-                bestMatchSize = countMatches.get( colName );
-                bestCol = colName;
+        for ( Map.Entry<String, Integer> cmEntry : countMatches.entrySet() ) {
+            if ( cmEntry.getValue() > bestMatchSize ) {
+                bestMatchSize = cmEntry.getValue();
+                bestCol = cmEntry.getKey();
             }
         }
 
@@ -790,6 +1116,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
      * @param rawGEOPlatform Our representation of the original GEO platform
      * @param geoArrayDesign Our conversion
      */
+    @Nullable
     private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign ) {
 
         if ( rawGEOPlatform.getDesignElements().isEmpty() ) {
@@ -981,8 +1308,7 @@ public class GeoServiceImpl implements GeoService, InitializingBean {
         }
 
         Collection<GeoDataset> finishedDatasets = new HashSet<>();
-        for ( GeoPlatform platform : seenPlatforms.keySet() ) {
-            Collection<GeoDataset> datasetsForPlatform = seenPlatforms.get( platform );
+        for ( Collection<GeoDataset> datasetsForPlatform : seenPlatforms.values() ) {
             if ( datasetsForPlatform.size() > 1 ) {
                 GeoDataset combined = this.combineDatasets( datasetsForPlatform );
                 finishedDatasets.add( combined );

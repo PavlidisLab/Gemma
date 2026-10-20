@@ -6,7 +6,7 @@ import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;

@@ -20,12 +20,11 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Hibernate;
-import org.hibernate.QueryException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -41,12 +40,12 @@ import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author luke
  */
-public class CharacteristicServiceTest extends BaseSpringContextTest {
+public class CharacteristicServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private CharacteristicService characteristicService;
@@ -64,7 +63,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     private Characteristic eeChar1;
     private Characteristic eeChar2;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         ee = this.getTestPersistentBasicExpressionExperiment();
         ee.setCharacteristics( this.getTestPersistentCharacteristics( 2 ) );
@@ -95,7 +94,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             runAsAdmin();
@@ -116,9 +115,11 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
         characteristicService.browse( 10, 10, "category", true );
     }
 
-    @Test(expected = QueryException.class)
+    @Test
     public void testBrowseWithInvalidField() {
-        characteristicService.browse( 10, 10, "foo", true );
+        // HB6 wraps the underlying UnknownPathException in an IllegalArgumentException
+        // before it reaches the caller (was a bare QueryException on HB5).
+        assertThrows( IllegalArgumentException.class, () -> characteristicService.browse( 10, 10, "foo", true ) );
     }
 
     @Autowired
@@ -126,7 +127,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindExperimentsByUris() {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertEquals( 1, result.keySet().size() );
         assertTrue( result.containsKey( ExpressionExperiment.class ) );
         ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
@@ -135,7 +136,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
 
     @Test
     public void testFindExperimentsByUrisAsProxies() {
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, false, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, false, true );
         assertEquals( 1, result.size() );
         Collection<ExpressionExperiment> ees = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() );
         ExpressionExperiment ee = result.get( ExpressionExperiment.class ).get( eeChar1.getValueUri() ).iterator().next();
@@ -145,14 +146,14 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     @Test
     public void testFindExperimentsByUrisAsAnonymousUser() {
         runAsAnonymous();
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertTrue( result.isEmpty() );
     }
 
     @Test
     public void testFindExperimentsByUrisAsUser() {
         runAsUser( "bob" );
-        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), null, 10, true, true );
+        Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> result = characteristicService.findExperimentsByUris( Collections.singletonList( eeChar1.getValueUri() ), true, true, true, null, 10, true, true );
         assertTrue( result.isEmpty() );
     }
 
@@ -215,11 +216,11 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     // BibliographicReferenceService bibRefService = ( BibliographicReferenceService ) this
     // .getBean( "bibliographicReferenceService" );
     //
-    // BibliographicReference bibRef = bibRefService.load( new Long(111 ));
+    // BibliographicReference bibRef = bibRefService.load( Long.valueOf( 111 ));
     //
     // Collection<ExpressionExperiment> foundEEs = eeService.findByBibliographicReference( bibRef );
     // assertEquals(1,foundEEs.size());
-    // assertEquals(new Long(8), (Long) foundEEs.iterator().next().getId());
+    // assertEquals(Long.valueOf(8), (Long) foundEEs.iterator().next().getId());
     //
     // }
 

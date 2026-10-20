@@ -18,7 +18,9 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test values are from hg18 all_est.
@@ -26,8 +28,9 @@ import junit.framework.TestCase;
  * @author pavlidis
  *
  */
-public class SequenceBinUtilsTest extends TestCase {
+public class SequenceBinUtilsTest {
 
+    @Test
     public void testBinFromRangeA() {
         int start = 2802;
         int end = 3149;
@@ -36,6 +39,7 @@ public class SequenceBinUtilsTest extends TestCase {
         assertEquals( expectedBin, actualBin );
     }
 
+    @Test
     public void testBinFromRangeB() {
         int start = 6263823;
         int end = 6310008;
@@ -44,6 +48,7 @@ public class SequenceBinUtilsTest extends TestCase {
         assertEquals( expectedBin, actualBin );
     }
 
+    @Test
     public void testBinFromRangeC() {
         int start = 36694488;
         int end = 36702427;
@@ -52,6 +57,7 @@ public class SequenceBinUtilsTest extends TestCase {
         assertEquals( expectedBin, actualBin );
     }
 
+    @Test
     public void testBinFromRangeD() {
         int start = 31582661;
         int end = 31594399;

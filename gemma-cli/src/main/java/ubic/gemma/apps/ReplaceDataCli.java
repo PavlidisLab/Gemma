@@ -19,8 +19,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -97,5 +97,12 @@ public class ReplaceDataCli extends ExpressionExperimentManipulatingCLI {
         }
 
         dataUpdater.replaceData( ee, targetArrayDesign, qt, data );
+        addSuccessObject( ee, "Replaced data." );
+
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, true, false );
+        } catch ( Exception e ) {
+            addWarningObject( ee, "Failed to refresh dataset vectors from Gemma Web." );
+        }
     }
 }

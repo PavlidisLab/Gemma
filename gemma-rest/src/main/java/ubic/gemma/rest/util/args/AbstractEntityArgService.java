@@ -11,10 +11,10 @@ import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.rest.util.EntityNotFoundException;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -61,8 +61,8 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String p ) {
-        return service.getFilterablePropertyIsUsingSubquery( p );
+    public boolean isFilterablePropertyUsingSubquery( String p ) {
+        return service.isFilterablePropertyUsingSubquery( p );
     }
 
     @Override
@@ -71,7 +71,12 @@ public abstract class AbstractEntityArgService<T extends Identifiable, S extends
     }
 
     @Override
-    @Nonnull
+    public boolean isFilterablePropertyDeprecated( String p ) {
+        return service.isFilterablePropertyDeprecated( p );
+    }
+
+    @Override
+    @NonNull
     public T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException {
         return checkEntity( entityArg, entityArg.getEntity( service ) );
     }

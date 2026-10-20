@@ -15,6 +15,7 @@
 package ubic.gemma.rest.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.List;
 @Getter
 public class ResponseDataObject<T> {
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The payload. The key is always present on a successful response, though the endpoint may document a null value for it.")
     private final T data;
 
     /**
@@ -38,6 +40,7 @@ public class ResponseDataObject<T> {
      * This is an extension to the Google JSON style-guide.
      */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Schema(description = "Warnings that applied to the request without preventing it from being served. Omitted when empty. This is an extension to the Google JSON style guide.")
     private final List<WellComposedWarning> warnings = new ArrayList<>();
 
     /**

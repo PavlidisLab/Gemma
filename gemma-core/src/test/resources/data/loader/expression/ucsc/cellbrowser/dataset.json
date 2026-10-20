@@ -1,0 +1,6455 @@
+{
+  "shortLabel": "All Datasets",
+  "abstract": "This is a summary text",
+  "inDir": "/hive/data/inside/cells/datasets",
+  "name": "",
+  "datasets": [
+    {
+      "shortLabel": "22q11 Microdeletion Organoid Models",
+      "name": "organoid-22q11",
+      "md5": "34ee0654b3",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "organoid",
+        "thalamus",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "<em>Ciona intestinalis</em> Embryogenesis",
+      "name": "ciona-cao",
+      "md5": "47108d7d22",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole organism",
+        "embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Sea Squirt (C. intestinalis)"
+      ],
+      "isCollection": true,
+      "datasetCount": 9
+    },
+    {
+      "shortLabel": "Adult <em>Pristina leidyi</em>",
+      "name": "p-leidyi-adult",
+      "md5": "788d128be9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Freshwater Worm (P. leidyi)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 75218
+    },
+    {
+      "shortLabel": "Adult Cortex Meta-Atlas",
+      "name": "adult-ctx-meta-atlas",
+      "md5": "7cb6b243df",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "development",
+        "adult"
+      ],
+      "sampleCount": 520013
+    },
+    {
+      "shortLabel": "Adult Mouse Brain Newborn Cells",
+      "name": "adult-mouse-brain-newborn",
+      "md5": "57ffdb0c80",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Adult Pancreas",
+      "name": "adultPancreas",
+      "md5": "074a5cbcfd",
+      "tags": [
+        "smartseq2"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "pancreas"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "sampleCount": 4026
+    },
+    {
+      "shortLabel": "Adult Retina",
+      "name": "wong-retina-atlas",
+      "md5": "4f253be078",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Retina Atlas"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Adult Testis",
+      "name": "adult-testis",
+      "md5": "209c2f6cd4",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "testis"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 6199
+    },
+    {
+      "shortLabel": "Aedes aegypti Mosquito Cell Atlas",
+      "name": "mosquito",
+      "md5": "857b0d2c9d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all",
+        "head",
+        "thorax",
+        "abdomen",
+        "antenna",
+        "maxillary palps",
+        "proboscis",
+        "stylet",
+        "tarsi",
+        "wing",
+        "brain",
+        "thoracic ganglia",
+        "gut",
+        "salivary gland",
+        "abdominal pelt",
+        "malpighian tubule",
+        "abdominal tip",
+        "ovary",
+        "testis",
+        "male accessory sex gland"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mosquito (A. aegypti)"
+      ],
+      "isCollection": true,
+      "datasetCount": 20,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Aging Brain",
+      "name": "aging-brain",
+      "md5": "04784800ee",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "whole brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 72543
+    },
+    {
+      "shortLabel": "Aging Brain and Alzheimer's Disease",
+      "name": "ad-aging-brain",
+      "md5": "143592115d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "prefrontal cortex"
+      ],
+      "diseases": [
+        "Alzheimer's disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "ROSMAP"
+      ],
+      "domains": [
+        "atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 2,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Aging Brain and Alzheimer's disease ",
+      "name": "rosmap-ad-aging-brain",
+      "md5": "f25de43557",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "prefrontal cortex"
+      ],
+      "diseases": [
+        "Alzheimer's disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "ROSMAP"
+      ],
+      "domains": [
+        "atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 2,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Aging Human Skin",
+      "name": "aging-human-skin",
+      "md5": "338b29d0f1",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "skin"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 15457
+    },
+    {
+      "shortLabel": "Airway Epithelium in Healthy and Cystic Fibrosis Patients",
+      "name": "airway-cf",
+      "md5": "2948370fa7",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "airway"
+      ],
+      "diseases": [
+        "Cystic Fibrosis",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Airway Macrophage Diversity",
+      "name": "healthy-bal",
+      "md5": "a898eadb9e",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "sampleCount": 49384
+    },
+    {
+      "shortLabel": "Alexandria Project from the Shalek Lab",
+      "name": "shalek-alexandria-project",
+      "md5": "36692bcf6d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        ""
+      ],
+      "diseases": [
+        "Granuloma",
+        "Healthy Control",
+        "HIV-1",
+        "Chronic Rhinosinusitis",
+        "Type 2 Inflammatory Disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)",
+        "Rhesus macaque (M. mulatta)"
+      ],
+      "projects": [
+        "Alexandria Project"
+      ],
+      "isCollection": true,
+      "datasetCount": 3,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "Allen Brain Map: Cell Types Database",
+      "name": "allen-celltypes",
+      "md5": "70cfd66473",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "thalamus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)",
+        "Rhesus macaque (M. mulatta)"
+      ],
+      "projects": [
+        "Allen Brain Atlas"
+      ],
+      "isCollection": true,
+      "collectionCount": 3
+    },
+    {
+      "shortLabel": "Alveolar Macrophage Supercluster in CF and Healthy BALF",
+      "name": "ams-supercluster",
+      "md5": "304d9bc1ec",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung",
+        "airway"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Cystic Fibrosis"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 113213
+    },
+    {
+      "shortLabel": "Alveolar Macrophages in BALF from pwCF",
+      "name": "bal-ams-cf",
+      "md5": "8c3d7a1432",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "bronchoalveolar lavage fluid"
+      ],
+      "diseases": [
+        "Healthy",
+        "Cystic Fibrosis"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Alzheimer's Disease Across Six Brain Regions",
+      "name": "ad-multi-region",
+      "md5": "0517c4f1cc",
+      "tags": [
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Alzheimer's disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "ROSMAP"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "domains": [
+        "atlas"
+      ],
+      "sampleCount": 1353074
+    },
+    {
+      "shortLabel": "Atlas for Zebrafish Development",
+      "name": "zebrafish-dev",
+      "md5": "ba21ed5051",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "early develop."
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Zebrafish (D. rerio)"
+      ],
+      "sampleCount": 44020
+    },
+    {
+      "shortLabel": "Atlas of Fetal Gene Expression",
+      "name": "fetal-gene-atlas",
+      "md5": "38efe7f2fe",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Autism",
+      "name": "autism",
+      "md5": "7446433586",
+      "tags": [
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Autism Spectrum Disorder",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 104559
+    },
+    {
+      "shortLabel": "Bone-Marrow Derived Osteoblasts in Mouse",
+      "name": "mouse-osteoblasts",
+      "md5": "2f010365f9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "bone",
+        "bone marrow"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 6764
+    },
+    {
+      "shortLabel": "Brain Cut&Tag RNA, ATAC and Spatial",
+      "name": "brain-spatial-omics",
+      "md5": "07c9813f44",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)",
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "fetal",
+        "neonatal",
+        "adult"
+      ],
+      "domains": [
+        "neuroscience"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "assays": [
+        "spatial",
+        "expr"
+      ],
+      "facets": {
+        "body_parts": [
+          "brain"
+        ],
+        "organisms": [
+          "Mouse (M. musculus)"
+        ],
+        "projects": [],
+        "diseases": [
+          "Healthy"
+        ],
+        "life_stages": [
+          "adult"
+        ],
+        "assays": [
+          "spatial",
+          "multimodal",
+          "atac",
+          "expr"
+        ],
+        "domains": [
+          "neuroscience"
+        ]
+      },
+      "isCollection": true,
+      "datasetCount": 7
+    },
+    {
+      "shortLabel": "Brain Organoids",
+      "name": "organoids",
+      "md5": "185a17d5b8",
+      "tags": [
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "organoid",
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Rhesus macaque (M. mulatta)",
+        "Chimp (P. troglodytes)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Brain Organoids Morphology",
+      "name": "brain-org-morph",
+      "md5": "91cc7e33d6",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "organoid"
+      ],
+      "sampleCount": 29216
+    },
+    {
+      "shortLabel": "Brain Single-cell Transcriptome",
+      "name": "bts-brain-cell-atlas",
+      "md5": "e605fce6a7",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "prenatal",
+        "postnatal",
+        "adolescent",
+        "fetal",
+        "adult",
+        "neonatal",
+        "child"
+      ],
+      "sampleCount": 393060
+    },
+    {
+      "shortLabel": "Brain and organoid",
+      "name": "organoidatlas",
+      "md5": "aba1033958",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "organoid",
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 190022
+    },
+    {
+      "shortLabel": "Bronchoalveolar Immune Cells in COVID-19",
+      "name": "covid19-balf",
+      "md5": "80eec09076",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung",
+        "balf"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 65813
+    },
+    {
+      "shortLabel": "COVID-19 Airways",
+      "name": "covid-airways",
+      "md5": "e9e4b54b41",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung",
+        "nasopharynx"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "COVID-19 Autoimmunity PBMCs",
+      "name": "covid19-autoimmune-pbmc",
+      "md5": "c273dad7da",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood",
+        "peripheral blood"
+      ],
+      "diseases": [
+        "COVID-19"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "sampleCount": 97499
+    },
+    {
+      "shortLabel": "COVID-19 Blood Altas",
+      "name": "covid19-blood-atlas",
+      "md5": "898d203eae",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "sampleCount": 836148
+    },
+    {
+      "shortLabel": "COVID-19 Frontal Cortex and Choroid Plexus",
+      "name": "covid19-brain",
+      "md5": "8e5b95f7ac",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "frontal cortex",
+        "choroid plexus"
+      ],
+      "diseases": [
+        "Alzheimer's disease",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "COVID-19 Immunological Response",
+      "name": "covid19-immuno",
+      "md5": "de1f15b0fa",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "COVID-19 Infection Immune Response",
+      "name": "covid19-infection-response",
+      "md5": "b737473e0f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood",
+        "peripheral blood"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "COVID-19 PBMC",
+      "name": "covid19-pbmc",
+      "md5": "95f963c726",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 647366
+    },
+    {
+      "shortLabel": "COVID-19 SCARFace",
+      "name": "scarface",
+      "md5": "1164dab042",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "ovary",
+        "testis",
+        "nasal",
+        "lung"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 7
+    },
+    {
+      "shortLabel": "COVID-19 Type 1 Interferons",
+      "name": "covid19-type1-ifn",
+      "md5": "a41404955f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "diseases": [
+        "COVID-19"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "sampleCount": 600929
+    },
+    {
+      "shortLabel": "COVID-19 and Influenza Immunophenotyping",
+      "name": "covid19-influenza-response",
+      "md5": "9f2c38b7b4",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Influenza",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 59572
+    },
+    {
+      "shortLabel": "COVID-19 in Hypertensive Patients",
+      "name": "covid-hypertension",
+      "md5": "40dd4e7f9a",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "nasal"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 88177
+    },
+    {
+      "shortLabel": "CRUK STORMing Cancer",
+      "name": "storming-cancer",
+      "md5": "643272fe25",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "stomach",
+        "esophagus"
+      ],
+      "diseases": [
+        "Cancer",
+        "Barrett’s esophagus",
+        "esophageal adenocarcinoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CRUK",
+        "STORMing Cancer"
+      ],
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Canine Leukocyte Atlas",
+      "name": "canine-leukocyte-atlas",
+      "md5": "8cc63f3111",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "immune",
+        "blood"
+      ],
+      "diseases": [
+        "Healthy",
+        "osteosarcoma"
+      ],
+      "organisms": [
+        "Dog (C. familiaris)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Canine Osteosarcoma Atlas",
+      "name": "canine-os-atlas",
+      "md5": "497faf4d61",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "bone"
+      ],
+      "diseases": [
+        "osteosarcoma"
+      ],
+      "organisms": [
+        "Dog (C. familiaris)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Canine TILs versus circulating leukocytes",
+      "name": "canine-tils-blood",
+      "md5": "9604051b46",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "osteosarcoma",
+        "tumor"
+      ],
+      "organisms": [
+        "Dog (C. familiaris)"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Cardiac Differentiation",
+      "name": "cardiac-differentiation",
+      "md5": "50d79cb29c",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart"
+      ],
+      "diseases": [
+        "TBX5 haploinsufficiency",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "isCollection": true,
+      "collectionCount": 3
+    },
+    {
+      "shortLabel": "Caudate Nucleus Postmortem Samples from Individuals with and without Alcohol Use Disorder",
+      "name": "caudate-aud",
+      "md5": "5d846aa98f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "caudate nucleus",
+        "brain",
+        "striatum"
+      ],
+      "diseases": [
+        "alcohol use disorder",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 1307323
+    },
+    {
+      "shortLabel": "Causal Genes for Age-Related Macular Degeneration",
+      "name": "hackney-retina-atlas",
+      "md5": "dfa283156a",
+      "tags": [
+        "eQTL",
+        "snRNA-seq"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy",
+        "age-related macular degeneration"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Retina Atlas"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 10,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Cell Type Signatures in Autism Spectrum Disorder",
+      "name": "asd-psychencode",
+      "md5": "f00e91f951",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "prefrontal cortex"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Autism",
+        "Autism Spectrum Disorder",
+        "Dup15q syndrome"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult",
+        "child",
+        "adolescent"
+      ],
+      "sampleCount": 591043
+    },
+    {
+      "shortLabel": "Cellular Targets of SARS-CoV-2",
+      "name": "covid19-cellular-targets",
+      "md5": "7d53525586",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart",
+        "lung",
+        "kidney"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "Cerebral Cortex Fate Specification",
+      "name": "human-cortex-organoids",
+      "md5": "1df34a4253",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "facets": {
+        "body_parts": [
+          "brain",
+          "organoid"
+        ],
+        "organisms": [
+          "Human (H. sapiens)"
+        ],
+        "projects": [
+          "CIRM"
+        ],
+        "diseases": [
+          "Healthy"
+        ],
+        "life_stages": [
+          "fetal"
+        ],
+        "assays": [
+          "spatial"
+        ],
+        "domains": [
+          "neuroscience",
+          "neurogenesis",
+          "development"
+        ]
+      },
+      "isCollection": true,
+      "datasetCount": 8,
+      "collectionCount": 3
+    },
+    {
+      "shortLabel": "Choroid Plexus Organoids",
+      "name": "chporg",
+      "md5": "58d602b0ee",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "organoid",
+        "brain",
+        "choroid plexus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 32464
+    },
+    {
+      "shortLabel": "Chronic Active Multiple Sclerosis",
+      "name": "chronic-ms",
+      "md5": "4862feb0c2",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "subcortex"
+      ],
+      "diseases": [
+        "Multiple Sclerosis",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 66430
+    },
+    {
+      "shortLabel": "Ciona Larva",
+      "name": "ciona-larva",
+      "md5": "e21aa3fafc",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Sea Squirt (C. robusta)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Ciona robusta embryo: 64 cell to mid-gastrula",
+      "name": "ciona-dev",
+      "md5": "580e96baa5",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Sea Squirt (C. robusta)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Colorectal Cancer",
+      "name": "colorectal-cancer",
+      "md5": "fe2b225aff",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "colon",
+        "rectum"
+      ],
+      "sampleCount": 63689
+    },
+    {
+      "shortLabel": "Cortex ATAC",
+      "name": "cortex-atac",
+      "md5": "5653db4eb6",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Cortex development",
+      "name": "cortex-dev",
+      "md5": "b7edfec8cf",
+      "tags": [
+        "smartseq2"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "life_stages": [
+        "embryo"
+      ],
+      "domains": [
+        "neuroscience"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "assays": [
+        "scRNA-seq"
+      ],
+      "facets": {
+        "body_parts": [
+          "brain"
+        ],
+        "organisms": [
+          "Human (H. sapiens)"
+        ],
+        "projects": [
+          "CIRM"
+        ],
+        "diseases": [
+          "Healthy"
+        ],
+        "life_stages": [
+          "embryo"
+        ],
+        "domains": [
+          "neuroscience"
+        ],
+        "assays": [
+          "scRNA-seq"
+        ],
+        "sources": [
+          "direct"
+        ]
+      },
+      "sampleCount": 4261
+    },
+    {
+      "shortLabel": "Cortical Development Transcription Networks",
+      "name": "mouse-cortex-perturb-4tf",
+      "md5": "48085f3429",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "forebrain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "embryo"
+      ],
+      "domains": [
+        "Neuroscience"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "DLPFC snATAC-seq for Major Depressive Disorder",
+      "name": "mdd-dlpfc-atac",
+      "md5": "c1c48527cb",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy",
+        "major depressive disorder"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Dental Cells",
+      "name": "dental-cells",
+      "md5": "86d9811639",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "teeth"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Developing <em>Xenopus</em> Mucociliary Epithelium",
+      "name": "xenopus-dev",
+      "md5": "4b326e665f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "African Clawed Frog (X. laevis)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "domains": [
+        "development"
+      ],
+      "assays": [
+        "expr"
+      ],
+      "sampleCount": 33990
+    },
+    {
+      "shortLabel": "Developing Brain Lipid Heterogeneity",
+      "name": "brain-lipids",
+      "md5": "5d1b749e48",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Developing Cortex Meta-Atlas",
+      "name": "dev-ctx-meta-atlas",
+      "md5": "1e8e9e54ff",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "development"
+      ],
+      "sampleCount": 599211
+    },
+    {
+      "shortLabel": "Developing Human Brain and Neocortex",
+      "name": "dev-brain-regions",
+      "md5": "ecd9992671",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "neocortex",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Developing Human Immune System",
+      "name": "fetal-immune",
+      "md5": "a9654a389d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "immune",
+        "fetal"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 8
+    },
+    {
+      "shortLabel": "Developing Human Lung",
+      "name": "lung-dev",
+      "md5": "14a4bffd18",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Developing Intestinal Tract",
+      "name": "intestine-fetal-adult",
+      "md5": "144a678296",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "intestine",
+        "gut"
+      ],
+      "diseases": [
+        "Healthy",
+        "Crohn's disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Gut Cell Atlas"
+      ],
+      "life_stages": [
+        "fetal",
+        "adult",
+        "child",
+        "adolescent"
+      ],
+      "assays": [
+        "expr"
+      ],
+      "sampleCount": 428469
+    },
+    {
+      "shortLabel": "Developing Mammalian Interneurons",
+      "name": "dev-mammal-inhibneurons",
+      "md5": "1a915759e6",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Macaque (M. fascicularis)",
+        "Rabbit (O. cuniculus)",
+        "Rat (R. norvegicus)",
+        "Mouse (M. musculus)",
+        "Pig (S. scrofa)",
+        "Ferret (M. putorius furo)",
+        "Opossum (M. domestica)",
+        "Sugar glider (P. breviceps)"
+      ],
+      "life_stages": [
+        "development"
+      ],
+      "isCollection": true,
+      "datasetCount": 8
+    },
+    {
+      "shortLabel": "Dorsolateral Prefrontal Cortex Affected by Major Depressive Disorder",
+      "name": "dlpfc-mdd",
+      "md5": "f8e9bff550",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "dorsolateral prefrontal cortex",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy",
+        "major depressive disorder"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 160711
+    },
+    {
+      "shortLabel": "DroNc-seq of Human Brain (Habib et al. 2017.)",
+      "name": "brain-dronc-seq",
+      "md5": "2459b819b6",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "hippocampus",
+        "prefrontal cortex",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sources": [
+        "COVID-19 Cell Atlas"
+      ],
+      "sampleCount": 13067
+    },
+    {
+      "shortLabel": "Drosophila Olfactory Receptor Neurons",
+      "name": "dros-olfac",
+      "md5": "3cb7eeae19",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "sampleCount": 3833
+    },
+    {
+      "shortLabel": "Drosophila Ovary",
+      "name": "dros-ovary",
+      "md5": "245e46377d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "ovary"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Fruit Fly (D. melanogaster)"
+      ],
+      "isCollection": true,
+      "datasetCount": 7
+    },
+    {
+      "shortLabel": "Drosophila Visual System Development",
+      "name": "dros-visual-sys",
+      "md5": "810a6f6cb0",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "optic lobe"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Fruit Fly (D. melanogaster)"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Drosophila larval brain",
+      "name": "dros-brain",
+      "md5": "41ead1183a",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "whole brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Fruit Fly (D. melanogaster)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Dup15q Syndrome Cortex and Cortical Organoids",
+      "name": "dup15q-cortex-organoids",
+      "md5": "09d79e9d47",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "organoid",
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Dup15q syndrome"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Dynamic Responses of Oligodendroglia in EAE Mice",
+      "name": "olg-dyn-eae-multiome",
+      "md5": "0498f98713",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "spinal cord"
+      ],
+      "diseases": [
+        "experimental autoimmune encephalomyelitis"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "EMT Induction in HBECs",
+      "name": "bronc-epi-in-vitro",
+      "md5": "15d51b7035",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Eils: Lung and HBECs",
+      "name": "eils-lung",
+      "md5": "ead634140d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Adenocarcinoma",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Embryonic Mouse Forebrain Lineage",
+      "name": "mouse-brain-lineage",
+      "md5": "a81eb49125",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "sampleCount": 65700
+    },
+    {
+      "shortLabel": "Endometrium Across Menstrual Cycle",
+      "name": "endometrium-cycle",
+      "md5": "d2828803e0",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "endometrium"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 71032
+    },
+    {
+      "shortLabel": "Engraftable Hematopoietic Stem Cells",
+      "name": "engraftable-hsc",
+      "md5": "f80297e0e9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "liver"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "EvoCell Project",
+      "name": "evocell",
+      "md5": "00472328a1",
+      "tags": [
+        "project"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole organism"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Freshwater Hydra (H. vulgaris)",
+        "Capitellid Worm (C. teleta)",
+        "Freshwater Sponge (S. lacustris)"
+      ],
+      "projects": [
+        "EvoCell"
+      ],
+      "isCollection": true,
+      "datasetCount": 6,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Extended Mouse Organogenesis Atlas",
+      "name": "ext-mouse-atlas",
+      "md5": "115651d60b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "embryo"
+      ],
+      "domains": [
+        "development",
+        "atlas"
+      ],
+      "sampleCount": 430339
+    },
+    {
+      "shortLabel": "Female Brine Shrimp Reproductive System",
+      "name": "brine-shrimp-repro",
+      "md5": "09dfb4ed86",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "female reproductive organ",
+        "ovary"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Brine Shrimp (A. franciscana)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 20109
+    },
+    {
+      "shortLabel": "Fetal Chromatin Accessibility",
+      "name": "fetal-chromatin-atlas",
+      "md5": "8aa73ffb04",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "collectionCount": 15
+    },
+    {
+      "shortLabel": "Fetal Liver and Yolk Sac",
+      "name": "fetal-liver",
+      "md5": "f151510f00",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "liver",
+        "yolk sac"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Fetal Lung",
+      "name": "fetal-lung",
+      "md5": "08dcc4d701",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 36807
+    },
+    {
+      "shortLabel": "Fetal Thymus",
+      "name": "fetal-thymus",
+      "md5": "820e7cdc59",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "thymus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Fly Cell Atlas",
+      "name": "fly-cell-atlas",
+      "md5": "e4dea8669c",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "antenna",
+        "body wall",
+        "gut",
+        "haltere",
+        "heart",
+        "leg",
+        "male reproductive gland",
+        "malpighian tubule",
+        "oenocyte",
+        "ovary",
+        "proboscis",
+        "maxillary",
+        "palps",
+        "testis",
+        "trachea",
+        "wing"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Fruit Fly (D. melanogaster)"
+      ],
+      "projects": [
+        "Fly Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 17
+    },
+    {
+      "shortLabel": "Forebrain Organoids",
+      "name": "autism-organoids",
+      "md5": "34fa662d48",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "forebrain",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy",
+        "Autism"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "life_stages": [
+        "juvenile"
+      ],
+      "domains": [
+        "Neuroscience"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "sampleCount": 643961
+    },
+    {
+      "shortLabel": "Foveal and Peripheral Human Retina",
+      "name": "scheetz-retina-atlas",
+      "md5": "1151f7e625",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "facets": {
+        "body_parts": [
+          "eye",
+          "retina",
+          "fovea",
+          "peripheral retina"
+        ],
+        "organisms": [
+          "Human (H. sapiens)"
+        ],
+        "projects": [
+          "hca",
+          "Human Cell Atlas",
+          "Retina Atlas"
+        ],
+        "diseases": [
+          "Healthy"
+        ],
+        "life_stages": [
+          "adult"
+        ]
+      },
+      "isCollection": true,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Fracture Repair Atlas",
+      "name": "fracture-repair-atlas",
+      "md5": "25d4e2e532",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "bone"
+      ],
+      "diseases": [
+        "bone fracture"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 6213
+    },
+    {
+      "shortLabel": "GTEx RNA-seq Analysis V8",
+      "name": "gtex8",
+      "md5": "a02d16a073",
+      "tags": [
+        "bulk"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "GTEx"
+      ],
+      "sampleCount": 17382
+    },
+    {
+      "shortLabel": "Gallbladder (Sampaziotis et al. Unpublished.)",
+      "name": "human-gallbladder",
+      "md5": "148432015e",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "gallbladder"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 8414
+    },
+    {
+      "shortLabel": "Ganglionic Eminence and Immature Cortical Interneurons",
+      "name": "interneurons",
+      "md5": "66da049a26",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "ganglionic eminence",
+        "neocortex",
+        "cortex"
+      ],
+      "sampleCount": 2241
+    },
+    {
+      "shortLabel": "Glioblastoma",
+      "name": "gbm",
+      "md5": "e33581d736",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "glioblastoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "sampleCount": 32877
+    },
+    {
+      "shortLabel": "Glioblastoma Infiltrating vs. Tumor Core",
+      "name": "quake-gbm",
+      "md5": "d754c880a5",
+      "tags": [
+        "GEO",
+        "smartseq2"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "glioblastoma",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "sampleCount": 3588
+    },
+    {
+      "shortLabel": "Glioblastoma Neurovascular Progenitor",
+      "name": "gbm-nvp",
+      "md5": "249841aae6",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "organoid"
+      ],
+      "diseases": [
+        "glioblastoma",
+        "tumor"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Gut Cell Survey",
+      "name": "gut-cell-atlas",
+      "md5": "9a94d04f20",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "gut",
+        "colon",
+        "ileum",
+        "duojejunum"
+      ],
+      "diseases": [
+        "Crohn's Disease",
+        "Healthy Control",
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "HCA Datasets via Xena",
+      "name": "xena",
+      "md5": "207b20a6af",
+      "tags": [],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "oral cavity",
+        "placenta",
+        "decidua",
+        "blood",
+        "cord blood",
+        "retina",
+        "spleen",
+        "lung",
+        "esophagus",
+        "pancreas",
+        "brain",
+        "cortex",
+        "hippocampus"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "isCollection": true,
+      "datasetCount": 11
+    },
+    {
+      "shortLabel": "HCA LungMAP COVID-19 Integrated Analysis",
+      "name": "hca-lungmap-integrated",
+      "md5": "d0374a6b3d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "adipose",
+        "bone marrow",
+        "blood",
+        "brain",
+        "heart",
+        "kidney",
+        "liver",
+        "lung",
+        "pancreas",
+        "placenta",
+        "prostate",
+        "skeletal muscle",
+        "skin"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "LungMAP",
+        "hca"
+      ],
+      "isCollection": true,
+      "datasetCount": 24
+    },
+    {
+      "shortLabel": "HIV Associated Extracellular Vesicles In Neuroinflammation",
+      "name": "hiv-evs-neuroinflammation",
+      "md5": "a3396cbc4a",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "HIV-1"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 90245
+    },
+    {
+      "shortLabel": "HTAN - Children's Hospital of Philadelphia",
+      "name": "htan-chop",
+      "md5": "fd1c95c271",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Pediatric High Grade Glioma",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Tumor Atlas Network",
+        "HTAN"
+      ],
+      "isCollection": true,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "HTAN - Memorial Sloan Kettering Cancer Center",
+      "name": "htan-msk",
+      "md5": "e1c5a05365",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "normal",
+        "lung cancer"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)"
+      ],
+      "projects": [
+        "Human Tumor Atlas Network",
+        "HTAN"
+      ],
+      "isCollection": true,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "HTAN - Vanderbilt University Medical Center",
+      "name": "htan-vumc",
+      "md5": "cdcf3f8756",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "colon",
+        "large intestine",
+        "small intestine",
+        "intestine"
+      ],
+      "diseases": [
+        "colorectal cancer",
+        "normal"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Tumor Atlas Network",
+        "hca",
+        "Human Cell Atlas",
+        "HTAN"
+      ],
+      "isCollection": true,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Head and Neck Cancer",
+      "name": "head-neck",
+      "md5": "2ed8ca80b6",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "oral cavity"
+      ],
+      "diseases": [
+        "Head and Neck Squamous Cell Carcinoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 3608
+    },
+    {
+      "shortLabel": "Head and Neck Squamous Cell Carcinoma (HNSCC) Atlas",
+      "name": "hnscc-atlas",
+      "md5": "00b38decf3",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "sampleCount": 274911
+    },
+    {
+      "shortLabel": "Healthy Human Liver Single Nuclear",
+      "name": "liver-sex-age-map",
+      "md5": "a7c1a896d8",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "liver"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Healthy Human Skin",
+      "name": "healthy-human-skin",
+      "md5": "9aeb160461",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "skin"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 195739
+    },
+    {
+      "shortLabel": "Healthy Intestinal Epithelium",
+      "name": "intestine-epithelium",
+      "md5": "7f6b027219",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "small intestine",
+        "colon",
+        "intestine",
+        "gut"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Gut Cell Atlas"
+      ],
+      "sampleCount": 12590
+    },
+    {
+      "shortLabel": "Healthy Rat Liver Atlas",
+      "name": "rat-liver-atlas",
+      "md5": "2b7af6fec0",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "liver"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Rat (R. norvegicus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Healthy and Chronic Inflammatory Enteropathy Canine Duodenum",
+      "name": "canine-duodenum-cie",
+      "md5": "f1491112a0",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "duodenum",
+        "intestine",
+        "small intestine"
+      ],
+      "diseases": [
+        "Healthy",
+        "chronic inflammatory enteropathy"
+      ],
+      "organisms": [
+        "Dog (C. familiaris)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Healthy and Osteoarthritic Equine Joints",
+      "name": "equine-joint-oa",
+      "md5": "f499dae314",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "synovial joint",
+        "synovial fluid"
+      ],
+      "diseases": [
+        "Healthy",
+        "osteoarthritis"
+      ],
+      "organisms": [
+        "Horse (E. caballus)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Heart Cell Atlas",
+      "name": "heart-cell-atlas",
+      "md5": "5f1b21d255",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Heart Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 10
+    },
+    {
+      "shortLabel": "Heart of Cells",
+      "name": "hoc",
+      "md5": "f6f2184098",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 10
+    },
+    {
+      "shortLabel": "Histone Profiling in Mouse Brain",
+      "name": "mouse-brain-cutandtag",
+      "md5": "c5d0c24515",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "whole brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "collectionCount": 7
+    },
+    {
+      "shortLabel": "Human Adult Kidney",
+      "name": "human-kidney-atac",
+      "md5": "9c9fa799eb",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "kidney"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Human Adult Ureter",
+      "name": "adult-ureter",
+      "md5": "65d097e717",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "ureter"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Human Brain Development Epigenomics",
+      "name": "brain-epigenome",
+      "md5": "b3f3979fc5",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "hippocampus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 1
+    },
+    {
+      "shortLabel": "Human Brain Vascular Atlas",
+      "name": "brain-vasc-atlas",
+      "md5": "55255072db",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "vasculature",
+        "hippocampus",
+        "cortex"
+      ],
+      "diseases": [
+        "Alzheimer's disease",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 143793
+    },
+    {
+      "shortLabel": "Human Brain Vasculature Across Development, Adulthood, and Disease",
+      "name": "brain-vasc",
+      "md5": "4b8cd4428f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cerebrovasculature"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "Human Cardiogenesis",
+      "name": "cardiogenesis-atac",
+      "md5": "b9ff06cd85",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Human Cellular Landscape",
+      "name": "human-cellular-landscape",
+      "md5": "fbd44b896e",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "sampleCount": 584207
+    },
+    {
+      "shortLabel": "Human Cerebellar Development",
+      "name": "cbl-dev",
+      "md5": "5b782a7c3f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cerebellum"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 69174
+    },
+    {
+      "shortLabel": "Human Colon in Ulcerative Colitis",
+      "name": "human-colon",
+      "md5": "f616080765",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "colon"
+      ],
+      "diseases": [
+        "Ulcerative Colitis",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Human Cornea",
+      "name": "human-cornea",
+      "md5": "b403993c25",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "cornea"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 21343
+    },
+    {
+      "shortLabel": "Human Cortical Development",
+      "name": "pre-postnatal-cortex",
+      "md5": "0f308bdfcc",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "development",
+        "prenatal",
+        "postnatal"
+      ],
+      "isCollection": true,
+      "datasetCount": 3,
+      "collectionCount": 4
+    },
+    {
+      "shortLabel": "Human Cortical Development",
+      "name": "human-cortical-dev",
+      "md5": "053bd3c357",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Human Cortical Lineage",
+      "name": "human-cortical-lineage",
+      "md5": "8face92ecc",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Human Cortical Organoids Cross-site Reproducibility",
+      "name": "hco-cross-site-repro",
+      "md5": "81ade925c9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 128384
+    },
+    {
+      "shortLabel": "Human Developing Thalamus Atlas",
+      "name": "dev-thal",
+      "md5": "b71d8fab6b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "thalamus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "development"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Human Enhancer Atlas",
+      "name": "human-enhancer-atlas",
+      "md5": "ee87a60fcb",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "sampleCount": 1323041
+    },
+    {
+      "shortLabel": "Human Fetal Pancreas",
+      "name": "human-fetal-panc",
+      "md5": "fd4cb0411c",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "pancreas"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Human Forebrain Development",
+      "name": "human-forebraindev",
+      "md5": "9dbd96b22b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "forebrain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Human Fovea and Peripheral Retina Atlas",
+      "name": "sanes-retina-atlas",
+      "md5": "6e9583fc93",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Retina Atlas"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 6,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Human Foveal vs Peripheral Retina",
+      "name": "human-fovea-periphery",
+      "md5": "a066937f66",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina",
+        "fovea"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 8217
+    },
+    {
+      "shortLabel": "Human Glial Atlas Project",
+      "name": "hgap",
+      "md5": "fa4eb90031",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "hippocampus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Human Healthy Airways",
+      "name": "healthy-human-airway",
+      "md5": "75b1473f2f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 77969
+    },
+    {
+      "shortLabel": "Human Hippocampal Axis",
+      "name": "human-hippo-axis",
+      "md5": "611a62ace2",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "hippocampus"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Temporal Lobe Epilepsy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 129908
+    },
+    {
+      "shortLabel": "Human Hippocampus Lifespan",
+      "name": "hippo-lifespan",
+      "md5": "54e5466105",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "hippocampus"
+      ],
+      "diseases": [
+        "Healthy",
+        "Alzheimer's disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Human IPSC Astrocyte Neuron",
+      "name": "ipsc-astrocyte-neuron",
+      "md5": "7b4681f4a9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Human Ileum",
+      "name": "human-ileum",
+      "md5": "3112b5d8d1",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "ileum",
+        "small intestine"
+      ],
+      "diseases": [
+        "Crohn's Disease",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 32458
+    },
+    {
+      "shortLabel": "Human Intestine",
+      "name": "human-intestine",
+      "md5": "8c76fd75ad",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "colon",
+        "ileum",
+        "rectum",
+        "intestine"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sources": [
+        "COVID-19 Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Human Kidney Cell Atlas",
+      "name": "kidney-atlas",
+      "md5": "d905ecc77a",
+      "tags": [
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "kidney"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 7
+    },
+    {
+      "shortLabel": "Human Liver",
+      "name": "human-liver",
+      "md5": "154a250b4c",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "liver"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 8444
+    },
+    {
+      "shortLabel": "Human Lung Airway",
+      "name": "lung-airway",
+      "md5": "9cebb25f36",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Human Macaque Mouse Developing Whole Brain",
+      "name": "dev-whole-brain-hqm",
+      "md5": "cbafdd9e14",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "n/a"
+      ],
+      "organisms": [
+        "Rhesus macaque (M. mulatta)",
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "development"
+      ],
+      "sampleCount": 1854767
+    },
+    {
+      "shortLabel": "Human Muscle Inclusion Body Myositis",
+      "name": "muscle-ibm",
+      "md5": "21e8db2d68",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "muscle",
+        "skeletal muscle"
+      ],
+      "diseases": [
+        "Healthy",
+        "Myositis"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Human Neural Organoid Cell Atlas (HNOCA)",
+      "name": "hnoca",
+      "md5": "24c912879e",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy",
+        "microcephaly",
+        "amyotrophic lateral sclerosis",
+        "Alzheimer's disease",
+        "Autism",
+        "fragile-X syndrome",
+        "schizophrenia",
+        "neuronal heterotopia",
+        "Pitt-Hopkins syndrome",
+        "myotonic dystrophy",
+        "glioblastoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "development"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Human Organoid Tumor Transplantation",
+      "name": "hott",
+      "md5": "1a36bc54c6",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "organoid"
+      ],
+      "diseases": [
+        "tumor",
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 216125
+    },
+    {
+      "shortLabel": "Human Pancreas",
+      "name": "human-pancreas",
+      "md5": "d731b52b2a",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "pancreas"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 7714
+    },
+    {
+      "shortLabel": "Human Retina and Retinal Organoids",
+      "name": "roska-retina-atlas",
+      "md5": "590f6b1843",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "retina",
+        "eye"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Retina Atlas"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 3,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Human Sputum Cells",
+      "name": "human-sputum",
+      "md5": "6f55be6d8f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Cystic Fibrosis"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 21258
+    },
+    {
+      "shortLabel": "Human Testis - Integrated Dataset",
+      "name": "testis",
+      "md5": "8620968a74",
+      "tags": [
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "testis"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Non-obstructive azoospermia"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 46482
+    },
+    {
+      "shortLabel": "Human and Mouse Alveolar Macrophages Comparison",
+      "name": "ams-human-mouse",
+      "md5": "4becc2e825",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Human and Mouse Retina Cell Atlas",
+      "name": "retina",
+      "md5": "79199efe80",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Human Retina Cell Atlas",
+        "Mouse Retina Cell Atlas"
+      ],
+      "isCollection": true,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "Human fetal pancreas and spheroids",
+      "name": "human-pancreas-dev",
+      "md5": "0cd5cc2112",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "pancreas"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Human pancreatic cells from 48 donors",
+      "name": "pancreas-diabetes",
+      "md5": "599c91a91f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "pancreas"
+      ],
+      "diseases": [
+        "Healthy",
+        "Pre-diabetic",
+        "Type 2 Diabetic"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Hydractinia Cell Atlas",
+      "name": "hydractinia",
+      "md5": "7b244b554d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "feeding polyp",
+        "sexual polyp",
+        "stolon"
+      ],
+      "organisms": [
+        "Colonial Hydroid (H. symbiolongicarpus)"
+      ],
+      "sampleCount": 195300
+    },
+    {
+      "shortLabel": "Immune Cell Atlas",
+      "name": "pan-immune",
+      "md5": "88c3a91306",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "immune",
+        "thymus",
+        "bone marrow",
+        "spleen",
+        "lymph node",
+        "gut",
+        "lung",
+        "liver",
+        "muscle"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Immune Cells in Developing Mouse Lung",
+      "name": "mouse-lung-immune",
+      "md5": "4aacb57498",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 4052
+    },
+    {
+      "shortLabel": "Immune Cells in Severe COVID-19",
+      "name": "covid19-fatal",
+      "md5": "6ec0ba7e73",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Immune Cells in Systemic Lupus Erythematosus",
+      "name": "lupus-pbmc",
+      "md5": "3a32d34e65",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Systemic Lupus Erythematosus"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "sampleCount": 1263676
+    },
+    {
+      "shortLabel": "Immune Human Organoid Tumor Transplantation",
+      "name": "ihott",
+      "md5": "5fb8458507",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "glioblastoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Immune cells in Critical COVID-19 Cases",
+      "name": "covid19-critical-immuno",
+      "md5": "490131f72f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood",
+        "balf"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 1462702
+    },
+    {
+      "shortLabel": "Inflammatory Memory Neutrophils in Asthma",
+      "name": "mouse-asthma",
+      "md5": "60e9bfa3f6",
+      "tags": [
+        "mouse"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "OVA-induced chronic allergic asthma"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Inflammatory Response in Human Kidney Allograft",
+      "name": "kidney-inflamm-response",
+      "md5": "e5c4654fad",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "kidney"
+      ],
+      "diseases": [
+        "End-stage Renal Failure",
+        "Hemolytic-uremic Syndrome",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 4487
+    },
+    {
+      "shortLabel": "Inhibitory Neurons",
+      "name": "dev-inhibitory-neurons",
+      "md5": "84c3a742cf",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "cerebrum",
+        "telencephalon",
+        "forebrain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)",
+        "Rhesus macaque (M. mulatta)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Klein-lab Xenopus",
+      "name": "klein-xenopus",
+      "md5": "45c316363f",
+      "tags": [
+        "dropseq"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "early develop."
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Western Clawed Frog (X. tropicalis)"
+      ],
+      "sampleCount": 136966
+    },
+    {
+      "shortLabel": "Krasnow Lung datasets",
+      "name": "stanford-czb-hlca",
+      "md5": "aa29feee62",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Lung Cancer",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Lifespan Nasal Atlas",
+      "name": "lifespan-nasal-atlas",
+      "md5": "dd3acb880b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "respiratory system",
+        "nasal",
+        "lung"
+      ],
+      "diseases": [
+        "Influenza",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Living Donor Kidney",
+      "name": "living-donor-kidney",
+      "md5": "0b4847dcd1",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 27677
+    },
+    {
+      "shortLabel": "Lung Interstitial Macrophages (IMs)",
+      "name": "lung-interstitial-macrophage",
+      "md5": "2f39591cac",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "acute lung injury"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 26267
+    },
+    {
+      "shortLabel": "Lung in Pulmonary Fibrosis vs Control",
+      "name": "lung-pf-control",
+      "md5": "a7b58b1217",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Pulmonary Fibrosis",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 114396
+    },
+    {
+      "shortLabel": "Lung, Spleen, and Oesophagus Cryo-preservation Study",
+      "name": "tissue-stability",
+      "md5": "c9c4f44c2b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung",
+        "spleen",
+        "oesophagus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "sources": [
+        "COVID-19 Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Macrophage Atlas",
+      "name": "macrophage-atlas",
+      "md5": "8205099677",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung",
+        "skin",
+        "peritoneal cavity",
+        "airway",
+        "lymph node"
+      ],
+      "diseases": [
+        "Healthy",
+        "Melanoma",
+        "Cancer"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 7
+    },
+    {
+      "shortLabel": "Macrophage Development",
+      "name": "macrophage-dev-bian2020",
+      "md5": "a1f0596cdf",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 1230
+    },
+    {
+      "shortLabel": "Maternal-Fetal Interface (Placenta/Decidua)",
+      "name": "placenta-decidua",
+      "md5": "d23f25f785",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "placenta/decidua"
+      ],
+      "sources": [
+        "COVID-19 Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Melanoma",
+      "name": "melanoma",
+      "md5": "f019e8e793",
+      "tags": [
+        "10x",
+        "Drop-Seq"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "skin"
+      ],
+      "diseases": [
+        "Melanoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Microbial and Immune Niches Colon",
+      "name": "microbial-immune-colon",
+      "md5": "4e62bf4b7d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "colon",
+        "gut",
+        "large intestine"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Gut Cell Atlas"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "assays": [
+        "expr"
+      ],
+      "sampleCount": 41650
+    },
+    {
+      "shortLabel": "Microglia Models",
+      "name": "mg-models",
+      "md5": "8009242a6e",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Microglia in the Developing Human Brain and Primary Glioblastoma",
+      "name": "mg-lineage",
+      "md5": "253abe6083",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "thalamus"
+      ],
+      "diseases": [
+        "Healthy",
+        "glioblastoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "development"
+      ],
+      "assays": [
+        "scATAC-seq"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Migratory Dendritic Cells Direct Monocytes into Lymph Nodes",
+      "name": "ln-mono-dc",
+      "md5": "47cc4e2fff",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lymph node"
+      ],
+      "sampleCount": 12535
+    },
+    {
+      "shortLabel": "Modeling Embryo Development using hPSCs",
+      "name": "hpsc-embryo-model",
+      "md5": "3c8a990f51",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "embryo",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 9966
+    },
+    {
+      "shortLabel": "Monocyte-associated Cytokine Storm in Severe COVID-19",
+      "name": "covid19-cytokine-storm",
+      "md5": "5a4c797935",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "GSA for Human"
+      ],
+      "sampleCount": 68190
+    },
+    {
+      "shortLabel": "Mouse Cardiac Development",
+      "name": "mouse-cardiac",
+      "md5": "5ffe32dd57",
+      "tags": [
+        "10x",
+        "mouse"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 9
+    },
+    {
+      "shortLabel": "Mouse Cardiomyocytes",
+      "name": "chi-10x-mouse-cardiomyocytes",
+      "md5": "2c15c22409",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "sampleCount": 9072
+    },
+    {
+      "shortLabel": "Mouse Cell Atlas",
+      "name": "mouse-cell-atlas",
+      "md5": "f8f5e79516",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "projects": [
+        "Mouse Cell Atlas"
+      ],
+      "life_stages": [
+        "adult",
+        "fetal",
+        "neonatal"
+      ],
+      "domains": [
+        "development"
+      ],
+      "assays": [
+        "scrna"
+      ],
+      "facets": {
+        "body_parts": [
+          "all"
+        ],
+        "assays": [
+          "scrna"
+        ],
+        "domains": [
+          "development"
+        ],
+        "life_stages": [
+          "adult",
+          "fetal",
+          "neonatal"
+        ],
+        "organisms": [
+          "Mouse (M. musculus)"
+        ],
+        "projects": [
+          "Mouse Cell Atlas"
+        ],
+        "diseases": [
+          "Healthy"
+        ]
+      },
+      "sampleCount": 318795
+    },
+    {
+      "shortLabel": "Mouse DRG Injury",
+      "name": "mouse-drg-injury",
+      "md5": "68ccdd7491",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "drg",
+        "dorsal root ganglion"
+      ],
+      "diseases": [
+        "Sciatic Nerve Crush Injury",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Mouse Developing Brain",
+      "name": "mouse-dev-brain",
+      "md5": "a4e3d4c344",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "hindbrain",
+        "forebrain",
+        "midbrain",
+        "forebrain dorsal",
+        "midbrain dorsal",
+        "midbrain ventral",
+        "forebrain ventrothalamic",
+        "forebrain ventral",
+        "forebrain ventrolateral"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 292495
+    },
+    {
+      "shortLabel": "Mouse Developing Heart",
+      "name": "mouse-dev-heart",
+      "md5": "f924ea80dd",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "heart"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "embryo",
+        "neonatal"
+      ],
+      "domains": [
+        "development",
+        "atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Mouse Dorsal and Ventral Forebrain Organoids",
+      "name": "mouse-df-vf-organoid",
+      "md5": "3f4b77f8f9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "dorsal forebrain ",
+        "ventral forebrain "
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "prenatal"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Mouse Embryonic Pancreas",
+      "name": "mouse-embryonic-pancreas",
+      "md5": "4d3c339595",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "pancreas"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Mouse Esophageal Epithelium",
+      "name": "mouse-esophagus",
+      "md5": "f97ee261a7",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "esophagus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 7972
+    },
+    {
+      "shortLabel": "Mouse Gastrulation",
+      "name": "mouse-gastrulation",
+      "md5": "29a0f9c8ca",
+      "tags": [
+        "mouse",
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "early develop."
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 139331
+    },
+    {
+      "shortLabel": "Mouse Hematopoietic Stem Cells",
+      "name": "mouse-hsc",
+      "md5": "abfe09ee64",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood",
+        "bone marrow"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Mouse Hypothalamus Development",
+      "name": "mouse-hypothalamus-dev",
+      "md5": "c840682d53",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "hypothalamus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 51245
+    },
+    {
+      "shortLabel": "Mouse Kidney Compensatory Hypertrophy",
+      "name": "mouse-comp-kidney",
+      "md5": "d8f025830f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "kidney"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 16500
+    },
+    {
+      "shortLabel": "Mouse Kidney Regulatory Landscape",
+      "name": "mouse-kidney-atac",
+      "md5": "b09fb6cc53",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "kidney"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Mouse Kidney Sepsis",
+      "name": "mouse-kidney-sepsis",
+      "md5": "8bacca3c1d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "kidney"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Sepsis"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Mouse Liver Macrophages",
+      "name": "liver-macrophages",
+      "md5": "13828269d5",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "liver"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Systemic Inflammation Syndrome"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Mouse Lung B16F10 Melanoma Cells ",
+      "name": "mouse-lung-b16",
+      "md5": "80566f1268",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "sampleCount": 54893
+    },
+    {
+      "shortLabel": "Mouse Mammary Epithelium",
+      "name": "mouse-mammary-epithelium-integrated",
+      "md5": "27574e9ec7",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "breast",
+        "breast epithelium"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Mouse Motor Neuron scATAC-seq",
+      "name": "mouse-motor-atac",
+      "md5": "9b8d523bd2",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "embryo"
+      ],
+      "domains": [
+        "Neuroscience"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "sampleCount": 62169
+    },
+    {
+      "shortLabel": "Mouse Nervous System",
+      "name": "mouse-nervous-system",
+      "md5": "9a8a5a1475",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "amygdala",
+        "cerebellum",
+        "cortex",
+        "drg",
+        "dorsal root ganglion",
+        "hippocampus",
+        "midbrain ventral",
+        "pons",
+        "striatum dorsal",
+        "thalamus",
+        "hypothalamus",
+        "medulla",
+        "olfactory",
+        "striatum ventral",
+        "enteric",
+        "midbrain dorsal",
+        "spinal cord",
+        "sympathetic"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 20
+    },
+    {
+      "shortLabel": "Mouse Oligodendrocyte Heterogeneity",
+      "name": "mouse-oligo-het",
+      "md5": "79dcff5c3a",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cns",
+        "central nervous system",
+        "cortex",
+        "hypothalamus",
+        "amygdala",
+        "striatum",
+        "hippocampus",
+        "dentate gyrus",
+        "zona incerta",
+        "corpus callosum",
+        "dorsal horn"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 5069
+    },
+    {
+      "shortLabel": "Mouse Organogenesis",
+      "name": "mouse-organogenesis",
+      "md5": "f02835b0cb",
+      "tags": [
+        "mouse"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 2058652
+    },
+    {
+      "shortLabel": "Mouse Pituitary Gland Inflammation",
+      "name": "mouse-pituitary-inflam",
+      "md5": "bf009c77ec",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "hypothalamus",
+        "pituitary gland",
+        "immune"
+      ],
+      "diseases": [
+        "inflammation"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "adult",
+        "8-12 weeks"
+      ],
+      "sampleCount": 5903
+    },
+    {
+      "shortLabel": "Mouse Primary Motor Cortex Atlas",
+      "name": "mouse-mop-atlas",
+      "md5": "7f9bdf4958",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "projects": [
+        "Allen Brain Atlas"
+      ],
+      "domains": [
+        "Neuroscience"
+      ],
+      "isCollection": true,
+      "datasetCount": 1
+    },
+    {
+      "shortLabel": "Mouse Skin Stretch Response",
+      "name": "mouse-skin-stretch",
+      "md5": "b3ac468ed2",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "skin"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 7
+    },
+    {
+      "shortLabel": "Mouse Striatal Development",
+      "name": "mouse-striatal-dev",
+      "md5": "d2594a1313",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "striatum"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Mouse Vis-Cortex Astrocytes",
+      "name": "mouse-astro-dev",
+      "md5": "991df356e3",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "visual cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Mouse cortex and hippocampus",
+      "name": "zeisel2015",
+      "md5": "280b1713b7",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "sampleCount": 3005
+    },
+    {
+      "shortLabel": "Mouse embryonic forelimb atlas",
+      "name": "mouse-limb",
+      "md5": "78e16bfb4e",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "limb"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Multimodal Chromatin Profiling of Juvenile Mouse Brain",
+      "name": "mouse-epi-juv-brain",
+      "md5": "fe686a4014",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "whole brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "assays": [
+        "atac",
+        "scrna"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Multimodal PBMC",
+      "name": "multimodal-pbmc",
+      "md5": "2ede5ad37b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca",
+        "Blood Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Multiomic Glioblastoma Atlas",
+      "name": "multiomic-gbm",
+      "md5": "59086b1515",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "facets": {
+        "body_parts": [
+          "brain"
+        ],
+        "organisms": [
+          "Human (H. sapiens)"
+        ],
+        "projects": [],
+        "diseases": [
+          "Healthy",
+          "glioblastoma"
+        ],
+        "life_stages": [
+          "adult"
+        ],
+        "assays": [
+          "spatial",
+          "atac"
+        ],
+        "domains": [
+          "neuroscience",
+          "cancer"
+        ]
+      },
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Multiple Sclerosis",
+      "name": "ms",
+      "md5": "8d44088747",
+      "tags": [
+        "10X"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "sampleCount": 48919
+    },
+    {
+      "shortLabel": "Multiple Sclerosis-like lesions in Marmoset Brain",
+      "name": "marmoset-eae-ms",
+      "md5": "12387a4aaf",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Multiple Sclerosis",
+        "experimental autoimmune encephalomyelitis"
+      ],
+      "organisms": [
+        "Marmoset (C. jacchus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 9
+    },
+    {
+      "shortLabel": "Multiplexed Morphogen Screening",
+      "name": "morphogen-screen",
+      "md5": "d0a2f06275",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "facets": {
+        "body_parts": [
+          "brain",
+          "organoid"
+        ],
+        "organisms": [
+          "Human (H. sapiens)"
+        ],
+        "projects": [
+          "CIRM"
+        ],
+        "diseases": [
+          "Healthy"
+        ],
+        "life_stages": [
+          "fetal"
+        ],
+        "assays": [
+          "spatial"
+        ],
+        "domains": [
+          "neuroscience"
+        ]
+      },
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Muscle Cell Atlas",
+      "name": "muscle-cell-atlas",
+      "md5": "ce1018904d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "muscle",
+        "skeletal muscle"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 22058
+    },
+    {
+      "shortLabel": "Myeloid Subsets in Neuroinflammation",
+      "name": "myeloid-neuroinflam",
+      "md5": "c8871521e9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "whole brain",
+        "cns",
+        "central nervous system",
+        "spinal cord",
+        "choroid plexus",
+        "leptomeninges"
+      ],
+      "diseases": [
+        "Autoimmune Encephalomyelitis"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "N6-methyladenosine (m6A) in Mouse HSPCs",
+      "name": "mouse-m6a-hspc",
+      "md5": "c40e495b26",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "bone marrow"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Knockout Mutant"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "8-12 weeks"
+      ],
+      "sampleCount": 21096
+    },
+    {
+      "shortLabel": "Nasu-Hakola Disease Microglia",
+      "name": "nhd-brain",
+      "md5": "a49fad5c2d",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Nasu-Hakola disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 66324
+    },
+    {
+      "shortLabel": "Neocortex in Developing Mouse",
+      "name": "mouse-dev-neocortex",
+      "md5": "688c380ff4",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "neocortex",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 5777
+    },
+    {
+      "shortLabel": "Neural Tube Organoids using MiSTR",
+      "name": "neural-tube-organoids",
+      "md5": "ccb8f85598",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "organoid"
+      ],
+      "isCollection": true,
+      "datasetCount": 23
+    },
+    {
+      "shortLabel": "Neurally-differentiated H1 Human Embryonic Stem Cells",
+      "name": "h1-esc-diff",
+      "md5": "ce4138f21f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 1733
+    },
+    {
+      "shortLabel": "Neurogenic Lineage in Mouse V-SVZ",
+      "name": "svzneurogeniclineage",
+      "md5": "a701e53a74",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "ventricular-subventricular zone"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Normal and Inflamed Human Epidermis",
+      "name": "human-epidermis",
+      "md5": "13761f7b01",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "skin",
+        "epidermis"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Inflammatory Skin Disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 68036
+    },
+    {
+      "shortLabel": "Oligodendrocyte Lineage in Development",
+      "name": "oligo-lineage-dev",
+      "md5": "4844ff7e8e",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cns",
+        "central nervous system",
+        "cortex",
+        "hypothalamus",
+        "amygdala",
+        "striatum",
+        "hippocampus",
+        "dentate gyrus",
+        "zona incerta",
+        "corpus callosum",
+        "dorsal horn"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 1956
+    },
+    {
+      "shortLabel": "Oligodendrocyte Lineage in Multiple Sclerosis",
+      "name": "oligo-lineage-ms",
+      "md5": "6361aa86a5",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "spinal cord",
+        "whole brain"
+      ],
+      "diseases": [
+        "Multiple Sclerosis",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "sampleCount": 1765
+    },
+    {
+      "shortLabel": "Oligodendrocytes in MS",
+      "name": "oligodendrocyte-ms",
+      "md5": "b568f2c807",
+      "tags": [
+        "GEO",
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cerebellum",
+        "cortex",
+        "frontal cortex",
+        "visual cortex"
+      ],
+      "diseases": [
+        "Multiple Sclerosis",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 17799
+    },
+    {
+      "shortLabel": "Oligodendrocytes in Mouse EAE Model of MS",
+      "name": "olg-eae-ms",
+      "md5": "0a6103c626",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "whole brain",
+        "spinal cord"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Autoimmune Encephalomyelitis",
+        "Multiple Sclerosis"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "collectionCount": 3
+    },
+    {
+      "shortLabel": "Oral Cavity",
+      "name": "oral-cavity",
+      "md5": "2ad14311c1",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "gingiva",
+        "salivary gland",
+        "oral cavity"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    },
+    {
+      "shortLabel": "Organoid Brain Development",
+      "name": "brain-dev-organoids",
+      "md5": "98e2292829",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "organoid"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Rhesus macaque (M. mulatta)",
+        "Chimp (P. troglodytes)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "life_stages": [
+        "adult",
+        "development",
+        "fetal"
+      ],
+      "domains": [
+        "neuroscience"
+      ],
+      "assays": [
+        "spatial"
+      ],
+      "isCollection": true,
+      "datasetCount": 4,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "Organoid Report Card",
+      "name": "organoidreportcard",
+      "md5": "bc2ff1b505",
+      "tags": [
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "organoid",
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "CIRM"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Ovarian Follicle Reconstruction",
+      "name": "ovarian-follicle-recon",
+      "md5": "73990d9447",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "ovary"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "sampleCount": 20676
+    },
+    {
+      "shortLabel": "Oyster Embryo",
+      "name": "oyster",
+      "md5": "8bf044ffbd",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Pacific Oyster (Crassostrea gigas)"
+      ],
+      "life_stages": [
+        "embryo"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "PanSci Organismal Aging",
+      "name": "mouse-pansci",
+      "md5": "e1cf610829",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy",
+        "Alzheimer's disease"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "life_stages": [
+        "6-month",
+        "12-month",
+        "23-month"
+      ],
+      "isCollection": true,
+      "datasetCount": 15
+    },
+    {
+      "shortLabel": "Parasitic Flatworm Schistosoma mansoni",
+      "name": "s-mansoni",
+      "md5": "7d55113bc4",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole organism"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Blood Fluke (S. mansoni)"
+      ],
+      "sampleCount": 43642
+    },
+    {
+      "shortLabel": "Peripheral Immune in COVID-19 Infection (Wilk et al. 2020.)",
+      "name": "covid19-periph-immuno",
+      "md5": "41d9196305",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "immune",
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 44721
+    },
+    {
+      "shortLabel": "Perturb-seq in Human Cortical Development",
+      "name": "cortical-lineage-perturb-44tf",
+      "md5": "e3b3f60383",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "normal"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "development"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "Polybrominated diphenyl ethers in Mouse mammaries",
+      "name": "mouse-mammary-pbde",
+      "md5": "e7f0be7d95",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Polybrominated diphenyl ethers"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "projects": [],
+      "life_stages": [
+        "adult"
+      ],
+      "domains": [
+        "neuroscience",
+        "toxicology"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "assays": [
+        "scrna"
+      ],
+      "facets": {
+        "body_parts": [
+          "brain"
+        ],
+        "organisms": [
+          "Mouse (M. musculus)"
+        ],
+        "projects": [],
+        "diseases": [
+          "Polybrominated diphenyl ethers"
+        ],
+        "life_stages": [
+          "adult"
+        ],
+        "assays": [
+          "scrna"
+        ],
+        "domains": [
+          "neuroscience",
+          "toxicology"
+        ],
+        "sources": [
+          "direct"
+        ]
+      },
+      "sampleCount": 48128
+    },
+    {
+      "shortLabel": "Preimplantation Embryos",
+      "name": "preimplant-embryos",
+      "md5": "9ac6fe46fa",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "embryo"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 1528
+    },
+    {
+      "shortLabel": "Prostate and Prostatic Urethra",
+      "name": "prostate-prostatic-urethra",
+      "md5": "c76efa042a",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "prostate"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 32921
+    },
+    {
+      "shortLabel": "Radial Glia in Early Brain",
+      "name": "early-brain",
+      "md5": "9b3c56c3e9",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 45156
+    },
+    {
+      "shortLabel": "Retina (Menon et al. 2019.)",
+      "name": "retina-mac-degen",
+      "md5": "7abfc89758",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "sources": [
+        "COVID-19 Cell Atlas"
+      ],
+      "sampleCount": 20091
+    },
+    {
+      "shortLabel": "Retina Atlas: Cell Types Associated in Age-related Macular Degeneration",
+      "name": "hafler-retina-atlas",
+      "md5": "64cc51ec40",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy",
+        "age-related macular degeneration"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas",
+        "Retina Atlas"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Retinal Pigment Epithelium",
+      "name": "retinal-pigment-epi",
+      "md5": "07ff376e51",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Neovascular age-related macular degeneration"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 4335
+    },
+    {
+      "shortLabel": "Retinal Pigment Epithelium Development",
+      "name": "choroid-rpe-dev",
+      "md5": "9b8c0e75d1",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Neovascular age-related macular degeneration"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sources": [
+        "GEO"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "Risk Loci in Alzheimer's and Parkinson's",
+      "name": "neuro-degen-atac",
+      "md5": "ce8d5ce9db",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "cortex",
+        "hippocampus",
+        "parietal lobe",
+        "substantia nigra",
+        "striatum"
+      ],
+      "diseases": [
+        "Healthy Control",
+        "Alzheimer's disease",
+        "Parkinson's disease"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Rubella Virus Organoids",
+      "name": "rubella-organoids",
+      "md5": "5df3a34878",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "organoid"
+      ],
+      "diseases": [
+        "rubella"
+      ],
+      "sampleCount": 23640
+    },
+    {
+      "shortLabel": "SARS-CoV-2 Target Cells in Human Airway Epithelium",
+      "name": "covid19-bronch-epi",
+      "md5": "68dae27660",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "airway"
+      ],
+      "diseases": [
+        "COVID-19",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 77650
+    },
+    {
+      "shortLabel": "SARS-CoV-2 and Cigarette Smoke",
+      "name": "covid19-smoking",
+      "md5": "361763e83b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung",
+        "cell culture"
+      ],
+      "diseases": [
+        "COVID-19"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 19361
+    },
+    {
+      "shortLabel": "Sea Anemone Atlas",
+      "name": "sea-anemone-atlas",
+      "md5": "f70b411bda",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole organism"
+      ],
+      "organisms": [
+        "Starlet Sea Anemone (N. vectensis)"
+      ],
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 3
+    },
+    {
+      "shortLabel": "Sea Urchin Development",
+      "name": "sea-urchin-dev",
+      "md5": "6ee65f9e90",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole organism"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Sea Urchin (S. purpuratus)"
+      ],
+      "sampleCount": 60399
+    },
+    {
+      "shortLabel": "Sea Urchin Pigment Cells",
+      "name": "sea-urchin-pigment",
+      "md5": "79a1ccab3f",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "ectoderm"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Sea Urchin (S. purpuratus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Single-Cell Multiome of the Human Retina",
+      "name": "chang-retina-atlas",
+      "md5": "258ba90ee7",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "facets": {
+        "body_parts": [
+          "eye",
+          "retina"
+        ],
+        "organisms": [
+          "Human (H. sapiens)"
+        ],
+        "projects": [
+          "Human Cell Atlas",
+          "Retina Atlas"
+        ],
+        "diseases": [
+          "Healthy"
+        ],
+        "life_stages": [
+          "adult"
+        ],
+        "assays": [
+          "eQTL",
+          "snRNA-seq",
+          "NuqSeq"
+        ],
+        "domains": []
+      },
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "Single-cell atlas of human leptomeningeal metastasis",
+      "name": "lepto-metastasis",
+      "md5": "ee7c81c8de",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "spinal cord",
+        "leptomeninges"
+      ],
+      "diseases": [
+        "Leptomeningeal Melanoma"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "Single-nucleus cross-tissue molecular reference maps (GTEx v9)",
+      "name": "cross-tissue-maps",
+      "md5": "c0da80bbec",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "GTEx",
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Skeletal Muscle",
+      "name": "skeletal-muscle",
+      "md5": "34bb2a3f95",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "muscle",
+        "skeletal muscle"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "collectionCount": 6
+    },
+    {
+      "shortLabel": "Smoking Effect on Human Airway Epithelium",
+      "name": "lung-smoking-effect",
+      "md5": "7fec7d3125",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Smoker",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 36248
+    },
+    {
+      "shortLabel": "Spongilla lacustris",
+      "name": "spongilla-lacustris",
+      "md5": "b81ae5cbdb",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "whole organism"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Tabula Microcebus - Mouse Lemur",
+      "name": "tabula-microcebus",
+      "md5": "8746558e98",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse lemur (T. microcebus)"
+      ],
+      "projects": [
+        "HCA",
+        "CZI BioHub"
+      ],
+      "isCollection": true,
+      "datasetCount": 27
+    },
+    {
+      "shortLabel": "Tabula Muris",
+      "name": "tabulamuris",
+      "md5": "6e02bb53c8",
+      "tags": [
+        "smartseq2"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "projects": [
+        "Tabula Muris Consortium"
+      ],
+      "sampleCount": 44949
+    },
+    {
+      "shortLabel": "Tabula Muris Senis",
+      "name": "tabula-muris-senis",
+      "md5": "c834a6aa38",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "projects": [
+        "Tabula Muris Consortium"
+      ],
+      "isCollection": true,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "Tabula Sapiens",
+      "name": "tabula-sapiens",
+      "md5": "b15d56fe1c",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca"
+      ],
+      "isCollection": true,
+      "datasetCount": 1,
+      "collectionCount": 2
+    },
+    {
+      "shortLabel": "Teichmann Lung and Asthma Atlases",
+      "name": "teichmann-asthma",
+      "md5": "8e77ad1b76",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "lung"
+      ],
+      "diseases": [
+        "Asthma",
+        "Healthy Control"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 3,
+      "collectionCount": 1
+    },
+    {
+      "shortLabel": "ToppCell COVID-19 Web Portal",
+      "name": "covid19-toppcell",
+      "md5": "77d103d8a5",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "peripheral blood",
+        "lung",
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca",
+        "ToppCell",
+        "Blood Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 10
+    },
+    {
+      "shortLabel": "Transplanted Human Organoids in Degenerating Mouse Retina",
+      "name": "xeno-hesc-retina",
+      "md5": "fa727d8527",
+      "tags": [
+        "mouse"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human-Mouse Xenograft"
+      ],
+      "sampleCount": 5831
+    },
+    {
+      "shortLabel": "Treehouse Cancer Compendium",
+      "name": "treehouse",
+      "md5": "8d533efb87",
+      "tags": [
+        "bulk"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "all"
+      ],
+      "diseases": [
+        "Cancer"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 8
+    },
+    {
+      "shortLabel": "Trigeminal Ganglion",
+      "name": "trigeminal-ganglion",
+      "md5": "5e61001721",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "trigeminal ganglion"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "Vasculature in the developing brain",
+      "name": "vascular-dev",
+      "md5": "d86fdcba79",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "vasculature"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "sampleCount": 139134
+    },
+    {
+      "shortLabel": "Vasculature of Adult Brain",
+      "name": "adult-brain-vasc",
+      "md5": "a7ebb64a7b",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "vasculature"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "isCollection": true,
+      "datasetCount": 5
+    },
+    {
+      "shortLabel": "ZScape - Zebrafish reference",
+      "name": "zscape",
+      "md5": "28186415de",
+      "tags": [
+        "splitseq"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "sampleCount": 1241018
+    },
+    {
+      "shortLabel": "Zebrafish Lens Aging",
+      "name": "zebrafish-lens-aging",
+      "md5": "a5f38689c4",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye"
+      ],
+      "organisms": [
+        "Zebrafish (D. rerio)"
+      ],
+      "domains": [
+        "neuroscience"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "sampleCount": 925
+    },
+    {
+      "shortLabel": "Zebrafish Marrow and Thymus Cell Atlas",
+      "name": "dr-marrow-thymus",
+      "md5": "8b223fa041",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "thymus",
+        "bone marrow"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Zebrafish (D. rerio)"
+      ],
+      "isCollection": true,
+      "datasetCount": 7
+    },
+    {
+      "shortLabel": "Zebrafish Neural Crest Atlas",
+      "name": "zebrafish-neural-crest-atlas",
+      "md5": "e9deccda72",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "neural crest"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Zebrafish (D. rerio)"
+      ],
+      "sampleCount": 4018
+    },
+    {
+      "shortLabel": "Zebrafish Tectum Repair",
+      "name": "zebrafish-tectum",
+      "md5": "af017d57d2",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Zebrafish (D. rerio)"
+      ],
+      "projects": [],
+      "life_stages": [
+        "embryo"
+      ],
+      "domains": [
+        "neuroscience",
+        "neurogenesis",
+        "regeneration"
+      ],
+      "sources": [
+        "direct"
+      ],
+      "assays": [
+        "expr"
+      ],
+      "facets": {
+        "organisms": [
+          "Zebrafish (D. rerio)"
+        ],
+        "projects": [],
+        "diseases": [
+          "Healthy"
+        ],
+        "life_stages": [
+          "embryo"
+        ],
+        "domains": [
+          "neuroscience",
+          "neurogenesis",
+          "regeneration"
+        ],
+        "sources": [
+          "direct"
+        ],
+        "assays": [
+          "expr"
+        ],
+        "body_parts": [
+          "brain"
+        ]
+      },
+      "sampleCount": 1556
+    },
+    {
+      "shortLabel": "Zebrafish mpeg1.1+ Cells Atlas",
+      "name": "zebrafish-mpeg1",
+      "md5": "92b64fb783",
+      "tags": [
+        "10x"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "epidermis",
+        "gill",
+        "intestine",
+        "liver",
+        "heart",
+        "brain"
+      ],
+      "organisms": [
+        "Zebrafish (D. rerio)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "isCollection": true,
+      "datasetCount": 6
+    },
+    {
+      "shortLabel": "eQTL Mapping to Autoimmune Disease",
+      "name": "eqtl-autoimmune",
+      "md5": "b8d1981ddc",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "blood"
+      ],
+      "diseases": [
+        "COVID-19"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "Human Cell Atlas",
+        "hca"
+      ],
+      "sampleCount": 1248980
+    },
+    {
+      "shortLabel": "iPain Dorsal Root Ganglion",
+      "name": "ipain-drg",
+      "md5": "3f3bdae358",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "spinal cord"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Mouse (M. musculus)"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "scRNA-seq of Various Brain Regions",
+      "name": "ms-cross-regional",
+      "md5": "7195e8be91",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "spinal cord",
+        "cerebrum",
+        "cerebellum"
+      ],
+      "diseases": [
+        "Multiple Sclerosis"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "life_stages": [
+        "adult"
+      ],
+      "domains": [
+        "neuroscience"
+      ],
+      "isCollection": true,
+      "datasetCount": 4
+    },
+    {
+      "shortLabel": "snATAC-seq of Human Retina",
+      "name": "retina-atac",
+      "md5": "6d58623e14",
+      "tags": [
+        "ATAC"
+      ],
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "eye",
+        "retina"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)"
+      ],
+      "projects": [
+        "hca",
+        "Human Cell Atlas"
+      ],
+      "isCollection": true,
+      "datasetCount": 2
+    },
+    {
+      "shortLabel": "snRNA-seq of human, chimp, bonobo and macaque brains",
+      "name": "primate-brain-regions",
+      "md5": "4f6f7d35d2",
+      "hasFiles": [
+        "datasetDesc"
+      ],
+      "body_parts": [
+        "brain",
+        "anterior cingulate cortex",
+        "cortex",
+        "cerebellum",
+        "caudate nucleus"
+      ],
+      "diseases": [
+        "Healthy"
+      ],
+      "organisms": [
+        "Human (H. sapiens)",
+        "Rhesus macaque (M. mulatta)",
+        "Bonobo (P. paniscus)",
+        "Chimp (P. troglodytes)"
+      ],
+      "isCollection": true,
+      "datasetCount": 3
+    }
+  ],
+  "md5": "88c9d3b248",
+  "fileVersions": {
+    "desc": {
+      "fname": "/hive/data/inside/cells/datasets/desc.conf",
+      "md5": "d1a52e9b51",
+      "size": 3336,
+      "mtime": "2023-10-17 12:55:39"
+    }
+  },
+  "hasFiles": [
+    "datasetDesc"
+  ]
+}

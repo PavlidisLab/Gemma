@@ -1,15 +1,15 @@
 package ubic.gemma.core.loader.util.anndata;
 
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.iterators.ArrayIterator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.hdf5.H5Dataset;
 import ubic.gemma.core.loader.util.hdf5.H5Group;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -24,7 +24,7 @@ import static ubic.gemma.core.loader.util.anndata.Utils.checkEncoding;
  * @param <K> the type of index being used
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoCloseable {
 
     /**
@@ -189,7 +189,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
                 column = new CategoricalColumn<>( columnName, getCategoricalColumn( columnName, clazz ) );
                 break;
             case "string-array":
-                Assert.isTrue( String.class.isAssignableFrom( clazz ) );
+                Assert.isTrue( String.class.isAssignableFrom( clazz ) , "expected true");
                 //noinspection unchecked
                 column = ( Column<K, T> ) new ArrayColumn<>( columnName, getStringArrayColumn( columnName ) );
                 break;
@@ -211,12 +211,12 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
                 }
                 break;
             case "nullable-integer":
-                Assert.isTrue( Integer.class.isAssignableFrom( clazz ) );
+                Assert.isTrue( Integer.class.isAssignableFrom( clazz ) , "expected true");
                 //noinspection unchecked
                 column = new ArrayColumn<>( columnName, ( T[] ) getNullableIntegerArrayColumn( columnName ) );
                 break;
             case "nullable-boolean":
-                Assert.isTrue( Boolean.class.isAssignableFrom( clazz ) );
+                Assert.isTrue( Boolean.class.isAssignableFrom( clazz ) , "expected true");
                 //noinspection unchecked
                 column = new ArrayColumn<>( columnName, ( T[] ) getNullableBooleanArrayColumn( columnName ) );
                 break;
@@ -234,6 +234,16 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
         Assert.isTrue( Objects.equals( group.getStringAttribute( columnName, "encoding-type" ), "array" ),
                 "The column " + columnName + " is not an array." );
         return group.getDataset( columnName );
+    }
+
+    /**
+     * Obtain an enum array column.
+     * <p>
+     * This is very similar to {@link #getCategoricalColumn(String)}, but the main difference is that the enumerated
+     * value is backed internally by H5 enum data type.
+     */
+    public EnumArray getEnumArrayColumn( String columnName ) {
+        return new EnumArray( getArrayColumn( columnName ) );
     }
 
     /**
@@ -309,7 +319,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public Iterator<Column<K, ?>> iterator() {
         List<String> columnNames = getColumns();
         return new Iterator<Column<K, ?>>() {
@@ -442,7 +452,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public Iterator<T> iterator() {
             return new Iterator<T>() {
                 private int i = 0;
@@ -496,7 +506,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
 
         @Override
         public Set<T> uniqueValues() {
-            return new HashSet<>( Arrays.asList( c.getCategories() ) );
+            return new LinkedHashSet<>( Arrays.asList( c.getCategories() ) );
         }
 
         @Override
@@ -535,7 +545,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public Iterator<T> iterator() {
             return new ArrayIterator<>( arr );
         }
@@ -586,7 +596,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public Iterator<Boolean> iterator() {
             return new ArrayIterator<>( arr );
         }
@@ -658,7 +668,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public Iterator<Integer> iterator() {
             return new ArrayIterator<>( arr );
         }
@@ -704,7 +714,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public Iterator<Double> iterator() {
             return new ArrayIterator<>( arr );
         }
@@ -811,7 +821,7 @@ public class Dataframe<K> implements Iterable<Dataframe.Column<K, ?>>, AutoClose
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public Iterator<K> iterator() {
             return column.iterator();
         }

@@ -19,11 +19,11 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -36,15 +36,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests for methods that create ExpressionExperimentSetValueObjects from expressionExperiment entities
  *
  * @author tvrossum
  */
-public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringContextTest {
+public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -58,7 +58,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
     private ExpressionExperiment ee = null;
     private ExpressionExperimentSet eeSet = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         Taxon tax1 = this.getTaxon( "human" );
@@ -77,7 +77,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         expressionExperimentService.remove( ee );
     }

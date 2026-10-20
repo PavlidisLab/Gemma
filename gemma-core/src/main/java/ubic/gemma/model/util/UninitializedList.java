@@ -1,6 +1,6 @@
 package ubic.gemma.model.util;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
@@ -20,7 +20,7 @@ public class UninitializedList<T> extends UninitializedCollection<T> implements 
     }
 
     @Override
-    public boolean addAll( int index, @Nonnull Collection<? extends T> c ) {
+    public boolean addAll( int index, @NonNull Collection<? extends T> c ) {
         throw uninitializedException();
     }
 
@@ -54,19 +54,19 @@ public class UninitializedList<T> extends UninitializedCollection<T> implements 
         throw uninitializedException();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public ListIterator<T> listIterator() {
         throw uninitializedException();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public ListIterator<T> listIterator( int index ) {
         throw uninitializedException();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<T> subList( int fromIndex, int toIndex ) {
         throw uninitializedException();

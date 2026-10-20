@@ -20,13 +20,26 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
 
 /**
  * An event that occurs when a curator has validated the entity and indicated that it is "approved". This could be used
  * to indicate that all preprocessing is finished, for example.
  *
  * @author Paul
+ * @deprecated resolve the open
+ * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#GENERIC GENERIC} /
+ * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketType#BATCH_INFO_NEEDED BATCH_INFO_NEEDED}
+ * ticket(s) targeting the entity via
+ * {@link ubic.gemma.persistence.service.common.auditAndSecurity.curation.TicketService#transition}
+ * (target state
+ * {@link ubic.gemma.model.common.auditAndSecurity.curation.TicketState#RESOLVED}).
+ * See {@link CurationDetailsEvent} for the full migration map.
  */
+@Deprecated
+@Entity
+@DiscriminatorValue("DoesNotNeedAttentionEvent")
 public class DoesNotNeedAttentionEvent extends NeedsAttentionAlteringEvent {
 
     @Override

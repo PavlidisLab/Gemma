@@ -1,5 +1,154 @@
 ## Updates
 
+### Update 3.0.0
+
+Correct the specification where it did not describe the API. None of this changes the wire; every
+change below makes the published document agree with what the server already does.
+
+The version goes to 3.0.0 rather than 2.10.0, for two reasons that are both about the number having
+stopped being informative. First, 2.9.4 no longer identifies one API: the 1.32.8 maintenance line
+publishes that same version for nine resources, while this document describes twenty-seven, so a
+client cannot tell from the version which of the two it is holding. Second, the field rename below
+is a breaking wire change that already shipped under 2.9.4, which means the number a client has
+does not tell it whether it has the renamed fields either. A major bump separates this document
+from both of those, and from here the number moves whenever the wire does.
+
+`AnnotationValueObject` renamed four of its fields and the change was never recorded here:
+`className` became `category`, `classUri` became `categoryUri`, `termName` became `value`, and
+`termUri` became `valueUri`. It landed on 2026-08-31, seven months after the 2.9.4 release of
+2026-01-09, and under that same version number — the commit changed neither the version nor this
+file, so a client had no signal of any kind. The old names are gone from the wire. This
+entry exists because they vanished without one — a client reading a factor-value row also finds
+that `value` now carries the term's own label rather than a composed sentence such as
+"wild type genotype has background APP/PS1". A test now pins the wire names of the value objects
+clients consume, so the next rename fails the build instead of shipping quietly.
+
+Seven write endpoints documented a status they do not return. `releaseCurationLock`, `deleteGroup`,
+`removeMember` and `deleteTicket` answer 204 with no body, not 200 with a JSON one; `createGroup`
+and `createTicket` answer 201, not 200; `removeTicketTarget` answers 204 when the ticket carried no
+such target. `upsertDatasetDraftAnnotationSet`, `submitDatasetAnnotationSet` and
+`attachAnnotationSet` answer 200 or 201 depending on whether the thing already existed, and now say
+so. Twenty write responses that declared no response body at all now declare one.
+
+`GET /datasets/{dataset}/design` accepts `quantitationType` and `useProcessedQuantitationType` on
+its tab-separated representation. Neither appeared in the specification, because the endpoint is
+served by two methods and the documented one does not take them.
+
+`GET /genes/{gene}/probes` has four response shapes, not two: `summary=true` returns
+`CompositeSequenceSummaryValueObject` rows, a type that did not appear in the specification at all.
+
+Bearer authentication is declared. `POST /login` has always minted tokens for
+`Authorization: Bearer <token>`, but the scheme was missing, so a generated client could not express
+it.
+
+Every response now carries a description, every operation a tag, and every parameter a description.
+The 503s that carry a `Retry-After` header say so, including on the eight budget-limited endpoints
+that did not document a 503 at all. Responses that serve a tab-separated body no longer describe it
+as a JSON object, and media types no longer carry the `q` weight that belonged to server-side
+content negotiation rather than to the specification.
+
+The `Admin`, `Admin/Pipeline` and `Internal/Pipeline` tags carry `x-internal: true`. A client
+generator that should not ship Gemma's operational surface can collect the internal tag names from
+the document's own `tags` list and drop the operations carrying them — 41 of 291 — without
+hardcoding tag names or path prefixes. `Observability` is deliberately not marked: `/health` and
+`/info` are what external uptime monitors read.
+
+`GeeqValueObject` no longer advertises each quality score twice. The specification listed both
+`qScoreOutliers` and `qscoreOutliers` for all nine scores, and had since before 2.9.4. Serializing
+one and inspecting the result showed the lowercase spelling was never on the wire: Lombok's
+`@Setter` generates `setQScoreOutliers` from the field `qScoreOutliers`, swagger mangles that setter
+name back to `qscoreOutliers`, and Jackson ignores it because the field's `@JsonProperty` settles
+the name. So these were phantom properties — advertised by the document, absent from every
+response. Nothing that reads `qScore*` changes; a client written against `qscore*` was reading a
+field it never received.
+
+### Update 2.9.4
+
+Remove the GEEQ suitability score. The `publicSuitabilityScore` and the eight `sScore*` fields it averaged
+(`sScorePublication`, `sScorePlatformAmount`, `sScorePlatformsTechMulti`, `sScoreAvgPlatformPopularity`,
+`sScoreAvgPlatformSize`, `sScoreSampleSize`, `sScoreRawData`, `sScoreMissingValues`) are gone from the
+`GeeqValueObject` model, along with `detectedSuitabilityScore` / `manualSuitabilityScore` /
+`manualSuitabilityOverride` on the admin model. The `geeq.publicSuitabilityScore` filter and sort property is
+withdrawn — it was the only property that required `GROUP_ADMIN`, so no filterable property is authority-gated
+any more. `pub` is no longer an accepted GEEQ scoring mode.
+
+The suitability score was scored from platform and publication properties, which do not discriminate for
+sequencing data: processed RNA-seq lands on a `GENELIST` platform, which pins platform amount, technology
+consistency, popularity and size. The quality score, its `qScore*` breakdown and every GEEQ endpoint remain.
+
+Add a `useProcessedQuantitationType` option to the `getDatasetDesign` endpoint to generate a design matrix that is
+tailored to the processed data vectors.
+
+Add a `quantitationType` option to `getDatasetDesign` endpoint to generate a design matrix that is tailored to any data
+vectors.
+
+Add a `type` option to the `getPlatformAnnotations` endpoint to select which annotation file to serve: `standard`
+(the default, and what the endpoint served before), `bioProcess` (biological-process terms only) or `noParents`
+(directly assigned terms, without the implied parents). The latter two were already generated alongside the standard
+file whenever GO was loaded, but no endpoint exposed them.
+
+### Update 2.9.3
+
+Add various single-cell metrics to the `BioAssayValueObject` model.
+
+Ignore the `offset` and `limit` parameters of `getDatasetDifferentialExpressionAnalyses` and schedule it for removal in
+the 2.10 release. This parameter was not really necessary given the few number of analyses per dataset and was causing
+issues with the pagination over the result sets.
+
+Add a `dataset` parameter to the `search` endpoint to constraint results to be related to a specific dataset.
+
+Add a `resultObjectUrl` and `resultObjectUrlExternal` fields to the `SearchResultValueObject` model.
+
+### Update 2.9.2
+
+Subject, predicates and objects of statements are now exposed in the `FilterArgExpressionExperiment` model. Their URIs
+are expanded with ontology inference.
+
+Consequently, the following properties have been added:
+
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.subject`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.predicate`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.predicateUri`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.object`,
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.objectUri`,
+
+For the `allCharacteristics` special collection, the following properties are now available:
+
+- `allCharacteristics.subject`,
+- `allCharacteristics.subjectUri`,
+- `allCharacteristics.predicate`,
+- `allCharacteristics.predicateUri`,
+- `allCharacteristics.object`,
+- `allCharacteristics.objectUri`,
+
+Filterable properties that are subject to ontology inference are now clearly indicated on the OpenAPI specification.
+
+Filterable properties can now be deprecated in the specification. The `x-gemma-filterable-property` section of the
+specification will contain a `deprecated` field for these.
+
+```yaml
+x-gemma-filterable-properties:
+  - name: "experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri"
+    type: "string[]"
+    description: "will be expanded with ontology inference; use experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri instead; alias for experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri"
+    deprecated: true
+```
+
+The following properties are now deprecated:
+
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.value`,
+  `experimentalDesign.experimentalFactors.factorValues.characteristics.subject` should be used instead
+- `experimentalDesign.experimentalFactors.factorValues.characteristics.valueUri`,
+  `experimentalDesign.experimentalFactors.factorValues.characteristics.subjectUri` should be used instead
+
+Note that the `allCharacteristics` will retain its `value` and `valueUri` properties as this collection still holds
+regular characteristics.
+
+Endpoints that produce`text/tab-separated-values` no-longer use the `binary` encoding. This is to avoid confusion in the
+client because no decoding is actually necessary. The encoding is still used by actual binary endpoints such as the one
+producing `application/vnd.10xgenomics.mex` for single-cell data.
+
 ### Update 2.9.1
 
 Add a `protocol` parameter to `getDatasetsCellTypeAssignment` endpoint to locate a cell type assignment by the name of

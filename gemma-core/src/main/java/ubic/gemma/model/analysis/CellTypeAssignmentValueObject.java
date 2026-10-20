@@ -1,0 +1,116 @@
+package ubic.gemma.model.analysis;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+
+import org.springframework.lang.Nullable;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
+
+/**
+ * @author poirigui
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Slf4j
+public class CellTypeAssignmentValueObject extends AnalysisValueObject<CellTypeAssignment> {
+
+    /**
+     * A set of cell types that are assigned to individual cells.
+     */
+    private Set<CharacteristicValueObject> cellTypes;
+
+    /**
+     * A list of IDs, one-per-cell, that refers to one of the cell type labels in {@link #cellTypes}.
+     * <p>
+     * {@code null} is used to indicate an unknown cell type.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<Long> cellTypeIds;
+
+    /**
+     * Indicate how many cells have an assigned cell type, or {@code null} if this information is not available.
+     */
+    @Nullable
+    private Integer numberOfAssignedCells;
+
+    /**
+     * How many cells carry each cell type, keyed by the {@link CharacteristicValueObject#getId() id} of the entry
+     * in {@link #cellTypes}. {@code null} when the indices are unavailable.
+     * <p>
+     * The tally comes off the same {@code cellTypeIndices} array {@link #cellTypeIds} is built from, so it costs
+     * one extra pass and no extra query. It exists because the per-cell array was the only way to answer "how
+     * many astrocytes" — 89,700 entries and 809 KB on one dataset to recover ten numbers (uib, 2026-09-03) —
+     * and a client that only needs the tally can now exclude the array outright.
+     */
+    @Nullable
+    private Map<Long, Integer> numberOfAssignedCellsByCellType;
+
+    /**
+     * Indicate if this assignment is the preferred one.
+     */
+    private boolean isPreferred;
+
+    public CellTypeAssignmentValueObject( CellTypeAssignment cellTypeAssignment, boolean excludeCellTypeIds ) {
+        super( cellTypeAssignment );
+        cellTypes = cellTypeAssignment.getCellTypes().stream()
+                .map( CharacteristicValueObject::new )
+                .collect( Collectors.toSet() );
+        if ( !excludeCellTypeIds ) {
+            try {
+                cellTypeIds = Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
+                        .mapToObj( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE ? requireNonNull( cellTypeAssignment.getCellTypes().get( i ).getId() ) : null )
+                        .collect( Collectors.toList() );
+            } catch ( IndexOutOfBoundsException e ) {
+                // this may happen because getCellType() can fail if the data we have is incorrect, but we don't want to
+                // break the VO serialization which would break the REST API.
+                log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
+            }
+        }
+        int[] indices = cellTypeAssignment.getCellTypeIndices();
+        if ( indices != null ) {
+            Map<Long, Integer> tally = new LinkedHashMap<>();
+            for ( Characteristic ct : cellTypeAssignment.getCellTypes() ) {
+                if ( ct.getId() != null ) {
+                    tally.put( ct.getId(), 0 );
+                }
+            }
+            try {
+                for ( int i : indices ) {
+                    if ( i == CellTypeAssignment.UNKNOWN_CELL_TYPE ) {
+                        continue;
+                    }
+                    Long id = cellTypeAssignment.getCellTypes().get( i ).getId();
+                    if ( id != null ) {
+                        tally.merge( id, 1, Integer::sum );
+                    }
+                }
+                numberOfAssignedCellsByCellType = tally;
+            } catch ( IndexOutOfBoundsException e ) {
+                // same reason as above: bad indices must not break the whole response
+                log.warn( "Cell type indices are invalid for " + cellTypeAssignment + "." );
+            }
+        }
+        if ( cellTypeAssignment.getNumberOfAssignedCells() != null ) {
+            numberOfAssignedCells = cellTypeAssignment.getNumberOfAssignedCells();
+        } else if ( cellTypeAssignment.getCellTypeIndices() != null ) {
+            numberOfAssignedCells = ( int ) Arrays.stream( cellTypeAssignment.getCellTypeIndices() )
+                    .filter( i -> i != CellTypeAssignment.UNKNOWN_CELL_TYPE )
+                    .count();
+        } else {
+            numberOfAssignedCells = null;
+        }
+        isPreferred = cellTypeAssignment.isPreferred();
+    }
+}

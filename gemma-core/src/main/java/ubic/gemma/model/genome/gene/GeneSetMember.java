@@ -18,18 +18,39 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Objects;
 
+/**
+ * Hibernate Search 7 mapping: contributes its referenced {@link Gene} via {@code @IndexedEmbedded}
+ * from {@link GeneSet}. The set's documents pick up the gene's official symbol / name / accessions
+ * via this path.
+ */
+@Entity
+@Table(name = "GENE_SET_MEMBER")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Indexed
 public class GeneSetMember extends AbstractIdentifiable {
 
+    @Column(name = "SCORE", nullable = false, columnDefinition = "DOUBLE")
     private Double score;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GENE_FK", nullable = false, columnDefinition = "BIGINT")
     private Gene gene;
 
     @Override
@@ -38,6 +59,7 @@ public class GeneSetMember extends AbstractIdentifiable {
         return super.getId();
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public Gene getGene() {
         return this.gene;

@@ -1,11 +1,11 @@
 package ubic.gemma.core.analysis.stats;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.count;
 import static ubic.gemma.core.analysis.stats.DataVectorDescriptive.countMissing;
 

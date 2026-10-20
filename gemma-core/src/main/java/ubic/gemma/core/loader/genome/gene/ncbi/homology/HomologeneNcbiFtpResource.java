@@ -1,8 +1,8 @@
 package ubic.gemma.core.loader.genome.gene.ncbi.homology;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.AbstractResource;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.util.Collection;
  * Resource designed to retrieve Homologene data from NCBI FTP server.
  * @see HomologeneFetcher
  */
-@CommonsLog
+@Slf4j
 class HomologeneNcbiFtpResource extends AbstractResource {
 
     private final String filename;

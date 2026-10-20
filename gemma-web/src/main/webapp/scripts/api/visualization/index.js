@@ -1,6 +1,0 @@
-import './EEDetailsVisualizationWidget'
-import './Heatmap'
-import './LinePlot'
-import './VisualizationWidget'
-import './cytoscape'
-import './metaheatmap'

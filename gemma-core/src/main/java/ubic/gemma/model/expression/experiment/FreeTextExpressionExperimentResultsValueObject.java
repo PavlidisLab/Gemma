@@ -37,12 +37,17 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Collection;
 
 /**
  * @author tvrossum
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Getter
+@Setter
 public class FreeTextExpressionExperimentResultsValueObject extends SessionBoundExpressionExperimentSetValueObject {
 
     private static final long serialVersionUID = 3557304710219740029L;
@@ -76,20 +81,6 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
         this.setExpressionExperimentIds( memberIds );
         this.setModified( false );
         this.setQueryString( queryString );
-    }
-
-    /**
-     * @return the queryString
-     */
-    public String getQueryString() {
-        return queryString;
-    }
-
-    /**
-     * @param queryString the queryString to set
-     */
-    public void setQueryString( String queryString ) {
-        this.queryString = queryString;
     }
 
 }

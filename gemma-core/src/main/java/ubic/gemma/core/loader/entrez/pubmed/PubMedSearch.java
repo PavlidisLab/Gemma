@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.w3c.dom.Document;
 import ubic.gemma.core.loader.entrez.EntrezQuery;
@@ -29,19 +29,21 @@ import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 import ubic.gemma.model.common.description.BibliographicReference;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.core.loader.entrez.EntrezUtils.quoteTerm;
+
 /**
  * Search PubMed for terms, retrieve document records.
  *
  * @author pavlidis
  */
-@CommonsLog
+@Slf4j
 public class PubMedSearch {
 
     private static final int MAX_TRIES = 3;
@@ -109,6 +111,20 @@ public class PubMedSearch {
     }
 
     /**
+     * Retrieve PubMed records by DOI.
+     */
+    public Collection<BibliographicReference> searchAndRetrieveByDoi( String doi ) throws IOException {
+        if ( doi.startsWith( "https://doi.org/" ) ) {
+            doi = doi.substring( "https://doi.org/".length() );
+        } else if ( doi.startsWith( "http://doi.org/" ) ) {
+            doi = doi.substring( "http://doi.org/".length() );
+        } else if ( doi.startsWith( "doi:" ) ) {
+            doi = doi.substring( "doi:".length() );
+        }
+        return searchAndRetrieve( quoteTerm( doi ) + "[lid]", -1 );
+    }
+
+    /**
      * Retrieve a single PubMed record by ID.
      * @see EntrezUtils#fetchById(String, String, EntrezRetmode, String, String)
      */
@@ -116,7 +132,7 @@ public class PubMedSearch {
     public BibliographicReference retrieve( String pubMedId ) throws IOException {
         URL fetchUrl = EntrezUtils.fetchById( "pubmed", pubMedId, EntrezRetmode.XML, "full", apiKey );
         Collection<BibliographicReference> results = fetch( fetchUrl );
-        if ( results == null || results.isEmpty() ) {
+        if ( results.isEmpty() ) {
             return null;
         }
         assert results.size() == 1;

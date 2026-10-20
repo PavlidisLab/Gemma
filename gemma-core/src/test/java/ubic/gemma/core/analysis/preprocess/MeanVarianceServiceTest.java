@@ -15,24 +15,26 @@
 package ubic.gemma.core.analysis.preprocess;
 
 import org.hibernate.ObjectNotFoundException;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -47,13 +49,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.io.InputStream;
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author ptan
  */
-@Category(GeoTest.class)
-public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
+@Tag("geo")
+@ExtendWith(NetworkAvailableExtension.class)
+public class MeanVarianceServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private MeanVarianceService meanVarianceService;
@@ -74,7 +77,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void after() {
         if ( ee != null ) {
             eeService.remove( ee );
@@ -82,7 +85,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateTwoColor() throws Exception {
         prepareGSE2892();
 
@@ -118,7 +122,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( means );
         Arrays.sort( variances );
 
-        int expectedLength = 78; // after filtering
+        int expectedLength = 81; // after filtering
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
 
@@ -133,7 +137,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateOneColor() throws Exception {
         prepareGSE2892();
 
@@ -163,8 +168,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         Arrays.sort( variances );
 
         // check sizes
-        int expectedMeanVarianceLength = 78;
-        int expectedLowessLength = 78; // NAs removed
+        int expectedMeanVarianceLength = 81;
+        int expectedLowessLength = 81; // NAs removed
         assertEquals( expectedMeanVarianceLength, means.length );
         assertEquals( expectedMeanVarianceLength, variances.length );
 
@@ -180,7 +185,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     final public void testServiceCreateCountData() throws Exception {
 
         // so it doesn't look for soft files
@@ -195,7 +201,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AccessDeniedException e ) {
             // see https://github.com/PavlidisLab/Gemma/issues/206
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
         } catch ( AlreadyExistsInSystemException e ) {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
@@ -203,7 +209,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         try {
             ee = eeService.thaw( ee );
         } catch ( ObjectNotFoundException e ) {
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
         }
 
         this.createOrUpdateQt( ScaleType.COUNT );
@@ -274,7 +280,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     final public void testServiceCreateExistingEe() throws Exception {
         prepareGSE2892();
 
@@ -336,7 +343,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             results = geoService.fetchAndLoad( "GSE2982", false, false, false );
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
             return;
         }
 

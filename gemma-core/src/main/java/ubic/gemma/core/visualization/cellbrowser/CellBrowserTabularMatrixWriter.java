@@ -1,5 +1,6 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
+import lombok.Setter;
 import ubic.gemma.core.analysis.preprocess.convert.ScaleTypeConversionUtils;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationScaleConversionException;
 import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeConversionException;
@@ -13,7 +14,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
@@ -29,33 +30,17 @@ import static ubic.gemma.model.common.quantitationtype.QuantitationTypeUtils.get
  * Generate a tabular matrix format compatible with <a href="https://cellbrowser.readthedocs.io/en/master/tabsep.html">Cell Browser</a>.
  * @author poirigui
  */
+@Setter
 public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
     private boolean useBioAssayIds = false;
     private boolean useRawColumnNames = false;
     private boolean autoFlush = false;
+    @Nullable
     private ScaleType scaleType = null;
 
-    public void setUseBioAssayIds( boolean useBioAssayIds ) {
-        this.useBioAssayIds = useBioAssayIds;
-    }
-
-    public void setUseRawColumnNames( boolean useRawColumnNames ) {
-        this.useRawColumnNames = useRawColumnNames;
-    }
-
     @Override
-    public void setAutoFlush( boolean autoFlush ) {
-        this.autoFlush = autoFlush;
-    }
-
-    @Override
-    public void setScaleType( @Nullable ScaleType scaleType ) {
-        this.scaleType = scaleType;
-    }
-
-    @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer writer ) throws IOException, UnsupportedOperationException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer writer ) throws IOException, UnsupportedOperationException {
         throw new UnsupportedOperationException( "Writing single-cell matrices is not supported." );
     }
 
@@ -132,7 +117,7 @@ public class CellBrowserTabularMatrixWriter implements SingleCellExpressionDataM
 
     private void writeVector( SingleCellExpressionDataVector vector, Object data, PrimitiveType representation, @Nullable Map<CompositeSequence, Set<Gene>> cs2gene, String valueIfMissing, Writer writer ) throws IOException {
         writeDesignElement( vector.getDesignElement(), cs2gene, writer );
-        int numCells = vector.getSingleCellDimension().getNumberOfCells();
+        int numCells = vector.getSingleCellDimension().getNumberOfCellIds();
         int k = 0;
         for ( int i = 0; i < numCells; i++ ) {
             writer.write( "\t" );

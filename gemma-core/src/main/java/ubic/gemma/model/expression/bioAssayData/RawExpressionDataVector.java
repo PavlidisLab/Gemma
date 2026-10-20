@@ -18,13 +18,70 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 
 /**
  * Data for one design element, across one or more bioassays, for a single quantitation type. For example, the
  * "expression profile" for a probe (gene) across a set of samples
  */
+@Getter
+@Setter
+@Entity
+@Table(name = "RAW_EXPRESSION_DATA_VECTOR")
 public class RawExpressionDataVector extends BulkExpressionDataVector {
+
+    /**
+     * Number of cells that were used to compute each value in this vector.
+     *
+     * @see ExpressionExperiment#getNumberOfCells()
+     * @see BioAssay#getNumberOfCells()
+     */
+    // hbm: lazy="false" fetch="join" — restore outer-join semantics so bulk-vector loads don't
+    // issue one follow-up SELECT against NUMBER_OF_CELLS per vector (the default Hibernate fetch
+    // for a mappedBy 1:1 is SECONDARY SELECT, not JOIN).
+    @Nullable
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "vector", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.JOIN)
+    private RawExpressionDataVectorNumberOfCells numberOfCellsObject;
+
+    @Nullable
+    RawExpressionDataVectorNumberOfCells getNumberOfCellsObject() {
+        return numberOfCellsObject;
+    }
+
+    void setNumberOfCellsObject( @Nullable RawExpressionDataVectorNumberOfCells numberOfCellsObject ) {
+        this.numberOfCellsObject = numberOfCellsObject;
+    }
+
+    @Nullable
+    public int[] getNumberOfCells() {
+        return numberOfCellsObject != null ? numberOfCellsObject.getNumberOfCells() : null;
+    }
+
+    public void setNumberOfCells( @Nullable int[] numberOfCells ) {
+        if ( numberOfCells != null ) {
+            if ( numberOfCellsObject != null ) {
+                this.numberOfCellsObject.setNumberOfCells( numberOfCells );
+            } else {
+                this.numberOfCellsObject = RawExpressionDataVectorNumberOfCells.Factory.newInstance( this, numberOfCells );
+            }
+        } else {
+            this.numberOfCellsObject = null;
+        }
+    }
 
     @Override
     public int hashCode() {

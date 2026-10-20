@@ -47,12 +47,22 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
             return 0;
         //noinspection unchecked
         List<Long> aeIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select ae.id from AuditTrail at join at.events ae" )
+                .createQuery( "select ae.id from AuditTrail at join at.events ae where at.id in :atIds" )
+                .setParameterList( "atIds", optimizeParameterList( ids ) )
                 .list();
         //noinspection unchecked
         List<Long> aetIds = getSessionFactory().getCurrentSession()
-                .createQuery( "select aet.id from AuditTrail at join at.events ae join ae.eventType aet" )
+                .createQuery( "select aet.id from AuditTrail at join at.events ae join ae.eventType aet where at.id in :atIds" )
+                .setParameterList( "atIds", optimizeParameterList( ids ) )
                 .list();
+        // Null out the denormalised lastEvent pointer before deleting the events.
+        // V8__audit_trail_last_event_id.sql declares ON DELETE SET NULL on
+        // LAST_EVENT_FK, but under hbm2ddl=create the Hibernate-generated FK
+        // has no cascade rule, so we have to clear it ourselves.
+        getSessionFactory().getCurrentSession()
+                .createQuery( "update AuditTrail at set at.lastEvent = null where at.id in :atIds" )
+                .setParameterList( "atIds", optimizeParameterList( ids ) )
+                .executeUpdate();
         if ( !aeIds.isEmpty() ) {
             getSessionFactory().getCurrentSession()
                     .createQuery( "delete from AuditEvent ae where ae.id in :aeIds" )

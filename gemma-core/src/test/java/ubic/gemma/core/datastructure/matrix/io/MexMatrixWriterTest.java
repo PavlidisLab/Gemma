@@ -6,15 +6,17 @@ import no.uib.cipr.matrix.io.MatrixVectorReader;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.file.PathUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +40,7 @@ public class MexMatrixWriterTest {
     private int numCellsPerBioAssay;
     private int nnz;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         writer = new MexMatrixWriter();
         numDesignElements = 100;
@@ -302,7 +304,7 @@ public class MexMatrixWriterTest {
         SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         byte[] blob;
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-            writer.write( matrix, null, baos );
+            writer.write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, baos );
             blob = baos.toByteArray();
         }
         List<BioAssay> bas = vectors.iterator().next().getSingleCellDimension().getBioAssays();
@@ -348,7 +350,7 @@ public class MexMatrixWriterTest {
         SingleCellExpressionDataDoubleMatrix matrix = new SingleCellExpressionDataDoubleMatrix( vectors );
         byte[] blob;
         try ( ByteArrayOutputStream baos = new ByteArrayOutputStream() ) {
-            writer.write( matrix, null, baos );
+            writer.write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, baos );
             blob = baos.toByteArray();
         }
         List<BioAssay> bas = vectors.iterator().next().getSingleCellDimension().getBioAssays();

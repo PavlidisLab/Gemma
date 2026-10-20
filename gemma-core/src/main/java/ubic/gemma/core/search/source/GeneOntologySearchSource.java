@@ -3,12 +3,17 @@ package ubic.gemma.core.search.source;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.BaseCodeOntologySearchException;
+import ubic.gemma.core.search.SearchContext;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchSource;
 import ubic.gemma.core.search.lucene.LuceneQueryUtils;
+import ubic.gemma.model.common.search.SearchResult;
+import ubic.gemma.model.common.search.SearchResultSet;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -21,15 +26,34 @@ import java.util.DoubleSummaryStatistics;
 import java.util.Set;
 
 import static ubic.gemma.core.ontology.providers.GeneOntologyUtils.isGoId;
-import static ubic.gemma.core.search.SearchSettingsUtils.isFilled;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.extractTermsDnf;
 import static ubic.gemma.core.search.lucene.LuceneQueryUtils.quote;
+import static ubic.gemma.core.search.source.SearchSourceUtils.isFilled;
 
 /**
  * GO-based search source.
- * <p>
- * This does not exactly fit the {@link OntologySearchSource} because it is specialized for the {@link GeneOntologyService}
- * and uses higher-level method to retrieve GO-gene associations.
+ *
+ * <p>This does not exactly fit the {@link OntologySearchSource} because it is
+ * specialized for the {@link GeneOntologyService} and uses higher-level methods
+ * to retrieve GO-gene associations.
+ *
+ * <p><b>Phase 3 restoration.</b> This class was deleted wholesale in the Phase 2
+ * "stub/delete search subsystem cascade" commit (ed93c2f023) and is restored
+ * here per {@code SEARCH_RECCE.md} Section 6.3 Step 6. The body is the
+ * pre-strip implementation (167 LoC) restored verbatim.
+ *
+ * <p><b>Known runtime gap (2026-05-19).</b> Like {@link OntologySearchSource},
+ * this source consumes baseCode's {@link GeneOntologyService#findTerm(String, int)},
+ * which routes through baseCode's pre-renovations Lucene-3 indexer (now stubbed
+ * to always return null). GO full-text search will therefore return empty
+ * results until either baseCode gains a public hook for the in-Gemma
+ * {@link ubic.gemma.core.ontology.search.OntologySearchService} (jena-text /
+ * Lucene 9), or {@code GeneOntologyServiceImpl.findTerm} is rewired in Gemma to
+ * consult that service directly over a TDB / OntModel it controls. The
+ * 3 disabled tests in {@code GeneOntologyServiceTest} are the witness for this
+ * gap. The {@link GeneOntologyService#getGenes(String, ubic.gemma.model.genome.Taxon)}
+ * exact-GO-ID path remains functional.
+ *
  * @author poirigui
  */
 @Component
@@ -55,7 +79,9 @@ public class GeneOntologySearchSource implements SearchSource {
 
     @Override
     public boolean accepts( SearchSettings settings ) {
-        return settings.isUseGo();
+        return settings.isUseGeneOntology()
+                && settings.hasResultType( Gene.class )
+                && settings.getMode().isAtLeast( SearchSettings.SearchMode.FAST );
     }
 
     @Override
@@ -77,7 +103,6 @@ public class GeneOntologySearchSource implements SearchSource {
                 } else {
                     clauseResults.retainAll( doSearchGene( settings.withQuery( term ) ) );
                 }
-                // if there are no elements in common, we can move on to the next clause
                 if ( clauseResults.isEmpty() ) {
                     break;
                 }
@@ -93,7 +118,6 @@ public class GeneOntologySearchSource implements SearchSource {
         SearchResultSet<Gene> results = new SearchResultSet<>( settings );
 
         if ( isGoId( settings.getQuery() ) ) {
-            // find via a full URI or GO identifier
             Collection<Gene> exactMatchResults = filterGenesByExperimentAndPlatformConstraints( geneOntologyService.getGenes( settings.getQuery(), settings.getTaxonConstraint() ), settings );
             for ( Gene g : exactMatchResults ) {
                 results.add( SearchResult.from( Gene.class, g, 1.0, Collections.emptyMap(), "GeneOntologyService.getGenes using a GO URI" ) );
@@ -101,11 +125,9 @@ public class GeneOntologySearchSource implements SearchSource {
             return results;
         }
 
-        // find inexact match using full-text query of GO terms
         Collection<OntologySearchResult<OntologyTerm>> terms = findTerms( settings.getQuery() );
         findGenesByTerms( terms, settings, results );
 
-        // find via GO-annotated GeneSet
         for ( Gene g : geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxonConstraint() ) ) {
             results.add( SearchResult.from( Gene.class, g, 0.8, Collections.singletonMap( "GO Group", "From GO group" ), "GeneSearchService.getGOGroupGenes" ) );
         }
@@ -126,7 +148,6 @@ public class GeneOntologySearchSource implements SearchSource {
     }
 
     private void findGenesByTerms( Collection<OntologySearchResult<OntologyTerm>> terms, SearchSettings settings, SearchResultSet<Gene> results ) {
-        // rescale the scores in a [0, 1] range
         DoubleSummaryStatistics summaryStatistics = terms.stream()
                 .mapToDouble( OntologySearchResult::getScore )
                 .summaryStatistics();
@@ -147,12 +168,10 @@ public class GeneOntologySearchSource implements SearchSource {
 
     private Collection<Gene> filterGenesByExperimentAndPlatformConstraints( Collection<Gene> genes, SearchSettings settings ) {
         if ( settings.getPlatformConstraint() != null ) {
-            // query all genes for the given platform?
-            genes.retainAll( arrayDesignService.getGenes( settings.getPlatformConstraint() ) );
+            genes.retainAll( arrayDesignService.getGenes( settings.getPlatformConstraint(), true ) );
         }
-        if ( settings.getExperimentConstraint() != null ) {
-            // query all the genes used by the *preferred* set of vectors, or any vector?
-            genes.retainAll( expressionExperimentService.getGenesUsedByPreferredVectors( settings.getExperimentConstraint() ) );
+        if ( settings.getDatasetConstraint() != null ) {
+            genes.retainAll( expressionExperimentService.getGenesUsedByPreferredVectors( settings.getDatasetConstraint() ) );
         }
         return genes;
     }

@@ -30,24 +30,24 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import ubic.basecode.ontology.jena.UrlOntologyService;
-import ubic.basecode.ontology.model.AnnotationProperty;
-import ubic.basecode.ontology.model.OntologyIndividual;
-import ubic.basecode.ontology.model.OntologyResource;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.AbstractDelegatingOntologyService;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.jena.UrlOntologyService;
+import ubic.gemma.core.ontology.model.AnnotationProperty;
+import ubic.gemma.core.ontology.model.OntologyIndividual;
+import ubic.gemma.core.ontology.model.OntologyResource;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.providers.AbstractDelegatingOntologyService;
+import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneOntologyTermValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.cache.CacheUtils;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.InputStream;
 import java.util.*;
@@ -71,7 +71,7 @@ public class GeneOntologyServiceImpl extends AbstractDelegatingOntologyService i
     private static final Log log = LogFactory.getLog( GeneOntologyServiceImpl.class.getName() );
 
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationReadService gene2GOAssociationService;
 
     @Autowired
     private GeneService geneService;
@@ -161,13 +161,54 @@ public class GeneOntologyServiceImpl extends AbstractDelegatingOntologyService i
         return overlapTerms;
     }
 
+    /**
+     * Rewrite a free-text query so GO matching requires EVERY token, rather than the parser's
+     * default OR: strip the separators already present, then rejoin on AND.
+     * <p>
+     * The first replacement must yield a SPACE. It yielded the empty string, which welded the
+     * operands together — `cell AND neuron` became the single token `cellneuron`, and the rejoin
+     * pass then had no whitespace left to split on, so GO searched a term that cannot exist. Silent:
+     * no error, no hits. Found 2026-08-24 while tracing the `/annotations/search` 500 on a bare
+     * boolean keyword; only reachable on the GO fallback, which runs when the other ontologies
+     * return nothing.
+     * <p>
+     * 🛑 It stripped only {@code AND}, so an infix {@code OR} survived into the rejoin and came out
+     * as an OPERAND: `tumour OR normal` became `tumour AND OR AND normal`, which does not parse. A
+     * legal query was turned into an invalid one by the rewrite, and the endpoint reported a 400 for
+     * a search that should simply have found nothing — which is why `liver OR brain` answered 200
+     * (hits, so no fallback) while `zqx OR zqy` answered 400. Reported by oganm on gemma-ui PR #11.
+     * <p>
+     * Separators are matched with whitespace on BOTH sides, so a DANGLING operator (`cell OR`,
+     * `OR cell`) is deliberately left alone and still fails to parse: that input is malformed, and
+     * making it search is a separate behaviour change that was declined.
+     *
+     * @see #excludesTerms(String) for why {@code NOT} is not a separator
+     */
+    static String requireAllTerms( String queryString ) {
+        return queryString
+                .trim()
+                .replaceAll( "\\s+(AND|OR)\\s+", " " )
+                .replaceAll( "\\s+", " AND " );
+    }
+
+    /**
+     * Whether a query carries an infix {@code NOT}, i.e. asks to EXCLUDE something.
+     * <p>
+     * {@code NOT} is not stripped as a separator like {@code AND} / {@code OR}: dropping it would
+     * invert the query — `tumour NOT normal` would become `tumour AND normal`, matching the very
+     * thing the caller asked to exclude. GO cannot honour an exclusion here either, because this
+     * leg requires every token by construction, so the fallback sits the query out instead.
+     */
+    static boolean excludesTerms( String queryString ) {
+        return queryString != null && queryString.trim().matches( "(?s).*\\s+NOT\\s+.*" );
+    }
+
     @Override
     public Collection<OntologySearchResult<OntologyTerm>> findTerm( String queryString, int maxResults ) throws OntologySearchException {
-        // make sure we are all-inclusive
-        queryString = queryString
-                .trim()
-                .replaceAll( "\\s+AND\\s+", "" )
-                .replaceAll( "\\s+", " AND " );
+        if ( excludesTerms( queryString ) ) {
+            return Collections.emptySet();
+        }
+        queryString = requireAllTerms( queryString );
         StopWatch timer = StopWatch.createStarted();
         Set<OntologySearchResult<OntologyTerm>> matches = super.findTerm( queryString, maxResults )
                 .stream()

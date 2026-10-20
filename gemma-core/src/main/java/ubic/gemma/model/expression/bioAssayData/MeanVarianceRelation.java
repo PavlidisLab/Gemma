@@ -19,23 +19,42 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.AbstractIdentifiable;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.hibernate.ByteArrayType;
 
-import javax.persistence.Transient;
 import java.util.Arrays;
 
 /**
  * @author Patrick
  */
-public class MeanVarianceRelation extends AbstractIdentifiable implements SecuredChild {
+@Entity
+@Table(name = "MEAN_VARIANCE_RELATION")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+public class MeanVarianceRelation extends AbstractIdentifiable implements SecuredChild<ExpressionExperiment> {
 
+    @Type(value = ByteArrayType.class, parameters = @Parameter(name = "arrayType", value = "double"))
+    @Column(name = "MEANS", nullable = false, columnDefinition = "MEDIUMBLOB")
     private double[] means;
+    @Type(value = ByteArrayType.class, parameters = @Parameter(name = "arrayType", value = "double"))
+    @Column(name = "VARIANCES", nullable = false, columnDefinition = "MEDIUMBLOB")
     private double[] variances;
 
-    private Securable securityOwner;
+    @Nullable
+    @Transient
+    private ExpressionExperiment securityOwner;
 
     public double[] getMeans() {
         return this.means;
@@ -53,14 +72,15 @@ public class MeanVarianceRelation extends AbstractIdentifiable implements Secure
         this.variances = variances;
     }
 
+    @Nullable
     @Transient
     @Override
-    public Securable getSecurityOwner() {
+    public ExpressionExperiment getSecurityOwner() {
         return this.securityOwner;
     }
 
     @SuppressWarnings("unused") // used via reflection
-    public void setSecurityOwner( ExpressionExperiment ee ) {
+    public void setSecurityOwner( @Nullable ExpressionExperiment ee ) {
         this.securityOwner = ee;
     }
 

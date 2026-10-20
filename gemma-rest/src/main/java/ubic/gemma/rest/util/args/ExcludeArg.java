@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.ws.rs.BadRequestException;
+import jakarta.ws.rs.BadRequestException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

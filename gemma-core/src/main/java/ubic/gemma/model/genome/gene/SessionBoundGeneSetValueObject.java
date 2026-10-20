@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.genome.gene;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.GemmaSessionBackedValueObject;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -26,6 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @author tvrossum
  */
+@Getter
+@Setter
 public class SessionBoundGeneSetValueObject extends GeneSetValueObject implements GemmaSessionBackedValueObject {
 
     private static final long serialVersionUID = 5073203626044664184L;
@@ -44,22 +48,6 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
     public SessionBoundGeneSetValueObject() {
         super( counter.getAndIncrement() );
         this.setModified( false );
-    }
-
-    /**
-     * @return the modified
-     */
-    @Override
-    public boolean isModified() {
-        return modified;
-    }
-
-    /**
-     * @param modified the modified to set
-     */
-    @Override
-    public void setModified( boolean modified ) {
-        this.modified = modified;
     }
 
 }

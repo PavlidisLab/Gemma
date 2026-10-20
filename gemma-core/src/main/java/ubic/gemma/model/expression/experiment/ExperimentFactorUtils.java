@@ -38,6 +38,16 @@ public class ExperimentFactorUtils {
     }
 
     /**
+     * Check if a factor exists only to carry the DE_Include/DE_Exclude markers.
+     * <p>
+     * Such a factor selects which samples take part in a differential expression analysis; it is not a biological
+     * factor and must not be modelled or counted as one.
+     */
+    public static boolean isDeIncludeExcludeFactor( ExperimentalFactor ef ) {
+        return ef.getFactorValues().stream().anyMatch( FactorValueUtils::isDeIncludeExcludeMarker );
+    }
+
+    /**
      * Check if a given factor VO is a batch factor.
      */
     public static boolean isBatchFactor( ExperimentalFactorValueObject ef ) {

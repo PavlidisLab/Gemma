@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.InputStream;
@@ -29,7 +29,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author paul

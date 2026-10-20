@@ -19,30 +19,34 @@
 
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import ubic.gemma.core.security.acl.domain.AclService;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import org.springframework.security.acls.model.Acl;
+import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.util.IdentifiableUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author klc
  */
-public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
+public class DifferentialExpressionAnalysisServiceTest extends BaseIntegrationTest5 {
 
     @Autowired
     private DifferentialExpressionAnalysisService analysisService;
@@ -50,20 +54,34 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private AclService aclService;
+
+    @Autowired
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @Autowired
+    private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy;
+
     private ExpressionExperiment e1;
     private ExpressionExperiment e2;
     private ExpressionExperiment e3;
 
     private String dea1_name;
     private String dea2_name;
-
     private String testEESetName;
-
     private String testAnalysisName;
+    private DifferentialExpressionAnalysis eAnalysis1;
+    private DifferentialExpressionAnalysis eAnalysis2;
+    private DifferentialExpressionAnalysis eAnalysis3;
+    private DifferentialExpressionAnalysis eAnalysis4;
+    private ExpressionAnalysisResultSet resultSet1;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-
         e1 = ExpressionExperiment.Factory.newInstance();
         e1.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
         e1 = expressionExperimentService.create( e1 );
@@ -78,49 +96,82 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         ExpressionExperiment e4 = ExpressionExperiment.Factory.newInstance();
         e4.setShortName( RandomStringUtils.insecure().nextAlphabetic( 6 ) );
-        expressionExperimentService.create( e4 );
+        e4 = expressionExperimentService.create( e4 );
 
         // //////////////////
-        DifferentialExpressionAnalysis eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis1.setExperimentAnalyzed( e1 );
         dea1_name = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis1.setName( dea1_name );
         eAnalysis1.setDescription( "An analysis Test 1" );
-        analysisService.create( eAnalysis1 );
+        resultSet1 = ExpressionAnalysisResultSet.Factory.newInstance();
+        resultSet1.setAnalysis( eAnalysis1 );
+        resultSet1.setPvalueDistribution( PvalueDistribution.Factory.newInstance( new double[0] ) );
+        eAnalysis1.getResultSets().add( resultSet1 );
+        eAnalysis1 = analysisService.create( eAnalysis1 );
 
         // ///////////////
-        DifferentialExpressionAnalysis eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis2.setExperimentAnalyzed( e2 );
         dea2_name = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis2.setName( dea2_name );
         eAnalysis2.setDescription( "An analysis Test 2" );
-        analysisService.create( eAnalysis2 );
+        eAnalysis2 = analysisService.create( eAnalysis2 );
 
         // /////////////
-        DifferentialExpressionAnalysis eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
 
         eAnalysis3.setExperimentAnalyzed( e3 );
         this.testAnalysisName = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis3.setName( testAnalysisName );
         eAnalysis3.setDescription( "An analysis Test 3" );
-        analysisService.create( eAnalysis3 );
+        eAnalysis3 = analysisService.create( eAnalysis3 );
 
         // ////
-        DifferentialExpressionAnalysis eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
+        eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
         eAnalysis4.setExperimentAnalyzed( e3 );
         testEESetName = RandomStringUtils.insecure().nextAlphabetic( 6 );
         eAnalysis4.setName( testEESetName );
         eAnalysis4.setDescription( "An analysis Test 4" );
-        analysisService.create( eAnalysis4 );
-
+        eAnalysis4 = analysisService.create( eAnalysis4 );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         expressionExperimentService.remove( e1 );
         expressionExperimentService.remove( e2 );
         expressionExperimentService.remove( e3 );
+    }
+
+    /**
+     * The curation cascade reaches {@code deleteAnalysis} from inside its own transaction
+     * ({@code ExpressionExperimentServiceImpl} step 2, which routes there so the analysis takes its diffex
+     * archive and result-set TSV caches with it). {@code DifferentialExpressionAnalyzerServiceImpl} carries
+     * {@code Propagation.NEVER} at class level, so without the {@code SUPPORTS} override this call throws
+     * {@code IllegalTransactionStateException}. A mocked test cannot see that: it has no proxy, so no
+     * propagation is enforced.
+     */
+    @Test
+    public void testDeleteAnalysisJoinsACallersTransaction() {
+        Long id = eAnalysis1.getId();
+        assertNotNull( id );
+        new TransactionTemplate( transactionManager )
+                .executeWithoutResult( status -> differentialExpressionAnalyzerService.deleteAnalysis( e1, eAnalysis1 ) );
+        assertNull( analysisService.load( id ) );
+    }
+
+    @Test
+    public void testCreate() {
+        // check created ACLs
+        Acl eeAcl = aclService.readAclById( objectIdentityRetrievalStrategy.getObjectIdentity( e1 ) );
+        Acl analysisAcl = aclService.readAclById( objectIdentityRetrievalStrategy.getObjectIdentity( eAnalysis1 ) );
+        Acl resultSetAcl = aclService.readAclById( objectIdentityRetrievalStrategy.getObjectIdentity( resultSet1 ) );
+        assertFalse( eeAcl.isEntriesInheriting() );
+        assertEquals( eeAcl.getObjectIdentity(), analysisAcl.getParentAcl().getObjectIdentity() );
+        assertTrue( analysisAcl.isEntriesInheriting() );
+        assertEquals( analysisAcl.getObjectIdentity(), resultSetAcl.getParentAcl().getObjectIdentity() );
+        assertTrue( analysisAcl.isEntriesInheriting() );
     }
 
     @Test
@@ -142,24 +193,24 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
     @Test
     public void testFindByInvestigations() {
-        Collection<BioAssaySet> investigations = new ArrayList<>();
+        Collection<ExpressionExperiment> investigations = new ArrayList<>();
         investigations.add( e1 );
         investigations.add( e3 );
 
-        Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> results = analysisService
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> results = analysisService
                 .findByExperiments( investigations, true );
-        assertEquals( 2, results.keySet().size() );
+        assertEquals( 2, results.size() );
 
         assertEquals( 1, results.get( e1 ).size() );
         assertEquals( 2, results.get( e3 ).size() );
 
         // also by ID
-        Map<Long, Collection<DifferentialExpressionAnalysis>> ees = analysisService
-                .findByExperimentIds( IdentifiableUtils.getIds( investigations ) );
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> ees = analysisService
+                .findByExperiments( investigations, true );
         assertEquals( 2, ees.size() );
 
-        assertEquals( 1, ees.get( e1.getId() ).size() );
-        assertEquals( 2, ees.get( e3.getId() ).size() );
+        assertEquals( 1, ees.get( e1 ).size() );
+        assertEquals( 2, ees.get( e3 ).size() );
     }
 
     @Test

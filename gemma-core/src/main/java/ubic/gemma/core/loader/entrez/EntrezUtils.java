@@ -1,19 +1,18 @@
 package ubic.gemma.core.loader.entrez;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.core.util.SimpleRetryCallable;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
+
+import static ubic.gemma.core.util.StringUtils.urlEncode;
 
 /**
  * Low-level utilities for generating Entrez URLs.
@@ -21,7 +20,7 @@ import java.util.concurrent.Callable;
  * Read more about this in <a href="https://www.ncbi.nlm.nih.gov/books/NBK25500/">The E-utilities In-Depth: Parameters, Syntax and More</a>.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class EntrezUtils {
 
     public static final String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
@@ -82,11 +81,33 @@ public class EntrezUtils {
     }
 
     /**
+     * Quote a term if needed in a search query.
+     * <p>
+     * Refer to <a href="https://www.ncbi.nlm.nih.gov/books/NBK3837/">Entrez Help</a> for more details about the search
+     * query syntax.
+     */
+    public static String quoteTerm( String c ) {
+        // strip quotes, I don't think it's possible to escape them
+        c = c.replaceAll( "\"", "" );
+        // : is used for range queries (i.e. 1:10[Sequence Length])
+        // [] are used for fielded search
+        // () are used for grouping boolean expressions
+        // * is used for wildcard
+        // spaces must be quoted, or else they will be treated as separate terms
+        // '/' are used in date formatting
+        if ( c.matches( "[:\\[\\]()*/\\s]" ) ) {
+            return "\"" + c + "\"";
+        }
+        return c;
+    }
+
+    /**
      * Perform a search on an Entrez database.
      * <p>
      * Results must be subsequently retrieved with {@link #fetch(String, EntrezQuery, EntrezRetmode, String, int, int, String)} or
      * {@link #summary(String, EntrezQuery, EntrezRetmode, int, int, String)}. The query key and WebEnv values must be
      * extracted from the payload.
+     * @param term the search term(s); special characters can be quoted with {@link #quoteTerm(String)}
      */
     public static URL search( String db, String term, EntrezRetmode retmode, @Nullable String apiKey ) {
         return createUrl( ESEARCH
@@ -100,8 +121,8 @@ public class EntrezUtils {
      * Replay a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL search( String db, EntrezQuery query, EntrezRetmode retmode, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         if ( retstart >= query.getTotalRecords() ) {
             throw new IndexOutOfBoundsException();
         }
@@ -119,8 +140,8 @@ public class EntrezUtils {
      * Summarize a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL summary( String db, EntrezQuery query, EntrezRetmode retmode, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         if ( retstart >= query.getTotalRecords() ) {
             throw new IndexOutOfBoundsException();
         }
@@ -131,6 +152,19 @@ public class EntrezUtils {
                 + "&retstart=" + retstart
                 + "&retmax=" + retmax
                 + "&WebEnv=" + urlEncode( query.getCookie() ), apiKey );
+    }
+
+    /**
+     * Retrieve a document summary from an Entrez database by ID, without a prior search.
+     * <p>
+     * {@link #summary(String, EntrezQuery, EntrezRetmode, int, int, String)} needs the WebEnv of an earlier
+     * {@code esearch}; an id in hand needs neither, and a gene URI already carries the id.
+     */
+    public static URL summaryById( String db, String id, EntrezRetmode retmode, @Nullable String apiKey ) {
+        return createUrl( ESUMMARY
+                + "?db=" + urlEncode( db )
+                + "&id=" + urlEncode( id )
+                + "&retmode=" + urlEncode( retmode.getValue() ), apiKey );
     }
 
     /**
@@ -148,8 +182,8 @@ public class EntrezUtils {
      * Retrieve the results of a previous {@link #search(String, String, EntrezRetmode, String)} query.
      */
     public static URL fetch( String db, EntrezQuery query, EntrezRetmode retmode, String rettype, int retstart, int retmax, @Nullable String apiKey ) {
-        Assert.isTrue( retstart >= 0 );
-        Assert.isTrue( retmax > 0 );
+        Assert.isTrue( retstart >= 0 , "expected true");
+        Assert.isTrue( retmax > 0 , "expected true");
         return createUrl( EFETCH
                 + "?db=" + urlEncode( db )
                 + "&query_key=" + urlEncode( query.getQueryId() )
@@ -194,14 +228,6 @@ public class EntrezUtils {
                     + "&email=" + urlEncode( EMAIL )
                     + ( StringUtils.isNotBlank( apiKey ) ? "&api_key=" + urlEncode( apiKey ) : "" ) );
         } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    private static String urlEncode( String s ) {
-        try {
-            return URLEncoder.encode( s, StandardCharsets.UTF_8.name() );
-        } catch ( UnsupportedEncodingException e ) {
             throw new RuntimeException( e );
         }
     }

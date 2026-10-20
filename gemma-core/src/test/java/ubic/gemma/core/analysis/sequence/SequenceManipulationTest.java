@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,14 +18,17 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author pavlidis
  *
  */
-public class SequenceManipulationTest extends TestCase {
+public class SequenceManipulationTest {
 
+    @Test
     public void testStripPolyA() {
 
         String expectedResult = "ATGCCCCCC";
@@ -36,6 +39,7 @@ public class SequenceManipulationTest extends TestCase {
 
     }
 
+    @Test
     public void testStripPolyAtooShort() {
 
         String expectedResult = "TGCCCCCCAAAA";
@@ -46,6 +50,7 @@ public class SequenceManipulationTest extends TestCase {
 
     }
 
+    @Test
     public void testStripPolyT() {
 
         String expectedResult = "ATGCCCCCC";

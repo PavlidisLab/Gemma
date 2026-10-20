@@ -24,11 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.search.OntologySearchException;
-import ubic.basecode.ontology.search.OntologySearchResult;
+import ubic.gemma.core.ontology.model.OntologyTerm;
+import ubic.gemma.core.ontology.search.OntologySearchException;
+import ubic.gemma.core.ontology.search.OntologySearchResult;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.lucene.LuceneQueryUtils;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -36,12 +35,12 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GOGroupValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -60,7 +59,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     private static final Log log = LogFactory.getLog( GeneSetSearchImpl.class );
 
     @Autowired
-    private Gene2GOAssociationService gene2GoService;
+    private Gene2GOAssociationReadService gene2GoService;
     @Autowired
     private GeneOntologyService geneOntologyService;
     @Autowired
@@ -129,11 +128,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         try {
             matches = this.geneOntologyService.findTerm( StringUtils.strip( goTermName ), 500 );
         } catch ( OntologySearchException e ) {
-            try {
-                matches = this.geneOntologyService.findTerm( LuceneQueryUtils.escape( StringUtils.strip( goTermName ) ), 500 );
-            } catch ( OntologySearchException e1 ) {
-                throw new BaseCodeOntologySearchException( e );
-            }
+            throw new SearchException( e );
         }
 
         Collection<GeneSet> results = new HashSet<>();
@@ -300,9 +295,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Map<Taxon, Collection<Gene>> genesByTaxon = this.gene2GoService.findByGOTermUrisPerTaxon( termsToFetch );
 
         Collection<GeneSet> results = new HashSet<>();
-        for ( Taxon t : genesByTaxon.keySet() ) {
-            Collection<Gene> genes = genesByTaxon.get( t );
-
+        for ( Collection<Gene> genes : genesByTaxon.values() ) {
             if ( genes.isEmpty() || ( maxGeneSetSize != null && genes.size() > maxGeneSetSize ) ) {
                 continue;
             }

@@ -8,9 +8,9 @@ import ubic.gemma.persistence.service.FilteringVoEnabledService;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nonnull;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
+import org.springframework.lang.NonNull;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -45,7 +45,15 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
      */
     List<Object> getFilterablePropertyAllowedValues( String p );
 
-    boolean getFilterablePropertyIsUsingSubquery( String p );
+    /**
+     * @see FilteringVoEnabledService#isFilterablePropertyUsingSubquery(String)
+     */
+    boolean isFilterablePropertyUsingSubquery( String p );
+
+    /**
+     * @see FilteringVoEnabledService#isFilterablePropertyDeprecated(String)
+     */
+    boolean isFilterablePropertyDeprecated( String p );
 
     /**
      * @see FilteringVoEnabledService#getFilterablePropertyConfigAttributes(String)
@@ -62,7 +70,7 @@ public interface EntityArgService<T extends Identifiable, S extends FilteringSer
      * @throws NotFoundException   if the entity does not exist
      * @throws BadRequestException if the argument is malformed
      */
-    @Nonnull
+    @NonNull
     T getEntity( AbstractEntityArg<?, T, S> entityArg ) throws NotFoundException, BadRequestException;
 
     /**

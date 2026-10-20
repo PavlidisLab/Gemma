@@ -25,7 +25,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 
 /**

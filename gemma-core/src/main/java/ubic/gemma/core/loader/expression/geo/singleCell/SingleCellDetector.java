@@ -4,6 +4,8 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
+import ubic.gemma.core.util.DefaultProgressReporterFactory;
+import ubic.gemma.core.util.ProgressReporterFactory;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 
 import java.io.IOException;
@@ -12,12 +14,13 @@ import java.util.List;
 
 /**
  * Interface for single-cell data detectors from GEO.
+ *
  * @author poirigui
  */
 public interface SingleCellDetector {
 
     /**
-     * Set the download directory single cell data.
+     * Set the download directory single-cell data.
      */
     void setDownloadDirectory( Path dir );
 
@@ -27,28 +30,37 @@ public interface SingleCellDetector {
     void setRetryPolicy( SimpleRetryPolicy retryPolicy );
 
     /**
-     * Indicate if the given GEO series has single cell data.
+     * Set the factory to use to create progress reporter.
+     * <p>
+     * Defaults to {@link DefaultProgressReporterFactory}.
+     */
+    void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory );
+
+    /**
+     * Indicate if the given GEO series has single-cell data.
      */
     boolean hasSingleCellData( GeoSeries series );
 
     /**
-     * Indicate if the given GEO sample has single cell data.
+     * Indicate if the given GEO sample has single-cell data.
      */
     boolean hasSingleCellData( GeoSample sample );
 
     /**
      * Download single-cell data for the given GEO series.
+     *
      * @return a directory or file containing the downloaded series data
-     * @throws UnsupportedOperationException  if downloading single cell for a given series is not supported
-     * @throws NoSingleCellDataFoundException if there is no single cell data for the given series
+     * @throws UnsupportedOperationException  if downloading single-cell data for a given series is not supported
+     * @throws NoSingleCellDataFoundException if there is no single-cell data for the given series
      */
     Path downloadSingleCellData( GeoSeries series ) throws UnsupportedOperationException, NoSingleCellDataFoundException, IOException;
 
     /**
      * Download single-cell data for the given GEO sample.
+     *
      * @return a directory or file containing the downloaded sample data
-     * @throws UnsupportedOperationException  if downloading single cell for a given sample is not supported
-     * @throws NoSingleCellDataFoundException if there is no single cell data for the given sample
+     * @throws UnsupportedOperationException  if downloading single-cell data for a given sample is not supported
+     * @throws NoSingleCellDataFoundException if there is no single-cell data for the given sample
      */
     Path downloadSingleCellData( GeoSample sample ) throws UnsupportedOperationException, NoSingleCellDataFoundException, IOException;
 
@@ -64,8 +76,9 @@ public interface SingleCellDetector {
 
     /**
      * Obtain a single cell data loader for the given GEO series based on previously downloading data.
-     * @throws UnsupportedOperationException if loading single cell data is not supported
-     * @throws NoSingleCellDataFoundException if there is no single cell data for the given series
+     *
+     * @throws UnsupportedOperationException  if loading single-cell data is not supported
+     * @throws NoSingleCellDataFoundException if there is no single-cell data for the given series
      */
     SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws UnsupportedOperationException, NoSingleCellDataFoundException;
 }

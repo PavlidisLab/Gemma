@@ -10,12 +10,12 @@ body {
 
 .header .logo {
     float: left;
-    padding-top: 2px;
+    padding-top: 9px;
     padding-left: 12px;
 }
 
 .header .right-logo {
     float: right;
-    padding-top: 15px;
+    padding-top: 9px;
     padding-right: 12px;
 }

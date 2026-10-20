@@ -11,7 +11,7 @@ import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -31,11 +31,6 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     protected AbstractFilteringVoEnabledService( FilteringVoEnabledDao<O, VO> voDao ) {
         super( voDao );
         this.voDao = voDao;
-    }
-
-    @Override
-    public String getIdentifierPropertyName() {
-        return voDao.getIdentifierPropertyName();
     }
 
     @Override
@@ -100,6 +95,12 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
 
     @Override
     @Transactional(readOnly = true)
+    public CursorPage<VO> loadValueObjectsByCursor( @Nullable Filters filters, Sort sort, @Nullable Cursor cursor, int limit ) {
+        return voDao.loadValueObjectsByCursor( filters, sort, cursor, limit );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long count( @Nullable Filters filters ) {
         return voDao.count( filters );
     }
@@ -137,8 +138,13 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String property ) {
-        return voDao.getFilterablePropertyIsUsingSubquery( property );
+    public boolean isFilterablePropertyUsingSubquery( String property ) {
+        return voDao.isFilterablePropertyUsingSubquery( property );
+    }
+
+    @Override
+    public boolean isFilterablePropertyDeprecated( String property ) {
+        return voDao.isFilterablePropertyDeprecated( property );
     }
 
     /**
@@ -184,6 +190,11 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
+    public Filter getFilter( List<FilteringDao.ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) throws IllegalArgumentException {
+        return voDao.getFilter( conjuncts, subqueryMode );
+    }
+
+    @Override
     public Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, operator, values );
@@ -196,7 +207,7 @@ public abstract class AbstractFilteringVoEnabledService<O extends Identifiable, 
     }
 
     @Override
-    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+    public <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value ) {
         checkIfPropertyIsAccessible( property );
         return voDao.getFilter( property, propertyType, operator, value );
     }

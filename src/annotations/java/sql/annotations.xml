@@ -1,0 +1,5 @@
+<root>
+    <item name='java.sql.ResultSet java.sql.Blob getBlob(java.lang.String)'>
+        <annotation name='javax.annotation.Nullable'/>
+    </item>
+</root>

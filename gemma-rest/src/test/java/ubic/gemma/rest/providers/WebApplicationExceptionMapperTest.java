@@ -7,25 +7,29 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.Test;
-import org.springframework.beans.factory.FactoryBean;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import ubic.gemma.core.context.AsyncFactoryBean;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.concurrent.FutureUtils;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.rest.util.JacksonConfig;
 import ubic.gemma.rest.util.OpenApiFactory;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Application;
+import jakarta.ws.rs.core.MediaType;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ubic.gemma.rest.util.JsonAssert.json;
@@ -44,7 +48,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
         }
 
         @Bean
-        public FactoryBean<OpenAPI> openApi() {
+        public AsyncFactoryBean<OpenAPI> openApi() {
             return new OpenApiFactory( "ubic.gemma.rest.WebApplicationExceptionMapperTest" );
         }
 
@@ -79,6 +83,26 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
 
     private static AnnotationConfigWebApplicationContext ctx;
 
+    /**
+     * Bridge Jersey's JUnit 4 lifecycle into Jupiter's. {@link JerseyTest#setUp()}
+     * and {@link JerseyTest#tearDown()} are plain {@code public} methods (no
+     * JUnit 4 annotations baked into the bytecode), so re-annotating them here is
+     * safe and does not double-fire. We don't extend {@code BaseJerseyTest5}
+     * because its {@code configure()} is {@code final} and conflicts with the
+     * custom {@link ResourceConfig} this test needs.
+     */
+    @BeforeEach
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+
+    @AfterEach
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+    }
+
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new InMemoryTestContainerFactory();
@@ -100,7 +124,7 @@ public class WebApplicationExceptionMapperTest extends JerseyTest {
 
     @Test
     public void testTextRepresentation() {
-        String version = ctx.getBean( OpenAPI.class ).getInfo().getVersion();
+        String version = FutureUtils.get( ( Future<OpenAPI> ) ctx.getBean( "openApi", Future.class ) ).getInfo().getVersion();
         BuildInfo buildInfo = ctx.getBean( BuildInfo.class );
         assertThatThrownBy( () -> target( "/custom" ).request().accept( MediaType.TEXT_PLAIN ).get( CustomResource.MyModel.class ) )
                 .isInstanceOf( BadRequestException.class )

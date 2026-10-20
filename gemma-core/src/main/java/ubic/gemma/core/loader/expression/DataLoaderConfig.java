@@ -5,7 +5,7 @@ import lombok.experimental.SuperBuilder;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 
 /**
@@ -53,6 +53,12 @@ public class DataLoaderConfig {
      */
     @Nullable
     private ScaleType quantitationTypeNewScaleType;
+
+    /**
+     * Mark the quantitation type as recomputed from raw data.
+     * @see ubic.gemma.model.common.quantitationtype.QuantitationType#setIsRecomputedFromRawData(boolean)
+     */
+    private boolean markQuantitationTypeAsRecomputedFromRawData;
 
     /**
      * Mark the QT as preferred.

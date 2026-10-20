@@ -19,6 +19,8 @@
 
 package ubic.gemma.persistence.service;
 
+import ubic.gemma.model.common.Identifiable;
+
 import java.util.List;
 
 /**
@@ -26,7 +28,7 @@ import java.util.List;
  *
  * @author paul
  */
-public interface BrowsingDao<T> extends BaseDao<T> {
+public interface BrowsingDao<T extends Identifiable> extends BaseDao<T> {
 
     List<T> browse( int start, int limit );
 

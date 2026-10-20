@@ -19,14 +19,16 @@
 package ubic.gemma.core.loader.expression.geo;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -45,15 +47,16 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.persistence.util.ByteArrayUtils.*;
 
 /**
- * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
+ * Unit test for GeoConversion Added extension BaseIntegrationTest5 as want Taxon Service to be called
  *
  * @author pavlidis
  */
-public class GeoConverterTest extends BaseIntegrationTest {
+@ExtendWith(NetworkAvailableExtension.class)
+public class GeoConverterTest extends BaseIntegrationTest5 {
 
     @Autowired
     private GeoConverterImpl gc;
@@ -63,7 +66,8 @@ public class GeoConverterTest extends BaseIntegrationTest {
      *
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void test5C() {
         // GSE35721
         GeoDomainObjectGenerator g = new GeoDomainObjectGenerator();
@@ -357,7 +361,7 @@ public class GeoConverterTest extends BaseIntegrationTest {
         BioSequence seq = platform.getCompositeSequences().iterator().next().getBiologicalCharacteristic();
         assertNotNull( seq.getSequenceDatabaseEntry() );
         String acc = seq.getSequenceDatabaseEntry().getAccession();
-        assertEquals( "Genbank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
+        assertEquals( "GenBank", seq.getSequenceDatabaseEntry().getExternalDatabase().getName() );
         assertFalse( acc.startsWith( "IMAGE" ) );
     }
 
@@ -535,8 +539,8 @@ public class GeoConverterTest extends BaseIntegrationTest {
             }
         }
 
-        assertTrue( "Failed to set up the chimp data", found1 );
-        assertTrue( "Failed to set up the human data", found2 );
+        assertTrue( found1, "Failed to set up the chimp data" );
+        assertTrue( found2, "Failed to set up the human data" );
 
     }
 
@@ -713,8 +717,8 @@ public class GeoConverterTest extends BaseIntegrationTest {
         assertNotNull( ad );
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();
-            assertTrue( "Got: " + bs.getName(),
-                    !bs.getName().startsWith( "IMAGE" ) || bs.getSequenceDatabaseEntry() == null );
+            assertTrue( !bs.getName().startsWith( "IMAGE" ) || bs.getSequenceDatabaseEntry() == null,
+                    "Got: " + bs.getName() );
         }
     }
 
@@ -845,7 +849,7 @@ public class GeoConverterTest extends BaseIntegrationTest {
      * Platform has IMAGE:CCCCC in CLONE_ID column, no genbank accessions anywhere.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public final void testWithImageNoGenbank() throws Exception {
         InputStream is = new GZIPInputStream(
                 new ClassPathResource( "/data/loader/expression/geo/GPL222_family.soft.gz" ).getInputStream() );

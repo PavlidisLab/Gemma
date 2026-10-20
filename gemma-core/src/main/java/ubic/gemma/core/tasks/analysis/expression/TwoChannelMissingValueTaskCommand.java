@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.expression;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValuesImpl;
 import ubic.gemma.core.job.TaskCommand;
@@ -29,8 +31,12 @@ import java.util.HashSet;
 
 /**
  * @author paul
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class TwoChannelMissingValueTaskCommand extends TaskCommand {
     private static final long serialVersionUID = 1L;
 
@@ -57,42 +63,6 @@ public class TwoChannelMissingValueTaskCommand extends TaskCommand {
         this.s2n = s2n;
         this.extraMissingValueIndicators = extraMissingValueIndictors;
         this.expressionExperiment = expressionExperiment;
-    }
-
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    /**
-     * @return the extraMissingValueIndicators
-     */
-    public Collection<Double> getExtraMissingValueIndicators() {
-        return extraMissingValueIndicators;
-    }
-
-    /**
-     * @param extraMissingValueIndicators the extraMissingValueIndicators to set
-     */
-    public void setExtraMissingValueIndicators( Collection<Double> extraMissingValueIndicators ) {
-        this.extraMissingValueIndicators = extraMissingValueIndicators;
-    }
-
-    /**
-     * @return the s2n
-     */
-    public double getS2n() {
-        return s2n;
-    }
-
-    /**
-     * @param s2n the s2n to set
-     */
-    public void setS2n( double s2n ) {
-        this.s2n = s2n;
     }
 
     @Override

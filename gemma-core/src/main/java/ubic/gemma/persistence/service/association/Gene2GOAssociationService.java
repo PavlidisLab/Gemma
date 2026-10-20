@@ -25,7 +25,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseImmutableService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -56,6 +56,12 @@ public interface Gene2GOAssociationService extends BaseImmutableService<Gene2GOA
      * Used to fetch genes associated with a term + children.
      */
     Collection<Gene> findByGOTermUris( Collection<String> uris, @Nullable Taxon taxon );
+
+    /**
+     * Count distinct genes annotated to any of the given GO term URIs. See
+     * {@link Gene2GOAssociationReadService#countByGOTermUris(Collection, Taxon)}.
+     */
+    long countByGOTermUris( Collection<String> uris, @Nullable Taxon taxon );
 
     /**
      * Find all genes associated with a given set of GO terms, grouped by taxon.

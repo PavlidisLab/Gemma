@@ -25,6 +25,17 @@ public interface ExpressionMetadataChangelogFileService {
     String readChangelog( ExpressionExperiment expressionExperiment ) throws IOException;
 
     /**
+     * Absolute path of the changelog file for {@code expressionExperiment}, whether or not it
+     * exists yet.
+     * <p>
+     * Exposed so a caller can say where its write landed. The path derives from
+     * {@code gemma.appdata.home}, which resolves differently for a CLI running on the host than for
+     * gemma-rest reading a mounted volume — and a changelog written to the wrong tree is
+     * unrecoverable, since nothing reconstructs it and the reader looks elsewhere.
+     */
+    java.nio.file.Path getChangelogFilePath( ExpressionExperiment expressionExperiment );
+
+    /**
      * @see #addChangelogEntry(ExpressionExperiment, String, LocalDate)
      */
     void addChangelogEntry( ExpressionExperiment expressionExperiment, String changelogEntry ) throws IOException;

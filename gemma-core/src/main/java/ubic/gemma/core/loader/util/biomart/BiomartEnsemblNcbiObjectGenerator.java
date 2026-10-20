@@ -100,8 +100,9 @@ public class BiomartEnsemblNcbiObjectGenerator {
         Map<Taxon, File> taxaBiomartFiles = this.biomartEnsemblNcbiFetcher.fetch( validTaxa );
 
         if ( taxaBiomartFiles != null && !taxaBiomartFiles.isEmpty() ) {
-            for ( Taxon taxon : taxaBiomartFiles.keySet() ) {
-                File fileForTaxon = taxaBiomartFiles.get( taxon );
+            for ( Map.Entry<Taxon, File> entry : taxaBiomartFiles.entrySet() ) {
+                Taxon taxon = entry.getKey();
+                File fileForTaxon = entry.getValue();
                 if ( fileForTaxon != null ) {
                     log.info( "Starting processing taxon " + taxon + " for file " + fileForTaxon );
                     Map<String, Ensembl2NcbiValueObject> map = parseTaxonBiomartFile( taxon, fileForTaxon );

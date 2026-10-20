@@ -19,13 +19,13 @@ import lombok.EqualsAndHashCode;
  */
 @SuppressWarnings("unused") // Used in json serialization
 @Data
-@EqualsAndHashCode(of = { "characteristics" }, callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 public class FactorValueBasicValueObject extends AbstractFactorValueValueObject {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
     /**
-     * @deprecated use either {@link #getCharacteristics()} or {@link #getMeasurement()}
+     * @deprecated use either {@link #getCharacteristics()} or {@link #getMeasurementObject()}
      */
     @Deprecated
     @Schema(description = "Use `summary` if you need a human-readable representation of this factor value or lookup the `characteristics` bag.", deprecated = true)

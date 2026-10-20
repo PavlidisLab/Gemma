@@ -19,6 +19,10 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  *
  * Indicates that FASTQ headers were present, but they were not usable for determining batches, typically because of
@@ -26,6 +30,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("UninformativeFASTQHeadersForBatchingEvent")
 public class UninformativeFASTQHeadersForBatchingEvent extends FailedBatchInformationFetchingEvent {
 
 }

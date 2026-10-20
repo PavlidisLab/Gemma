@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 /**
  * Strategy for matching {@link GeoSample} from a given sample name.
  */
-@CommonsLog
+@Slf4j
 class GeoSampleToSampleNameMatcher {
 
     public Set<GeoSample> match( Collection<GeoSample> samples, String sampleName ) {

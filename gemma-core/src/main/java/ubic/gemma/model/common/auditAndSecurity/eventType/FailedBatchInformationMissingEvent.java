@@ -18,13 +18,19 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Use to indicate that the batch information has been successfully looked for, but is not available, so we shouldn't
  * look again. Do not use to indicate other types of failure such as an unsupported raw data type.
- * <p>
+ *
  * @deprecated use {@link BatchInformationMissingEvent}
  */
 @Deprecated
+@Entity
+@DiscriminatorValue("FailedBatchInformationMissingEvent")
 public class FailedBatchInformationMissingEvent extends BatchInformationMissingEvent {
 
 }

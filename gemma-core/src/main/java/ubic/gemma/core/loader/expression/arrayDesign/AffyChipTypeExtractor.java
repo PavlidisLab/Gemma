@@ -17,7 +17,7 @@ package ubic.gemma.core.loader.expression.arrayDesign;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoParser;
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -25,6 +25,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.io.*;
 import java.nio.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -106,8 +107,9 @@ public class AffyChipTypeExtractor {
      */
     private static Map<BioAssay, String> getChipTypesFromFiles( Map<BioAssay, File> bioAssays2Files ) throws IOException {
         Map<BioAssay, String> result = new HashMap<>();
-        for ( BioAssay ba : bioAssays2Files.keySet() ) {
-            File f = bioAssays2Files.get( ba );
+        for ( Map.Entry<BioAssay, File> entry : bioAssays2Files.entrySet() ) {
+            BioAssay ba = entry.getKey();
+            File f = entry.getValue();
             try ( InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() ) ) {
 
                 String chiptype = extract( is );
@@ -207,13 +209,10 @@ public class AffyChipTypeExtractor {
                         // this is fixed to 1 according to affy docs.
                         throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                     }
-                    @SuppressWarnings("unused")
-                    int numDataGroups = readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
-
+                    readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
                     // contains another header, with different name/value/type
                     // triples.
-                    @SuppressWarnings("unused")
-                    int filePosOfFirstGroup = readIntBigEndian( str ); // file position of first data group.
+                    readIntBigEndian( str ); // file position of first data group.
 
                     chipType = parseGenericCCHeader( str );
 
@@ -238,7 +237,7 @@ public class AffyChipTypeExtractor {
                     /*
                      * assume version 3 plain text.
                      */
-                    reader = new BufferedReader( new InputStreamReader( is ) );
+                    reader = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
                     String line;
                     int count = 0;
                     while ( ( line = reader.readLine() ) != null ) {
@@ -275,11 +274,9 @@ public class AffyChipTypeExtractor {
 
         AffyChipTypeExtractor.log.debug( guid );
 
-        // we just need to read thsee off, even if we aren't using it.
-        @SuppressWarnings("unused")
-        String createDate = readUnicodeString( str ); // blank?
-        @SuppressWarnings("unused")
-        String locale = readUnicodeString( str ); // e.g. en-US
+        // we just need to read these off, even if we aren't using it.
+        readUnicodeString( str ); // createDate, blank?
+        readUnicodeString( str ); // locale, e.g. en-US
         int numKeyValuePairs = readIntBigEndian( str ); // e.g. 55
         String result = null;
         for ( int i = 0; i < numKeyValuePairs; i++ ) {
@@ -298,8 +295,12 @@ public class AffyChipTypeExtractor {
                 case "text/plain":
                 case "text/ascii":
                     // text/ascii is undocumented, but needed.
-                    v = new String( value, "US-ASCII" );
-                    String vv = new String( ( ( String ) v ).getBytes(), "UTF-16" ).trim();
+                    v = new String( value, StandardCharsets.US_ASCII );
+                    // Preserve historical decode path: stringify under default,
+                    // re-encode under default, then read as UTF-16. The default
+                    // here is forced to US-ASCII (matching the source bytes) so
+                    // the path is portable across JVMs.
+                    String vv = new String( ( ( String ) v ).getBytes( StandardCharsets.US_ASCII ), StandardCharsets.UTF_16 ).trim();
 
                     if ( name.equals( "affymetrix-array-type" ) ) {
                         return vv;
@@ -355,8 +356,7 @@ public class AffyChipTypeExtractor {
 
         }
 
-        @SuppressWarnings("unused")
-        int numParentHeaders = readIntBigEndian( str );
+        readIntBigEndian( str ); // numParentHeaders
         return result;
     }
 
@@ -429,7 +429,7 @@ public class AffyChipTypeExtractor {
         for ( int i = 0; i < fieldLength; i++ ) {
             if ( str.available() == 0 )
                 throw new IOException( "Reached end of file without string end" );
-            buf.append( new String( new byte[] { str.readByte() } ) );
+            buf.append( new String( new byte[] { str.readByte() }, StandardCharsets.US_ASCII ) );
         }
         return buf.toString();
     }

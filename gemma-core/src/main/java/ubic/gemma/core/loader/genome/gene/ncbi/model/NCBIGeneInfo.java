@@ -1,5 +1,8 @@
 package ubic.gemma.core.loader.genome.gene.ncbi.model;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
@@ -11,7 +14,7 @@ import java.util.Map;
  * <p>
  * See ftp://ftp.ncbi.nlm.nih.gov/gene/DATA/README
  * </p>
- * 
+ *
  * <pre>
  *   ===========================================================================
  *   gene_info
@@ -63,9 +66,13 @@ import java.util.Map;
  * @author pavlidis
  */
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class NCBIGeneInfo {
 
+    @Setter(AccessLevel.NONE)
     private final Collection<String> synonyms = new HashSet<>();
+    @Setter(AccessLevel.NONE)
     private final Map<String, String> dbXrefs = new HashMap<>();
     private int taxId;
     private String geneId;
@@ -80,13 +87,20 @@ public class NCBIGeneInfo {
     private NomenclatureStatus nomenclatureStatus;
     private NcbiGeneHistory history;
     private String ensemblId = null;
+    /**
+     * NCBI gene ID that was 'discontinued' for the gene that match this symbol and taxon.
+     * <p>
+     * Accessed via {@link #getDiscontinuedId()} / {@link #setDiscontinuedId(String)} which handle accumulation.
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private String discontinuedIdForGene = null;
 
     /**
      * Convert string to GeneType. See
      * http://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/objects/entrezgene/entrezgene.asn
-     * 
-     * 
+     *
+     *
      * @param typeString type string
      * @return gene type
      */
@@ -132,55 +146,6 @@ public class NCBIGeneInfo {
     }
 
     /**
-     * @return Returns the chromosome.
-     */
-    public String getChromosome() {
-        return this.chromosome;
-    }
-
-    /**
-     * @param chromosome The chromosome to set.
-     */
-    public void setChromosome( String chromosome ) {
-        this.chromosome = chromosome;
-    }
-
-    /**
-     * @return Returns the dbXrefs.
-     */
-    public Map<String, String> getDbXrefs() {
-        return this.dbXrefs;
-    }
-
-    /**
-     * @return Returns the defaultSymbol.
-     */
-    public String getDefaultSymbol() {
-        return this.defaultSymbol;
-    }
-
-    /**
-     * @param defaultSymbol The defaultSymbol to set.
-     */
-    public void setDefaultSymbol( String defaultSymbol ) {
-        this.defaultSymbol = defaultSymbol;
-    }
-
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
      * @return The NCBI gene ID that was 'discontinued' for the gene that match this symbol and taxon. These
      *         correspond to the lines in gene_history that have a '-' in the second column. But because we are matching
      *         only on the symbol+taxon, we have to be a bit careful using it.
@@ -195,148 +160,6 @@ public class NCBIGeneInfo {
         } else {
             this.discontinuedIdForGene = discontinuedIdForGene;
         }
-    }
-
-    public String getEnsemblId() {
-        return ensemblId;
-    }
-
-    public void setEnsemblId( String ensemblId ) {
-        this.ensemblId = ensemblId;
-
-    }
-
-    /**
-     * @return Returns the geneId.
-     */
-    public String getGeneId() {
-        return this.geneId;
-    }
-
-    /**
-     * @param geneId The geneId to set.
-     */
-    public void setGeneId( String geneId ) {
-        this.geneId = geneId;
-    }
-
-    /**
-     * @return Returns the geneType.
-     */
-    public GeneType getGeneType() {
-        return this.geneType;
-    }
-
-    /**
-     * @param geneType The geneType to set.
-     */
-    public void setGeneType( GeneType geneType ) {
-        this.geneType = geneType;
-    }
-
-    /**
-     * @return the history
-     */
-    public NcbiGeneHistory getHistory() {
-        return history;
-    }
-
-    /**
-     * @param history the history to set
-     */
-    public void setHistory( NcbiGeneHistory history ) {
-        this.history = history;
-    }
-
-    /**
-     * @return Returns the locusTag.
-     */
-    public String getLocusTag() {
-        return this.locusTag;
-    }
-
-    /**
-     * @param locusTag The locusTag to set.
-     */
-    public void setLocusTag( String locusTag ) {
-        this.locusTag = locusTag;
-    }
-
-    /**
-     * @return Returns the mapLocation.
-     */
-    public String getMapLocation() {
-        return this.mapLocation;
-    }
-
-    /**
-     * @param mapLocation The mapLocation to set.
-     */
-    public void setMapLocation( String mapLocation ) {
-        this.mapLocation = mapLocation;
-    }
-
-    /**
-     * @return Returns the nomenclatureStatus.
-     */
-    public NomenclatureStatus getNomenclatureStatus() {
-        return this.nomenclatureStatus;
-    }
-
-    /**
-     * @param nomenclatureStatus The nomenclatureStatus to set.
-     */
-    public void setNomenclatureStatus( NomenclatureStatus nomenclatureStatus ) {
-        this.nomenclatureStatus = nomenclatureStatus;
-    }
-
-    /**
-     * @return Returns the synonyms.
-     */
-    public Collection<String> getSynonyms() {
-        return this.synonyms;
-    }
-
-    /**
-     * @return Returns the taxId.
-     */
-    public int getTaxId() {
-        return this.taxId;
-    }
-
-    /**
-     * @param taxId The taxId to set.
-     */
-    public void setTaxId( int taxId ) {
-        this.taxId = taxId;
-    }
-
-    /**
-     * @return Returns the nameIsFromAuthority.
-     */
-    public boolean isNameIsFromAuthority() {
-        return this.nameIsFromAuthority;
-    }
-
-    /**
-     * @param nameIsFromAuthority The nameIsFromAuthority to set.
-     */
-    public void setNameIsFromAuthority( boolean nameIsFromAuthority ) {
-        this.nameIsFromAuthority = nameIsFromAuthority;
-    }
-
-    /**
-     * @return Returns the symbolIsFromAuthority.
-     */
-    public boolean isSymbolIsFromAuthority() {
-        return this.symbolIsFromAuthority;
-    }
-
-    /**
-     * @param symbolIsFromAuthority The symbolIsFromAuthority to set.
-     */
-    public void setSymbolIsFromAuthority( boolean symbolIsFromAuthority ) {
-        this.symbolIsFromAuthority = symbolIsFromAuthority;
     }
 
     /**

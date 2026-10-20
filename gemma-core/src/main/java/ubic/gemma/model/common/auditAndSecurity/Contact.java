@@ -19,7 +19,18 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 
 import java.util.Objects;
 
@@ -29,8 +40,15 @@ import java.util.Objects;
  *
  * @author Paul
  */
+@Entity
+@Table(name = "CONTACT", indexes = @Index(name = "CONTACT_DELETED_AT_IDX", columnList = "DELETED_AT"))
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class", length = 255)
+@DiscriminatorValue("Contact")
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Contact extends AbstractDescribable {
 
+    @Column(name = "EMAIL", columnDefinition = "VARCHAR(255)")
     private String email;
 
     public String getEmail() {
@@ -51,7 +69,7 @@ public class Contact extends AbstractDescribable {
         if ( this.getId() != null && that.getId() != null ) {
             return getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() )
+        return DescribableUtils.equalsByName( this, that )
                 && Objects.equals( getEmail(), that.getEmail() );
     }
 

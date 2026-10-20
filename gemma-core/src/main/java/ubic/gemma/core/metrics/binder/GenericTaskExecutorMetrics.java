@@ -6,7 +6,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import ubic.gemma.core.util.concurrent.DelegatingTaskExecutor;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * A meter binder that delegates to the appropriate {@link TaskExecutor} implementation.

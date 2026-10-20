@@ -1,8 +1,11 @@
 package ubic.gemma.persistence.util;
 
 import org.hibernate.Hibernate;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
@@ -20,6 +23,32 @@ public class Thaws {
     public static void thawDatabaseEntry( DatabaseEntry databaseEntry ) {
         Hibernate.initialize( databaseEntry );
         Hibernate.initialize( databaseEntry.getExternalDatabase() );
+    }
+
+    /**
+     * Thaw the {@link CurationDetails} of a curatable entity, <em>including</em> the three
+     * {@code last*Event} associations hanging off it.
+     * <p>
+     * Initializing the {@code CurationDetails} on its own is not enough: {@code lastTroubledEvent},
+     * {@code lastNeedsAttentionEvent} and {@code lastNoteUpdateEvent} are separately lazy
+     * {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent} references, and every curatable
+     * value object reads all three in its constructor (see
+     * {@code AbstractCuratableValueObject} and {@code CurationDetailsValueObject}).
+     * <p>
+     * A REST method that thaws through one {@code @Transactional} service call and then builds the
+     * value object through another one spans two sessions, so whatever the thaw left as a proxy is
+     * dead by the time the VO is built. That is what made {@code GET /datasets/{id}/refresh} answer
+     * {@code Could not initialize proxy [AuditEvent#…] - no session} on every call, which in turn
+     * meant the post-write cache eviction the CLI performs never ran.
+     */
+    public static void thawCurationDetails( Curatable curatable ) {
+        CurationDetails curationDetails = curatable.getCurationDetails();
+        Hibernate.initialize( curationDetails );
+        if ( curationDetails != null ) {
+            Hibernate.initialize( curationDetails.getLastTroubledEvent() );
+            Hibernate.initialize( curationDetails.getLastNeedsAttentionEvent() );
+            Hibernate.initialize( curationDetails.getLastNoteUpdateEvent() );
+        }
     }
 
     public static void thawBibliographicReference( BibliographicReference br ) {
@@ -41,14 +70,30 @@ public class Thaws {
      * The corresponding biomaterial is also thawed with {@link #thawBioMaterial(BioMaterial)}.
      */
     public static void thawBioAssay( BioAssay ba ) {
-        Hibernate.initialize( ba.getArrayDesignUsed() );
-        Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
-        if ( ba.getOriginalPlatform() != null ) {
-            Hibernate.initialize( ba.getOriginalPlatform() );
-            Hibernate.initialize( ba.getOriginalPlatform().getDesignProvider() );
-        }
+        thawBioAssayPlatforms( ba );
         // also initialize the other side of the relationship since we're thawing assays
         thawBioMaterial( ba.getSampleUsed(), true );
+    }
+
+    /**
+     * Thaw the platform-side associations of a {@link BioAssay} without walking its
+     * {@code sampleUsed} {@link BioMaterial} chain.
+     * <p>
+     * Used by callers that batch-thaw the BioMaterial side via
+     * {@code BioMaterialDao#thawBioMaterialsForBioAssays}, where the per-BA
+     * source-chain walk in {@link #thawBioAssay(BioAssay)} would re-introduce the N+1
+     * pattern the batched call exists to eliminate. The platform-side init remains a
+     * cheap proxy/eager touch (one or two round-trips per BA at most).
+     */
+    public static void thawBioAssayPlatforms( BioAssay ba ) {
+        ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
+        Hibernate.initialize( arrayDesignUsed );
+        Hibernate.initialize( arrayDesignUsed.getDesignProvider() );
+        ArrayDesign originalPlatform = ba.getOriginalPlatform();
+        if ( originalPlatform != null ) {
+            Hibernate.initialize( originalPlatform );
+            Hibernate.initialize( originalPlatform.getDesignProvider() );
+        }
     }
 
     /**

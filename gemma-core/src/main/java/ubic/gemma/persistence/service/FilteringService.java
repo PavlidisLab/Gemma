@@ -5,7 +5,7 @@ import org.springframework.security.access.ConfigAttribute;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -15,11 +15,6 @@ import java.util.Set;
  * @see FilteringDao
  */
 public interface FilteringService<O extends Identifiable> extends BaseReadOnlyService<O> {
-
-    /**
-     * @see BaseDao#getIdentifierPropertyName()
-     */
-    String getIdentifierPropertyName();
 
     /**
      * @see FilteringDao#getFilterableProperties()
@@ -55,9 +50,14 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     List<MessageSourceResolvable> getFilterablePropertyResolvableAllowedValuesLabels( String property );
 
     /**
-     * @see FilteringDao#getFilterablePropertyIsUsingSubquery(String)
+     * @see FilteringDao#isFilterablePropertyUsingSubquery(String)
      */
-    boolean getFilterablePropertyIsUsingSubquery( String property );
+    boolean isFilterablePropertyUsingSubquery( String property );
+
+    /**
+     * @see FilteringDao#isFilterablePropertyDeprecated(String)
+     */
+    boolean isFilterablePropertyDeprecated( String property );
 
     /**
      * Obtain the Spring Security config attributes for a given property.
@@ -74,6 +74,11 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     Filter getFilter( String property, Filter.Operator operator, String value, SubqueryMode subqueryMode ) throws IllegalArgumentException;
 
     /**
+     * @see FilteringDao#getFilter(List, SubqueryMode)
+     */
+    Filter getFilter( List<FilteringDao.ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) throws IllegalArgumentException;
+
+    /**
      * @see FilteringDao#getFilter(String, Filter.Operator, Collection)
      */
     Filter getFilter( String property, Filter.Operator operator, Collection<String> values ) throws IllegalArgumentException;
@@ -83,7 +88,7 @@ public interface FilteringService<O extends Identifiable> extends BaseReadOnlySe
     /**
      * @see FilteringDao#getFilter(String, Class, Filter.Operator, Object)
      */
-    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value );
+    <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value );
 
     /**
      * @see FilteringDao#getFilter(String, Class, Filter.Operator, Collection)

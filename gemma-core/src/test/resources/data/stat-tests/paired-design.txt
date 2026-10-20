@@ -1,0 +1,13 @@
+sample	subject	treatment
+s1_ctrl	s1	ctrl
+s1_treat	s1	treat
+s2_ctrl	s2	ctrl
+s2_treat	s2	treat
+s3_ctrl	s3	ctrl
+s3_treat	s3	treat
+s4_ctrl	s4	ctrl
+s4_treat	s4	treat
+s5_ctrl	s5	ctrl
+s5_treat	s5	treat
+s6_ctrl	s6	ctrl
+s6_treat	s6	treat

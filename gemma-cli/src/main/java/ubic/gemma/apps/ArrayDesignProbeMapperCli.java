@@ -6,10 +6,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysisFactory;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
-import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -66,6 +67,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private ExternalDatabaseService eds;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
+    @Autowired
+    private GoldenPathSequenceAnalysisFactory goldenPathSequenceAnalysisFactory;
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     @Value("${gemma.goldenpath.db.rat}")
     private String goldenPathRatDbName;
@@ -81,6 +86,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private Double blatScoreThreshold = null;
     private boolean usePred;
     private String configOption = null;
+    private String markOnlyReason = null;
     private boolean mirnaOnlyModeOption = false;
     private Double identityThreshold = null;
     private Double overlapThreshold = null;
@@ -95,8 +101,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
 
         options.addOption( Option.builder( "i" ).hasArg().argName( "value" )
                 .type( Number.class )
@@ -178,17 +183,25 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .hasArg().argName( "probes" ).build();
 
         options.addOption( probesToDoOption );
+
+        options.addOption( Option.builder( MARK_ONLY_OPTION ).hasArg().argName( "reason" )
+                .desc( "Record the alignment-based gene mapping event for the platforms named with -a or -platformFile "
+                        + "and do nothing else: no GoldenPath query, no deletion of associations, no rebuild. For a "
+                        + "platform whose sequences another platform's run has already mapped — associations are held "
+                        + "per sequence, so the work is done, but the event only propagates down the merge tree. The "
+                        + "reason is recorded in the event, e.g. 'sequences mapped by GPL6887'. Only the platforms "
+                        + "named are marked, and platforms selected by -taxon, -auto or -mdate are refused." )
+                .build() );
     }
 
 
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
-     *
-     * @see AbstractCLI#processOptions(CommandLine)
      */
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
+        this.markOnlyReason = getMarkOnlyReason( commandLine, "import", "nodb", "probes", "t", "force", "mirna",
+                "config" );
 
         if ( commandLine.hasOption( "import" ) ) {
             if ( !commandLine.hasOption( 't' ) ) {
@@ -217,11 +230,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         if ( commandLine.hasOption( "probes" ) ) {
-
-            if ( this.getArrayDesignsToProcess() == null || this.getArrayDesignsToProcess().size() > 1 ) {
-                throw new IllegalArgumentException( "With '-probes' you must provide exactly one platform" );
-            }
-
             this.useDB = false;
             probeNames = commandLine.getOptionValue( "probes" ).split( "," );
 
@@ -277,7 +285,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return true;
         }
 
-        arrayDesign = getArrayDesignService().thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
         /*
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
@@ -400,11 +408,28 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected boolean selectsOwnPlatforms() {
+        if ( this.probeNames != null ) {
+            // -probes works on a single platform named with -a
+            return false;
+        }
+        // same condition as the batchRun() branch of processArrayDesigns()
+        return taxon != null || getLimitingDate() != null || isAutoSeek();
+    }
+
+    @Override
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
-        if ( this.taxon != null && this.directAnnotationInputFileName == null && this.getArrayDesignsToProcess()
-                .isEmpty() ) {
+        if ( this.markOnlyReason != null ) {
+            for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
+                this.audit( arrayDesign, this.markOnlyReason, AlignmentBasedGeneMappingEvent.class );
+                addSuccessObject( arrayDesign, "marked as mapped to genes without running: " + this.markOnlyReason );
+            }
+            return;
+        }
+
+        if ( this.taxon != null && this.directAnnotationInputFileName == null && arrayDesignsToProcess.isEmpty() ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName()
                     + " Array designs, troubled platforms may be skipped *** " );
         }
@@ -412,11 +437,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         /*
          * This is a separate method from batchRun...processArrayDesign because there are more possibilities.
          */
-        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
-            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+        if ( !arrayDesignsToProcess.isEmpty() ) {
+            for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
                 if ( this.probeNames != null ) {
                     // only one platform possible
-                    if ( getArrayDesignsToProcess().size() > 1 )
+                    if ( arrayDesignsToProcess.size() > 1 )
                         throw new IllegalArgumentException( "Can only use probe names when processing a single platform" );
                     this.processProbes( arrayDesign );
                     break;
@@ -428,9 +453,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     continue;
                 }
 
-                arrayDesign = getArrayDesignService().thaw( arrayDesign );
+                arrayDesign = arrayDesignService.thaw( arrayDesign );
                 if ( directAnnotationInputFileName != null ) {
-                    if ( this.getArrayDesignsToProcess().size() > 1 )
+                    if ( arrayDesignsToProcess.size() > 1 )
                         throw new IllegalArgumentException( "Can only use direct annotation from a file when processing a single platform" );
                     try {
                         File f = new File( this.directAnnotationInputFileName );
@@ -483,7 +508,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 throw new IllegalStateException(
                         "Sorry, you can't provide an input mapping file when doing multiple arrays at once" );
             }
-            this.configure( null );
+            if ( this.taxon != null ) {
+                // validates and logs the options once; without -t, configure() needs a platform to find the taxon,
+                // and each platform is configured in processArrayDesign(Date, ArrayDesign) anyway
+                this.configure( null );
+            }
             this.batchRun( skipIfLastRunLaterThan );
 
         } else {
@@ -492,17 +521,23 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     private void audit( ArrayDesign arrayDesign, String note, Class<? extends ArrayDesignGeneMappingEvent> eventType ) {
-        getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        if ( AnnotationBasedGeneMappingEvent.class.equals( eventType ) ) {
+            cliArrayDesignAuditService.recordAnnotationBasedGeneMapping( arrayDesign, note );
+        } else if ( AlignmentBasedGeneMappingEvent.class.equals( eventType ) ) {
+            cliArrayDesignAuditService.recordAlignmentBasedGeneMapping( arrayDesign, note );
+        } else {
+            throw new IllegalArgumentException( "Unsupported ArrayDesignGeneMappingEvent subtype for CLI audit: " + eventType );
+        }
     }
 
     private void batchRun( final Date skipIfLastRunLaterThan ) {
         Collection<ArrayDesign> allArrayDesigns;
 
         if ( this.taxon != null ) {
-            allArrayDesigns = getArrayDesignService().findByTaxon( this.taxon );
+            allArrayDesigns = arrayDesignService.findByTaxon( this.taxon );
         } else {
-            allArrayDesigns = getArrayDesignService().loadAll();
+            allArrayDesigns = arrayDesignService.loadAll();
         }
 
         // TODO: process array designs in order of how many experiments they use (most first)
@@ -520,7 +555,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         boolean isRat;
         if ( this.taxon == null ) {
             assert arrayDesign != null;
-            Taxon t = getArrayDesignService().getTaxon( arrayDesign.getId() );
+            Taxon t = arrayDesign.getPrimaryTaxon();
             isRat = t.getCommonName().equals( "rat" );
         } else {
             isRat = taxon.getCommonName().equals( "rat" );
@@ -586,7 +621,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( taxon != null && !getArrayDesignService().getTaxa( design ).contains( taxon ) ) {
+        if ( taxon != null && !arrayDesignService.getTaxaFromBioSequences( design ).contains( taxon ) ) {
             return;
         }
 
@@ -597,16 +632,18 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         log.info( "============== Start processing: " + design + " ==================" );
         try {
 
-            design = getArrayDesignService().thaw( design );
+            design = arrayDesignService.thaw( design );
             this.configure( design );
             if ( !getRelatedDesigns( design ).isEmpty() ) {
                 log.info( getRelatedDesigns( design ).size() + " subsumed or merged platforms will be implicitly updated" );
             }
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
+            if ( useDB ) {
+                // as in the single-platform path: with -nodb nothing was written, so no mapping event is recorded
+                this.audit( design, "Part of a batch job", AlignmentBasedGeneMappingEvent.class );
+                updateMergedOrSubsumed( design );
+            }
             addSuccessObject( design );
-            this.audit( design, "Part of a batch job", AlignmentBasedGeneMappingEvent.class );
-
-            updateMergedOrSubsumed( design );
 
         } catch ( Exception e ) {
             addErrorObject( design, e );
@@ -629,13 +666,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)", AlignmentBasedGeneMappingEvent.class );
             arrayDesignProbeMapperService.deleteOldFiles( ad );
-            getArrayDesignReportService().generateArrayDesignReport( ad.getId() );
+            arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
     }
 
     private void processProbes( ArrayDesign arrayDesign ) {
         assert this.probeNames != null && this.probeNames.length > 0;
-        arrayDesign = getArrayDesignService().thawLite( arrayDesign );
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
         this.configure( arrayDesign );
 
         for ( String probeName : this.probeNames ) {
@@ -649,7 +686,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             probe = compositeSequenceService.thaw( probe );
 
             Map<String, Collection<BlatAssociation>> results;
-            try ( GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon ) ) {
+            try ( GoldenPathSequenceAnalysis goldenPathDb = goldenPathSequenceAnalysisFactory.create( taxon ) ) {
                 results = this.arrayDesignProbeMapperService
                         .processCompositeSequence( this.config, taxon, goldenPathDb, probe );
             }

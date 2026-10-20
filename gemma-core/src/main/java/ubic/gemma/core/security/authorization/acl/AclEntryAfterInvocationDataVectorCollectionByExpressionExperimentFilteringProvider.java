@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationCollectionFilteringProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import ubic.gemma.model.expression.bioAssayData.DataVector;
@@ -35,13 +34,8 @@ import java.util.List;
 public class AclEntryAfterInvocationDataVectorCollectionByExpressionExperimentFilteringProvider
         extends AclEntryAfterInvocationByAssociationCollectionFilteringProvider {
 
-    public AclEntryAfterInvocationDataVectorCollectionByExpressionExperimentFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_DATA_VECTOR_COLLECTION_READ", requirePermission );
-    }
-
-    @Override
-    protected Class<?> getProcessDomainObjectClass() {
-        return DataVector.class;
+    public AclEntryAfterInvocationDataVectorCollectionByExpressionExperimentFilteringProvider( AclService aclService, String processConfigAttribute, List<Permission> requirePermission ) {
+        super( aclService, processConfigAttribute, requirePermission );
     }
 
     @Override

@@ -23,11 +23,12 @@ import ubic.gemma.core.search.SearchException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import org.springframework.lang.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.List;
@@ -59,14 +60,71 @@ public interface BibliographicReferenceService
     @Secured({ "GROUP_USER" })
     BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
 
+    /**
+     * Resolve a PubMed id to a persistent {@link BibliographicReference}, fetching it from PubMed and
+     * persisting it when it is not already in the system.
+     * <p>
+     * Encapsulates the find-or-fetch dance that {@code UpdatePubMedCli} and the retired gemma-web
+     * {@code ExpressionExperimentController.updatePubMed} both open-coded: look up by external id first,
+     * otherwise retrieve the record over the wire and {@link #findOrCreate(BibliographicReference)} it.
+     *
+     * @param pubMedId a PubMed id (must be non-blank).
+     * @return the persistent reference for {@code pubMedId}.
+     * @throws IllegalStateException if no record can be retrieved from PubMed for {@code pubMedId}.
+     */
+    @Secured({ "GROUP_USER" })
+    BibliographicReference findOrCreateByPubMedId( String pubMedId );
+
+    /**
+     * Resolve a DOI to a persistent {@link BibliographicReference}, fetching it when necessary.
+     * <p>
+     * Resolution order: (1) an existing DOI-keyed reference already in Gemma; (2) PubMed-by-DOI
+     * (covers DOIs NCBI indexes — yields the richer PubMed record); (3) CrossRef by DOI (covers the
+     * rest, notably bioRxiv / medRxiv preprints PubMed does not carry). This is what lets a preprint be
+     * attached to an experiment instead of being noted in a free-text comment.
+     *
+     * @param doi a DOI in any common form ({@code 10.x/…}, {@code https://doi.org/…}, {@code doi:…});
+     *            normalized internally.
+     * @return the persistent reference for {@code doi}.
+     * @throws IllegalStateException if the DOI resolves via neither PubMed nor CrossRef. (Manual entry
+     *                               of such a reference is intentionally not supported here yet.)
+     */
+    @Secured({ "GROUP_USER" })
+    BibliographicReference findOrCreateByDoi( String doi );
+
     @Override
     @Secured({ "GROUP_USER" })
     BibliographicReference create( BibliographicReference bibliographicReference );
 
     @Override
+    @Secured({ "GROUP_USER" })
+    Collection<BibliographicReference> create( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Collection<BibliographicReference> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( BibliographicReference entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    BibliographicReference save( BibliographicReference entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Collection<BibliographicReference> save( Collection<BibliographicReference> entities );
+
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( BibliographicReference BibliographicReference );
 
+    @Override
+    @Secured({ "GROUP_ADMIN" })
+    void remove( Collection<BibliographicReference> entities );
+
+    @Nullable
     BibliographicReference findByExternalId( DatabaseEntry accession );
 
     /**
@@ -75,15 +133,17 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference
      */
+    @Nullable
     BibliographicReference findByExternalId( java.lang.String id );
 
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      *
-     * @param id id
+     * @param id           id
      * @param databaseName db name
      * @return reference
      */
+    @Nullable
     BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
 
     /**
@@ -94,10 +154,14 @@ public interface BibliographicReferenceService
      * @param id id
      * @return reference VO
      */
+    @Nullable
     BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
-    long countExperimentLinkedReferences();
+    long countDistinctWithRelatedExperiments();
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
+    long countWithRelatedExperiments();
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
@@ -105,34 +169,25 @@ public interface BibliographicReferenceService
      * @return all references with EEs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
-    Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit );
+    Map<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> getRelatedExperiments( int offset, int limit );
 
-    /**
-     * Get the ExpressionExperiments, if any, that are linked to the given reference.
-     *
-     * @param bibliographicReference reference
-     * @return datasets
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference );
-
-    Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
-            Collection<BibliographicReference> records );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" }) /* ACLs are applied in the query */
+    Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments( Collection<BibliographicReference> records );
 
     /**
      * @return all the IDs of bibliographic references in the system.
      */
     Collection<Long> listAll();
 
+    @Nullable
     @Secured({ "GROUP_ADMIN" })
     BibliographicReference refresh( String pubMedId );
 
-    List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) throws SearchException;
+    List<BibliographicReferenceValueObject> search( String query, boolean searchExperiments, boolean searchBibrefs ) throws SearchException;
 
     List<BibliographicReferenceValueObject> search( String query ) throws SearchException;
 
     BibliographicReference thaw( BibliographicReference bibliographicReference );
 
     Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
-
 }

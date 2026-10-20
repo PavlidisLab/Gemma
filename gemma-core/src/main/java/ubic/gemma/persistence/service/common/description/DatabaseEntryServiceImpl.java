@@ -24,36 +24,35 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractVoEnabledService;
-
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * Spring Service base class for <code>DatabaseEntryService</code>, provides access to all services and entities
  * referenced by this service.
+ * <p>
+ * Phase 3 strangler: the read cluster ({@code findLatestByAccession}, plus the inherited
+ * {@code load(Long)}/{@code loadAll()}/{@code countAll()}/{@code findByAccession} surface
+ * if you reach for it) now lives on {@link DatabaseEntryReadService}; this facade delegates
+ * the unique read method to that service. Write methods stay on the facade.
  *
  * @see DatabaseEntryService
+ * @see DatabaseEntryReadService
  */
 @Service
 public class DatabaseEntryServiceImpl extends AbstractFilteringVoEnabledService<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryService {
 
-    private final DatabaseEntryDao databaseEntryDao;
+    private final DatabaseEntryReadService databaseEntryReadService;
 
     @Autowired
-    public DatabaseEntryServiceImpl( DatabaseEntryDao databaseEntryDao ) {
+    public DatabaseEntryServiceImpl( DatabaseEntryDao databaseEntryDao, DatabaseEntryReadService databaseEntryReadService ) {
         super( databaseEntryDao );
-        this.databaseEntryDao = databaseEntryDao;
+        this.databaseEntryReadService = databaseEntryReadService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public DatabaseEntry findLatestByAccession( String accession ) {
-        return this.databaseEntryDao.findByAccession( accession )
-                .stream()
-                .max( DatabaseEntry.getComparator() )
-                .orElse( null );
+        return databaseEntryReadService.findLatestByAccession( accession );
     }
 
 }

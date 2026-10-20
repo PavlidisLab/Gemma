@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.sequence;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -32,7 +32,7 @@ import ubic.gemma.persistence.service.genome.ChromosomeUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * {@link BlatAssociationScorer} tests
@@ -46,6 +46,7 @@ public class BlatAssociationScorerTest {
 
         // there's only one gene product that is aligned to two different regions
         GeneProduct geneProduct = this.createGeneProduct();
+        BioSequence querySequence = BioSequence.Factory.newInstance();
 
         BlatResult blatResult_1 = this.createBlatResult( "6_cox_hap2" );
         BlatResult blatResult_2 = this.createBlatResult( "6" );
@@ -57,14 +58,14 @@ public class BlatAssociationScorerTest {
         association_1.setBlatResult( blatResult_1 );
         association_1.setScore( 50.0 );
         association_1.setOverlap( 50 );
-        association_1.setBioSequence( BioSequence.Factory.newInstance() );
+        association_1.setBioSequence( querySequence );
 
         BlatAssociation association_2 = BlatAssociation.Factory.newInstance();
         association_2.setGeneProduct( geneProduct );
         association_2.setBlatResult( blatResult_2 );
         association_2.setScore( 30.0 );
         association_2.setOverlap( 30 );
-        association_2.setBioSequence( BioSequence.Factory.newInstance() );
+        association_2.setBioSequence( querySequence );
 
         Collection<BlatAssociation> blatAssociations = new ArrayList<>();
         blatAssociations.add( association_1 );
@@ -99,7 +100,7 @@ public class BlatAssociationScorerTest {
         Taxon taxon = Taxon.Factory.newInstance();
         taxon.setCommonName( "human" );
 
-        Chromosome chr = new Chromosome( name, taxon );
+        Chromosome chr = Chromosome.Factory.newInstance( name, taxon );
         blatResult.setTargetChromosome( chr );
 
         return blatResult;

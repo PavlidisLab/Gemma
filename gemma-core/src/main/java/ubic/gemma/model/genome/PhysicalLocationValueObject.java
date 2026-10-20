@@ -1,5 +1,7 @@
 package ubic.gemma.model.genome;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 import java.util.Objects;
@@ -8,6 +10,8 @@ import java.util.Objects;
  * A very simple value object to represent a physical location
  */
 @SuppressWarnings("unused") // Getters used by JSON serializer in the REST API
+@Getter
+@Setter
 public class PhysicalLocationValueObject extends IdentifiableValueObject<PhysicalLocation> {
 
     private Long nucleotide;
@@ -55,53 +59,5 @@ public class PhysicalLocationValueObject extends IdentifiableValueObject<Physica
                 that.taxon != null && this.taxon != null && that.taxon.getId().equals( this.taxon.getId() ) ) )
                 && that.strand.equals( this.strand ) && that.chromosome.equals( this.chromosome ) && that.bin
                 .equals( this.bin );
-    }
-
-    public Long getNucleotide() {
-        return nucleotide;
-    }
-
-    public Integer getNucleotideLength() {
-        return nucleotideLength;
-    }
-
-    public String getStrand() {
-        return strand;
-    }
-
-    public Integer getBin() {
-        return bin;
-    }
-
-    public String getChromosome() {
-        return chromosome;
-    }
-
-    public TaxonValueObject getTaxon() {
-        return taxon;
-    }
-
-    public void setNucleotideLength( Integer nucleotideLength ) {
-        this.nucleotideLength = nucleotideLength;
-    }
-
-    public void setStrand( String strand ) {
-        this.strand = strand;
-    }
-
-    public void setBin( Integer bin ) {
-        this.bin = bin;
-    }
-
-    public void setChromosome( String chromosome ) {
-        this.chromosome = chromosome;
-    }
-
-    public void setTaxon( TaxonValueObject taxon ) {
-        this.taxon = taxon;
-    }
-
-    public void setNucleotide( Long nucleotide ) {
-        this.nucleotide = nucleotide;
     }
 }

@@ -18,16 +18,18 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import org.springframework.transaction.PlatformTransactionManager;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.service.genome.gene.GeneSetService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -38,12 +40,12 @@ import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class NCBIGeneLoadingTest extends BaseSpringContextTest {
+public class NCBIGeneLoadingTest extends BaseSpringContextTest5 {
 
     private Gene g = null;
 
@@ -53,21 +55,28 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     private GeneSetService geneSetService;
     @Autowired
     private GeneProductService geneProductService;
+    @Autowired
+    private GeneWriteService geneWriteService;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    @Autowired
+    private SessionFactory sessionFactory;
 
-    @Before
+    @BeforeEach
     public void setup() {
         clean();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         clean();
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGeneLoader() throws Exception {
-        NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
+        NcbiGeneLoader loader = new NcbiGeneLoader();
+        loader.setGeneWriteService( geneWriteService );
         loader.setTaxonService( taxonService );
 
         String geneInfoTestFile = "/data/loader/genome/gene/gene_info.human.sample";
@@ -143,7 +152,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         Collection<Gene> updatedTestGene = geneService.findByOfficialSymbol( "TEAD1" );
         assertEquals( 1, updatedTestGene.size() );
         g = updatedTestGene.iterator().next();
-        assertEquals( "7003", g.getPreviousNcbiId() );
+        assertEquals( "7003", g.getPreviousNcbiGeneId() );
         assertEquals( new Integer( 44444 ), g.getNcbiGeneId() );
 
         g = geneService.findByNCBIId( 1 );
@@ -152,6 +161,31 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         // test remove...
         geneProductService.remove( products );
 
+    }
+
+    /**
+     * A dry run goes through the real upsert and flush, reports what it would have done, and leaves nothing behind.
+     */
+    @Test
+    public void testDryRunWritesNothing() throws Exception {
+        NcbiGeneLoader loader = new NcbiGeneLoader();
+        loader.setGeneWriteService( geneWriteService );
+        loader.setTaxonService( taxonService );
+        loader.setTransactionManager( transactionManager );
+        loader.setSessionFactory( sessionFactory );
+        loader.setDryRun( true );
+        Taxon human = taxonService.findByCommonName( "human" );
+        assertNotNull( human );
+
+        loader.load( FileTools.resourceToPath( "/data/loader/genome/gene/gene_info.human.sample" ),
+                FileTools.resourceToPath( "/data/loader/genome/gene/gene2accession.human.sample" ),
+                FileTools.resourceToPath( "/data/loader/genome/gene/gene_history.human.sample" ), null, human );
+
+        assertEquals( 4, loader.getLoadedGeneCount() );
+        assertEquals( 4, loader.getCreatedGeneCount() );
+        assertEquals( 0, loader.getFailedGeneCount() );
+        assertTrue( geneService.findByOfficialSymbol( "A2M" ).isEmpty() );
+        assertNull( geneService.findByNCBIId( 2 ) );
     }
 
     private void clean() {

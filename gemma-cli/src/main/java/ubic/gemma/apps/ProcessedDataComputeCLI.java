@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.analysis.preprocess.QuantitationTypeDetectionRelatedPreprocessingException;
 import ubic.gemma.core.analysis.preprocess.detect.SuspiciousValuesForQuantitationException;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -88,52 +89,60 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        getPipelineJobReporter().stage( "processed-data:" + ee.getShortName() );
         if ( expressionExperimentService.isTroubled( ee ) && !isForce() ) {
-            addErrorObject( ee, "Skipping troubled experiment " + ee.getShortName() + ", use -" + FORCE_OPTION + " to process." );
+            addWarningObject( ee, "Skipping troubled experiment " + ee.getShortName() + ", use -" + FORCE_OPTION + " to process." );
             return;
         }
-        try {
-            ee = this.eeService.thaw( ee );
 
-            if ( this.updateDiagnostics || this.updateRanks ) {
-                log.info( "Skipping processed data vector creation; only doing selected postprocessing steps" );
+        // -mdate: skip datasets whose processed data was computed after the limiting date; noNeedToRun records why
+        if ( getLimitingDate() != null && noNeedToRun( ee, ProcessedVectorComputationEvent.class ) ) {
+            return;
+        }
 
-                if ( this.updateRanks ) {
-                    log.info( "Updating ranks: " + ee );
-                    this.processedVectorService.updateRanks( ee );
-                }
+        ee = this.eeService.thaw( ee );
 
-                if ( this.updateDiagnostics ) {
-                    log.info( "Updating diagnostics: " + ee );
-                    this.preprocessorService.processDiagnostics( ee );
-                }
-            } else {
+        if ( this.updateDiagnostics || this.updateRanks ) {
+            log.info( "Skipping processed data vector creation; only doing selected postprocessing steps" );
+
+            if ( this.updateRanks ) {
+                log.info( "Updating ranks: " + ee );
+                this.processedVectorService.updateRanks( ee );
+                // Note the auditing is done by the service.
+                addSuccessObject( ee, "Updated ranks on processed vectors." );
+            }
+
+            if ( this.updateDiagnostics ) {
+                log.info( "Updating diagnostics: " + ee );
+                this.preprocessorService.processDiagnostics( ee );
+                // Note the auditing is done by the service.
+                addSuccessObject( ee, "Updated diagnostics." );
+            }
+        } else {
+            try {
                 // this does all of the steps including batch correction
                 this.preprocessorService.process( ee, ignoreQuantitationMismatch );
+                // Note the auditing is done by the service.
+                addSuccessObject( ee, "Post-processed." );
+            } catch ( QuantitationTypeDetectionRelatedPreprocessingException e ) {
+                if ( e.getCause() instanceof SuspiciousValuesForQuantitationException ) {
+                    SuspiciousValuesForQuantitationException actual = ( SuspiciousValuesForQuantitationException ) e.getCause();
+                    QuantitationType qt = actual.getQuantitationType();
+                    addErrorObject( String.format( "%s:\n%s", ee, qt ), String.format( "The following issues were found in expression data:\n\n - %s\n\nYou may ignore this by setting the -%s option.",
+                            actual
+                                    .getSuspiciousValues().stream()
+                                    .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
+                                    .collect( Collectors.joining( "\n - " ) ), IGNORE_QUANTITATION_MISMATCH_OPTION ) );
+                } else {
+                    throw e;
+                }
             }
+        }
 
-            try {
-                refreshExpressionExperimentFromGemmaWeb( ee, true, false );
-            } catch ( Exception e ) {
-                addWarningObject( ee, "Failed to refresh experiment from Gemma Web.", e );
-            }
-
-            // Note the auditing is done by the service.
-            addSuccessObject( ee );
-        } catch ( QuantitationTypeDetectionRelatedPreprocessingException e ) {
-            if ( e.getCause() instanceof SuspiciousValuesForQuantitationException ) {
-                SuspiciousValuesForQuantitationException actual = ( SuspiciousValuesForQuantitationException ) e.getCause();
-                QuantitationType qt = actual.getQuantitationType();
-                addErrorObject( String.format( "%s:\n%s", ee, qt ), String.format( "The following issues were found in expression data:\n\n - %s\n\nYou may ignore this by setting the -%s option.",
-                        actual
-                                .getSuspiciousValues().stream()
-                                .map( SuspiciousValuesForQuantitationException.SuspiciousValueResult::toString )
-                                .collect( Collectors.joining( "\n - " ) ), IGNORE_QUANTITATION_MISMATCH_OPTION ) );
-            } else {
-                addErrorObject( ee, e );
-            }
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, true, false );
         } catch ( Exception e ) {
-            addErrorObject( ee, e );
+            addWarningObject( ee, "Failed to refresh experiment from Gemma Web.", e );
         }
     }
 }

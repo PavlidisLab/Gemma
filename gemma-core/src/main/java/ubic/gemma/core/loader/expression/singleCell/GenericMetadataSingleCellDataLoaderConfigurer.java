@@ -1,11 +1,11 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.core.loader.util.mapper.BioAssayMapper;
 
-@CommonsLog
+@Slf4j
 public class GenericMetadataSingleCellDataLoaderConfigurer implements SingleCellDataLoaderConfigurer<GenericMetadataSingleCellDataLoader> {
 
     private final SingleCellDataLoaderConfigurer<?> delegate;
@@ -27,7 +27,13 @@ public class GenericMetadataSingleCellDataLoaderConfigurer implements SingleCell
         if ( config.getOtherCellLevelCharacteristicsFile() != null ) {
             log.info( "Loading additional cell-level characteristics from " + config.getOtherCellLevelCharacteristicsFile() );
         }
-        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader( delegate.configureLoader( config ), config.getCellTypeAssignmentFile(), config.getOtherCellLevelCharacteristicsNames(), config.getOtherCellLevelCharacteristicsFile() );
+        GenericMetadataSingleCellDataLoader loader = new GenericMetadataSingleCellDataLoader(
+                delegate.configureLoader( config ),
+                config.getCellTypeAssignmentFile(),
+                config.getOtherCellLevelCharacteristicsFile(), config.getOtherCellLevelCharacteristicsNames(),
+                config.getOtherCellLevelCharacteristicsDefaultValues(),
+                config.getOtherCellLevelCharacteristicsDefaultValueUris()
+        );
         // this needs to be set so that the delegate can use it
         loader.setBioAssayToSampleNameMapper( bioAssayMapper );
         if ( config.getCellTypeAssignmentName() != null ) {

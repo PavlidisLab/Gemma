@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Do not import this, it's used for testing purposes. -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!--
+    Renovations Phase 2 wiring: Spring 6 + Hibernate 6.
+    Spring 6's org.springframework.orm.hibernate5.LocalSessionFactoryBean is preserved for
+    backward compatibility with Hibernate 5 only — it calls hibernate-commons-annotations
+    ReflectionManager.reset(), which was removed in Hibernate 6. The path forward is to build a
+    JPA EntityManagerFactory via Spring's LocalContainerEntityManagerFactoryBean and expose a
+    SessionFactory by unwrapping it, so existing SessionFactory-injected DAOs (gsec's AclDao,
+    Gemma DAOs) continue to compile and run.
+    -->
+
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
+        <property name="driver">
+            <bean class="org.h2.Driver"/>
+        </property>
+        <property name="url" value="jdbc:h2:mem:gsec;DB_CLOSE_DELAY=-1"/>
+    </bean>
+
+    <!--
+    Use Spring's native LocalSessionFactoryBean (hibernate5 package, kept for back-compat with
+    HB6 in this hbm.xml-only project) instead of the JPA bootstrap path. Spring 6's
+    LocalSessionFactoryBean calls into a small subset of the Hibernate API that still works
+    under HB6 when no annotated entities are involved — gsec's mappings are pure hbm.xml so
+    this is fine. The JPA path is problematic because it hard-codes
+    current_session_context_class=jpa, which breaks SessionFactory.getCurrentSession() under
+    HibernateTransactionManager — the same problem Gemma's HibernateSessionFactoryBean works around.
+    -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mappingLocations">
+            <list>
+                <value>classpath:ubic/gemma/core/security/model/AclEntry.hbm.xml</value>
+                <value>classpath:ubic/gemma/core/security/model/AclObjectIdentity.hbm.xml</value>
+                <value>classpath:ubic/gemma/core/security/model/AclSid.hbm.xml</value>
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.hbm2ddl.auto">create</prop>
+                <prop key="hibernate.cache.use_second_level_cache">false</prop>
+                <prop key="hibernate.cache.use_query_cache">false</prop>
+                <prop key="hibernate.current_session_context_class">org.springframework.orm.hibernate5.SpringSessionContext</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--
+    Use HibernateTransactionManager (not JpaTransactionManager) so SessionFactory.getCurrentSession()
+    works in DAOs. HibernateTransactionManager binds the Session directly to the SessionFactory,
+    which is what the legacy DAOs (AclDaoImpl, etc.) need.
+    -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <bean id="userDetailsManager" class="ubic.gemma.core.security.UserDetailsManagerImpl"/>
+    <bean id="groupManager" class="ubic.gemma.core.security.GroupManagerImpl"/>
+    <bean id="userService" class="ubic.gemma.core.security.UserServiceImpl"/>
+    <bean id="authenticationManager" class="org.springframework.security.authentication.ProviderManager">
+        <constructor-arg>
+            <list>
+                <bean class="org.springframework.security.authentication.TestingAuthenticationProvider"/>
+            </list>
+        </constructor-arg>
+    </bean>
+</beans>

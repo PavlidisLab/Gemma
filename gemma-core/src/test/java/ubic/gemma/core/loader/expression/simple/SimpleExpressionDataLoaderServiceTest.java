@@ -19,15 +19,15 @@
 package ubic.gemma.core.loader.expression.simple;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.loader.expression.simple.model.*;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -46,8 +46,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author pavlidis
  */
-@Category(SlowTest.class)
-public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest {
+@Tag("slow")
+public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -57,7 +57,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void after() {
         if ( ee != null ) {
             eeService.remove( ee );
@@ -182,7 +182,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setShortName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setName( RandomStringUtils.insecure().nextAlphabetic( 5 ) );
         metaData.setTaxon( SimpleTaxonMetadata.forName( "mouse" ) );
-        metaData.setAccession( SimpleDatabaseEntry.fromAccession( "GSE109291", "GEO" ) );
+        metaData.setAccession( SimpleDatabaseEntry.fromAccession( "GSE109291", ExternalDatabases.GEO ) );
 
         metaData.getArrayDesigns().add( SimplePlatformMetadata.forId( ad.getId() ) );
 
@@ -191,7 +191,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
             sampleMetadata.setName( "sample" + i );
             sampleMetadata.setDescription( "sample description " + i );
             sampleMetadata.setPlatformUsed( SimplePlatformMetadata.forId( ad.getId() ) );
-            sampleMetadata.setAccession( SimpleDatabaseEntry.fromAccession( "GSM0000" + i, "GEO" ) );
+            sampleMetadata.setAccession( SimpleDatabaseEntry.fromAccession( "GSM0000" + i, ExternalDatabases.GEO ) );
             metaData.getSamples().add( sampleMetadata );
         }
 
@@ -201,7 +201,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertThat( ee ).isNotNull();
         assertThat( ee.getAccession() ).isNotNull();
         assertThat( ee.getAccession().getAccession() ).isEqualTo( "GSE109291" );
-        assertThat( ee.getAccession().getExternalDatabase().getName() ).isEqualTo( "GEO" );
+        assertThat( ee.getAccession().getExternalDatabase().getName() ).isEqualTo( ExternalDatabases.GEO );
         assertThat( ee.getBioAssays() )
                 .hasSize( 8 )
                 .allSatisfy( ba -> {

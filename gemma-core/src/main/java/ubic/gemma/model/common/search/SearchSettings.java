@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -46,17 +46,37 @@ public class SearchSettings {
 
     public enum SearchMode {
         /**
-         * Prefer correctness to speed.
+         * Very fast search mode, designed for exact matching of identifiers, etc.
          */
-        ACCURATE,
+        EXACT,
+        /**
+         * Fast search mode, designed for autocompletion.
+         * <p>
+         * In this mode, we stop searching as soon as we have enough results to satisfy the request.
+         */
+        FAST,
         /**
          * Normal search mode with trade-offs to make it usable.
          */
         BALANCED,
         /**
-         * Fast search mode, designed for autocompletion.
+         * Prefer correctness to speed.
          */
-        FAST
+        ACCURATE;
+
+        /**
+         * Check if a search mode is at least as thorough as the given one.
+         */
+        public boolean isAtLeast( SearchMode other ) {
+            return this.ordinal() >= other.ordinal();
+        }
+
+        /**
+         * Check if a search mode is at most as thorough as the given one.
+         */
+        public boolean isAtMost( SearchMode searchMode ) {
+            return this.ordinal() <= searchMode.ordinal();
+        }
     }
 
     /**
@@ -68,7 +88,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings arrayDesignSearch( String query ) {
@@ -78,7 +98,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings bibliographicReferenceSearch( String query ) {
@@ -88,8 +108,8 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query       query
-     * @param  arrayDesign the array design to limit the search to
+     * @param query       query
+     * @param arrayDesign the array design to limit the search to
      * @return search settings
      */
     public static SearchSettings compositeSequenceSearch( String query, @Nullable ArrayDesign arrayDesign ) {
@@ -102,7 +122,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @return search settings
      */
     public static SearchSettings expressionExperimentSearch( String query ) {
@@ -115,7 +135,7 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
+     * @param query query
      * @param taxon if you want to filter by taxon (can be null)
      * @return search settings
      */
@@ -130,8 +150,8 @@ public class SearchSettings {
     /**
      * Convenience method to get pre-configured settings.
      *
-     * @param  query query
-     * @param  taxon the taxon to limit the search to (can be null)
+     * @param query query
+     * @param taxon the taxon to limit the search to (can be null)
      * @return search settings
      */
     public static SearchSettings geneSearch( String query, @Nullable Taxon taxon ) {
@@ -150,22 +170,62 @@ public class SearchSettings {
     private Set<Class<? extends Identifiable>> resultTypes;
 
     /* optional search constraints */
+    /**
+     * Constraint results to be related to the given platform.
+     */
     @Nullable
     private ArrayDesign platformConstraint;
+    /**
+     * Constraint results to be related to the given dataset.
+     */
     @Nullable
-    private ExpressionExperiment experimentConstraint;
+    private ExpressionExperiment datasetConstraint;
+    /**
+     * Constraint results to to be related to the given taxon.
+     */
     @Nullable
     private Taxon taxonConstraint;
 
     /* sources */
-    @Builder.Default
-    private boolean useCharacteristics = true;
+    /**
+     * Use the database for finding results.
+     */
     @Builder.Default
     private boolean useDatabase = true;
+    /**
+     * Use the ontology and ontology inference for finding results.
+     * <p>
+     * Results from the Gene Ontology (GO) are not included in this setting, use {@link #setUseGeneOntology(boolean)}
+     * for that purpose.
+     */
     @Builder.Default
-    private boolean useGo = true;
+    private boolean useOntology = true;
+    /**
+     * Include results from the Gene Ontology (GO).
+     */
     @Builder.Default
-    private boolean useIndices = true;
+    private boolean useGeneOntology = true;
+    /**
+     * Use the full-text index for finding results.
+     */
+    @Builder.Default
+    private boolean useFullTextIndex = true;
+
+    /**
+     * Widen the search into terms Gemma knows are related to the ones matched -- so that ticking
+     * "Leigh syndrome" still returns a dataset annotated only as a {@code SURF1} mutant.
+     *
+     * <p><b>Off by default, and that is a deliberate choice rather than caution.</b> Turning it on
+     * changes every existing disease result set and every count derived from one, and no specificity
+     * threshold has yet been tuned against curator judgement. A wrong threshold shipped as a default
+     * does not look like a wrong threshold; it looks like a search bug. The browse UI opts in
+     * explicitly, which also means the client knows which terms it added and why, and can keep the
+     * two classes of hit distinguishable instead of merging them behind the user's back.</p>
+     *
+     * <p>Inferred hits are scored below direct ones and carry their own provenance string.</p>
+     */
+    @Builder.Default
+    private boolean useInferredRelations = false;
 
     /**
      * Limit for the number of results per result type.
@@ -177,13 +237,16 @@ public class SearchSettings {
     private int maxResults = SearchSettings.DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
 
     /**
-     * Indicate if results should be filled.
+     * Indicate if result objects (i.e. {@link SearchResult#getResultObject()} should be filled, otherwise only the
+     * class and ID will be populated.
      */
     @Builder.Default
     private boolean fillResults = true;
 
     /**
-     * Fast mode, return quickly.
+     * Indicate the search mode to use.
+     * <p>
+     * Defaults to balanced.
      */
     @Builder.Default
     private SearchMode mode = SearchMode.BALANCED;
@@ -195,17 +258,36 @@ public class SearchSettings {
         return resultTypes.contains( cls );
     }
 
-
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder( "'" + query + "'" );
         s.append( " in " ).append( resultTypes.stream().map( Class::getSimpleName ).sorted().collect( Collectors.joining( ", " ) ) );
+        if ( datasetConstraint != null ) {
+            s.append( " " ).append( "[" ).append( datasetConstraint ).append( "]" );
+        }
         if ( platformConstraint != null ) {
             s.append( " " ).append( "[" ).append( platformConstraint ).append( "]" );
         }
         if ( taxonConstraint != null ) {
             s.append( " " ).append( "[" ).append( taxonConstraint ).append( "]" );
         }
+        if ( useDatabase ) {
+            s.append( " [Use Database]" );
+        }
+        if ( useOntology ) {
+            s.append( " [Use Ontology]" );
+        }
+        if ( useGeneOntology ) {
+            s.append( " [Use Gene Ontology]" );
+        }
+        if ( useFullTextIndex ) {
+            s.append( " [Use Full-Text Index]" );
+        }
+        s.append( " Max Results=" ).append( maxResults );
+        if ( fillResults ) {
+            s.append( " [Fill Results]" );
+        }
+        s.append( " Mode=" ).append( mode );
         return s.toString();
     }
 }

@@ -19,12 +19,18 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indiates that there was at least one batch with only one sample. This normally is only relevant to RNA-seq as for
  * microarrays we group samples by nearest date. FASTQ headers don't provide for that heuristic.
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("SingletonBatchInvalidEvent")
 public class SingletonBatchInvalidEvent extends FailedBatchInformationFetchingEvent {
 
 }

@@ -1,18 +1,37 @@
 package ubic.gemma.model.expression.bioAssayData;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
+import ubic.gemma.core.datastructure.sparse.SparseListUtils;
 import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.util.SparseListUtils;
+import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.persistence.hibernate.ByteArrayType;
 import ubic.gemma.persistence.hibernate.CompressedStringListType;
 
 import java.util.*;
 
-import static ubic.gemma.model.util.SparseListUtils.getSparseRangeArrayElement;
+import static ubic.gemma.core.datastructure.sparse.SparseListUtils.getSparseRangeArrayElement;
 
 /**
  * Represents a single-cell dimension, holding shared information for a set of {@link SingleCellExpressionDataVector}.
@@ -22,9 +41,11 @@ import static ubic.gemma.model.util.SparseListUtils.getSparseRangeArrayElement;
  */
 @Getter
 @Setter
+@Entity
+@Table(name = "SINGLE_CELL_DIMENSION")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class SingleCellDimension extends AbstractIdentifiable implements Identifiable {
-
-    private Long id;
 
     /**
      * Cell identifiers.
@@ -33,15 +54,23 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * <p>
      * This is stored as a compressed, gzipped blob in the database. See {@link CompressedStringListType} for more details.
      */
+    // FIXME: the delimiter is "\n" — a literal backslash + n, not a newline. Rewriting all stored
+    // cell IDs to a real newline is tracked at https://github.com/PavlidisLab/Gemma/issues/1365.
     @MayBeUninitialized(hasSize = true)
+    @Type(value = CompressedStringListType.class, parameters = @Parameter(name = "delimiter", value = "\\n"))
+    @Column(name = "CELL_IDS", nullable = false, columnDefinition = "LONGBLOB")
     private List<String> cellIds = new ArrayList<>();
 
     /**
-     * Number of cells.
+     * Number of cell IDs.
+     * <p>
+     * This is *not* the number of cells
      * <p>
      * This must always be equal to the size of {@link #cellIds}.
      */
-    private int numberOfCells = 0;
+    // TODO: rename the column to NUMBER_OF_CELL_IDS.
+    @Column(name = "NUMBER_OF_CELLS", nullable = false, columnDefinition = "INTEGER")
+    private int numberOfCellIds = 0;
 
     /**
      * List of {@link BioAssay}s applicable to the cells.
@@ -53,6 +82,16 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * To find the {@link BioAssay} of a given cell, use {@link #getBioAssay(int)}.
      */
     @MayBeUninitialized
+    @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    @JoinTable(name = "BIO_ASSAYS2SINGLE_CELL_DIMENSIONS",
+            joinColumns = @JoinColumn(name = "SINGLE_CELL_DIMENSIONS_FK", columnDefinition = "BIGINT",
+                    foreignKey = @ForeignKey(name = "SINGLE_CELL_DIMENSIONS_FKC")),
+            inverseJoinColumns = @JoinColumn(name = "BIO_ASSAYS_FK", columnDefinition = "BIGINT",
+                    foreignKey = @ForeignKey(name = "BIO_ASSAYS_SC_FKC")))
+    @OrderColumn(name = "ORDERING")
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+    @Immutable
     private List<BioAssay> bioAssays = new ArrayList<>();
 
     /**
@@ -64,6 +103,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * <p>
      * This may be set to {@code null} to keep the model lightweight.
      */
+    @Type(value = ByteArrayType.class, parameters = @Parameter(name = "arrayType", value = "int"))
+    @Column(name = "BIO_ASSAYS_OFFSET", nullable = false, columnDefinition = "LONGBLOB")
     private int[] bioAssaysOffset = new int[0];
 
     /**
@@ -73,6 +114,9 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * {@link CellTypeAssignment#isPreferred()} if non-empty.
      */
     @MayBeUninitialized
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "SINGLE_CELL_DIMENSION_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "SINGLE_CELL_DIMENSION_FKC"))
     private Set<CellTypeAssignment> cellTypeAssignments = new HashSet<>();
 
     /**
@@ -81,6 +125,10 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * Cell types have a special treatment and should be added to {@link #cellTypeAssignments}.
      */
     @MayBeUninitialized
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true,
+            targetEntity = GenericCellLevelCharacteristics.class)
+    @JoinColumn(name = "SINGLE_CELL_DIMENSION_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "CELL_LEVEL_CHARACTERISTICS_SINGLE_SINGLE_CELL_DIMENSION_FKC"))
     private Set<CellLevelCharacteristics> cellLevelCharacteristics = new HashSet<>();
 
     /**
@@ -91,10 +139,10 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      * @throws IndexOutOfBoundsException if the index is out of bounds
      */
     public BioAssay getBioAssay( int cellIndex ) throws IndexOutOfBoundsException {
-        if ( cellIndex < 0 || cellIndex > numberOfCells ) {
-            throw new IndexOutOfBoundsException( "Cell index must be in the range [0, " + numberOfCells + "[." );
+        if ( cellIndex < 0 || cellIndex > numberOfCellIds ) {
+            throw new IndexOutOfBoundsException( "Cell index must be in the range [0, " + numberOfCellIds + "[." );
         }
-        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, numberOfCells, cellIndex );
+        return getSparseRangeArrayElement( bioAssays, bioAssaysOffset, numberOfCellIds, cellIndex );
     }
 
     /**
@@ -106,7 +154,7 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
         if ( sampleIndex < 0 || sampleIndex >= bioAssays.size() ) {
             throw new IndexOutOfBoundsException( "Sample index must be in range [0, " + bioAssays.size() + "[." );
         }
-        return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellsBySample( sampleIndex ) ) );
+        return Collections.unmodifiableList( cellIds.subList( bioAssaysOffset[sampleIndex], bioAssaysOffset[sampleIndex] + getNumberOfCellIdsBySample( sampleIndex ) ) );
     }
 
     /**
@@ -116,12 +164,12 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
      *
      * @param sampleIndex the sample position in {@link #bioAssays}
      */
-    public int getNumberOfCellsBySample( int sampleIndex ) {
+    public int getNumberOfCellIdsBySample( int sampleIndex ) {
         if ( sampleIndex < 0 || sampleIndex >= bioAssays.size() ) {
             throw new IndexOutOfBoundsException( "Sample index must be in range [0, " + bioAssays.size() + "[." );
         }
         if ( sampleIndex == bioAssays.size() - 1 ) {
-            return numberOfCells - bioAssaysOffset[sampleIndex];
+            return numberOfCellIds - bioAssaysOffset[sampleIndex];
         } else {
             return bioAssaysOffset[sampleIndex + 1] - bioAssaysOffset[sampleIndex];
         }
@@ -129,7 +177,8 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
 
     @Override
     public int hashCode() {
-        return Objects.hash( numberOfCells, bioAssays, Arrays.hashCode( bioAssaysOffset ) );
+        // bioAssays may be uninitialized, so it's not safe to include in the hashcode
+        return Objects.hash( numberOfCellIds, Arrays.hashCode( bioAssaysOffset ) );
     }
 
     @Override
@@ -139,9 +188,10 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
         if ( !( obj instanceof SingleCellDimension ) )
             return false;
         SingleCellDimension scd = ( SingleCellDimension ) obj;
-        if ( id != null && scd.id != null )
-            return id.equals( scd.id );
-        return Objects.equals( bioAssays, scd.bioAssays )
+        if ( getId() != null && scd.getId() != null )
+            return getId().equals( scd.getId() );
+        // bioAssays might be uninitialized, ignore it when comparing
+        return ModelUtils.equals( bioAssays, scd.bioAssays ) == ModelUtils.EqualityOutcome.EQUAL
                 && Arrays.equals( bioAssaysOffset, scd.bioAssaysOffset )
                 && Objects.equals( cellIds, scd.cellIds );  // this is the most expensive to compare
     }
@@ -150,6 +200,6 @@ public class SingleCellDimension extends AbstractIdentifiable implements Identif
     public String toString() {
         return super.toString()
                 + ( bioAssays != null ? " Number of Assays=" + bioAssays.size() : "" )
-                + " Number of Cells=" + ( cellIds != null ? cellIds.size() : numberOfCells );
+                + " Number of Cell IDs=" + ( cellIds != null ? cellIds.size() : numberOfCellIds );
     }
 }

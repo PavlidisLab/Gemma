@@ -26,7 +26,7 @@ public class ExpLevelConsolidationArg extends AbstractArg<String> {
      *
      * @param s the request boolean argument
      * @return an instance of BoolArg representing boolean value of the input string, or a malformed BoolArg that will
-     * throw an {@link javax.ws.rs.BadRequestException} when accessing its value, if the input String can not be
+     * throw an {@link jakarta.ws.rs.BadRequestException} when accessing its value, if the input String can not be
      * converted into a boolean.
      */
     @SuppressWarnings("unused")

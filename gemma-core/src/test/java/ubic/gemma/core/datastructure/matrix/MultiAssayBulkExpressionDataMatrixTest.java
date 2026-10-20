@@ -1,6 +1,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -56,7 +56,7 @@ public class MultiAssayBulkExpressionDataMatrixTest {
         List<RawExpressionDataVector> vectors = new ArrayList<>();
         vectors.addAll( RandomBulkDataUtils.randomBulkVectors( ee, bad1, ad1, qt1, RawExpressionDataVector.class ) );
         vectors.addAll( RandomBulkDataUtils.randomBulkVectors( ee, bad2, ad2, qt2, RawExpressionDataVector.class ) );
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( vectors, Arrays.asList( qt1, qt2 ) );
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, vectors, Arrays.asList( qt1, qt2 ) );
         assertThat( matrix.getQuantitationTypes() )
                 .containsExactlyInAnyOrder( qt1, qt2 );
         assertThat( matrix.getQuantitationType() ).satisfies( qt -> {
@@ -116,7 +116,7 @@ public class MultiAssayBulkExpressionDataMatrixTest {
         List<RawExpressionDataVector> vectors = new ArrayList<>();
         vectors.addAll( RandomBulkDataUtils.randomBulkVectors( ee, bad1, ad1, qt1, RawExpressionDataVector.class ) );
         vectors.addAll( RandomBulkDataUtils.randomBulkVectors( ee, bad2, ad2, qt2, RawExpressionDataVector.class ) );
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( vectors, Arrays.asList( qt1, qt2 ) );
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee, vectors, Arrays.asList( qt1, qt2 ) );
         assertThat( matrix.getQuantitationTypes() )
                 .containsExactlyInAnyOrder( qt1, qt2 );
         assertThat( matrix.getQuantitationType() ).satisfies( qt -> {
@@ -152,7 +152,7 @@ public class MultiAssayBulkExpressionDataMatrixTest {
         List<RawExpressionDataVector> vectors = new ArrayList<>();
         vectors.addAll( RandomBulkDataUtils.randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
         vectors.addAll( RandomBulkDataUtils.randomBulkVectors( ee, ad, qt, RawExpressionDataVector.class ) );
-        assertThatThrownBy( () -> new ExpressionDataDoubleMatrix( vectors ) )
+        assertThatThrownBy( () -> new ExpressionDataDoubleMatrix( ee, vectors ) )
                 .isInstanceOf( IllegalStateException.class );
     }
 }

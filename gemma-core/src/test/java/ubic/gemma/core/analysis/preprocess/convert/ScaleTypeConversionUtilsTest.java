@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.preprocess.convert;
 
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 

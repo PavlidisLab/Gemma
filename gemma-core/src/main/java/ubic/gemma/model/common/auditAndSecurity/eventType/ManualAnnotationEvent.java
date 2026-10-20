@@ -18,6 +18,14 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
+@Entity
+
+@DiscriminatorValue("ManualAnnotationEvent")
+
 public class ManualAnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
 }

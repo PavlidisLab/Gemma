@@ -15,7 +15,10 @@
 package ubic.gemma.core.loader.expression.geo.service;
 
 import lombok.Builder;
+import org.springframework.lang.Nullable;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.core.loader.expression.geo.model.GeoData;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -45,6 +48,7 @@ public interface GeoService {
      * @param splitIncompatiblePlatforms split incompatible platforms
      * @return collection
      */
+    @Nullable
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms );
 
@@ -57,9 +61,33 @@ public interface GeoService {
      * @param splitIncompatiblePlatforms split incompatible platforms
      * @return collection
      */
+    @Nullable
     Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean splitIncompatiblePlatforms, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
+    /**
+     * Convert already-fetched platform data and persist the resulting array designs.
+     * <p>
+     * 🛑 Not meant to be called directly — it exists so {@link #fetchAndLoad}, which is
+     * {@code Propagation.NEVER} so the GEO fetch it wraps does not hold a transaction open, can reach a
+     * real transaction boundary through this bean's proxy for the persist step. A self-invocation would
+     * not open one.
+     */
+    @Transactional
+    Collection<ArrayDesign> loadPlatforms( String geoAccession, Collection<? extends GeoData> platforms );
+
+    /**
+     * Convert an already-fetched series and persist the resulting experiment(s).
+     * <p>
+     * Same reason as {@link #loadPlatforms}: reached through the proxy from {@link #fetchAndLoad} once the
+     * long GEO fetch has already returned, so the ACL-creating persist at the end of this call (and
+     * everything that validates/converts the series beforehand) runs in its own fresh transaction rather
+     * than the one the fetch would otherwise have held open.
+     */
+    @Nullable
+    @Transactional
+    Collection<?> convertAndPersist( Collection<? extends GeoData> parseResult, boolean doSampleMatching,
+            boolean splitByPlatform, boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
     /**
      * Refetch and reprocess the GEO series, updating select information. Currently only implemented for experiments (GSEs)
@@ -74,10 +102,20 @@ public interface GeoService {
     void updateFromGEO( ExpressionExperiment expressionExperiment, GeoUpdateConfig geoUpdateConfig );
 
     @Builder
+    @lombok.Getter
     class GeoUpdateConfig {
         boolean experimentTags;
         boolean sampleCharacteristics;
         boolean publications;
+        /**
+         * Rebuild {@code Investigation.sourceMetadata} from the series this refetch parsed.
+         * <p>
+         * Separate from the three above because it is the only one that writes nothing of GEO's
+         * opinion into Gemma's own curated fields: the document is a record of what GEO said, stored
+         * beside the experiment rather than merged into it. That is what makes it safe to run over
+         * the whole corpus, and why the backfill CLI sets this flag and none of the others.
+         */
+        boolean sourceMetadata;
     }
 
     /**

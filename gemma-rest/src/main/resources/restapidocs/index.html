@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>RESTful API documentation | Gemma</title>
+    <link rel="stylesheet" type="text/css" href="swagger-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+<body>
+<header class="header">
+    <a href="/" class="logo">
+        <img src="gemma-lockup.svg" height="40" alt="Gemma"/>
+    </a>
+    <a href="https://www.ubc.ca/" class="right-logo">
+        <img src="ubc-logo.png" height="40" alt="UBC Logo"/>
+    </a>
+</header>
+<div id="swagger-ui"></div>
+<script src="swagger-ui-bundle.js"></script>
+<script>
+    // Derive context path from the current URL. This page lives at
+    // <contextPath>/resources/restapidocs/index.html (or .../resources/restapidocs/),
+    // so strip the trailing "/resources/restapidocs/..." to recover the app context.
+    (function () {
+        var path = window.location.pathname;
+        var marker = '/resources/restapidocs';
+        var idx = path.indexOf( marker );
+        var contextPath = idx >= 0 ? path.substring( 0, idx ) : '';
+
+        window.ui = SwaggerUIBundle( {
+            url: contextPath + '/rest/v2/openapi.json',
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            tagsSorter: 'alpha',
+            operationsSorter: 'alpha',
+            presets: [
+                SwaggerUIBundle.presets.apis
+            ]
+        } );
+    })();
+</script>
+</body>
+</html>

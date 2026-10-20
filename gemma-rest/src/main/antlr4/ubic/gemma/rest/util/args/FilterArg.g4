@@ -42,6 +42,9 @@ quantifier: ALL | ANY | NONE;
 scalar: STRING | QUOTED_STRING | PROPERTY | CONJUNCTION | DISJUNCTION | ANY | NONE | ALL | operator | collectionOperator;
 collection: '(' scalar (',' scalar)* ')' | '(' ')';
 predicate: PROPERTY operator scalar | PROPERTY collectionOperator collection;
-subClause: predicate | quantifier '(' predicate ')';
+// A quantifier may scope a CONJUNCTION of predicates, not just one. The conjunction then binds to a
+// single element of the relation: any(a = 1 and b = 2) means "some element has a=1 AND b=2", which
+// plain `a = 1 and b = 2` cannot say (that is two independent subqueries).
+subClause: predicate | quantifier '(' predicate (CONJUNCTION predicate)* ')';
 clause: subClause (disjunction subClause)*;
 filter: clause (CONJUNCTION clause)* EOF | EOF;

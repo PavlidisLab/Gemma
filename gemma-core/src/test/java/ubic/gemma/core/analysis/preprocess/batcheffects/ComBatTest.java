@@ -18,15 +18,15 @@ import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.dataStructure.matrix.StringMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.basecode.io.reader.StringMatrixReader;
+import org.junit.jupiter.api.Test;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrix;
+import ubic.gemma.core.util.matrix.StringMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.StringMatrixReader;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author paul

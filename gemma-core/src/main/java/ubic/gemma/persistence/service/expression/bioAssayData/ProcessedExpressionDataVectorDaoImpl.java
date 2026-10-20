@@ -19,39 +19,22 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
-import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
-import ubic.gemma.core.analysis.preprocess.normalize.QuantileNormalizer;
-import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.util.CommonQueries;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
-import java.util.function.Function;
 
-import static ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionUtils.ensureLog2Scale;
 import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
@@ -61,131 +44,31 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
 public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementDataVectorDao<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorDao {
 
-    /**
-     * Don't attempt to renormalize data that is smaller than this. This avoids unnecessary normalization in tests, and
-     * in data sets where normalization is more likely to harm than good.
-     */
-    private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
-
-    @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
-    @Autowired
-    private QuantitationTypeDao quantitationTypeDao;
-
     @Autowired
     public ProcessedExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
         super( ProcessedExpressionDataVector.class, sessionFactory );
     }
 
-    @Override
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        log.info( "Removing processed expression vectors for " + expressionExperiment + "..." );
-        expressionExperimentDao.removeProcessedDataVectors( expressionExperiment );
-
-        log.info( "Computing processed expression vectors for " + expressionExperiment );
-
-        boolean isTwoChannel = this.isTwoChannel( expressionExperiment );
-
-        Collection<RawExpressionDataVector> missingValueVectors = new HashSet<>();
-        if ( isTwoChannel ) {
-            missingValueVectors = this.getMissingValueVectors( expressionExperiment );
-        }
-
-        Collection<RawExpressionDataVector> rawPreferredDataVectors = this
-                .getPreferredDataVectors( expressionExperiment );
-        if ( rawPreferredDataVectors.isEmpty() ) {
-            throw new IllegalArgumentException( "No preferred data vectors for " + expressionExperiment );
-        }
-
-        removeDuplicateElements( rawPreferredDataVectors );
-
-        RawExpressionDataVector preferredDataVectorExemplar = rawPreferredDataVectors.iterator().next();
-        QuantitationType preferredMaskedDataQuantitationType = this
-                .getPreferredMaskedDataQuantitationType( expressionExperiment, preferredDataVectorExemplar.getQuantitationType() );
-
-        /* log-transform if necessary */
-        // this will also consolidate sets of raw vectors that have multiple BADs
-        Collection<RawExpressionDataVector> consolidatedRawVectors = consolidateRawVectors( rawPreferredDataVectors,
-                preferredMaskedDataQuantitationType, ignoreQuantitationMismatch );
-
-        BioAssayDimension preferredMaskedDataDimension = consolidatedRawVectors.iterator().next().getBioAssayDimension();
-        Map<CompositeSequence, DoubleVectorValueObject> maskedVectorObjects = this
-                .maskAndUnpack( consolidatedRawVectors, missingValueVectors );
-
-        /*
-         * Note that we used to not normalize count data, but we've removed this restriction; and in any case we have
-         * moved to using non-count summaries for the primary data type.
-         */
-        if ( preferredMaskedDataQuantitationType.getType().equals( StandardQuantitationType.COUNT ) ) {
-            /*
-             * Backfill target
-             */
-            log.warn( "Preferred data are counts; please convert to log2cpm" );
-        }
-
-        if ( preferredMaskedDataQuantitationType.getIsRatio() ) {
-            log.info( "Data is on a ratio scale, skipping normalization step." );
-        } else if ( maskedVectorObjects.size() < ProcessedExpressionDataVectorDaoImpl.MIN_SIZE_FOR_RENORMALIZATION ) {
-            log.info( "Not enough data vectors (" + maskedVectorObjects.size() + ") to perform normalization." );
-        } else {
-            log.info( "Normalizing the data" );
-            this.renormalize( maskedVectorObjects );
-            preferredMaskedDataQuantitationType.setIsNormalized( true );
-            quantitationTypeDao.update( preferredMaskedDataQuantitationType );
-        }
-
-        /*
-         * Done with processing, now build the vectors and persist; Do a sanity check that we don't have more than we
-         * should
-         */
-        int i = 0;
-        Collection<CompositeSequence> seenDes = new HashSet<>();
-        Collection<ProcessedExpressionDataVector> newVectors = new HashSet<>();
-        for ( CompositeSequence cs : maskedVectorObjects.keySet() ) {
-
-            DoubleVectorValueObject dvvo = maskedVectorObjects.get( cs );
-
-            if ( seenDes.contains( cs ) ) {
-                // defensive programming, this happens.
-                throw new IllegalStateException( "Duplicated design element: " + cs
-                        + "; make sure the experiment has only one 'preferred' quantitation type. "
-                        + "Perhaps you need to run vector merging following an array design switch?" );
-            }
-
-            ProcessedExpressionDataVector vec = ProcessedExpressionDataVector.Factory.newInstance();
-            vec.setExpressionExperiment( expressionExperiment );
-            // assert this.getBioAssays().size() > 0;
-            vec.setQuantitationType( preferredMaskedDataQuantitationType );
-            vec.setBioAssayDimension( preferredMaskedDataDimension );
-            vec.setDesignElement( cs );
-            // assert this.getBioAssays().size() > 0;
-            vec.setDataAsDoubles( dvvo.getData() );
-            vec.setRankByMax( dvvo.getRankByMax() );
-            vec.setRankByMean( dvvo.getRankByMean() );
-
-            newVectors.add( vec );
-            seenDes.add( cs );
-            if ( ++i % 5000 == 0 ) {
-                log.info( i + " vectors built" );
-            }
-        }
-
-        log.info( String.format( "Persisting %d processed data vectors...",
-                newVectors.size() ) );
-
-        int created = expressionExperimentDao.createProcessedDataVectors( expressionExperiment, newVectors );
-
-        assert expressionExperiment.getNumberOfDataVectors() != null;
-
-        return created;
-    }
 
     @Override
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
         StopWatch timer = StopWatch.createStarted();
+        // join fetch designElement + its arrayDesign + biologicalCharacteristic to avoid an N+1
+        // storm: arrayDesign is mapped lazy="false" fetch="select" (one extra SELECT per row),
+        // and biologicalCharacteristic is a lazy proxy that the matrix-builder filter
+        // (RowsWithSequencesFilter) triggers per row via a null check.
+        // See PERF_PROBE_REPORT_ROUND3 Category A1.
+        // bioAssayDimension + quantitationType are now lazy=proxy in the hbm (was eager+select
+        // which produced one follow-up SELECT per vector); join fetch them here since the
+        // Cached*Service VO builders read both per vector.
         //noinspection unchecked
         List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "left join fetch cs.biologicalCharacteristic "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee" )
                 .setParameter( "ee", ee )
                 .list();
@@ -195,14 +78,42 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     @Override
     public List<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch QT so
+        // downstream VO builders don't trigger one SELECT per vector. (dimension is already
+        // pinned by the parameter; still join-fetch for consistency.)
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
                                 + "where dedv.expressionExperiment = :ee and dedv.bioAssayDimension = :dimension" )
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                .list();
+    }
+
+    @Override
+    public Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
+        if ( designElements == null || designElements.isEmpty() ) {
+            return new HashSet<>();
+        }
+        // Mirror getProcessedVectors(ee): join fetch designElement + arrayDesign + bioAssayDimension +
+        // quantitationType so the downstream consumers don't fall back to per-row lazy initialization.
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select dedv from ProcessedExpressionDataVector dedv "
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
+                                + "where dedv.designElement in (:des) and dedv.quantitationType = :qt" )
+                .setParameterList( "des", optimizeIdentifiableParameterList( designElements ) )
+                .setParameter( "qt", quantitationType )
                 .list();
     }
 
@@ -214,10 +125,17 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
         StopWatch timer = StopWatch.createStarted();
 
-        // Do not do in clause for experiments, as it can't use the indices
+        // Do not do in clause for experiments, as it can't use the indices.
+        // join fetch designElement + arrayDesign: see getProcessedVectors(ee) for the N+1 rationale.
+        // bioAssayDimension/quantitationType are lazy=proxy in the hbm; join fetch both since
+        // the Cached*Service VO builders read them per vector.
         Query queryObject = this.getSessionFactory().getCurrentSession().createQuery(
                         "select dedv from ProcessedExpressionDataVector dedv "
-                                + "where dedv.designElement.id in ( :cs )"
+                                + "join fetch dedv.designElement cs "
+                                + "join fetch cs.arrayDesign "
+                                + "join fetch dedv.bioAssayDimension "
+                                + "join fetch dedv.quantitationType "
+                                + "where cs.id in ( :cs )"
                                 + ( ees != null ? " and dedv.expressionExperiment in :ees" : "" ) )
                 .setParameterList( "cs", optimizeParameterList( cs2gene.keySet() ) );
         List<ProcessedExpressionDataVector> results;
@@ -249,8 +167,9 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
 
     /**
      * Obtain a random sample of processed vectors for the given experiment.
-     * @param  ee    ee
-     * @param  limit if {@code >0}, you will get a "random" set of vectors for the experiment
+     *
+     * @param ee    ee
+     * @param limit if {@code >0}, you will get a "random" set of vectors for the experiment
      * @return processed data vectors
      */
     @Override
@@ -267,23 +186,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
             // cannot fix this here, because we're read-only.
         }
 
-        //noinspection unchecked
-        List<ProcessedExpressionDataVector> result = this.getSessionFactory().getCurrentSession()
-                .createQuery( " from ProcessedExpressionDataVector dedv "
-                        + "where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5 order by RAND()" ) // order by rand() works?
-                .setParameter( "ee", ee )
-                .setMaxResults( limit )
-                .list();
+        // HQL_SQL_AUDIT P2: replace `order by RAND()` (forces a full sort of every matching
+        // vector with a random key per row -- O(N log N) on millions of vectors per EE) with
+        // a two-step pattern: (1) cheap id-only index scan, (2) shuffle in Java + pick N,
+        // (3) fetch only the chosen vectors by id (with the same fetch joins as before).
+        List<ProcessedExpressionDataVector> result = sampleVectorsByRank( ee, limit, true );
 
         // maybe ranks are not set for some reason; can happen e.g. GeneSpring mangled data.
         if ( result.isEmpty() ) {
-            //noinspection unchecked
-            result = this.getSessionFactory().getCurrentSession()
-                    .createQuery( " from ProcessedExpressionDataVector dedv "
-                            + "where dedv.expressionExperiment = :ee order by RAND()" )
-                    .setParameter( "ee", ee )
-                    .setMaxResults( limit )
-                    .list();
+            result = sampleVectorsByRank( ee, limit, false );
         }
 
         thaw( result ); // needed?
@@ -299,6 +210,43 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         return result;
     }
 
+    /**
+     * Sample {@code limit} processed vectors for the given experiment, optionally restricted
+     * to {@code rankByMean > 0.5}.
+     * <p>
+     * Implementation: (1) cheap id-only query returning candidate ids, (2) shuffle the id
+     * list in Java and pick the first {@code limit}, (3) fetch only those vectors by id with
+     * the same designElement / arrayDesign join fetches as the bulk loader.
+     * <p>
+     * Replaces a `ORDER BY RAND()` over the full set, which forced the DB to compute a
+     * random key per row and sort the entire result. See HQL_SQL_AUDIT P2.
+     */
+    private List<ProcessedExpressionDataVector> sampleVectorsByRank( ExpressionExperiment ee, int limit, boolean rankFilter ) {
+        String idQuery = rankFilter
+                ? "select dedv.id from ProcessedExpressionDataVector dedv where dedv.expressionExperiment = :ee and dedv.rankByMean > 0.5"
+                : "select dedv.id from ProcessedExpressionDataVector dedv where dedv.expressionExperiment = :ee";
+        //noinspection unchecked
+        List<Long> ids = this.getSessionFactory().getCurrentSession()
+                .createQuery( idQuery )
+                .setParameter( "ee", ee )
+                .list();
+        if ( ids.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Collections.shuffle( ids );
+        List<Long> picked = ids.size() > limit ? ids.subList( 0, limit ) : ids;
+        //noinspection unchecked
+        return ( List<ProcessedExpressionDataVector> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select dedv from ProcessedExpressionDataVector dedv "
+                        + "join fetch dedv.designElement cs "
+                        + "join fetch cs.arrayDesign "
+                        + "join fetch dedv.bioAssayDimension "
+                        + "join fetch dedv.quantitationType "
+                        + "where dedv.id in (:ids)" )
+                .setParameterList( "ids", picked )
+                .list();
+    }
+
     @Override
     public List<CompositeSequence> getProcessedVectorsDesignElements( ExpressionExperiment ee, BioAssayDimension dimension, int offset, int limit ) {
         //noinspection unchecked
@@ -308,7 +256,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                 .setParameter( "ee", ee )
                 .setParameter( "dimension", dimension )
                 .setFirstResult( offset )
-                .setMaxResults( limit )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
                 .list();
     }
 
@@ -404,29 +353,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
         Map<Long, Collection<Long>> cs2gene = CommonQueries
                 .getCs2GeneMapForProbes( probes, this.getSessionFactory().getCurrentSession() );
 
-        Map<ProcessedExpressionDataVector, Collection<Long>> vector2gene = new HashMap<>( cs2gene.size() );
+        Map<ProcessedExpressionDataVector, Collection<Long>> vector2gene = HashMap.newHashMap( cs2gene.size() );
         for ( ProcessedExpressionDataVector pedv : vectors ) {
             vector2gene.put( pedv, cs2gene.getOrDefault( pedv.getDesignElement().getId(), Collections.emptySet() ) );
         }
 
         return vector2gene;
-    }
-
-    /**
-     * Consolidate raw vectors that have multiple BADs and log-transform them if necessary.
-     *
-     * @param  rawPreferredDataVectors             raw preferred data vectors
-     * @param  preferredMaskedDataQuantitationType preferred masked data QT
-     * @return collection containing the vectors
-     */
-    private Collection<RawExpressionDataVector> consolidateRawVectors(
-            Collection<RawExpressionDataVector> rawPreferredDataVectors,
-            QuantitationType preferredMaskedDataQuantitationType,
-            boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        ExpressionDataDoubleMatrix matrix = ensureLog2Scale( new ExpressionDataDoubleMatrix( rawPreferredDataVectors ), ignoreQuantitationMismatch );
-        preferredMaskedDataQuantitationType.setScale( ScaleType.LOG2 );
-        this.getSessionFactory().getCurrentSession().update( preferredMaskedDataQuantitationType );
-        return new HashSet<>( BulkExpressionDataMatrixUtils.toVectors( matrix, RawExpressionDataVector.class ) );
     }
 
     private void addToGene( RankMethod method, Map<Gene, Collection<Double>> result, Double rMean, Double rMax,
@@ -446,286 +378,5 @@ public class ProcessedExpressionDataVectorDaoImpl extends AbstractDesignElementD
                     break;
             }
         }
-    }
-
-    private void doQuantileNormalization( DoubleMatrix<CompositeSequence, Integer> matrix,
-            Map<CompositeSequence, DoubleVectorValueObject> vectors ) {
-
-        QuantileNormalizer<CompositeSequence, Integer> normalizer = new QuantileNormalizer<>();
-
-        DoubleMatrix<CompositeSequence, Integer> normalized = normalizer.normalize( matrix );
-
-        for ( int i = 0; i < normalized.rows(); i++ ) {
-            double[] row = normalized.getRow( i );
-            CompositeSequence cs = normalized.getRowName( i );
-            DoubleVectorValueObject vec = vectors.get( cs );
-            double[] data = vec.getData();
-            System.arraycopy( row, 0, data, 0, row.length );
-        }
-
-    }
-
-    private Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
-        //language=HQL
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dedv from RawExpressionDataVector dedv "
-                                + "join dedv.quantitationType q "
-                                + "where q.type = 'PRESENTABSENT' and dedv.expressionExperiment  = :ee " )
-                .setParameter( "ee", ee )
-                .list();
-    }
-
-    /**
-     * @param  ee ee
-     * @return Retrieve the RAW data for the preferred quantitation type.
-     */
-    private Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
-        //language=HQL
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select dedv from RawExpressionDataVector dedv "
-                                + "join dedv.quantitationType q "
-                                + "where q.isPreferred = true and dedv.expressionExperiment = :ee" )
-                .setParameter( "ee", ee )
-                .list();
-    }
-
-    /**
-     * Make (or re-use) a quantitation type for attaching to the new processed data - always log2 transformed
-     *
-     * @param  ee          expression experiment we're dealing with
-     * @param  preferredQt preferred QT
-     * @return QT
-     */
-    private QuantitationType getPreferredMaskedDataQuantitationType( ExpressionExperiment ee, QuantitationType preferredQt ) {
-        QuantitationType present = QuantitationType.Factory.newInstance();
-
-        present.setName( preferredQt.getName() + " - Processed version" );
-        present.setDescription(
-                "Processed data (as per Gemma) for analysis, based on the preferred quantitation type raw data" );
-
-        present.setGeneralType( preferredQt.getGeneralType() );
-        present.setType( preferredQt.getType() );
-        present.setScale( preferredQt.getScale() );
-        present.setRepresentation( preferredQt.getRepresentation() ); // better be a number!
-
-        present.setIsBackground( false );
-        present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
-
-        present.setIsBatchCorrected( preferredQt.getIsBatchCorrected() );
-        present.setIsRecomputedFromRawData(
-                preferredQt.getIsRecomputedFromRawData() ); // By "RAW" we mean CEL files or Fastq etc.
-
-        // we do not copy the normalized flag from raw QTs because it does not guarantee to mean it is quantile-normalized
-        // present.setIsNormalized( preferredQt.getIsNormalized() );
-
-        present.setIsRatio( preferredQt.getIsRatio() );
-
-        present.setIsMaskedPreferred( true );
-
-        return quantitationTypeDao.create( present, ProcessedExpressionDataVector.class );
-    }
-
-    /**
-     * @param  expressionExperiment ee
-     * @return true if any platform used by the ee is two-channel (including dual-mode)
-     */
-    private boolean isTwoChannel( ExpressionExperiment expressionExperiment ) {
-
-        boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this.getSessionFactory().getCurrentSession() );
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            TechnologyType technologyType = ad.getTechnologyType();
-
-            if ( technologyType == null ) {
-                throw new IllegalStateException(
-                        "Array designs must have a technology type assigned before processed vector computation" );
-            }
-
-            if ( technologyType.equals( TechnologyType.TWOCOLOR ) || technologyType
-                    .equals( TechnologyType.DUALMODE ) ) {
-                isTwoChannel = true;
-            }
-        }
-        return isTwoChannel;
-    }
-
-    /**
-     * Mask missing values. This is mostly for two-color (ratiometric) data.
-     *
-     */
-    private Map<CompositeSequence, DoubleVectorValueObject> maskAndUnpack(
-            Collection<RawExpressionDataVector> preferredData, Collection<RawExpressionDataVector> missingValueData ) {
-        Map<CompositeSequence, DoubleVectorValueObject> unpackedData = this.unpack( preferredData );
-
-        if ( missingValueData.isEmpty() ) {
-            log.debug( "There is no separate missing data information, simply using the data as is" );
-            for ( DoubleVectorValueObject rv : unpackedData.values() ) {
-                rv.setMasked( true );
-            }
-            return unpackedData;
-        }
-
-        Collection<BooleanVectorValueObject> unpackedMissingValueData = this.unpackBooleans( missingValueData );
-        Map<CompositeSequenceValueObject, BooleanVectorValueObject> missingValueMap = new HashMap<>();
-        for ( BooleanVectorValueObject bv : unpackedMissingValueData ) {
-            missingValueMap.put( bv.getDesignElement(), bv );
-        }
-
-        boolean warned = false;
-        for ( DoubleVectorValueObject rv : unpackedData.values() ) {
-            double[] data = rv.getData();
-            CompositeSequenceValueObject de = rv.getDesignElement();
-            BooleanVectorValueObject mv = missingValueMap.get( de );
-            if ( mv == null ) {
-                if ( !warned && log.isWarnEnabled() )
-                    log.warn( "No mask vector for " + de
-                            + ", additional warnings for missing masks for this job will be skipped" );
-                // we're missing a mask vector for it for some reason, but still flag it as effectively masked.
-                rv.setMasked( true );
-                warned = true;
-                continue;
-            }
-
-            boolean[] mvData = mv.getData();
-
-            if ( mvData.length != data.length ) {
-                throw new IllegalStateException( "Missing value data didn't match data length" );
-            }
-            for ( int i = 0; i < data.length; i++ ) {
-                if ( !mvData[i] ) {
-                    data[i] = Double.NaN;
-                }
-            }
-            rv.setMasked( true );
-        }
-
-        return unpackedData;
-    }
-
-    /**
-     */
-    private void removeDuplicateElements( Collection<RawExpressionDataVector> rawPreferredDataVectors ) {
-        /*
-         * Remove rows that are duplicates for the same design element. This can happen for data sets that were merged.
-         * We arbitrarily throw one out.
-         */
-        int maxWarn = 10;
-        int warned = 0;
-        Set<CompositeSequence> seenDes = new HashSet<>();
-        Collection<RawExpressionDataVector> toRemove = new HashSet<>();
-        for ( RawExpressionDataVector rdv : rawPreferredDataVectors ) {
-            CompositeSequence de = rdv.getDesignElement();
-
-            if ( seenDes.contains( de ) ) {
-                if ( warned <= maxWarn ) {
-                    log.info( "Duplicate vector for: " + de );
-                    warned++;
-                }
-                if ( warned == maxWarn ) {
-                    log.info( "Further warnings skipped" );
-                }
-                toRemove.add( rdv );
-            }
-            seenDes.add( de );
-        }
-        if ( !toRemove.isEmpty() ) {
-            rawPreferredDataVectors.removeAll( toRemove );
-            log.info( "Removed " + toRemove.size() + " duplicate elements, " + rawPreferredDataVectors.size()
-                    + " remain" );
-        }
-    }
-
-    /**
-     * Quantile normalize data. This should be one of the last steps in processing before persisting
-     *
-     * @param vectors vectors
-     */
-    private void renormalize( Map<CompositeSequence, DoubleVectorValueObject> vectors ) {
-
-        int cols = vectors.values().iterator().next().getBioAssayDimension().getBioAssays().size();
-        DoubleMatrix<CompositeSequence, Integer> mat = new DenseDoubleMatrix<>( vectors.size(), cols );
-        for ( int i = 0; i < cols; i++ ) {
-            mat.setColumnName( i, i );
-        }
-
-        int i = 0;
-        for ( CompositeSequence c : vectors.keySet() ) {
-            DoubleVectorValueObject v = vectors.get( c );
-            double[] data = v.getData();
-
-            if ( data.length != cols ) {
-                throw new IllegalStateException(
-                        "Normalization failed: perhaps vector merge needs to be run on this experiment? (vector length="
-                                + data.length + "; " + cols + " bioAssays in bioassaydimension ID=" + v
-                                .getBioAssayDimension().getId() );
-            }
-            for ( int j = 0; j < cols; j++ ) {
-                mat.set( i, j, data[j] );
-            }
-            mat.setRowName( c, i );
-            i++;
-        }
-
-        this.doQuantileNormalization( mat, vectors );
-
-        assert mat.rows() == vectors.size();
-
-    }
-
-    private Map<CompositeSequence, DoubleVectorValueObject> unpack(
-            Collection<? extends BulkExpressionDataVector> data ) {
-        Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
-                BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
-                BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
-                BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
-        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
-                vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
-        for ( BulkExpressionDataVector v : data ) {
-            result.put( v.getDesignElement(),
-                    new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
-                            qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                            adVos.get( v.getDesignElement().getArrayDesign() ), null ) );
-        }
-        return result;
-    }
-
-    private Collection<BooleanVectorValueObject> unpackBooleans( Collection<? extends BulkExpressionDataVector> data ) {
-        Collection<BooleanVectorValueObject> result = new HashSet<>();
-        Map<ExpressionExperiment, ExpressionExperimentValueObject> eeVos = createValueObjectCache( data,
-                BulkExpressionDataVector::getExpressionExperiment, ExpressionExperimentValueObject::new );
-        Map<QuantitationType, QuantitationTypeValueObject> qtVos = createValueObjectCache( data,
-                BulkExpressionDataVector::getQuantitationType, QuantitationTypeValueObject::new );
-        Map<BioAssayDimension, BioAssayDimensionValueObject> badVos = createValueObjectCache( data,
-                BulkExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
-        Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data,
-                v -> v.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
-        for ( BulkExpressionDataVector v : data ) {
-            result.add( new BooleanVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
-                    qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    adVos.get( v.getDesignElement().getArrayDesign() ) ) );
-        }
-        return result;
-    }
-
-    /**
-     * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably
-     *              just
-     *              have one
-     *              (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
-     *              for
-     *              details.
-     */
-    private <S, T> Map<S, T> createValueObjectCache( Collection<? extends BulkExpressionDataVector> vectors,
-            Function<BulkExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {
-        Map<S, T> result = new HashMap<>();
-        for ( BulkExpressionDataVector v : vectors ) {
-            result.computeIfAbsent( keyExtractor.apply( v ), valueExtractor );
-        }
-        return result;
     }
 }

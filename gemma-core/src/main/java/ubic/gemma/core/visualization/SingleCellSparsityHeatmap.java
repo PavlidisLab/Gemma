@@ -13,7 +13,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,15 +41,15 @@ public class SingleCellSparsityHeatmap implements Heatmap {
     /**
      *
      * @param expressionExperiment    an experiment containing single-cell data
-     * @param singleCellDimension     a single cell dimension
+     * @param singleCellDimension     a single-cell dimension
      * @param dimension               a regular dimension for aggregated data
      * @param subSets                 a set of subsets containing aggregated data
      * @param designElementsPerSample the number of design elements for the platform of each sample
      * @param type                    the type of heatmap to generate
      */
     public SingleCellSparsityHeatmap( ExpressionExperiment expressionExperiment, SingleCellDimension singleCellDimension, BioAssayDimension dimension, Collection<ExpressionExperimentSubSet> subSets, @Nullable Map<BioAssay, Long> designElementsPerSample, @Nullable SingleCellHeatmapType type ) {
-        Assert.isTrue( expressionExperiment.getBioAssays().containsAll( singleCellDimension.getBioAssays() ) );
-        Assert.isTrue( subSets.stream().map( BioAssaySet::getBioAssays ).allMatch( dimension.getBioAssays()::containsAll ) );
+        Assert.isTrue( expressionExperiment.getBioAssays().containsAll( singleCellDimension.getBioAssays() ) , "expected true");
+        Assert.isTrue( subSets.stream().map( BioAssaySet::getBioAssays ).allMatch( dimension.getBioAssays()::containsAll ) , "expected true");
         this.expressionExperiment = expressionExperiment;
         this.samples = expressionExperiment.getBioAssays().stream()
                 .sorted( Comparator.comparing( BioAssay::getName ) )
@@ -69,7 +69,7 @@ public class SingleCellSparsityHeatmap implements Heatmap {
 
     @Override
     public BufferedImage createImage( int cellSize ) {
-        Assert.notNull( type );
+        Assert.notNull( type , "must not be null");
         DefaultHeatMapDataset d = new DefaultHeatMapDataset( subSets.size(), expressionExperiment.getBioAssays().size(), 0, 1, 0, 1 );
         for ( int i = 0; i < subSets.size(); i++ ) {
             for ( int j = 0; j < samples.size(); j++ ) {
@@ -84,7 +84,7 @@ public class SingleCellSparsityHeatmap implements Heatmap {
                     switch ( type ) {
                         case CELL:
                             if ( assay.getNumberOfCells() != null ) {
-                                z = ( double ) assay.getNumberOfCells() / ( double ) singleCellDimension.getNumberOfCellsBySample( sampleIndex );
+                                z = ( double ) assay.getNumberOfCells() / ( double ) singleCellDimension.getNumberOfCellIdsBySample( sampleIndex );
                             } else {
                                 z = Double.NaN;
                             }
@@ -125,7 +125,7 @@ public class SingleCellSparsityHeatmap implements Heatmap {
             switch ( type ) {
                 case CELL:
                     if ( sample.getNumberOfCells() != null ) {
-                        z = ( double ) sample.getNumberOfCells() / singleCellDimension.getNumberOfCellsBySample( sampleIndex );
+                        z = ( double ) sample.getNumberOfCells() / singleCellDimension.getNumberOfCellIdsBySample( sampleIndex );
                     } else {
                         z = Double.NaN;
                     }

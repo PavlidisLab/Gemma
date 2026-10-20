@@ -1,8 +1,7 @@
 package ubic.gemma.core.search;
 
-import org.apache.lucene.queryParser.ParseException;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * An exception that indicate that the search query could not be parsed.
@@ -39,7 +38,7 @@ public class ParseSearchException extends SearchException {
     }
 
     /**
-     * The original {@link ParseException} if this query was reattempted.
+     * The original {@code ParseException} if this query was reattempted.
      */
     @Nullable
     public ParseSearchException getOriginalParseException() {

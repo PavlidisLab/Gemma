@@ -3,7 +3,7 @@ package ubic.gemma.core.loader.expression.sequencing;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Represents sequencing metadata for a {@link ubic.gemma.model.expression.bioAssay.BioAssay}.

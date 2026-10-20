@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -38,17 +37,13 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
 
 /**
  * @author pavlidis
- * @see    ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
+ * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
  */
 public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressionDataVector> extends AbstractDao<T>
         implements DesignElementDataVectorDao<T> {
 
     protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
-    }
-
-    protected AbstractDesignElementDataVectorDao( Class<T> elementClass, SessionFactory sessionFactory, ClassMetadata classMetadata ) {
-        super( elementClass, sessionFactory, classMetadata );
     }
 
     @Override
@@ -74,8 +69,12 @@ public abstract class AbstractDesignElementDataVectorDao<T extends BulkExpressio
     @Override
     public void thaw( T vector ) {
         Hibernate.initialize( vector.getExpressionExperiment() );
+        Hibernate.initialize( vector.getExpressionExperiment().getBioAssays() );
         thawDesignElement( vector.getDesignElement() );
         thawBioAssayDimension( vector.getBioAssayDimension() );
+        // quantitationType is lazy=proxy post c646639fa9 / 1520096ae2; callers of thaw()
+        // expect to read QT fields outside the loader's transaction.
+        Hibernate.initialize( vector.getQuantitationType() );
     }
 
     private void thawDesignElement( CompositeSequence designElement ) {

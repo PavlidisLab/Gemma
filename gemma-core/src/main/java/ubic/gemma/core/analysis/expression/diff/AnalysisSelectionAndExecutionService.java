@@ -61,20 +61,22 @@ class AnalysisSelectionAndExecutionService {
 
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
-        AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( expressionExperiment, config );
+        // the samples that are not analyzed have to go before anything is decided from the sample set: the analysis
+        // type, the baselines, whether a factor is complete and the degrees of freedom are all computed from it
+        ExpressionDataDoubleMatrix dmatrix = DiffExAnalyzerUtils.dropSamplesNotAnalyzed( expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment, true ) );
+
+        AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( expressionExperiment, config, dmatrix.getBioMaterials() );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                .getProcessedExpressionDataMatrix( expressionExperiment, true );
-
         // if this is a subset analysis, see if we can reuse an existing set of subsets
         if ( config.getSubsetFactor() != null ) {
             Map<FactorValue, ExpressionExperimentSubSet> subsets = expressionExperimentService.getSubSetsByFactorValue( expressionExperiment, config.getSubsetFactor(), dmatrix.getBioAssayDimension() );
             if ( subsets != null ) {
-                log.info( String.format( "%s already has subsets for %s, reusing them:\n\t%s", expressionExperiment,
+                log.info( String.format( "%s already has subsets for %s, reusing them:%n\t%s", expressionExperiment,
                         config.getSubsetFactor(),
                         subsets.entrySet().stream().map( e -> e.getKey() + " -> " + e.getValue() ).collect( Collectors.joining( "\n\t" ) ) ) );
                 return diffExAnalyzer.run( expressionExperiment, subsets, dmatrix, config );
@@ -88,14 +90,14 @@ class AnalysisSelectionAndExecutionService {
 
     public DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config ) {
-        AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( subset, config );
+        ExpressionDataDoubleMatrix dmatrix = DiffExAnalyzerUtils.dropSamplesNotAnalyzed( expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( subset.getSourceExperiment(), true ) );
+
+        AnalysisType analyzer = DiffExAnalyzerUtils.determineAnalysisType( subset, config, dmatrix.getBioMaterials() );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
-
-        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                .getProcessedExpressionDataMatrix( subset.getSourceExperiment(), true );
 
         return diffExAnalyzer.run( subset, dmatrix, config );
     }

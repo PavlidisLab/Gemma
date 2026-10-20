@@ -8,7 +8,7 @@ import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author poirigui
@@ -31,6 +31,11 @@ public class ProtocolAdderCli extends AbstractAuthenticatedCLI {
     @Override
     public String getShortDesc() {
         return "Add a new protocol";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
     }
 
     @Override

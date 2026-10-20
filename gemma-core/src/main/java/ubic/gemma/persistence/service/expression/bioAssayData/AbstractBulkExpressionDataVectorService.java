@@ -67,4 +67,12 @@ public abstract class AbstractBulkExpressionDataVectorService<T extends BulkExpr
         designElementDataVectorDao.thaw( vectors );
         return vectors;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public T thaw( T vector ) {
+        vector = ensureInSession( vector );
+        designElementDataVectorDao.thaw( vector );
+        return vector;
+    }
 }

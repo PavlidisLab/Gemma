@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.loader.expression.geo.model.GeoVariable.VariableType;
 import ubic.gemma.core.util.StringUtils;
 
@@ -30,6 +32,8 @@ import java.util.HashSet;
  * @author pavlidis
  */
 @SuppressWarnings("unused") // Possible external use
+@Getter
+@Setter
 public class GeoSubset extends GeoData {
 
     private String dataSet;
@@ -43,64 +47,7 @@ public class GeoSubset extends GeoData {
         this.description = StringUtils.appendWithDelimiter( this.description, s );
     }
 
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
-     * @return Returns the sample.
-     */
-    public Collection<GeoSample> getSamples() {
-        return this.samples;
-    }
-
     public void addSample( GeoSample sample ) {
         this.samples.add( sample );
-    }
-
-    /**
-     * @return Returns the type.
-     */
-    public VariableType getType() {
-        return this.type;
-    }
-
-    /**
-     * @param type The type to set.
-     */
-    public void setType( VariableType type ) {
-        this.type = type;
-    }
-
-    /**
-     * @return Returns the owningDataset.
-     */
-    public GeoDataset getOwningDataset() {
-        return this.owningDataset;
-    }
-
-    /**
-     * @param owningDataset The owningDataset to set.
-     */
-    public void setOwningDataset( GeoDataset owningDataset ) {
-        this.owningDataset = owningDataset;
-    }
-
-    public String getDataSet() {
-        return dataSet;
-    }
-
-    public void setDataSet( String dataSet ) {
-        this.dataSet = dataSet;
     }
 }

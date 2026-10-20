@@ -18,6 +18,8 @@
  */
 package ubic.gemma.core.tasks.analysis.sequence;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.Task;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -27,6 +29,8 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  *
  * @author keshav
  */
+@Getter
+@Setter
 public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
 
     private static final long serialVersionUID = 1L;
@@ -48,15 +52,6 @@ public class ArrayDesignRepeatScanTaskCommand extends TaskCommand {
     public ArrayDesignRepeatScanTaskCommand( ArrayDesign ad ) {
         super();
         this.arrayDesign = ad;
-    }
-
-    public ArrayDesign getArrayDesign() {
-        return arrayDesign;
-    }
-
-    @SuppressWarnings("unused") // Possible external use
-    public void setArrayDesign( ArrayDesign arrayDesign ) {
-        this.arrayDesign = arrayDesign;
     }
 
     @Override

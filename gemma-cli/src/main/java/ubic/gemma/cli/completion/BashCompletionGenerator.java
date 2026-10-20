@@ -2,15 +2,18 @@ package ubic.gemma.cli.completion;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.cli.util.OptionsUtils.isFileOption;
 import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
-public class BashCompletionGenerator extends AbstractCompletionGenerator {
+public class BashCompletionGenerator implements CompletionGenerator {
 
     private static final String INDENT = "    ";
 
@@ -24,9 +27,10 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
     /**
      * Current indentation level.
      */
-    private String indent = "";
+    private String currentIndent = "";
 
     public BashCompletionGenerator( String executableName, Set<String> subcommands ) {
+        Assert.isTrue( StringUtils.isNotBlank( executableName ), "Executable name cannot be blank." );
         this.executableName = executableName;
         this.subcommands = new TreeSet<>( subcommands );
     }
@@ -35,31 +39,31 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
     public void beforeCompletion( PrintWriter writer ) {
         writer.println( "function " + mangle( "__" + executableName + "_complete" ) + "() {" );
         pushIndent();
-        writer.append( indent ).println( "COMPREPLY=()" );
-        writer.append( indent ).println( "words=\"${COMP_WORDS[*]}\"" );
-        writer.append( indent ).println( "current_option=\"${COMP_WORDS[$COMP_CWORD-1]}\"" );
+        writer.append( currentIndent ).println( "COMPREPLY=()" );
+        writer.append( currentIndent ).println( "words=\"${COMP_WORDS[*]}\"" );
+        writer.append( currentIndent ).println( "current_option=\"${COMP_WORDS[$COMP_CWORD-1]}\"" );
 
     }
 
     @Override
     public void generateCompletion( Options options, PrintWriter writer ) {
-        writer.append( indent )
+        writer.append( currentIndent )
                 .printf( "if ! [[ \" $words \" =~ ' '(%s)' ' ]]; then%n",
                         subcommands.stream().map( String::trim ).map( this::quoteRegex ).collect( Collectors.joining( "|" ) ) );
         pushIndent();
         generateWordsFromOptions( options, writer );
         generateWordsFromStrings( subcommands, writer );
         popIndent();
-        writer.append( indent ).println( "fi" );
+        writer.append( currentIndent ).println( "fi" );
     }
 
     @Override
     public void generateSubcommandCompletion( String subcommand, Options subcommandOptions, @Nullable String subcommandDescription, boolean allowsPositionalArguments, PrintWriter writer ) {
-        writer.append( indent ).printf( "if [[ \" $words \" =~ %s ]]; then%n", quoteIfNecessary( " " + subcommand.trim() + " " ) );
+        writer.append( currentIndent ).printf( "if [[ \" $words \" =~ %s ]]; then%n", quoteIfNecessary( " " + subcommand.trim() + " " ) );
         pushIndent();
         generateWordsFromOptions( subcommandOptions, writer );
         popIndent();
-        writer.append( indent ).println( "fi" );
+        writer.append( currentIndent ).println( "fi" );
     }
 
     private void generateWordsFromOptions( Options options, PrintWriter writer ) {
@@ -82,27 +86,27 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
         }
 
         if ( !optionsThatRequireArg.isEmpty() ) {
-            writer.append( indent ).printf( "if ! [[ \"$current_option\" =~ (%s) ]]; then%n", String.join( "|", optionsThatRequireArg ) );
+            writer.append( currentIndent ).printf( "if ! [[ \"$current_option\" =~ (%s) ]]; then%n", String.join( "|", optionsThatRequireArg ) );
             pushIndent();
             generateWordsFromStrings( strings, writer );
             popIndent();
-            writer.append( indent ).println( "fi" );
+            writer.append( currentIndent ).println( "fi" );
         } else {
             generateWordsFromStrings( strings, writer );
         }
 
         // suggest files if the before-last word is an option that takes a file
         if ( !fileOptions.isEmpty() ) {
-            writer.append( indent ).printf( "if [[ \"$current_option\" =~ (%s) ]]; then%n", String.join( "|", fileOptions ) );
+            writer.append( currentIndent ).printf( "if [[ \"$current_option\" =~ (%s) ]]; then%n", String.join( "|", fileOptions ) );
             pushIndent();
-            writer.append( indent ).println( "mapfile -t -O \"${#COMPREPLY[@]}\" COMPREPLY < <(compgen -f -- \"$2\")" );
+            writer.append( currentIndent ).println( "mapfile -t -O \"${#COMPREPLY[@]}\" COMPREPLY < <(compgen -f -- \"$2\")" );
             popIndent();
-            writer.append( indent ).println( "fi" );
+            writer.append( currentIndent ).println( "fi" );
         }
     }
 
     private void generateWordsFromStrings( Collection<String> strings, PrintWriter writer ) {
-        writer.append( indent ).append( "mapfile -t -O \"${#COMPREPLY[@]}\" COMPREPLY < <(compgen -W \"" );
+        writer.append( currentIndent ).append( "mapfile -t -O \"${#COMPREPLY[@]}\" COMPREPLY < <(compgen -W \"" );
         boolean first = true;
         for ( String string : strings ) {
             if ( first ) {
@@ -117,11 +121,11 @@ public class BashCompletionGenerator extends AbstractCompletionGenerator {
     }
 
     private void pushIndent() {
-        indent += INDENT;
+        currentIndent += INDENT;
     }
 
     private void popIndent() {
-        indent = indent.substring( 0, indent.length() - INDENT.length() );
+        currentIndent = currentIndent.substring( 0, currentIndent.length() - INDENT.length() );
     }
 
     @Override

@@ -10,7 +10,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.cache.CacheUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 import static java.util.Collections.unmodifiableCollection;
@@ -33,7 +33,7 @@ class ProcessedDataVectorCacheImpl implements ProcessedDataVectorCache {
     @Nullable
     @Override
     public Collection<DoubleVectorValueObject> get( ExpressionExperiment ee ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         if ( !enabled ) {
             return null;
         }
@@ -44,7 +44,7 @@ class ProcessedDataVectorCacheImpl implements ProcessedDataVectorCache {
 
     @Override
     public void put( ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         if ( !enabled ) {
             return;
         }
@@ -53,7 +53,7 @@ class ProcessedDataVectorCacheImpl implements ProcessedDataVectorCache {
 
     @Override
     public void evict( ExpressionExperiment ee ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         if ( !enabled ) {
             return;
         }

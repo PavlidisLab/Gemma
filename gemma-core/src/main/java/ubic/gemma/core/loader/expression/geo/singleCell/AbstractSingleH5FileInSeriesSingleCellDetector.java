@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.util.anndata.AnnData;
 import ubic.gemma.core.loader.util.anndata.AnnDataException;
 import ubic.gemma.core.loader.util.hdf5.TruncatedH5FileException;
@@ -11,7 +11,7 @@ import java.nio.file.Path;
 /**
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public abstract class AbstractSingleH5FileInSeriesSingleCellDetector extends AbstractSingleFileInSeriesSingleCellDetector {
 
     protected AbstractSingleH5FileInSeriesSingleCellDetector( String name, String extension ) {

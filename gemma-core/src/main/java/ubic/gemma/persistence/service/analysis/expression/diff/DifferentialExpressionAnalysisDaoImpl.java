@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Hibernate;
@@ -27,25 +26,28 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.hibernate.HibernateUtils;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Thaws;
 
-import javax.annotation.Nullable;
-import java.io.Serializable;
+import org.springframework.lang.Nullable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -57,16 +59,41 @@ import static ubic.gemma.persistence.util.QueryUtils.*;
 
 /**
  * @author paul
- * @see    DifferentialExpressionAnalysis
+ * @see DifferentialExpressionAnalysis
  */
 @Repository
-class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.service.AbstractDao<DifferentialExpressionAnalysis>
-        implements DifferentialExpressionAnalysisDao, ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao<DifferentialExpressionAnalysis> {
+class DifferentialExpressionAnalysisDaoImpl extends AbstractDao<DifferentialExpressionAnalysis>
+        implements DifferentialExpressionAnalysisDao {
 
     /**
      * Logger for manual SQL statements so they appear alongside Hibernate's.
      */
     private static final SqlStatementLogger statementLogger = new SqlStatementLogger();
+
+    /**
+     * Rows per {@code executeBatch()} when writing an analysis's results and contrasts.
+     *
+     * <h4>🛑 Why there has to be a bound at all</h4>
+     *
+     * <p>{@code gemma.db.hikari.rewriteBatchedStatements=true} (default.properties:93) makes the driver rewrite
+     * an accumulated batch into ONE multi-row {@code INSERT ... VALUES (…),(…),…}. Batching the whole analysis
+     * and calling {@code executeBatch()} once therefore built a single packet whose size grew with the total
+     * number of contrasts, with nothing bounding it.</p>
+     *
+     * <p>It landed on production 2026-09-10, GSE31534 (eid 5341):
+     * {@code PacketTooBigException: Packet for query is too large (293,298,585 > 268,435,456)}. 47 genotype
+     * levels over GPL570 is 46 contrasts x 54,681 probes = 2,515,326 rows in one statement, ~117 bytes each —
+     * frinkbro's arithmetic lands on the observed packet, so the mechanism was confirmed rather than inferred.
+     * The ceiling was roughly 2.3M contrast rows, i.e. ~42 contrasts on GPL570 or ~115 on a 20k-probe platform.</p>
+     *
+     * <p>🛑 Paul, 2026-09-10, ruling out the server's own suggestion in that message: <em>"we should just do the
+     * commits in smaller batches."</em> Raising {@code max_allowed_packet} is global, applies to every
+     * connection, and only moves the cliff — the packet is linear in the size of the analysis.</p>
+     *
+     * <p>50,000 rows is ~6 MB against the 256 MB default, two orders of margin. It is unrelated to
+     * {@code gemma.hibernate.jdbc_batch_size} (32), which this hand-built JDBC path never consults.</p>
+     */
+    private static final int INSERT_BATCH_SIZE = 50_000;
 
     private static final String
             INSERT_RESULT_SQL = "insert into DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT (ID, PVALUE, CORRECTED_PVALUE, `RANK`, CORRECTED_P_VALUE_BIN, PROBE_FK, RESULT_SET_FK) values (?, ?, ?, ?, ?, ?, ?)",
@@ -81,11 +108,11 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     @Autowired
     public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
         super( DifferentialExpressionAnalysis.class, sessionFactory );
-        resultPersister = ( ( SessionFactoryImpl ) sessionFactory )
-                .getEntityPersister( DifferentialExpressionAnalysisResult.class.getName() );
-        contrastPersister = ( ( SessionFactoryImpl ) sessionFactory )
-                .getEntityPersister( ContrastResult.class.getName() );
-        bioAssaySetBatchSize = HibernateUtils.getBatchSize( sessionFactory.getClassMetadata( BioAssaySet.class ), sessionFactory );
+        resultPersister = ( ( org.hibernate.engine.spi.SessionFactoryImplementor ) sessionFactory )
+                .getMappingMetamodel().getEntityDescriptor( DifferentialExpressionAnalysisResult.class.getName() );
+        contrastPersister = ( ( org.hibernate.engine.spi.SessionFactoryImplementor ) sessionFactory )
+                .getMappingMetamodel().getEntityDescriptor( ContrastResult.class.getName() );
+        bioAssaySetBatchSize = HibernateUtils.getBatchSize( BioAssaySet.class, sessionFactory );
     }
 
     /**
@@ -173,6 +200,13 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
                     insertResultStmt.setLong( 7, rs.getId() );
                     insertResultStmt.addBatch();
                     results.add( result );
+                    // Flush every INSERT_BATCH_SIZE rows so the rewritten multi-row INSERT stays well inside
+                    // max_allowed_packet. insertRowsAndAssignGeneratedKeys reads the generated keys for exactly
+                    // the objects it was handed, so per-chunk calls stay aligned by construction.
+                    if ( results.size() >= INSERT_BATCH_SIZE ) {
+                        insertRowsAndAssignGeneratedKeys( INSERT_RESULT_SQL, insertResultStmt, results, resultPersister, ( SessionImplementor ) session );
+                        results.clear();
+                    }
                 }
             }
 
@@ -199,6 +233,13 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
                         }
                         insertContrastStmt.addBatch();
                         contrasts.add( cr );
+                        // 🛑 The contrasts are the ones that overflow: this loop is per contrast per result,
+                        // where the one above is per result. Chunking here is safe for the same reason, and the
+                        // result ids these rows reference were all assigned before this loop began.
+                        if ( contrasts.size() >= INSERT_BATCH_SIZE ) {
+                            insertRowsAndAssignGeneratedKeys( INSERT_CONTRAST_SQL, insertContrastStmt, contrasts, contrastPersister, ( SessionImplementor ) session );
+                            contrasts.clear();
+                        }
                     }
                 }
             }
@@ -212,22 +253,36 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     }
 
     private void insertRowsAndAssignGeneratedKeys( String insertSql, PreparedStatement insertStmt, List<?> objects, EntityPersister persister, SessionImplementor session ) throws SQLException {
+        // Nothing pending. Guarded here rather than at each call site so a caller that flushes in chunks cannot
+        // forget it: the trailing flush after a loop sees an empty list whenever the total is an exact multiple
+        // of the chunk size, and an analysis can legitimately have no contrasts at all.
+        if ( objects.isEmpty() ) {
+            return;
+        }
         statementLogger.logStatement( insertSql + String.format( " [repeated %d times]", objects.size() ) );
-        ensureExpectedRowsAreInserted( insertStmt, insertStmt.executeBatch() );
-        ResultSet rs = insertStmt.getGeneratedKeys();
-        String idProp = persister.getIdentifierPropertyName();
-        Type idType = persister.getIdentifierType();
-        for ( Object object : objects ) {
-            Serializable id = IdentifierGeneratorHelper.getGeneratedIdentity( rs, idProp, idType );
-            persister.setIdentifier( object, id, session );
+        ensureExpectedRowsAreInserted( insertSql, insertStmt, insertStmt.executeBatch() );
+        // Direct JDBC read of getGeneratedKeys() instead of the deprecated
+        // IdentifierGeneratorHelper.getGeneratedIdentity(idProp, rs, PostInsertIdentityPersister, ...)
+        // — both PostInsertIdentityPersister and the helper method are marked for removal
+        // in Hibernate 7. DifferentialExpressionAnalysisResult's id is a Long, column 1 of the
+        // single-key result set, so rs.getLong(1) suffices.
+        try ( ResultSet rs = insertStmt.getGeneratedKeys() ) {
+            for ( Object object : objects ) {
+                if ( !rs.next() ) {
+                    throw new HibernateException( "Expected a generated identity row for every batched insert into " + persister.getEntityName() );
+                }
+                Long id = rs.getLong( 1 );
+                persister.setIdentifier( object, id, session );
+            }
         }
     }
 
-    private void ensureExpectedRowsAreInserted( PreparedStatement statement, int[] batchStatus ) throws
+    private void ensureExpectedRowsAreInserted( String insertSql, PreparedStatement statement, int[] batchStatus ) throws
             HibernateException, SQLException {
         int i = 0;
         for ( int bs : batchStatus ) {
-            Expectations.BASIC.verifyOutcome( bs, statement, i++ );
+            // Hibernate 5: verifyOutcome gained a sql String parameter.
+            Expectations.BASIC.verifyOutcome( bs, statement, i++, insertSql );
         }
     }
 
@@ -243,19 +298,21 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         // subset factorValues factors.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.subsetFactorValue ssf "
-                        + "where ssf.experimentalFactor = :ef" )
+                        + "where ssf.experimentalFactor = :ef "
+                        + "group by a" )
                 .setParameter( "ef", ef )
                 .list() );
 
         // factors used in the analysis.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.resultSets rs "
                         + "join rs.experimentalFactors efa "
-                        + "where efa = :ef" )
+                        + "where efa = :ef "
+                        + "group by a" )
                 .setParameter( "ef", ef )
                 .list() );
 
@@ -272,19 +329,21 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         // subset factorValues factors.
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.subsetFactorValue ssf "
-                        + "where ssf.experimentalFactor in :efs" )
+                        + "where ssf.experimentalFactor in :efs "
+                        + "group by a" )
                 .setParameterList( "efs", optimizeIdentifiableParameterList( experimentalFactors ) )
                 .list() );
 
         // factors used in the analysis
         //noinspection unchecked
         results.addAll( this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a from DifferentialExpressionAnalysis a "
+                .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "join a.resultSets rs "
                         + "join rs.experimentalFactors efa "
-                        + "where efa in :efs" )
+                        + "where efa in :efs "
+                        + "group by a" )
                 .setParameterList( "efs", optimizeIdentifiableParameterList( experimentalFactors ) )
                 .list() );
 
@@ -292,7 +351,7 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     }
 
     @Override
-    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet experimentAnalyzed, Long analysisId, boolean includeSubSets ) {
+    public DifferentialExpressionAnalysis findByExperimentAndAnalysisId( ExpressionExperiment experimentAnalyzed, boolean includeSubSets, Long analysisId ) {
         DifferentialExpressionAnalysis result = ( DifferentialExpressionAnalysis ) getSessionFactory().getCurrentSession()
                 .createQuery( "select a from DifferentialExpressionAnalysis a "
                         + "where a.experimentAnalyzed = :experimentAnalyzed and a.id = :id" )
@@ -305,7 +364,7 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         }
 
         // try to lookup subsets if we haven't found the analysis directly
-        if ( includeSubSets && experimentAnalyzed instanceof ExpressionExperiment ) {
+        if ( includeSubSets ) {
             return ( DifferentialExpressionAnalysis ) getSessionFactory().getCurrentSession()
                     .createQuery( "select a from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet subset "
                             + "where subset.sourceExperiment = :experimentAnalyzed and a.experimentAnalyzed = subset and a.id = :id" )
@@ -315,26 +374,6 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         }
 
         return result;
-    }
-
-    @Override
-    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentAnalyzedId(
-            Collection<Long> experimentAnalyzedId ) {
-
-        Map<Long, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
-        //noinspection unchecked
-        List<Object[]> qresult = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct e, a from DifferentialExpressionAnalysis a "
-                        + "join a.experimentAnalyzed e "
-                        + "where e.id in (:eeIds)" )
-                .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedId ) )
-                .list();
-        for ( Object[] o : qresult ) {
-            BioAssaySet bas = ( BioAssaySet ) o[0];
-            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) o[1];
-            results.computeIfAbsent( bas.getId(), k -> new HashSet<>() ).add( dea );
-        }
-        return results;
     }
 
     @Override
@@ -370,7 +409,7 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
         for ( Collection<Long> batch : batchParameterList( IdentifiableUtils.getIds( probes ), 1024 ) ) {
             //noinspection unchecked
             ids.addAll( this.getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
+                    .createNativeQuery( "select a.EXPERIMENT_ANALYZED_FK from ANALYSIS a "
                             + "join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK = a.EXPERIMENT_ANALYZED_FK "
                             + "join BIO_MATERIAL bm ON bm.ID = ba.SAMPLE_USED_FK "
                             + "join TAXON t ON bm.SOURCE_TAXON_FK = t.ID "
@@ -398,103 +437,218 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
     }
 
     @Override
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
-        Set<Long> result = new HashSet<>();
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> eeIds, boolean includeSubSets ) {
         //noinspection unchecked
-        result.addAll( ( List<Long> ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct a.experimentAnalyzed.id from DifferentialExpressionAnalysis a"
-                        + " where a.experimentAnalyzed.id in (:eeIds)" )
-                .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedIds ) )
+        Set<Long> result = new HashSet<>( ( List<Long> ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select a.experimentAnalyzed.id from DifferentialExpressionAnalysis a "
+                        + "where a.experimentAnalyzed.id in (:eeIds) "
+                        + "group by a.experimentAnalyzed" )
+                .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
                 .list() );
         if ( includeSubSets ) {
             //noinspection unchecked
             result.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct e.id from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet eess "
+                    .createQuery( "select e.id from DifferentialExpressionAnalysis a, ExpressionExperimentSubSet eess "
                             + "join eess.sourceExperiment e "
-                            + "where a.experimentAnalyzed = eess and e.id in (:eeIds)" )
-                    .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedIds ) )
+                            + "where a.experimentAnalyzed = eess and e.id in (:eeIds) "
+                            + "group by e" )
+                    .setParameterList( "eeIds", optimizeParameterList( eeIds ) )
                     .list() );
         }
         return result;
     }
 
     @Override
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
+    public void remove( DifferentialExpressionAnalysis analysis ) {
+        log.info( "Removing " + analysis + "..." );
+        List<Long> resultSetIds = IdentifiableUtils.getIds( analysis.getResultSets() );
+        if ( !resultSetIds.isEmpty() ) {
+            Session session = getSessionFactory().getCurrentSession();
+            int removedContrasts = session
+                    .createNativeQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
+                    .setParameterList( "resultSetIds", resultSetIds )
+                    .executeUpdate();
+            int removedResults = session
+                    .createNativeQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
+                    .setParameterList( "resultSetIds", resultSetIds )
+                    .executeUpdate();
+            log.info( String.format( "Removed %d results and %d contrasts from %s.", removedResults, removedContrasts, analysis ) );
+
+            /*
+             * Hibernate 6 fix (HIBERNATE6_CASCADE_AUDIT.md HIGH #2).
+             *
+             * The two native bulk deletes above wipe DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT
+             * + CONTRAST_RESULT rows directly at the DB level, bypassing the
+             * session entirely. Any DifferentialExpressionAnalysisResult /
+             * ContrastResult instances that the caller already loaded into
+             * the session (the test exercises this; service callers that
+             * read result-sets before deleting also do) are now dangling
+             * references to deleted DB rows. Without explicit eviction the
+             * subsequent `super.remove(analysis)` / `session.remove(analysis)`
+             * cascade triggers HB6's ACTION_CHECK_ON_FLUSH walk through
+             * `resultSets` -> each ExpressionAnalysisResultSet -> its
+             * `results` bag (still holding stale managed DEARs whose
+             * `resultSet` many-to-one points at an ExpressionAnalysisResultSet
+             * now in DELETING state), and HB6 raises TransientObjectException
+             * on `persistent instance references an unsaved transient
+             * instance of ExpressionAnalysisResultSet`. Evict the stale
+             * child entities explicitly so the cascade walk only sees the
+             * parent graph that `session.remove(analysis)` is actually
+             * authorised to delete.
+             *
+             * Companion to 02c87a91ed (AnalysisResultSet + DEAResult L2
+             * cache drop, HIGH #3) and ab8b4c443c (AuditEvent L2 cache
+             * drop). Pattern A + B + D from the audit doc.
+             */
+            for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+                if ( !org.hibernate.Hibernate.isInitialized( rs.getResults() ) ) {
+                    continue;
+                }
+                for ( DifferentialExpressionAnalysisResult der : rs.getResults() ) {
+                    if ( org.hibernate.Hibernate.isInitialized( der.getContrasts() ) ) {
+                        for ( ContrastResult cr : der.getContrasts() ) {
+                            if ( session.contains( cr ) ) {
+                                session.evict( cr );
+                            }
+                        }
+                    }
+                    if ( session.contains( der ) ) {
+                        session.evict( der );
+                    }
+                }
+            }
+        }
+        super.remove( analysis );
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> findByExperiment( ExpressionExperiment experiment, boolean includeSubSets ) {
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>( findByExperimentAnalyzed( experiment ) );
+
+        /*
+         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
+         */
+        if ( includeSubSets ) {
+            //noinspection unchecked
+            results.addAll( this.getSessionFactory().getCurrentSession()
+                    .createQuery( "select a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                            + "join eess.sourceExperiment see "
+                            + "join a.experimentAnalyzed eeanalyzed "
+                            + "where see = :ee and eess = eeanalyzed "
+                            + "group by a" )
+                    .setParameter( "ee", experiment )
+                    .list() );
+        }
+
+        return results;
+    }
+
+    @Override
+    public Collection<DifferentialExpressionAnalysis> findByExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee.id from DifferentialExpressionAnalysis as doa "
-                        + "join doa.experimentAnalyzed as ee "
-                        + "join ee.bioAssays as ba "
-                        + "join ba.sampleUsed as sample "
-                        + "where sample.sourceTaxon = :taxon" )
-                .setParameter( "taxon", taxon )
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                        "select a from DifferentialExpressionAnalysis a "
+                                + "where a.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experimentAnalyzed )
                 .list();
     }
 
     @Override
-    public Map<Long, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
-            Collection<Long> experimentAnalyzedIds, int offset, int limit, boolean includeSubSets ) {
+    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<ExpressionExperiment> experiments, boolean includeSubSets ) {
+        //noinspection unchecked
+        Collection<DifferentialExpressionAnalysis> results = new HashSet<>(
+                ( List<DifferentialExpressionAnalysis> ) this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select a from DifferentialExpressionAnalysis a "
+                                + "where a.experimentAnalyzed in :ees group by a" )
+                        .setParameterList( "ees", optimizeIdentifiableParameterList( experiments ) )
+                        .list() );
+
+        /*
+         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
+         */
+        if ( includeSubSets ) {
+            Collection<ExpressionExperiment> sourceExperiments = getExpressionExperiments( experiments );
+            if ( !sourceExperiments.isEmpty() ) {
+                //noinspection unchecked
+                results.addAll( this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                                + "join eess.sourceExperiment see "
+                                + "join a.experimentAnalyzed eeanalyzed "
+                                + "where see in :ees and eess=eeanalyzed "
+                                + "group by eess, a" )
+                        .setParameterList( "ees", optimizeIdentifiableParameterList( sourceExperiments ) )
+                        .list() );
+            }
+        }
+
+        return results.stream()
+                .collect( Collectors.groupingBy( this::getSourceExperiment, Collectors.toCollection( ArrayList::new ) ) );
+    }
+
+    /**
+     * Select actual {@link ExpressionExperiment} from a collection of experiments analyzed.
+     */
+    private Collection<@MayBeUninitialized ExpressionExperiment> getExpressionExperiments( Collection<? extends @MayBeUninitialized BioAssaySet> bioAssaySets ) {
+        return bioAssaySets.stream()
+                .filter( bas -> bas instanceof ExpressionExperiment )
+                .map( bas -> ( ( ExpressionExperiment ) bas ) )
+                .collect( IdentifiableUtils.toIdentifiableSet() );
+    }
+
+    @Override
+    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> findByExperimentIds(
+            Collection<Long> experimentIds, boolean includeSubSets,
+            @Nullable Map<Long, Collection<Long>> arrayDesignsUsed,
+            @Nullable Map<Long, Collection<FactorValue>> factorValuesUsed
+    ) {
 
         /*
          * There are three cases to consider: the ids are experiments; the ids are experiment subsets; the ids are
          * experiments that have subsets.
          */
-        Map<Long, List<DifferentialExpressionAnalysisValueObject>> r = new HashMap<>();
-
-        Map<Long, Collection<Long>> arrayDesignsUsed = CommonQueries
-                .getArrayDesignsUsedEEMap( experimentAnalyzedIds, this.getSessionFactory().getCurrentSession() );
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> r = new HashMap<>();
 
         /*
          * Fetch analyses of experiments or subsets.
          */
         //noinspection unchecked
         Collection<DifferentialExpressionAnalysis> hits = this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct a from DifferentialExpressionAnalysis a "
-                                + "join fetch a.experimentAnalyzed e "
-                                + "where e.id in (:eeIds)" )
-                .setParameterList( "eeIds", optimizeParameterList( experimentAnalyzedIds ) )
-                .setFirstResult( offset )
-                .setMaxResults( limit )
+                        "select a from DifferentialExpressionAnalysis a "
+                                + "join a.experimentAnalyzed e "
+                                + "where e.id in (:eeIds) "
+                                + "group by a" )
+                .setParameterList( "eeIds", optimizeParameterList( experimentIds ) )
                 .list();
 
-        // initialize result sets and hit list sizes
-        // this is necessary because the DEA VO constructor will ignore uninitialized associations
-        for ( DifferentialExpressionAnalysis hit : hits ) {
-            Hibernate.initialize( hit.getResultSets() );
-            for ( ExpressionAnalysisResultSet rs : hit.getResultSets() ) {
-                Hibernate.initialize( rs.getHitListSizes() );
-            }
-        }
-
-        Map<Long, Collection<FactorValue>> ee2fv = new HashMap<>();
-        List<Object[]> fvs;
-
         if ( !hits.isEmpty() ) {
-            // factor values for the experiments.
-            //noinspection unchecked
-            fvs = this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct ee.id, fv from ExpressionExperiment ee "
-                            + "join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv "
-                            + "where ee.id in (:ees)" )
-                    .setParameterList( "ees", optimizeParameterList( experimentAnalyzedIds ) ).list();
-            this.addFactorValues( ee2fv, fvs );
-
-            // also get factor values for subsets - those not found yet.
-            Collection<Long> used = new HashSet<>();
-            for ( DifferentialExpressionAnalysis a : hits ) {
-                used.add( a.getExperimentAnalyzed().getId() );
-            }
-
-            // drop all the EE IDs, we should be left only with subset IDs
-            List<Long> probableSubSetIds = ListUtils.removeAll( used, ee2fv.keySet() );
-            if ( !probableSubSetIds.isEmpty() ) {
+            if ( arrayDesignsUsed != null ) {
                 //noinspection unchecked
-                fvs = this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct eess.id, fv from ExpressionExperimentSubSet eess "
-                                + "join eess.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv "
-                                + "where eess.id in (:ees)" )
-                        .setParameterList( "ees", optimizeParameterList( probableSubSetIds ) ).list();
-                this.addFactorValues( ee2fv, fvs );
+                List<Object[]> qr = getSessionFactory().getCurrentSession()
+                        .createQuery( "select ee.id, ad.id from ExpressionExperiment as ee "
+                                + "join ee.bioAssays b join b.arrayDesignUsed ad where ee.id in (:ees) "
+                                + "group by ee, ad" )
+                        .setParameterList( "ees", optimizeParameterList( experimentIds ) )
+                        .list();
+                for ( Object[] oa : qr ) {
+                    Long eeId = ( Long ) oa[0];
+                    Long adId = ( Long ) oa[1];
+                    arrayDesignsUsed.computeIfAbsent( eeId, k -> new HashSet<>() ).add( adId );
+                }
+            }
+            if ( factorValuesUsed != null ) {
+                // factor values for the experiments.
+                //noinspection unchecked
+                List<Object[]> fvs = this.getSessionFactory().getCurrentSession()
+                        .createQuery( "select ee.id, fv from ExpressionExperiment ee "
+                                + "join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv "
+                                + "where ee.id in (:ees) "
+                                + "group by ee, fv" )
+                        .setParameterList( "ees", optimizeParameterList( experimentIds ) ).list();
+                for ( Object[] oa : fvs ) {
+                    Long eeId = ( Long ) oa[0];
+                    FactorValue fv = ( FactorValue ) oa[1];
+                    factorValuesUsed.computeIfAbsent( eeId, k -> new HashSet<>() ).add( fv );
+                }
             }
         }
 
@@ -505,239 +659,72 @@ class DifferentialExpressionAnalysisDaoImpl extends ubic.gemma.persistence.servi
             // EE and subsets share the same ID space, so it's not a problem to use them for querying
             //noinspection unchecked
             List<DifferentialExpressionAnalysis> analysesOfSubsets = this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
+                    .createQuery( "select a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
                             + "join eess.sourceExperiment ee "
-                            + "join fetch a.experimentAnalyzed eeanalyzed "
-                            + "where ee.id in (:eeids) and eess=eeanalyzed" )
-                    .setParameterList( "eeids", optimizeParameterList( experimentAnalyzedIds ) ).list();
+                            + "join a.experimentAnalyzed eeanalyzed "
+                            + "where ee.id in (:eeids) and eess=eeanalyzed "
+                            + "group by a" )
+                    .setParameterList( "eeids", optimizeParameterList( experimentIds ) ).list();
+
+            hits.addAll( analysesOfSubsets );
 
             if ( !analysesOfSubsets.isEmpty() ) {
-                hits.addAll( analysesOfSubsets );
+                Collection<Long> experimentSubsetIds = analysesOfSubsets.stream()
+                        .map( DifferentialExpressionAnalysis::getExperimentAnalyzed )
+                        .map( BioAssaySet::getId )
+                        .collect( Collectors.toSet() );
 
-                Collection<Long> experimentSubsetIds = new HashSet<>();
-                for ( DifferentialExpressionAnalysis a : analysesOfSubsets ) {
-                    ExpressionExperimentSubSet subset = ( ExpressionExperimentSubSet ) a.getExperimentAnalyzed();
-                    experimentSubsetIds.add( subset.getId() );
+                if ( arrayDesignsUsed != null ) {
+                    //noinspection unchecked
+                    List<Object[]> qr = getSessionFactory().getCurrentSession()
+                            .createQuery( "select eess.id, ad.id from ExpressionExperimentSubSet eess "
+                                    + "join eess.bioAssays b join b.arrayDesignUsed ad where eess.id in :subsetIds "
+                                    + "group by eess, ad" )
+                            .setParameterList( "subsetIds", optimizeParameterList( experimentSubsetIds ) )
+                            .list();
+                    for ( Object[] oa : qr ) {
+                        Long subsetId = ( Long ) oa[0];
+                        Long adId = ( Long ) oa[1];
+                        arrayDesignsUsed.computeIfAbsent( subsetId, k -> new HashSet<>() ).add( adId );
+                    }
                 }
 
-                // factor value information for the subset. The key output is the ID of the subset, not of the source
-                // experiment.
-                //noinspection unchecked
-                fvs = this.getSessionFactory().getCurrentSession().createQuery(
-                                "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
-                                        + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
-                        .setParameterList( "ees", optimizeParameterList( experimentSubsetIds ) ).list();
-                this.addFactorValues( ee2fv, fvs );
+                if ( factorValuesUsed != null ) {
+                    // factor value information for the subset. The key output is the ID of the subset, not of the source
+                    // experiment.
+                    //noinspection unchecked
+                    List<Object[]> fvs = this.getSessionFactory().getCurrentSession()
+                            .createQuery( "select ee.id, fv from ExpressionExperimentSubSet ee "
+                                    + "join ee.bioAssays ba "
+                                    + "join ba.sampleUsed bm "
+                                    + "join bm.factorValues fv "
+                                    + "where ee.id in (:ees) "
+                                    + "group by ee, fv" )
+                            .setParameterList( "ees", optimizeParameterList( experimentSubsetIds ) ).list();
+                    for ( Object[] oa : fvs ) {
+                        Long subsetId = ( Long ) oa[0];
+                        FactorValue fv = ( FactorValue ) oa[1];
+                        factorValuesUsed.computeIfAbsent( subsetId, k -> new HashSet<>() ).add( fv );
+                    }
+                }
             }
         }
 
-        // postprocesss...
-        if ( hits.isEmpty() ) {
-            return r;
-        }
-        Collection<DifferentialExpressionAnalysisValueObject> summaries = this
-                .convertToValueObjects( hits, arrayDesignsUsed, ee2fv );
-
-        for ( DifferentialExpressionAnalysisValueObject an : summaries ) {
-            Long bioAssaySetId;
-            if ( an.getSourceExperimentId() != null ) {
-                bioAssaySetId = an.getSourceExperimentId();
-            } else {
-                bioAssaySetId = an.getExperimentAnalyzedId();
-            }
-            r.computeIfAbsent( bioAssaySetId, k -> new ArrayList<>() ).add( an );
+        for ( DifferentialExpressionAnalysis an : hits ) {
+            r.computeIfAbsent( getSourceExperiment( an ), k -> new HashSet<>() ).add( an );
         }
 
         return r;
     }
 
-    private void addFactorValues( Map<Long, Collection<FactorValue>> ee2fv, List<Object[]> fvs ) {
-        for ( Object[] oa : fvs ) {
-            Long eeId = ( Long ) oa[0];
-            FactorValue fv = ( FactorValue ) oa[1];
-            ee2fv.computeIfAbsent( eeId, k -> new HashSet<>() ).add( fv );
-        }
-    }
-
-    @Override
-    public void remove( DifferentialExpressionAnalysis analysis ) {
-        log.info( "Removing " + analysis + "..." );
-        List<Long> resultSetIds = IdentifiableUtils.getIds( analysis.getResultSets() );
-        if ( !resultSetIds.isEmpty() ) {
-            int removedContrasts = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete cr from CONTRAST_RESULT cr where cr.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK in (select dear.ID from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds))" )
-                    .setParameterList( "resultSetIds", resultSetIds )
-                    .executeUpdate();
-            int removedResults = getSessionFactory().getCurrentSession()
-                    .createSQLQuery( "delete dear from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear where dear.RESULT_SET_FK in (:resultSetIds)" )
-                    .setParameterList( "resultSetIds", resultSetIds )
-                    .executeUpdate();
-            log.info( String.format( "Removed %d results and %d contrasts from %s.", removedResults, removedContrasts, analysis ) );
-        }
-        super.remove( analysis );
-    }
-
-    @Override
-    public boolean existsByExperiment( BioAssaySet ee, boolean includeSubSets ) {
-        if ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery(
-                        "select count(a) from DifferentialExpressionAnalysis a "
-                                + "where a.experimentAnalyzed = :ee" )
-                .setParameter( "ee", ee )
-                .uniqueResult() > 0 ) {
-            return true;
-        }
-
-        if ( includeSubSets && ee instanceof ExpressionExperiment ) {
-            return ( Long ) this.getSessionFactory().getCurrentSession()
-                    .createQuery( "select count(distinct a) from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
-                            + "join eess.sourceExperiment see "
-                            + "join a.experimentAnalyzed eeanalyzed "
-                            + "where see = :ee and eess = eeanalyzed" )
-                    .setParameter( "ee", ee )
-                    .uniqueResult() > 0;
-        }
-
-        return false;
-    }
-
-    @Override
-    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment, boolean includeSubSets ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
-
-        //noinspection unchecked
-        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select a from DifferentialExpressionAnalysis a "
-                                + "where a.experimentAnalyzed = :ee" )
-                .setParameter( "ee", experiment )
-                .list() );
-
-        /*
-         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
-         */
-        if ( includeSubSets && experiment instanceof ExpressionExperiment ) {
-            //noinspection unchecked
-            results.addAll( this.getSessionFactory().getCurrentSession()
-                    .createQuery(
-                            "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
-                                    + "join eess.sourceExperiment see "
-                                    + "join a.experimentAnalyzed eeanalyzed "
-                                    + "where see = :ee and eess = eeanalyzed" )
-                    .setParameter( "ee", experiment )
-                    .list() );
-        }
-
-        return results;
-    }
-
-    @Override
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments( Collection<? extends
-            BioAssaySet> experiments, boolean includeSubSets ) {
-        Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
-
-        //noinspection unchecked
-        results.addAll( this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct a from DifferentialExpressionAnalysis a "
-                                + "where a.experimentAnalyzed in :ees" )
-                .setParameterList( "ees", optimizeIdentifiableParameterList( experiments ) ).list() );
-
-        /*
-         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
-         */
-        if ( includeSubSets ) {
-            Collection<ExpressionExperiment> sourceExperiments = getExpressionExperiments( experiments );
-            if ( !sourceExperiments.isEmpty() ) {
-                //noinspection unchecked
-                results.addAll( this.getSessionFactory().getCurrentSession()
-                        .createQuery( "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
-                                + "join eess.sourceExperiment see "
-                                + "join a.experimentAnalyzed eeanalyzed "
-                                + "where see in :ees and eess=eeanalyzed" )
-                        .setParameterList( "ees", optimizeIdentifiableParameterList( sourceExperiments ) )
-                        .list() );
-            }
-        }
-
-        return results.stream()
-                .collect( Collectors.groupingBy( DifferentialExpressionAnalysis::getExperimentAnalyzed, Collectors.toCollection( ArrayList::new ) ) );
-    }
-
-    /**
-     * Select actual {@link ExpressionExperiment} from a collection of experiments analyzed.
-     */
-    private Collection<ExpressionExperiment> getExpressionExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
-        return bioAssaySets.stream()
-                .filter( bas -> bas instanceof ExpressionExperiment )
-                .map( bas -> ( ( ExpressionExperiment ) bas ) )
-                .collect( IdentifiableUtils.toIdentifiableSet() );
-    }
-
-    private Collection<DifferentialExpressionAnalysisValueObject> convertToValueObjects(
-            Collection<DifferentialExpressionAnalysis> analyses, Map<Long, Collection<Long>> arrayDesignsUsed,
-            Map<Long, Collection<FactorValue>> ee2fv ) {
-        Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<>();
-
-        for ( DifferentialExpressionAnalysis analysis : analyses ) {
-
-            Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
-
-            DifferentialExpressionAnalysisValueObject avo = new DifferentialExpressionAnalysisValueObject( analysis );
-
-            BioAssaySet bioAssaySet = analysis.getExperimentAnalyzed();
-
-            avo.setExperimentAnalyzedId( bioAssaySet.getId() ); // might be a subset.
-
-            if ( analysis.getSubsetFactorValue() != null ) {
-                avo.setSubsetFactorValue( new FactorValueValueObject( analysis.getSubsetFactorValue() ) );
-                avo.setSubsetFactor(
-                        new ExperimentalFactorValueObject( analysis.getSubsetFactorValue().getExperimentalFactor() ) );
-                assert bioAssaySet instanceof ExpressionExperimentSubSet;
-                avo.setSourceExperimentId( ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getId() );
-                if ( arrayDesignsUsed.containsKey( bioAssaySet.getId() ) ) {
-                    avo.setArrayDesignsUsed( arrayDesignsUsed.get( bioAssaySet.getId() ) );
-                } else {
-                    assert arrayDesignsUsed.containsKey( avo.getSourceExperimentId() );
-                    avo.setArrayDesignsUsed( arrayDesignsUsed.get( avo.getSourceExperimentId() ) );
-                }
-            } else {
-                Collection<Long> adids = arrayDesignsUsed.get( bioAssaySet.getId() );
-                avo.setArrayDesignsUsed( adids );
-            }
-
-            for ( ExpressionAnalysisResultSet resultSet : results ) {
-                DiffExResultSetSummaryValueObject desvo = new DiffExResultSetSummaryValueObject( resultSet );
-                desvo.setArrayDesignsUsed( avo.getArrayDesignsUsed() );
-                desvo.setBioAssaySetAnalyzedId( bioAssaySet.getId() ); // might be a subset.
-                desvo.setAnalysisId( analysis.getId() );
-                avo.getResultSets().add( desvo );
-                assert ee2fv.containsKey( bioAssaySet.getId() );
-                this.populateWhichFactorValuesUsed( avo, ee2fv.get( bioAssaySet.getId() ) );
-            }
-
-            summaries.add( avo );
-        }
-        return summaries;
-    }
-
-    /**
-     * Figure out which factorValues were used for each of the experimental factors (excluding the subset factor)
-     */
-    private void populateWhichFactorValuesUsed( DifferentialExpressionAnalysisValueObject avo, @Nullable Collection<FactorValue> fvs ) {
-        if ( fvs == null || fvs.isEmpty() ) {
-            return;
-        }
-        ExperimentalFactorValueObject subsetFactor = avo.getSubsetFactor();
-
-        for ( FactorValue fv : fvs ) {
-
-            Long experimentalFactorId = fv.getExperimentalFactor().getId();
-
-            if ( subsetFactor != null && experimentalFactorId.equals( subsetFactor.getId() ) ) {
-                continue;
-            }
-
-            avo.getFactorValuesUsedByExperimentalFactorId()
-                    .computeIfAbsent( experimentalFactorId, k -> new HashSet<>() )
-                    .add( new FactorValueValueObject( fv ) );
+    private ExpressionExperiment getSourceExperiment( DifferentialExpressionAnalysis analysis ) {
+        BioAssaySet experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( analysis.getExperimentAnalyzed() );
+        if ( experimentAnalyzed instanceof ExpressionExperiment ) {
+            return ( ExpressionExperiment ) experimentAnalyzed;
+        } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
+            return ( ( ExpressionExperimentSubSet ) experimentAnalyzed ).getSourceExperiment();
+        } else {
+            throw new UnsupportedOperationException( "Unsupported BioAssaySet type: " + experimentAnalyzed.getClass() + "." );
         }
     }
 }

@@ -19,6 +19,8 @@ public final class Categories {
     public static final Category BLOCK = new Category( "block", "http://www.ebi.ac.uk/efo/EFO_0005067" );
     public static final Category BIOLOGICAL_SEX = new Category( "biological sex", "http://purl.obolibrary.org/obo/PATO_0000047" );
     public static final Category ORGANISM_PART = new Category( "organism part", "http://www.ebi.ac.uk/efo/EFO_0000635" );
+    public static final Category DEVELOPMENT_STAGE = new Category( "development stage", "http://www.ebi.ac.uk/efo/EFO_0000399" );
+    public static final Category DISEASE = new Category( "disease", "http://www.ebi.ac.uk/efo/EFO_0000408" );
 
     /**
      * Represent a mask for a set of data.

@@ -20,12 +20,14 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.core.loader.expression.geo.service.*;
@@ -38,7 +40,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,6 +51,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.cli.util.OptionsUtils.addEnumSetOption;
 
 /**
  * Scans GEO for experiments that are not in Gemma, subject to some filtering criteria, outputs to a file for further
@@ -85,7 +88,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     private static final DateFormat dateFormat = new SimpleDateFormat( "yyyy.MM.dd", Locale.ENGLISH );
 
-    private static final GeoSeriesType[] SERIES_TYPES = new GeoSeriesType[] {
+    private static final GeoSeriesType[] DEFAULT_SERIES_TYPES = new GeoSeriesType[] {
             GeoSeriesType.EXPRESSION_PROFILING_BY_ARRAY,
             GeoSeriesType.EXPRESSION_PROFILING_BY_HIGH_THROUGHPUT_SEQUENCING,
             GeoSeriesType.EXPRESSION_PROFILING_BY_MPSS,
@@ -109,6 +112,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     /**
      * Detailed preset for this CLI used when fetching GEO records.
+     *
      * @see GeoRetrieveConfig#DETAILED
      */
     private static final GeoRetrieveConfig DETAILED = GeoRetrieveConfig.builder()
@@ -131,6 +135,9 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private Path accessionFile;
 
     // options for browsing datasets
+    private EnumSet<GeoSeriesType> seriesTypes;
+    @Nullable
+    private Set<String> allowedTaxa;
     @Nullable
     private Date dateLimit;
     @Nullable
@@ -164,11 +171,6 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.ANALYSIS;
-    }
-
-    @Override
     public String getCommandName() {
         return "listGEOData";
     }
@@ -179,12 +181,17 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+
+    @Override
     protected void buildOptions( Options options ) {
         options.addOption( Option.builder( "output" )
                 .longOpt( "output" )
                 .hasArg().type( Path.class )
                 .desc( "File path for output (defaults to standard output)" )
-                .build() );
+                .get() );
 
         // for retrieving platforms
         options.addOption( PLATFORMS_OPTION, false, "Fetch a list of all platforms instead of experiments (-startdate, -date, -startat and -gselimit are ignored)" );
@@ -195,9 +202,16 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 .longOpt( "file" )
                 .hasArg().type( Path.class )
                 .desc( "A file containing accessions to retrieve from GEO" )
-                .build() );
+                .get() );
+
 
         // for browsing datasets
+        addEnumSetOption( options, "seriesTypes", "series-types",
+                String.format( "Specify what kind of GEO series types to retrieve. Defaults to %s.",
+                        Arrays.stream( DEFAULT_SERIES_TYPES )
+                                .map( Enum::toString )
+                                .collect( Collectors.joining( ", " ) ) ), GeoSeriesType.class );
+        options.addOption( Option.builder( "allowedTaxa" ).longOpt( "allowed-taxa" ).hasArgs().valueSeparator( ',' ).desc( "Limit to selected taxa. Defaults to all taxa declared in Gemma." ).get() );
         options.addOption( "platformLimit", true, "Limit to selected platforms" );
         options.addOption( "startdate", true, "Attempt to 'fast-rewind' to the given date in format yyyy-MM-dd or yyyy.MM.dd and continue retrieving from there" );
         options.addOption( "date", true, "A release date to stop the search in format yyyy-MM-dd or yyyy.MM.dd (e.g. 2010.01.12). Records on that date will not be processed." );
@@ -209,7 +223,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 .longOpt( "chunk-size" )
                 .hasArg().type( Number.class )
                 .desc( "Chunk size to use when retrieving GEO records (defaults to " + DEFAULT_CHUNK_SIZE + ")" )
-                .build() );
+                .get() );
     }
 
     @Override
@@ -229,6 +243,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         this.accession = commandLine.getOptionValue( ACCESSION_OPTION );
         this.accessionFile = commandLine.getParsedOptionValue( ACCESSION_FILE_OPTION );
 
+        if ( commandLine.hasOption( "seriesTypes" ) ) {
+            this.seriesTypes = requireNonNull( OptionsUtils.getEnumSetOptionValue( commandLine, "seriesTypes" ) );
+        } else {
+            this.seriesTypes = EnumSet.copyOf( Arrays.asList( DEFAULT_SERIES_TYPES ) );
+        }
+
         if ( commandLine.hasOption( "date" ) ) {
             try {
                 // this is a user input, so we have to respect its locale
@@ -239,6 +259,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         }
         if ( commandLine.hasOption( "gselimit" ) ) {
             this.gseLimit = commandLine.getOptionValue( "gselimit" );
+        }
+
+        if ( commandLine.hasOption( "allowedTaxa" ) ) {
+            this.allowedTaxa = new HashSet<>( Arrays.asList( commandLine.getOptionValues( "allowedTaxa" ) ) );
+        } else {
+            this.allowedTaxa = null;
         }
 
         if ( commandLine.hasOption( "platformLimit" ) ) {
@@ -298,7 +324,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                 getDatasets( accessions );
                 break;
             case BROWSE_DATASETS:
-                browseDatasets( startFrom, gseLimit, startDate, dateLimit, limitPlatform, Arrays.asList( SERIES_TYPES ) );
+                browseDatasets( startFrom, gseLimit, startDate, dateLimit, limitPlatform, seriesTypes );
                 break;
             default:
                 throw new IllegalStateException( "Unknown mode " + mode );
@@ -308,12 +334,17 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private void getPlatforms() throws IOException {
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( "Acc", "ReleaseDate", "Taxa", "Title", "Summary", "TechType" )
-                .build();
-        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, getAllowedTaxa(), 10000 );
+                .get();
+        Collection<GeoRecord> allGEOPlatforms = gbs.getAllGeoRecords( GeoRecordType.PLATFORM, allowedTaxa != null ? allowedTaxa : getTaxaInGemma(), 10000 );
         log.info( "Fetched " + allGEOPlatforms.size() + " records" );
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord geoRecord : allGEOPlatforms ) {
-                os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
+                String releaseDateStr;
+                // SimpleDateFormat is not thread-safe; synchronize on the shared static instance.
+                synchronized ( dateFormat ) {
+                    releaseDateStr = dateFormat.format( geoRecord.getReleaseDate() );
+                }
+                os.printRecord( geoRecord.getGeoAccession(), releaseDateStr,
                         StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getTitle(),
                         geoRecord.getSummary(), geoRecord.getSeriesType() );
                 os.flush();
@@ -328,7 +359,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( DATASET_HEADER )
-                .build();
+                .get();
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             for ( GeoRecord record : gbs.getGeoRecords( GeoRecordType.SERIES, accessions, DETAILED ) ) {
                 writeDataset( record, areAllPlatformsInGemma( record, seenPlatforms ), isAffymetrix( record, seenPlatforms ), os );
@@ -339,7 +370,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     private void browseDatasets( @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit, @Nullable Collection<String> limitPlatform, Collection<GeoSeriesType> seriesTypes ) throws IOException {
         Set<String> seen = new HashSet<>();
         Map<String, ArrayDesign> seenArrayDesigns = new HashMap<>();
-        Collection<String> allowedTaxa = getAllowedTaxa();
+        Collection<String> allowedTaxa = this.allowedTaxa != null ? this.allowedTaxa : getTaxaInGemma();
 
         String searchMessage = "Browsing GEO series with the following characteristics:";
         searchMessage += "\n\t" + "Taxa: " + String.join( ", ", allowedTaxa );
@@ -359,7 +390,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
         CSVFormat tsvFormat = CSVFormat.TDF.builder()
                 .setHeader( DATASET_HEADER )
-                .build();
+                .get();
         try ( CSVPrinter os = tsvFormat.print( getOutputWriter() ) ) {
             int numProcessed = 0;
             int numUsed = 0;
@@ -387,7 +418,12 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                         return;
                     }
 
-                    log.debug( "Processing " + geoRecord.getGeoAccession() + " released on " + geoRecord.getReleaseDate() + "..." );
+                    log.debug( "Processing " + geoRecord + " released on " + geoRecord.getReleaseDate() + "..." );
+
+                    if ( geoRecord.getGeoAccession() == null ) {
+                        log.warn( geoRecord + ": skipping, no GEO accession found." );
+                        continue;
+                    }
 
                     if ( !seen.add( geoRecord.getGeoAccession() ) ) {
                         log.warn( geoRecord + ": skipping, this dataset was already seen." ); // this would be a bug IMO, want to avoid!
@@ -410,13 +446,13 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
                     }
 
                     if ( ignoreNoPlatform && StringUtils.isBlank( geoRecord.getPlatform() ) ) {
-                        log.warn( geoRecord.getGeoAccession() + ": skipping, does not have any platform." );
+                        log.warn( geoRecord + ": skipping, does not have any platform." );
                         continue;
                     }
 
                     // we skip if all the platforms for the GSE are blacklisted
                     if ( ignoreBlacklisted && areAllPlatformsBlacklisted( geoRecord ) ) {
-                        log.warn( geoRecord.getGeoAccession() + ": skipping, all platforms are blacklisted." );
+                        log.warn( geoRecord + ": skipping, all platforms are blacklisted." );
                         continue;
                     }
 
@@ -430,6 +466,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
 
     /**
      * TODO: use a binary search for date-based rewinding
+     *
      * @return the rewind point if found, otherwise -1
      */
     private int seekRewindPoint( GeoQuery query, @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date startDate, @Nullable Date dateLimit ) throws IOException {
@@ -442,7 +479,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         }
     }
 
-    private int seekRewindPointByAccession( GeoQuery query, String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit ) throws IOException {
+    private int seekRewindPointByAccession( GeoQuery query, @Nullable String startFrom, @Nullable String gseLimit, @Nullable Date dateLimit ) throws IOException {
         log.info( "Seeking rewind point from " + startFrom + " with chunks of " + REWIND_CHUNK_SIZE + " records..." );
         // we're not fetching details, so we can handle larger chunks
         int totalRecords = Integer.MAX_VALUE;
@@ -450,7 +487,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             Slice<GeoRecord> records = getGeoRecords( query, start, REWIND_CHUNK_SIZE, false );
             totalRecords = requireNonNull( records.getTotalElements() ).intValue();
             GeoRecord firstRecord = records.iterator().next();
-            log.info( String.format( "Currently at %s (%d/%d) released on %s", firstRecord.getGeoAccession(),
+            log.info( String.format( "Currently at %s (%d/%d) released on %s", firstRecord,
                     start, totalRecords, firstRecord.getReleaseDate() ) );
             for ( int i = 0; i < records.size(); i++ ) {
                 GeoRecord geoRecord = records.get( i );
@@ -483,7 +520,7 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
             Slice<GeoRecord> records = getGeoRecords( query, pos, 1, false );
             GeoRecord record = records.iterator().next();
 
-            log.info( "Currently at " + record.getGeoAccession() + " (" + pos + "/" + start + ".." + end + ") released on " + record.getReleaseDate() );
+            log.info( "Currently at " + record + " (" + pos + "/" + start + ".." + end + ") released on " + record.getReleaseDate() );
 
             if ( beforeOrEquals( record.getReleaseDate(), startDate ) ) {
                 end = pos;
@@ -504,7 +541,10 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
         }
     }
 
-    private Set<String> getAllowedTaxa() {
+    /**
+     * Obtain a set of taxa that are considered usable in Gemma.
+     */
+    private Set<String> getTaxaInGemma() {
         Set<String> allowedTaxa = new HashSet<>();
         for ( Taxon t : ts.loadAll() ) {
             allowedTaxa.add( t.getScientificName() );
@@ -606,13 +646,18 @@ public class GeoGrabberCli extends AbstractAuthenticatedCLI implements Initializ
     }
 
     private void writeDataset( GeoRecord geoRecord, boolean allPlatformsInGemma, boolean isAffymetrix, CSVPrinter os ) throws IOException {
-        os.printRecord( geoRecord.getGeoAccession(), dateFormat.format( geoRecord.getReleaseDate() ),
+        String releaseDateStr;
+        // SimpleDateFormat is not thread-safe; synchronize on the shared static instance.
+        synchronized ( dateFormat ) {
+            releaseDateStr = dateFormat.format( geoRecord.getReleaseDate() );
+        }
+        os.printRecord( geoRecord.getGeoAccession(), releaseDateStr,
                 StringUtils.join( geoRecord.getOrganisms(), "," ), geoRecord.getPlatform(), allPlatformsInGemma,
                 isAffymetrix, geoRecord.getNumSamples(), geoRecord.getSeriesType(), geoRecord.isSuperSeries(),
                 geoRecord.getSubSeriesOf(), StringUtils.join( geoRecord.getPubMedIds(), "," ), geoRecord.getTitle(), geoRecord.getSummary(),
                 StringUtils.join( geoRecord.getMeshHeadings(), "," ), geoRecord.getSampleDetails(),
                 geoRecord.getLibraryStrategy(), geoRecord.getLibrarySource(),
-                StringUtils.replace( geoRecord.getOverallDesign(), "\n", "\\n" ),
+                Strings.CS.replace( geoRecord.getOverallDesign(), "\n", "\\n" ),
                 extractKeywords( geoRecord ).stream().sorted().collect( Collectors.joining( ";" ) ) );
         os.flush();
     }

@@ -11,7 +11,7 @@ import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentMetaFileType;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -74,14 +74,16 @@ public class ExpressionExperimentMetadataFileAdderCli extends ExpressionExperime
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
         try {
             String buf = generateChangelog( expressionExperiment );
-            if ( fileType == ExpressionExperimentMetaFileType.MULTIQC_REPORT ) {
-                expressionDataFileService.copyMultiQCReport( expressionExperiment, filename, isForce() );
+            if ( fileType != null && fileType.isMultiQC() ) {
+                expressionDataFileService.copyMultiQCReport( expressionExperiment, filename, fileType, isForce() );
             } else if ( fileType != null ) {
                 expressionDataFileService.copyMetadataFile( expressionExperiment, filename, fileType, isForce() );
             } else {
                 expressionDataFileService.copyMetadataFile( expressionExperiment, filename, filename.getFileName().toString(), isForce() );
             }
             expressionMetadataChangelogFileService.addChangelogEntry( expressionExperiment, buf );
+            addSuccessObject( expressionExperiment, String.format( "Added %s%sto the metadata file.", filename,
+                    fileType != null ? " (" + fileType + ")" : "" ) );
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );

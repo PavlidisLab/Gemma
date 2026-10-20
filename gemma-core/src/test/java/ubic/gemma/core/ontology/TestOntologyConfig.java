@@ -9,8 +9,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
-import ubic.basecode.ontology.providers.*;
-import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.context.EnvironmentProfiles;
+import ubic.gemma.core.ontology.providers.*;
+import ubic.gemma.core.ontology.providers.OntologyService;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.MondoOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyServiceFactory;
@@ -24,7 +25,7 @@ import ubic.gemma.core.util.TextResourceToSetOfLinesFactoryBean;
  * @author poirigui
  */
 @Configuration
-@Profile("test") // not needed since this is a test resource, but we need to be consistent with OntologyConfig
+@Profile(EnvironmentProfiles.TEST) // not needed since this is a test resource, but we need to be consistent with OntologyConfig
 public class TestOntologyConfig {
 
     // FIXME: inject it as a Set<String>, but Spring interpret this as a set of String beans
@@ -76,18 +77,6 @@ public class TestOntologyConfig {
     @Bean
     public FactoryBean<HumanPhenotypeOntologyService> humanPhenotypeOntologyServiceOntologyService( @Qualifier("ontologyTaskExecutor") TaskExecutor taskExecutor ) {
         return createOntologyFactory( HumanPhenotypeOntologyService.class, taskExecutor );
-    }
-
-    @Bean
-    @Deprecated
-    public FactoryBean<NIFSTDOntologyService> nisftOntologyServiceFactory( @Qualifier("ontologyTaskExecutor") TaskExecutor taskExecutor ) {
-        return createOntologyFactory( NIFSTDOntologyService.class, taskExecutor );
-    }
-
-    @Bean
-    @Deprecated
-    public FactoryBean<FMAOntologyService> fmaOntologyService( @Qualifier("ontologyTaskExecutor") TaskExecutor taskExecutor ) {
-        return createOntologyFactory( FMAOntologyService.class, taskExecutor );
     }
 
     @Bean

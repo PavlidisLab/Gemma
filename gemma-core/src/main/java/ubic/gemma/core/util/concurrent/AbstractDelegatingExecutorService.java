@@ -1,6 +1,6 @@
 package ubic.gemma.core.util.concurrent;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
@@ -35,7 +35,7 @@ public abstract class AbstractDelegatingExecutorService extends AbstractDelegati
         delegate.shutdown();
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<Runnable> shutdownNow() {
         return delegate.shutdownNow();
@@ -56,37 +56,37 @@ public abstract class AbstractDelegatingExecutorService extends AbstractDelegati
         return delegate.awaitTermination( l, timeUnit );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public <T> Future<T> submit( Callable<T> callable ) {
         return delegate.submit( wrap( callable ) );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public <T> Future<T> submit( Runnable runnable, T t ) {
         return delegate.submit( wrap( runnable ), t );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Future<?> submit( Runnable runnable ) {
         return delegate.submit( wrap( runnable ) );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public <T> List<Future<T>> invokeAll( Collection<? extends Callable<T>> collection ) throws InterruptedException {
         return delegate.invokeAll( wrap( collection ) );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public <T> List<Future<T>> invokeAll( Collection<? extends Callable<T>> collection, long l, TimeUnit timeUnit ) throws InterruptedException {
         return delegate.invokeAll( wrap( collection ), l, timeUnit );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public <T> T invokeAny( Collection<? extends Callable<T>> collection ) throws InterruptedException, ExecutionException {
         return delegate.invokeAny( wrap( collection ) );

@@ -15,6 +15,7 @@
 package ubic.gemma.rest.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
@@ -31,11 +32,14 @@ import java.util.List;
 @Jacksonized
 public class WellComposedErrorBody {
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "The HTTP status code, repeated in the body.")
     int code;
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "What went wrong, in one line.")
     String message;
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Schema(description = "Per-item detail, where the endpoint has any to give. Omitted when empty.")
     List<WellComposedError> errors = new ArrayList<>();
 }

@@ -10,7 +10,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -93,8 +93,11 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
      */
     T[][] getRawMatrix();
 
+    List<BioMaterial> getBioMaterials();
+
     /**
      * Access a single column of the matrix.
+     *
      * @return a vector for the given column, or null if the column is not present
      */
     @Nullable
@@ -106,6 +109,27 @@ public interface BulkExpressionDataMatrix<T> extends ExpressionDataMatrix<T> {
     int getColumnIndex( BioAssay bioAssay );
 
     int getColumnIndex( BioMaterial bioMaterial );
+
+    /**
+     * Slice the requested samples (columns) from this matrix.
+     * <p>
+     * Dimensions will be altered to reflect only the selected samples.
+     *
+     * @param bioMaterials samples to select from the matrix
+     * @throws IllegalArgumentException if any of the requested biomaterial are not found in the matrix
+     */
+    BulkExpressionDataMatrix<T> sliceColumns( List<BioMaterial> bioMaterials );
+
+    /**
+     * Slice the requested samples (columns) from this matrix.
+     * <p>
+     * This also allows specifying a new dimension for the columns that will be used for every design element (rows).
+     *
+     * @param bioMaterials samples to select from the matrix
+     * @param dimension    the dimension to use
+     * @throws IllegalArgumentException if any of the requested biomaterial are not found in the matrix
+     */
+    BulkExpressionDataMatrix<T> sliceColumns( List<BioMaterial> bioMaterials, BioAssayDimension dimension );
 
     /**
      * Obtain an assay corresponding to a given column.

@@ -18,12 +18,12 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.report.ArrayDesignReportService;
-import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -33,7 +33,6 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
@@ -73,7 +72,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
     @Autowired
     private EntityLocator entityLocator;
     @Autowired
-    private AuditTrailService auditTrailService;
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private String platformShortName = null;
     private String geneListFileName = null;
@@ -147,9 +146,21 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
         int numNewElements = 0;
         int numUpdatedElements = 0;
         int needsDummyElement = 0;
+        int notAnId = 0;
         for ( String ncbiId : ncbiIds ) {
 
             log.debug( "> Processing element for NCBI ID = " + ncbiId );
+
+            int ncbiGeneId;
+            try {
+                ncbiGeneId = Integer.parseInt( ncbiId );
+            } catch ( NumberFormatException e ) {
+                // e.g. a header line; it would otherwise become a platform element with a dummy sequence
+                log.warn( "Skipping '" + ncbiId + "' from " + this.geneListFileName + ": not an NCBI gene ID" );
+                addWarningObject( ncbiId, "Not an NCBI gene ID; skipped, no element created" );
+                notAnId++;
+                continue;
+            }
 
             CompositeSequence csForGene = null;
             if ( existingSymbolMap.containsKey( ncbiId ) ) {
@@ -173,13 +184,7 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                 log.info( "Gene NCBI ID=" + ncbiId + " not on platform, may add" );
             }
 
-            Gene gene = null;
-            try {
-                gene = geneService.findByNCBIId( Integer.parseInt( ncbiId ) );
-            } catch ( NumberFormatException e ) {
-                // shouldn't happen but just in case
-                log.error( "Could not parse NCBI ID = " + ncbiId + " as an integer" );
-            }
+            Gene gene = geneService.findByNCBIId( ncbiGeneId );
 
             boolean geneExists = gene != null;
             if ( !geneExists ) {
@@ -313,19 +318,31 @@ public class GenericGenelistDesignGenerator extends AbstractAuthenticatedCLI {
                         + " genes had no transcript." );
         }
 
-        log.info( "Platform has " + arrayDesignService.numCompositeSequenceWithGenes( platform )
+        log.info( "Platform has " + arrayDesignService.countCompositeSequencesWithGenes( platform, true )
                 + " 'elements' associated with genes." );
 
-        if ( !noDB ) arrayDesignReportService.generateArrayDesignReport( platform.getId() );
+        if ( !noDB && arrayDesignReportService.generateArrayDesignReport( platform.getId() ) == null ) {
+            // the platform itself is updated; carry on so the audit event is recorded and stale files are deleted
+            addErrorObject( platform.getShortName(), "The platform report could not be written or read back (see "
+                    + "the log); regenerate it with updatePlatformReports -a " + platform.getShortName() );
+        }
 
         String auditMessage = count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
-                + " updated elements; " + numWithNoTranscript + " genes had no transcript; " + geneNotFound + " genes from the file could not be found";
+                + " updated elements; " + numWithNoTranscript + " genes had no transcript; " + geneNotFound + " genes from the file could not be found"
+                + ( notAnId > 0 ? "; " + notAnId + " lines were not NCBI gene IDs and were skipped" : "" );
         log.info( auditMessage );
 
-        if ( !noDB ) auditTrailService.addUpdateEvent( platform, AnnotationBasedGeneMappingEvent.class, auditMessage );
+        if ( !noDB ) cliArrayDesignAuditService.recordAnnotationBasedGeneMapping( platform, auditMessage );
 
         log.info( "Don't forget to update the annotation files, any old ones will be deleted (unless dry run)" );
-        if ( !noDB ) arrayDesignAnnotationService.deleteExistingFiles( platform );
+        if ( !noDB ) {
+            // A DELETE, so naming the directory matters more here than for a write: against the
+            // wrong tree this is a silent no-op that leaves the real, stale annotation files in
+            // place for gemma-rest to keep serving.
+            log.info( String.format( "Deleting existing annotation files for %s from: %s",
+                    platform.getShortName(), arrayDesignAnnotationService.getAnnotDataDir() ) );
+            arrayDesignAnnotationService.deleteExistingFiles( platform );
+        }
 
         /*
         Delete elements for the platform that are not on the input list. This should probably not be kept here; we'll do it offline.

@@ -1,6 +1,5 @@
 package ubic.gemma.core.security.authorization.acl;
 
-import gemma.gsec.acl.afterinvocation.AclEntryAfterInvocationByAssociationFilteringProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -12,8 +11,8 @@ import java.util.List;
  */
 public class AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider extends AclEntryAfterInvocationByAssociationFilteringProvider {
 
-    public AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider( AclService aclService, List<Permission> requirePermission ) {
-        super( aclService, "AFTER_ACL_COMPOSITE_SEQUENCE_READ", requirePermission );
+    public AclEntryAfterInvocationCompositeSequenceByArrayDesignFilteringProvider( AclService aclService, String processConfigAttribute, List<Permission> requirePermission ) {
+        super( aclService, processConfigAttribute, requirePermission );
     }
 
     @Override

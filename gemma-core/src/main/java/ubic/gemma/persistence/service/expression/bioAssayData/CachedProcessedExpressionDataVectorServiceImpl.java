@@ -1,12 +1,13 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -19,17 +20,20 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.IdentifiableUtils;
+import ubic.gemma.persistence.util.Thaws;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@CommonsLog
+@Slf4j
 class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedExpressionDataVectorService {
 
     private final ProcessedExpressionDataVectorDao processedExpressionDataVectorDao;
@@ -37,6 +41,12 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    @Autowired
+    private BioMaterialDao bioMaterialDao;
 
     @Autowired
     private ProcessedDataVectorByGeneCache processedDataVectorByGeneCache;
@@ -156,7 +166,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          * Check the cache.
          */
         // using a TreeSet to prevent hashCode() from initializing proxies
-        Collection<BioAssaySet> needToSearch = new TreeSet<>( Comparator.comparing( BioAssaySet::getId ) );
+        Collection<BioAssaySet> needToSearch = new TreeSet<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
         Collection<Long> genesToSearch = new HashSet<>();
         this.checkCache( expressionExperiments, genes, results, needToSearch, genesToSearch );
         log.info( "Using " + results.size() + " DoubleVectorValueObject(s) from cache" );
@@ -225,11 +235,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
                 vecsForBas = processedDataVectors;
             } else {
                 // isolate the vectors for the current experiment.
-                for ( Iterator<ProcessedExpressionDataVector> it = processedDataVectors.keySet().iterator(); it
-                        .hasNext(); ) {
-                    ProcessedExpressionDataVector v = it.next();
+                for ( Iterator<Map.Entry<ProcessedExpressionDataVector, Collection<Long>>> it = processedDataVectors.entrySet().iterator(); it.hasNext(); ) {
+                    Map.Entry<ProcessedExpressionDataVector, Collection<Long>> entry = it.next();
+                    ProcessedExpressionDataVector v = entry.getKey();
                     if ( v.getExpressionExperiment().equals( bas ) ) {
-                        vecsForBas.put( v, processedDataVectors.get( v ) );
+                        vecsForBas.put( v, entry.getValue() );
                         it.remove(); // since we're done with it.
                     }
                 }
@@ -308,15 +318,22 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
          */
         Collection<Long> genes = new HashSet<>();
-        for ( Long cs : cs2gene.keySet() ) {
-            genes.addAll( cs2gene.get( cs ) );
+        // the probe ids actually requested for each gene. A gene's cache entry is only trustworthy for THIS
+        // call if it covers every one of these -- see checkCacheForProbes, and why a plain checkCache hit is
+        // not enough here even though it is for the by-gene path above.
+        Map<Long, Collection<Long>> geneToRequestedProbes = new HashMap<>();
+        for ( Map.Entry<Long, Collection<Long>> entry : cs2gene.entrySet() ) {
+            genes.addAll( entry.getValue() );
+            for ( Long g : entry.getValue() ) {
+                geneToRequestedProbes.computeIfAbsent( g, k -> new HashSet<>() ).add( entry.getKey() );
+            }
         }
 
         // this will be populated with experiments for which we don't have all the needed results cached
         Collection<BioAssaySet> needToSearch = new HashSet<>();
         // will contain IDs of genes that weren't covered by the cache
         Collection<Long> genesToSearch = new HashSet<>();
-        this.checkCache( ees, genes, results, needToSearch, genesToSearch );
+        this.checkCacheForProbes( ees, geneToRequestedProbes, results, needToSearch, genesToSearch );
 
         if ( !results.isEmpty() )
             log.debug( results.size() + " vectors fetched from cache" );
@@ -391,15 +408,79 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
             }
 
             if ( !newResults.isEmpty() ) {
-                this.cacheResults( newResults );
-
+                // Not cached: this fetch is restricted to the probes actually requested in this call, which can
+                // be a strict subset of a gene's full probe set (filteredcs2gene, above, is built from probeIds,
+                // not from "every probe of every gene involved"). The by-gene cache's contract is that a present
+                // entry holds the COMPLETE vector set for that gene -- getProcessedDataArrays(genes) upholds it
+                // by always fetching every composite sequence for the genes it searches. Writing a probe-filtered
+                // result under the same gene key would break that contract and silently hand a later, unrelated
+                // request for a DIFFERENT probe of the same gene this probe's data instead of its own.
                 newResults = this.sliceSubsets( ees, newResults );
 
                 results.addAll( newResults );
             }
         }
 
+        // Belt-and-suspenders: a cached gene entry can legitimately hold more probes than this call asked for
+        // (e.g. populated earlier by the by-gene path). Only ever return vectors for the probes actually
+        // requested, regardless of which path -- cache or DB -- supplied them.
+        results.removeIf( v -> v.getDesignElement() == null || !probeIds.contains( v.getDesignElement().getId() ) );
+
         return results;
+    }
+
+    /**
+     * As {@link #checkCache}, but for a probe-scoped request: a gene's cache entry is trusted only when it
+     * covers every one of {@code geneToRequestedProbes}' probe ids for that gene, not merely when the gene key
+     * is present.
+     * <p>
+     * {@link #checkCache} assumes any present entry is the complete vector set for the gene, which holds for
+     * its only caller ({@link #getProcessedDataArrays(Collection, Collection)}, which always fetches every
+     * composite sequence for the genes it searches) but not here: a probe-scoped call only ever asks about
+     * (and, per {@link #getProcessedDataArraysByProbeIds(Collection, Collection)}'s own caching, only ever
+     * writes) the probes it was actually given, so a present entry can be an older, narrower slice of the
+     * gene's probes than this call needs. Trusting it anyway is what let one probe's cached data answer a
+     * request for a different probe of the same gene — see that method's comment at its cacheResults call
+     * site, and notable_cases 2026-10-01 (209072_at / 207323_s_at, both MBP, RA 2026-09-30).
+     *
+     * @param bioAssaySets         that we exactly need the data for.
+     * @param geneToRequestedProbes genes that might have cached results, each mapped to the probe ids actually
+     *                             requested for it in this call.
+     * @param results              from the cache will be put here
+     * @param needToSearch         experiments that need to be searched (not fully cached); this will be populated
+     * @param genesToSearch        that still need to be searched (not in cache, or cached incompletely)
+     */
+    private void checkCacheForProbes( Collection<? extends BioAssaySet> bioAssaySets,
+            Map<Long, Collection<Long>> geneToRequestedProbes, Collection<DoubleVectorValueObject> results,
+            Collection<BioAssaySet> needToSearch, Collection<Long> genesToSearch ) {
+
+        for ( BioAssaySet ee : bioAssaySets ) {
+
+            for ( Map.Entry<Long, Collection<Long>> e : geneToRequestedProbes.entrySet() ) {
+                Long g = e.getKey();
+                Collection<Long> requestedProbesForGene = e.getValue();
+                Collection<DoubleVectorValueObject> obs = processedDataVectorByGeneCache.get( getExperiment( ee ), g );
+                Set<Long> cachedProbeIds = obs == null ? Collections.emptySet() : obs.stream()
+                        .map( v -> v.getDesignElement() != null ? v.getDesignElement().getId() : null )
+                        .collect( Collectors.toSet() );
+                if ( obs != null && cachedProbeIds.containsAll( requestedProbesForGene ) ) {
+                    if ( ee instanceof ExpressionExperimentSubSet ) {
+                        // we cache vectors at the experiment level. If we need subsets, we have to slice them out.
+                        results.addAll( this.sliceSubSet( ( ExpressionExperimentSubSet ) ee, obs ) );
+                    } else {
+                        results.addAll( obs );
+                    }
+                } else {
+                    genesToSearch.add( g );
+                }
+            }
+            /*
+             * This experiment is not fully cached for the genes in question.
+             */
+            if ( !genesToSearch.isEmpty() ) {
+                needToSearch.add( ee );
+            }
+        }
     }
 
     @Override
@@ -412,6 +493,7 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
     /**
      * Store vectors in the cache.
+     *
      * @param newResults Always provide full vectors, not subsets.
      */
     private void cacheResults( Collection<DoubleVectorValueObject> newResults ) {
@@ -420,10 +502,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
          */
         Map<Long, Map<Long, Collection<DoubleVectorValueObject>>> mapForCache = this.makeCacheMap( newResults );
         int i = 0;
-        for ( Long eeid : mapForCache.keySet() ) {
-            for ( Long g : mapForCache.get( eeid ).keySet() ) {
+        for ( Map.Entry<Long, Map<Long, Collection<DoubleVectorValueObject>>> mfcEntry : mapForCache.entrySet() ) {
+            Long eeid = mfcEntry.getKey();
+            for ( Map.Entry<Long, Collection<DoubleVectorValueObject>> gEntry : mfcEntry.getValue().entrySet() ) {
                 i++;
-                this.processedDataVectorByGeneCache.putById( eeid, g, mapForCache.get( eeid ).get( g ) );
+                this.processedDataVectorByGeneCache.putById( eeid, gEntry.getKey(), gEntry.getValue() );
             }
         }
         // WARNING cache size() can be slow, esp. terracotta.
@@ -486,8 +569,8 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  bioAssayDimensions See if anything is 'ragged' (fewer bioassays per biomaterial than in some other
-     *                            sample)
+     * @param bioAssayDimensions See if anything is 'ragged' (fewer bioassays per biomaterial than in some other
+     *                           sample)
      * @return bio assay dimension
      */
     private BioAssayDimension checkRagged( Collection<BioAssayDimension> bioAssayDimensions ) {
@@ -558,10 +641,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
                 ProcessedExpressionDataVector::getBioAssayDimension, BioAssayDimensionValueObject::new );
         Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
                 vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
-        for ( ProcessedExpressionDataVector v : data.keySet() ) {
+        for ( Map.Entry<ProcessedExpressionDataVector, Collection<Long>> dEntry : data.entrySet() ) {
+            ProcessedExpressionDataVector v = dEntry.getKey();
             result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
                     qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ) ) );
+                    adVos.get( v.getDesignElement().getArrayDesign() ), dEntry.getValue() ) );
         }
         return result;
     }
@@ -578,20 +662,21 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         Map<ArrayDesign, ArrayDesignValueObject> adVos = createValueObjectCache( data.keySet(),
                 vec -> vec.getDesignElement().getArrayDesign(), ArrayDesignValueObject::new );
         BioAssayDimensionValueObject dimToMatch = new BioAssayDimensionValueObject( longestBad );
-        for ( ProcessedExpressionDataVector v : data.keySet() ) {
+        for ( Map.Entry<ProcessedExpressionDataVector, Collection<Long>> dEntry : data.entrySet() ) {
+            ProcessedExpressionDataVector v = dEntry.getKey();
             result.add( new DoubleVectorValueObject( v, eeVos.get( v.getExpressionExperiment() ),
                     qtVos.get( v.getQuantitationType() ), badVos.get( v.getBioAssayDimension() ),
-                    adVos.get( v.getDesignElement().getArrayDesign() ), data.get( v ), dimToMatch ) );
+                    adVos.get( v.getDesignElement().getArrayDesign() ), dEntry.getValue(), dimToMatch ) );
         }
         return result;
     }
 
     /**
-     * @param  ees  Experiments and/or subsets required
-     * @param  vecs vectors to select from and if necessary slice, obviously from the given ees.
+     * @param ees  Experiments and/or subsets required
+     * @param vecs vectors to select from and if necessary slice, obviously from the given ees.
      * @return vectors that are for the requested subset. If an ee is not a subset, vectors will be unchanged.
-     *              Otherwise
-     *              the data in a vector will be for the subset of samples in the ee subset.
+     * Otherwise
+     * the data in a vector will be for the subset of samples in the ee subset.
      */
     private Collection<DoubleVectorValueObject> sliceSubsets( Collection<? extends BioAssaySet> ees,
             @Nullable Collection<DoubleVectorValueObject> vecs ) {
@@ -612,7 +697,12 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
         return results;
     }
 
+    @Nullable
     private Collection<DoubleVectorValueObject> sliceSubSet( BioAssaySet bas, @Nullable Collection<DoubleVectorValueObject> obs ) {
+        // unproxy before the test: a subset arriving as a BioAssaySet proxy is an instance of neither
+        // subclass, so it would take the else branch and hand back the source experiment's full set of
+        // vectors unsliced -- the wrong data, silently, rather than an exception.
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperimentSubSet ) {
             return sliceSubSet( ( ExpressionExperimentSubSet ) bas, obs );
         } else {
@@ -621,12 +711,13 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
     }
 
     /**
-     * @param  ee  ee
-     * @param  obs obs
+     * @param ee  ee
+     * @param obs obs
      * @return Given an ExpressionExperimentSubset and vectors from the source experiment, give vectors that include
-     *             just the
-     *             data for the subset.
+     * just the
+     * data for the subset.
      */
+    @Nullable
     private Collection<DoubleVectorValueObject> sliceSubSet( ExpressionExperimentSubSet ee,
             @Nullable Collection<DoubleVectorValueObject> obs ) {
         if ( obs == null || obs.isEmpty() )
@@ -639,11 +730,11 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
         DoubleVectorValueObject exemplar = obs.iterator().next();
 
-        BioAssayDimensionValueObject bad = new BioAssayDimensionValueObject();
-        bad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
-        bad.setDescription( "Subset slice" );
-        bad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
-        bad.setIsSubset( true );
+        BioAssayDimensionValueObject slicedBad = new BioAssayDimensionValueObject();
+        slicedBad.setName( "Subset of :" + exemplar.getBioAssayDimension().getName() );
+        slicedBad.setDescription( "Subset slice" );
+        slicedBad.setSourceBioAssayDimension( exemplar.getBioAssayDimension() );
+        slicedBad.setIsSubset( true );
         Collection<Long> subsetBioAssayIds = IdentifiableUtils.getIds( ee.getBioAssays() );
 
         for ( BioAssayValueObject ba : exemplar.getBioAssays() ) {
@@ -654,10 +745,18 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
             sliceBioAssays.add( ba );
         }
 
-        bad.addBioAssays( sliceBioAssays );
+        slicedBad.addBioAssays( sliceBioAssays );
         ExpressionExperimentSubsetValueObject eeVo = new ExpressionExperimentSubsetValueObject( ee );
+
+        List<BioAssayValueObject> assays = obs.iterator().next().getBioAssays();
+        Map<BioAssayValueObject, Integer> ba2i = ListUtils.indexOfElements( assays );
+        int[] bioAssayIndex = new int[sliceBioAssays.size()];
+        for ( int i = 0; i < sliceBioAssays.size(); i++ ) {
+            bioAssayIndex[i] = ba2i.get( sliceBioAssays.get( i ) );
+        }
+
         for ( DoubleVectorValueObject vec : obs ) {
-            sliced.add( vec.slice( eeVo, bad ) );
+            sliced.add( vec.slice( eeVo, slicedBad, bioAssayIndex ) );
         }
 
         return sliced;
@@ -665,46 +764,69 @@ class CachedProcessedExpressionDataVectorServiceImpl implements CachedProcessedE
 
 
     private Map<BioAssaySet, Collection<BioAssayDimension>> getBioAssayDimensions( Collection<? extends BioAssaySet> ees ) {
+        if ( ees.isEmpty() ) {
+            return new HashMap<>();
+        }
+        // Map each input BioAssaySet -> its source ExpressionExperiment (subsets resolve to their owner).
+        Map<BioAssaySet, ExpressionExperiment> basToEe = new HashMap<>();
+        for ( BioAssaySet bas : ees ) {
+            basToEe.put( bas, getExperiment( bas ) );
+        }
+        // One HQL fetches all (ee, bad) pairs for the union of source experiments.
+        Map<ExpressionExperiment, Collection<BioAssayDimension>> eeToBads = expressionExperimentDao
+                .getProcessedBioAssayDimensions( new HashSet<>( basToEe.values() ) );
+        // Batched thaw of every assay's source chain in a small constant number of queries —
+        // mirrors the per-EE-callee path (Thaws::thawBioAssayDimension -> thawBioAssay) but
+        // replaces the O(N x chainDepth) Hibernate.initialize loop with the batched BioMaterial
+        // loader introduced in 352118e781. Platform-side proxies are warmed per-assay.
+        List<BioAssay> allAssays = new ArrayList<>();
+        for ( Collection<BioAssayDimension> bads : eeToBads.values() ) {
+            for ( BioAssayDimension bad : bads ) {
+                for ( BioAssay ba : bad.getBioAssays() ) {
+                    Thaws.thawBioAssayPlatforms( ba );
+                    allAssays.add( ba );
+                }
+            }
+        }
+        if ( !allAssays.isEmpty() ) {
+            bioMaterialDao.thawBioMaterialsForBioAssays( allAssays );
+        }
+        // Stitch back to the input keys (multiple BAS may share an EE).
         Map<BioAssaySet, Collection<BioAssayDimension>> result = new HashMap<>();
-        for ( BioAssaySet ee : ees ) {
-            result.put( ee, getBioAssayDimensions( ee ) );
+        for ( Map.Entry<BioAssaySet, ExpressionExperiment> entry : basToEe.entrySet() ) {
+            Collection<BioAssayDimension> bads = eeToBads.get( entry.getValue() );
+            result.put( entry.getKey(), bads != null ? bads : Collections.emptyList() );
         }
         return result;
     }
 
-    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet ee ) {
-        return getBioAssayDimensionsForExperiment( getExperiment( ee ) );
+    private Collection<BioAssayDimension> getBioAssayDimensions( BioAssaySet bas ) {
+        // Delegate to the batched multi-EE path so the per-bioassay lazy-init chain
+        // (arrayDesign / designProvider / sourceTaxon / treatments / factorValues.EF for
+        // every assay in every BAD) collapses into the batched BioMaterial loader instead
+        // of N+1 round-trips. Saves ~13s cold on /datasets/{id}/expressions/differential.
+        Map<BioAssaySet, Collection<BioAssayDimension>> m = getBioAssayDimensions( Collections.singletonList( bas ) );
+        return m.getOrDefault( bas, Collections.emptyList() );
     }
 
     /**
-     * Retrieve all the BADs for the experiment, including those from subsets.
+     * Delegates to {@link CommonQueries#getExperiment(BioAssaySet)}, which was a byte-identical copy of
+     * what used to live here. Keeping one body means the unproxy that copy needed cannot be applied to
+     * only one of them.
      */
-    private Collection<BioAssayDimension> getBioAssayDimensionsForExperiment( ExpressionExperiment ee ) {
-        HashSet<BioAssayDimension> dimensions = new HashSet<>( expressionExperimentService.getBioAssayDimensions( ee ) );
-        dimensions.addAll( expressionExperimentService.getBioAssayDimensionsFromSubSets( ee ) );
-        return dimensions;
-    }
-
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {
-        ExpressionExperiment e;
-        if ( bas instanceof ExpressionExperiment ) {
-            e = ( ExpressionExperiment ) bas;
-        } else if ( bas instanceof ExpressionExperimentSubSet ) {
-            e = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
-        } else {
-            throw new UnsupportedOperationException( "Couldn't handle a " + bas.getClass() );
-        }
+        ExpressionExperiment e = CommonQueries.getExperiment( bas );
         assert e != null;
         return e;
     }
 
     /**
      * @return Pre-fetch and construct the BioAssayDimensionValueObjects. Used on the basis that the data probably
-     *              just
-     *              have one
-     *              (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
-     *              for
-     *              details.
+     * just
+     * have one
+     * (or a few) BioAssayDimensionValueObjects needed, not a different one for each vector. See bug 3629
+     * for
+     * details.
      */
     private <S, T> Map<S, T> createValueObjectCache( Collection<ProcessedExpressionDataVector> vectors, Function<ProcessedExpressionDataVector, S> keyExtractor, Function<S, T> valueExtractor ) {
         Map<S, T> result = new HashMap<>();

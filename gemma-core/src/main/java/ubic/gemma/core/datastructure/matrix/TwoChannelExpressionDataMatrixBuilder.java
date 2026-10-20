@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.ChannelUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**
@@ -45,13 +45,14 @@ import java.util.*;
  * This handles complexities such as experiments that contain multiple array designs with differing quantitation types.
  *
  * @author pavlidis
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 public class TwoChannelExpressionDataMatrixBuilder {
 
     private static final Log log = LogFactory.getLog( TwoChannelExpressionDataMatrixBuilder.class.getName() );
     private static final double LOGARITHM_BASE = 2.0;
 
-    @Nullable
     private final ExpressionExperiment expressionExperiment;
     private final Collection<BulkExpressionDataVector> vectors;
     private final Collection<ProcessedExpressionDataVector> processedDataVectors;
@@ -207,6 +208,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return TwoChannelExpressionDataMatrixBuilder.getUsefulQuantitationTypes( eeQtTypes );
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getBackgroundChannelA() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
 
@@ -224,6 +226,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return null;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getBackgroundChannelB() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
 
@@ -266,6 +269,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return new ArrayList<>( dimensions );
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getBkgSubChannelA() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<>();
@@ -294,6 +298,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
      * preferred data
      * matrix.
      */
+    @Nullable
     public ExpressionDataDoubleMatrix getIntensity() {
         if ( this.isTwoColor() ) {
 
@@ -348,7 +353,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         List<QuantitationType> qtypes = this.getMissingValueQTypes();
         if ( qtypes.isEmpty() )
             return null;
-        return new ExpressionDataBooleanMatrix( vectors, qtypes );
+        return new ExpressionDataBooleanMatrix( expressionExperiment, vectors, qtypes );
     }
 
     public int getNumMissingValues( QuantitationType qt ) {
@@ -358,6 +363,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
     /**
      * @return The matrix for the preferred data - NOT the processed data (though they may be the same, in fact)
      */
+    @Nullable
     public ExpressionDataDoubleMatrix getPreferredData() {
 
         List<QuantitationType> qtypes = this.getPreferredQTypes();
@@ -367,7 +373,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
             return null;
         }
 
-        return new ExpressionDataDoubleMatrix( this.getPreferredDataVectors(), qtypes );
+        return new ExpressionDataDoubleMatrix( expressionExperiment, this.getPreferredDataVectors(), qtypes );
     }
 
     public List<QuantitationType> getPreferredQTypes() {
@@ -396,6 +402,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return result;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getProcessedData() {
 
         List<QuantitationType> qtypes = this.getPreferredQTypes();
@@ -405,7 +412,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
             return null;
         }
 
-        return new ExpressionDataDoubleMatrix( this.getProcessedDataVectors(), qtypes );
+        return new ExpressionDataDoubleMatrix( expressionExperiment, this.getProcessedDataVectors(), qtypes );
     }
 
     public Map<CompositeSequence, Double> getRanksByMean() {
@@ -421,6 +428,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return ranks;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getSignalChannelA() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<>();
@@ -448,6 +456,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
         return null;
     }
 
+    @Nullable
     public ExpressionDataDoubleMatrix getSignalChannelB() {
         List<BioAssayDimension> dimensions = this.getBioAssayDimensions();
         List<QuantitationType> qTypes = new ArrayList<>();
@@ -696,13 +705,13 @@ public class TwoChannelExpressionDataMatrixBuilder {
         if ( channelANeedsReconstruction ) {
             ExpressionDataDoubleMatrix bkgDataA = null;
             if ( backgroundChannelA != null ) {
-                bkgDataA = new ExpressionDataDoubleMatrix( vectors, backgroundChannelA );
+                bkgDataA = new ExpressionDataDoubleMatrix( expressionExperiment, vectors, backgroundChannelA );
             }
 
             // use background-subtracted data and add bkg back on
             assert bkgDataA != null;
             assert bkgSubChannelA != null;
-            signalDataA = new ExpressionDataDoubleMatrix( vectors, bkgSubChannelA );
+            signalDataA = new ExpressionDataDoubleMatrix( expressionExperiment, vectors, bkgSubChannelA );
             this.addBackgroundBack( signalDataA, bkgDataA );
             return signalDataA;
 
@@ -734,7 +743,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
     @Nullable
     private ExpressionDataDoubleMatrix makeMatrix( List<QuantitationType> qTypes ) {
         if ( !qTypes.isEmpty() ) {
-            return new ExpressionDataDoubleMatrix( vectors, qTypes );
+            return new ExpressionDataDoubleMatrix( expressionExperiment, vectors, qTypes );
         }
         return null;
     }
@@ -844,7 +853,7 @@ public class TwoChannelExpressionDataMatrixBuilder {
     /**
      * Divide all values by the dividend
      *
-     * @param matrix matrix
+     * @param matrix   matrix
      * @param dividend dividend
      * @throws IllegalArgumentException if dividend == 0.
      */

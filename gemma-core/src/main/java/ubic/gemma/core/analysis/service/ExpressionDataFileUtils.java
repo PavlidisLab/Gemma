@@ -1,25 +1,24 @@
 package ubic.gemma.core.analysis.service;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.springframework.util.Assert;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
-import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * Generate filenames for various types of data files.
+ *
  * @author poirigui
  */
 public class ExpressionDataFileUtils {
@@ -32,7 +31,6 @@ public class ExpressionDataFileUtils {
 
     // for single-cell metadata
     private static final String SC_METADATA_SUFFIX = ".scmetadata";
-    private static final String TABULAR_SC_METADATA_FILE_SUFFIX = SC_METADATA_SUFFIX + ".tsv.gz";
     public static final String CELL_BROWSER_SC_METADATA_SUFFIX = SC_METADATA_SUFFIX + ".cellbrowser.tsv.gz";
 
     // for bulk (raw or processed vectors)
@@ -76,8 +74,18 @@ public class ExpressionDataFileUtils {
         return formatExpressionExperimentFilename( ee ) + "_coExp" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
-    public static String getDesignFileName( ExpressionExperiment ee ) {
-        return formatExpressionExperimentFilename( ee ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    /**
+     * Obtain the filename for writing experimental design.
+     */
+    public static String getDesignFileName( ExpressionExperiment ee, boolean useProcessedData ) {
+        return formatExpressionExperimentFilename( ee ) + ( useProcessedData ? "_processed" : "" ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
+    }
+
+    /**
+     * Obtain the filename for writing experimental design for a specific QT.
+     */
+    public static String getDesignFileName( ExpressionExperiment ee, QuantitationType quantitationType ) {
+        return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( quantitationType, QuantitationType::getName ) + "_expdesign" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
     public static String getDiffExArchiveFileName( DifferentialExpressionAnalysis diff ) {
@@ -97,43 +105,6 @@ public class ExpressionDataFileUtils {
         return formatIdentifiableFilename( ee, ExpressionExperiment::getShortName ) + "_eigengenes" + TABULAR_BULK_DATA_FILE_SUFFIX;
     }
 
-    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt ) {
-        return formatExpressionExperimentFilename( ee ) + "_" + formatIdentifiableFilename( qt, QuantitationType::getName ) + TABULAR_SC_METADATA_FILE_SUFFIX;
-    }
-
-    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt, CellTypeAssignment cellTypeAssignment ) {
-        return String.format( "%s_%s_%s%s", formatExpressionExperimentFilename( ee ),
-                formatIdentifiableFilename( qt, QuantitationType::getName ),
-                formatIdentifiableFilename( cellTypeAssignment, ExpressionDataFileUtils::getCellLevelCharacteristicsName ),
-                TABULAR_SC_METADATA_FILE_SUFFIX );
-    }
-
-    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt, Collection<CellLevelCharacteristics> cellLevelCharacteristics ) {
-        return String.format( "%s_%s_%s%s", formatExpressionExperimentFilename( ee ),
-                formatIdentifiableFilename( qt, QuantitationType::getName ),
-                cellLevelCharacteristics.stream()
-                        .map( clc -> formatIdentifiableFilename( clc, ExpressionDataFileUtils::getCellLevelCharacteristicsName ) )
-                        .collect( Collectors.joining( "_" ) ),
-                TABULAR_SC_METADATA_FILE_SUFFIX );
-    }
-
-    public static String getSingleCellMetadataFilename( ExpressionExperiment ee, QuantitationType qt, CellLevelCharacteristics cellLevelCharacteristics ) {
-        return String.format( "%s_%s_%s%s", formatExpressionExperimentFilename( ee ),
-                formatIdentifiableFilename( qt, QuantitationType::getName ),
-                formatIdentifiableFilename( cellLevelCharacteristics, ExpressionDataFileUtils::getCellLevelCharacteristicsName ),
-                TABULAR_SC_METADATA_FILE_SUFFIX );
-    }
-
-    private static String getCellLevelCharacteristicsName( CellLevelCharacteristics clc ) {
-        if ( clc.getName() != null ) {
-            return clc.getName();
-        } else if ( clc instanceof CellTypeAssignment ) {
-            return "cell_type";
-        } else {
-            return clc.getCharacteristics().iterator().next().getCategory();
-        }
-    }
-
     /**
      * Forms a folder name where the given experiments metadata will be located (within the {@code ${gemma.appdata.home}/metadata} directory).
      */
@@ -143,6 +114,10 @@ public class ExpressionDataFileUtils {
     }
 
     private static String formatExperimentAnalyzedFilename( BioAssaySet experimentAnalyzed ) {
+        // The analysis' experimentAnalyzed is frequently an uninitialized proxy, and a
+        // BioAssaySet$HibernateProxy is an instance of neither branch below -- it fell through to
+        // the throw and killed every makeProcessedData run over a dataset with existing DEAs.
+        experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( experimentAnalyzed );
         ExpressionExperiment ee;
         if ( experimentAnalyzed instanceof ExpressionExperiment ) {
             ee = ( ExpressionExperiment ) experimentAnalyzed;

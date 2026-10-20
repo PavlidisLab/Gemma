@@ -1,16 +1,13 @@
 package ubic.gemma.core.loader.expression.geo.fetcher2;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
-import ubic.gemma.core.loader.expression.geo.service.GeoSource;
-import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
-import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.loader.expression.geo.service.*;
+import ubic.gemma.core.loader.util.fetcher2.AbstractFetcher;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.locking.FileLockManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,49 +15,35 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
-@CommonsLog
-public class GeoFetcher {
+@Slf4j
+public class GeoFetcher extends AbstractFetcher {
 
     private final SimpleRetry<IOException> retryTemplate;
-    private final SimpleDownloader simpleDownloader;
     private final Path geoSeriesDownloadPath;
 
     public GeoFetcher( SimpleRetryPolicy retryPolicy, Path geoSeriesDownloadPath ) {
-        this.retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
         // not retrying within the downloader itself since we want to use different fallback method to get the SOFT
         // files
-        this.simpleDownloader = new SimpleDownloader( null );
+        super( new SimpleDownloader( null ) );
         this.simpleDownloader.setCheckArchiveIntegrity( true );
+        this.retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
         this.geoSeriesDownloadPath = geoSeriesDownloadPath;
-    }
-
-    public void setFtpClientFactory( FTPClientFactory ftpClientFactory ) {
-        this.simpleDownloader.setFtpClientFactory( ftpClientFactory );
-    }
-
-    public void setFileLockManager( FileLockManager fileLockManager ) {
-        this.simpleDownloader.setFileLockManager( fileLockManager );
-    }
-
-    public void setTaskExecutor( ExecutorService taskExecutor ) {
-        this.simpleDownloader.setTaskExecutor( taskExecutor );
     }
 
     public Path fetchSeriesFamilySoftFile( String accession ) throws IOException {
         Path dest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft.gz" );
         return retryTemplate.execute( ( ctx ) -> {
             try {
-                URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP, GeoFormat.SOFT );
+                URL resource = GeoUtils.getUrl( accession, GeoSource.FTP, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
                 simpleDownloader.download( resource, dest, false );
                 return dest;
             } catch ( IOException e ) {
                 log.warn( "Retrieving SOFT file for " + accession + " via FTP failed, trying HTTPS.", e );
                 try {
-                    URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP_VIA_HTTPS, GeoFormat.SOFT );
+                    URL resource = GeoUtils.getUrl( accession, GeoSource.FTP_VIA_HTTPS, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
                     simpleDownloader.download( resource, dest, false );
                     return dest;
                 } catch ( IOException e1 ) {
@@ -80,7 +63,7 @@ public class GeoFetcher {
     Path fetchSeriesFamilySoftFileFromGeoQuery( String accession ) throws IOException {
         Path dest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft.gz" );
         // last resort, ask GEO to generate the file
-        URL resource = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.QUERY, GeoFormat.SOFT );
+        URL resource = GeoUtils.getUrl( accession, GeoSource.DIRECT, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
         Path uncompressedDest = geoSeriesDownloadPath.resolve( accession ).resolve( accession + ".soft" );
         simpleDownloader.download( resource, uncompressedDest, false );
         try {

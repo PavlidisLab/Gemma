@@ -14,27 +14,23 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.expression.experiment.Statement;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.util.Slice;
 
+import org.springframework.lang.NonNull;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -50,59 +46,76 @@ import java.util.Set;
 public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<FactorValue, FactorValueValueObject>
         implements FactorValueService {
 
-    private final ExpressionExperimentService expressionExperimentService;
-    private final AuditTrailService auditTrailService;
-    private final AuditEventService auditEventService;
     private final FactorValueDao factorValueDao;
     private final StatementDao statementDao;
+    private final FactorValueReadService factorValueReadService;
 
     @Autowired
-    public FactorValueServiceImpl( ExpressionExperimentService expressionExperimentService, AuditTrailService auditTrailService, AuditEventService auditEventService, FactorValueDao factorValueDao, StatementDao statementDao ) {
+    public FactorValueServiceImpl( FactorValueDao factorValueDao, StatementDao statementDao,
+            FactorValueReadService factorValueReadService ) {
         super( factorValueDao );
-        this.expressionExperimentService = expressionExperimentService;
-        this.auditTrailService = auditTrailService;
-        this.auditEventService = auditEventService;
         this.factorValueDao = factorValueDao;
         this.statementDao = statementDao;
+        this.factorValueReadService = factorValueReadService;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public FactorValue loadWithExperimentalFactor( Long id ) {
-        FactorValue fv = load( id );
-        if ( fv != null ) {
-            Hibernate.initialize( fv.getExperimentalFactor() );
-        }
-        return fv;
+        return factorValueReadService.loadWithExperimentalFactor( id );
+    }
+
+    @NonNull
+    @Override
+    public <T extends Exception> FactorValue loadWithExperimentalFactorOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
+        return factorValueReadService.loadWithExperimentalFactorOrFail( id, exceptionSupplier );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public FactorValue loadWithExperimentalFactorOrFail( Long id ) {
-        FactorValue fv = loadOrFail( id );
-        Hibernate.initialize( fv.getExperimentalFactor() );
-        return fv;
+    public Map<FactorValue, Characteristic> getExperimentalFactorCategoriesIgnoreAcls( Collection<FactorValue> factorValues ) {
+        return factorValueReadService.getExperimentalFactorCategoriesIgnoreAcls( factorValues );
+    }
+
+    @Override
+    public Map<FactorValue, ExpressionExperiment> getExpressionExperimentsIgnoreAcls( Collection<FactorValue> factorValues ) {
+        return factorValueReadService.getExpressionExperimentsIgnoreAcls( factorValues );
     }
 
     @Override
     @Deprecated
-    @Transactional(readOnly = true)
     public FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly ) {
-        return factorValueDao.loadWithOldStyleCharacteristics( id, readOnly );
+        return factorValueReadService.loadWithOldStyleCharacteristics( id, readOnly );
     }
 
     @Override
     @Deprecated
-    @Transactional(readOnly = true)
     public Map<Long, Integer> loadIdsWithNumberOfOldStyleCharacteristics( Set<Long> excludedIds ) {
-        return factorValueDao.loadIdsWithNumberOfOldStyleCharacteristics( excludedIds );
+        return factorValueReadService.loadIdsWithNumberOfOldStyleCharacteristics( excludedIds );
+    }
+
+    @Override
+    public Collection<FactorValue> loadIgnoreAcls( Set<Long> ids ) {
+        return factorValueReadService.loadIgnoreAcls( ids );
+    }
+
+    @Override
+    public Slice<FactorValue> loadAll( int offset, int limit ) {
+        return factorValueReadService.loadAll( offset, limit );
+    }
+
+    @Override
+    public Collection<Long> loadAllIds() {
+        return factorValueReadService.loadAllIds();
+    }
+
+    @Override
+    public Slice<Long> loadAllIds( int offset, int limit ) {
+        return factorValueReadService.loadAllIds( offset, limit );
     }
 
     @Override
     @Deprecated
-    @Transactional(readOnly = true)
-    public Collection<FactorValue> findByValue( String valuePrefix, int maxResults ) {
-        return this.factorValueDao.findByValue( valuePrefix, maxResults );
+    public Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults ) {
+        return factorValueReadService.findByValueStartingWith( valuePrefix, maxResults );
     }
 
     @Override
@@ -162,8 +175,15 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
             throw new IllegalArgumentException( String.format( "%s is not associated with %s", statement, fv ) );
         }
         this.factorValueDao.update( fv );
-        // now we can safely delete it
-        this.statementDao.remove( statement );
+        // Hibernate 6: factorValueDao.update is now merge() (not the legacy reattach-via-update),
+        // which cascades into a fresh managed copy of the Statement. Calling statementDao.remove
+        // with the caller-provided detached reference would throw EntityExistsException because a
+        // different managed instance with the same id is already in the session. Re-resolve the
+        // managed Statement from its id and remove that.
+        Statement managed = statementDao.load( statement.getId() );
+        if ( managed != null ) {
+            this.statementDao.remove( managed );
+        }
     }
 
     @Override
@@ -176,41 +196,5 @@ public class FactorValueServiceImpl extends AbstractFilteringVoEnabledService<Fa
     @Transactional
     public void remove( Collection<FactorValue> entities ) {
         super.remove( ensureInSession( entities ) );
-    }
-
-    @Override
-    @Transactional
-    public void markAsNeedsAttention( FactorValue factorValue, String note ) {
-        Assert.isTrue( !factorValue.getNeedsAttention(), "This FactorValue already needs attention." );
-        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factorValue );
-        factorValue.setNeedsAttention( true );
-        factorValueDao.update( factorValue );
-        if ( ee != null ) {
-            auditTrailService.addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, String.format( "%s: %s", factorValue, note ) );
-        }
-    }
-
-    @Override
-    @Transactional
-    public void clearNeedsAttentionFlag( FactorValue factorValue, String note ) {
-        Assert.isTrue( factorValue.getNeedsAttention(), "This FactorValue does not need attention." );
-        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( factorValue );
-        factorValue.setNeedsAttention( false );
-        factorValueDao.update( factorValue );
-        if ( ee != null ) {
-            boolean needsAttention = ee.getCurationDetails().getNeedsAttention();
-            AuditEvent ae = auditEventService.getLastEvent( ee, NeedsAttentionEvent.class,
-                    Collections.singleton( FactorValueNeedsAttentionEvent.class ) );
-            AuditEvent nae = auditEventService.getLastEvent( ee, DoesNotNeedAttentionEvent.class );
-            // ensure that the last NeedsAttentionEvent hasn't been fixed already
-            boolean hasNeedsAttentionEvent = ae != null && ( nae == null || ae.getDate().after( nae.getDate() ) );
-            // check if all the FVs are OK
-            boolean hasFactorValueThatNeedsAttention = ee.getExperimentalDesign().getExperimentalFactors().stream()
-                    .flatMap( ef -> ef.getFactorValues().stream() )
-                    .anyMatch( FactorValue::getNeedsAttention );
-            if ( needsAttention && !hasNeedsAttentionEvent && !hasFactorValueThatNeedsAttention ) {
-                auditTrailService.addUpdateEvent( ee, DoesNotNeedAttentionEvent.class, note );
-            }
-        }
     }
 }

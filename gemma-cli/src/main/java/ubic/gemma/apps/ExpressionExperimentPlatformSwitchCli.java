@@ -69,16 +69,19 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        getPipelineJobReporter().stage( "platform-switch:" + expressionExperiment.getShortName() );
         expressionExperiment = this.eeService.thawLite( expressionExperiment );
         ArrayDesign ad;
         if ( this.arrayDesignName != null ) {
             ad = entityLocator.locateArrayDesign( this.arrayDesignName );
             serv.switchExperimentToArrayDesign( expressionExperiment, ad );
             ats.addUpdateEvent( expressionExperiment, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use " + ad );
+            addSuccessObject( expressionExperiment, "Switched to use " + ad + "." );
         } else {
             // Identify merged platform automatically; not really recommended as it might not make the optimal choice.
             ad = serv.switchExperimentToMergedPlatform( expressionExperiment );
             ats.addUpdateEvent( expressionExperiment, ExpressionExperimentPlatformSwitchEvent.class, "Switched to use merged platform " + ad );
+            addSuccessObject( expressionExperiment, "Switched to use merged platform  " + ad + "." );
         }
     }
 }

@@ -19,19 +19,21 @@
 
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -42,13 +44,15 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author paul
  */
-public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoServiceTest {
+@ExtendWith(NetworkAvailableExtension.class)
+public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private ExpressionExperimentBatchCorrectionService correctionService;
@@ -68,19 +72,19 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.cleanup();
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         this.cleanup();
     }
 
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testComBatOnEE() throws Exception {
 
         geoService.setGeoDomainObjectGenerator(
@@ -117,6 +121,9 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
         assertNotNull( comBat );
 
         assertEquals( newee.getBioAssays().size(), comBat.columns() );
+
+        // the outlier flagged above is restored into the matrix, which still has to report itself as batch-corrected
+        assertTrue( comBat.getQuantitationType().getIsBatchCorrected() );
 
     }
 

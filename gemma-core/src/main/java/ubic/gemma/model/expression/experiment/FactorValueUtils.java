@@ -1,15 +1,50 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicValueObject;
 import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.MeasurementValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 public class FactorValueUtils {
+
+    /**
+     * URI of {@code TGEMO_00013 DE_Include}, which marks samples to keep in a differential expression analysis.
+     */
+    public static final String DE_INCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00013";
+
+    /**
+     * URI of {@code TGEMO_00014 DE_Exclude}, which marks samples to leave out of a differential expression analysis.
+     */
+    public static final String DE_EXCLUDE_URI = "http://gemma.msl.ubc.ca/ont/TGEMO_00014";
+
+    /**
+     * Check if a factor value marks its samples for exclusion from differential expression analysis.
+     */
+    public static boolean isDeExcluded( FactorValue fv ) {
+        return hasCharacteristicWithUri( fv, DE_EXCLUDE_URI );
+    }
+
+    /**
+     * Check if a factor value is one of the two DE_Include/DE_Exclude markers.
+     */
+    public static boolean isDeIncludeExcludeMarker( FactorValue fv ) {
+        return hasCharacteristicWithUri( fv, DE_INCLUDE_URI ) || hasCharacteristicWithUri( fv, DE_EXCLUDE_URI );
+    }
+
+    private static boolean hasCharacteristicWithUri( FactorValue fv, String uri ) {
+        for ( Characteristic c : fv.getCharacteristics() ) {
+            if ( uri.equals( c.getValueUri() ) ) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Produce a value for representing a factor value.
@@ -20,21 +55,27 @@ public class FactorValueUtils {
      * <p>
      * This value is suitable for displaying in a flat file format. If you need a human-readable summary of the factor
      * value, consider using {@link #getSummaryString(FactorValue)} instead.
+     *
      * @param delimiter delimiter used when joining multiple values from statements
      */
     @Nullable
     public static String getValue( FactorValue fv, String delimiter ) {
+        String[] values = getValues( fv );
+        return values != null ? String.join( delimiter, values ) : null;
+    }
+
+    public static String[] getValues( FactorValue fv ) {
         if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
+            return new String[] { fv.getMeasurement().getValue() };
         } else {
-            String valueFromStatements = fv.getCharacteristics().stream()
+            String[] valuesFromStatements = fv.getCharacteristics().stream()
                     .map( Statement::getSubject )
                     .sorted()
-                    .collect( Collectors.joining( delimiter ) );
-            if ( StringUtils.isNotBlank( valueFromStatements ) ) {
-                return valueFromStatements;
+                    .toArray( String[]::new );
+            if ( valuesFromStatements.length > 0 ) {
+                return valuesFromStatements;
             } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
-                return fv.getValue();
+                return new String[] { fv.getValue() };
             } else {
                 return null;
             }
@@ -49,10 +90,14 @@ public class FactorValueUtils {
     }
 
     public static String getSummaryString( FactorValue fv, String statementDelimiter ) {
+        return getSummaryString( fv, fv.getExperimentalFactor() != null ? fv.getExperimentalFactor().getCategory() : null, statementDelimiter );
+    }
+
+    public static String getSummaryString( FactorValue fv, @Nullable Characteristic category, String statementDelimiter ) {
         StringBuilder buf = new StringBuilder();
         if ( fv.getMeasurement() != null ) {
-            if ( fv.getExperimentalFactor() != null && fv.getExperimentalFactor().getCategory() != null ) {
-                buf.append( defaultIfBlank( fv.getExperimentalFactor().getCategory().getCategory(), "?" ) )
+            if ( category != null && category.getCategory() != null ) {
+                buf.append( defaultIfBlank( category.getCategory(), "?" ) )
                         .append( ": " );
             }
             Measurement measurement = fv.getMeasurement();
@@ -69,6 +114,35 @@ public class FactorValueUtils {
             }
         } else if ( StringUtils.isNotBlank( fv.getValue() ) ) {
             buf.append( fv.getValue() );
+        } else {
+            buf.append( "?" );
+        }
+        return buf.toString();
+    }
+
+    public static String getSummaryString( AbstractFactorValueValueObject fv ) {
+        CharacteristicValueObject category = fv.getExperimentalFactorCategory();
+        String statementDelimiter = ", ";
+        StringBuilder buf = new StringBuilder();
+        if ( fv.getMeasurementObject() != null ) {
+            if ( category != null && category.getCategory() != null ) {
+                buf.append( defaultIfBlank( category.getCategory(), "?" ) )
+                        .append( ": " );
+            }
+            MeasurementValueObject measurement = fv.getMeasurementObject();
+            buf.append( defaultIfBlank( measurement.getValue(), "?" ) );
+            if ( fv.getMeasurementObject().getUnit() != null ) {
+                buf.append( " " ).append( fv.getMeasurementObject().getUnit() );
+            }
+        } else if ( !fv.getStatements().isEmpty() ) {
+            for ( Iterator<StatementValueObject> iter = fv.getStatements().stream().sorted().iterator(); iter.hasNext(); ) {
+                StatementValueObject c = iter.next();
+                buf.append( StatementUtils.formatStatement( c ) );
+                if ( iter.hasNext() )
+                    buf.append( statementDelimiter );
+            }
+        } else if ( fv instanceof FactorValueBasicValueObject && StringUtils.isNotBlank( ( ( FactorValueBasicValueObject ) fv ).getValue() ) ) {
+            buf.append( ( ( FactorValueBasicValueObject ) fv ).getValue() );
         } else {
             buf.append( "?" );
         }

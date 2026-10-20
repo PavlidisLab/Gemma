@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,9 +48,7 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
         BusinessKey.checkValidKey( experimentalFactor );
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
-        BusinessKey.addRestrictions( queryObject, experimentalFactor );
-        return ( ExperimentalFactor ) queryObject.uniqueResult();
+        return BusinessKey.find( super.getSessionFactory().getCurrentSession(), experimentalFactor );
     }
 
     @Override
@@ -92,7 +89,10 @@ public class ExperimentalFactorDaoImpl extends AbstractVoEnabledDao<Experimental
     private List<BioMaterial> getBioMaterials( ExperimentalFactor ef ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bm from BioMaterial bm join bm.factorValues fv where fv.experimentalFactor = :ef" )
+                .createQuery( "select bm from BioMaterial bm "
+                        + "join bm.factorValues fv "
+                        + "where fv.experimentalFactor = :ef "
+                        + "group by bm" )
                 .setParameter( "ef", ef )
                 .list();
     }

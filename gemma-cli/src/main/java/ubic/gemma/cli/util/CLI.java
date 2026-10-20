@@ -2,13 +2,13 @@ package ubic.gemma.cli.util;
 
 import org.apache.commons.cli.Options;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**
  * Interface for CLI tools.
  * <p>
- * Implementing this interface will make the tool detectable by {@link GemmaCLI}.
+ * Implementing this interface will make the tool detectable by {@link ubic.gemma.cli.main.GemmaCLI}.
  *
  * @author poirigui
  */
@@ -50,9 +50,8 @@ public interface CLI {
 
     /**
      * Execute the given command given CLI arguments.
-     * @return an exit code
      */
-    int executeCommand( CliContext ctx );
+    void executeCommand( CLIContext ctx );
 
     // order here is significant.
     enum CommandGroup {

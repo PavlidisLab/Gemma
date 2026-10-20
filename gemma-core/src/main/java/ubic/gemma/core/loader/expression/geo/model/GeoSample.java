@@ -26,7 +26,7 @@ import ubic.gemma.core.loader.expression.geo.GeoLibrarySource;
 import ubic.gemma.core.loader.expression.geo.GeoSampleType;
 import ubic.gemma.core.util.StringUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 
 /**
@@ -56,6 +56,21 @@ public class GeoSample extends GeoData implements Comparable<GeoSample> {
     private GeoLibrarySource libSource = null;
     @Nullable
     private GeoLibraryStrategy libStrategy = null;
+    /**
+     * Verbatim {@code !Sample_library_selection}, e.g. {@code cDNA}, {@code PCR}, {@code other}.
+     * <p>
+     * Kept as the submitter's raw string rather than an enum, unlike {@link #libSource} and
+     * {@link #libStrategy}: this feeds the verbatim upstream-metadata payload
+     * ({@code Investigation.sourceMetadata}), where normalizing to a closed set would both lose the
+     * original spelling and silently drop values the enum does not know. Empty when GEO did not
+     * state one.
+     */
+    private String librarySelection = "";
+    /**
+     * Verbatim {@code !Sample_instrument_model}, e.g. {@code Illumina HiSeq 2000}. Raw string for the
+     * same reason as {@link #librarySelection}. Empty when GEO did not state one.
+     */
+    private String instrumentModel = "";
     /**
      * Indicate if the data might be separate, as for some RNA-seq studies.
      */

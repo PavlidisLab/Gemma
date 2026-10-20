@@ -26,12 +26,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
-import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.cli.util.EnumeratedByCommandStringConverter;
+import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <ul>
@@ -51,10 +53,9 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     @Autowired
     private ArrayDesignMergeService arrayDesignMergeService;
 
-    private ArrayDesign arrayDesign;
+    private Set<String> otherArrayDesignIdentifiers;
     private String newName;
     private String newShortName;
-    private Collection<ArrayDesign> otherArrayDesigns;
     private boolean add;
 
     @Override
@@ -63,18 +64,12 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doAuthenticatedWork() {
-        arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, add );
-    }
-
-    @Override
     public String getShortDesc() {
         return "Make a new array design that combines the reporters from others.";
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platforms" )
                 .desc(
                         "Short name(s) of arrays to merge with the one given to the -a option, preferably subsumed by it, comma-delimited. "
@@ -103,34 +98,18 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) {
         if ( commandLine.hasOption( 'o' ) ) {// required
             String otherArrayDesignName = commandLine.getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
-            this.otherArrayDesigns = new HashSet<>();
-            for ( String string : names ) {
-                ArrayDesign o = entityLocator.locateArrayDesign( string );
-                this.otherArrayDesigns.add( o );
-            }
-            this.otherArrayDesigns = getArrayDesignService().thaw( this.otherArrayDesigns );
+            this.otherArrayDesignIdentifiers = new HashSet<>( Arrays.asList( names ) );
         }
-
-        if ( this.getArrayDesignsToProcess().size() > 1 ) {
-            throw new IllegalArgumentException(
-                    "Cannot be applied to more than one array design given to the '-a' option" );
-        }
-
-        arrayDesign = this.getArrayDesignsToProcess().iterator().next();
-
-        arrayDesign = getArrayDesignService().thaw( arrayDesign );
-
         if ( commandLine.hasOption( "add" ) ) {
-            if ( arrayDesign.getMergees().isEmpty() ) {
-                throw new IllegalArgumentException( "The array given must be a merged design when using -add" );
-            }
+            this.add = true;
+            this.newName = null;
+            this.newShortName = null;
         } else {
-
+            this.add = false;
             if ( commandLine.hasOption( "n" ) ) {
                 this.newName = commandLine.getOptionValue( 'n' );
             } else {
@@ -143,8 +122,31 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
                         "You must provide a short name for the new design unless using -add" );
             }
         }
-
-        this.add = commandLine.hasOption( "add" );
     }
 
+    @Override
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        if ( arrayDesigns.size() > 1 ) {
+            throw new IllegalArgumentException(
+                    "Cannot be applied to more than one array design given to the '-a' option" );
+        }
+
+        ArrayDesign arrayDesign = arrayDesigns.iterator().next();
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
+
+        if ( add ) {
+            if ( arrayDesign.getMergees().isEmpty() ) {
+                throw new IllegalArgumentException( "The array given must be a merged design when using -add" );
+            }
+        }
+
+        Collection<ArrayDesign> otherArrayDesigns = new HashSet<>();
+        for ( String string : otherArrayDesignIdentifiers ) {
+            ArrayDesign o = entityLocator.locateArrayDesign( string );
+            otherArrayDesigns.add( o );
+        }
+        otherArrayDesigns = arrayDesignService.thaw( otherArrayDesigns );
+
+        arrayDesignMergeService.merge( arrayDesign, otherArrayDesigns, newName, newShortName, add );
+    }
 }

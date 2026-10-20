@@ -1,15 +1,50 @@
 package ubic.gemma.model.common.quantitationtype;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.util.Assert;
+import ubic.gemma.persistence.util.ByteArrayUtils;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Utilities for working with {@link QuantitationType}s.
+ *
+ * @author poirigui
+ */
 public class QuantitationTypeUtils {
+
+    /**
+     * Check if a given quantitation type holds log2 CPM.
+     */
+    public static boolean isLog2cpm( QuantitationType qt ) {
+        return Strings.CI.contains( qt.getName(), "log2cpm" ) &&
+                qt.getGeneralType() == GeneralType.QUANTITATIVE &&
+                qt.getType() == StandardQuantitationType.AMOUNT &&
+                qt.getScale() == ScaleType.LOG2;
+    }
+
+    /**
+     * Check if a given QT holds log-transformed data.
+     */
+    public static boolean isLogTransformed( QuantitationType qt ) {
+        return qt.getScale() == ScaleType.LOG2 || qt.getScale() == ScaleType.LN || qt.getScale() == ScaleType.LOG10
+                || qt.getScale() == ScaleType.LOG1P || qt.getScale() == ScaleType.LOGBASEUNKNOWN;
+    }
+
+    /**
+     * Check if a given quantitation type contains counting data.
+     * <p>
+     * Note that counting data might not necessarily use the {@link ScaleType#COUNT} scale.
+     */
+    public static boolean isCount( QuantitationType qt ) {
+        return qt.getGeneralType() == GeneralType.QUANTITATIVE && qt.getType() == StandardQuantitationType.COUNT;
+    }
 
     /**
      * Obtain the default to use for a given quantitation type.
@@ -22,7 +57,7 @@ public class QuantitationTypeUtils {
      * For counting data represented as double or float, the default value is transformed as per
      * {@link #getDefaultCountValueAsDouble(QuantitationType)} and {@link #getDefaultCountValueAsFloat(QuantitationType)}.
      */
-    @Nonnull
+    @NonNull
     public static Object getDefaultValue( QuantitationType quantitationType ) {
         PrimitiveType pt = quantitationType.getRepresentation();
         switch ( pt ) {
@@ -51,7 +86,7 @@ public class QuantitationTypeUtils {
         }
     }
 
-    @Nonnull
+    @NonNull
     public static Number getDefaultValueAsNumber( QuantitationType quantitationType ) {
         PrimitiveType pt = quantitationType.getRepresentation();
         switch ( pt ) {
@@ -81,6 +116,42 @@ public class QuantitationTypeUtils {
             return getDefaultCountValueAsDouble( qt );
         } else {
             return 0;
+        }
+    }
+
+    /**
+     * Obtain the default value for a vector as an encoded {@code byte[]}.
+     */
+    public static byte[] getDefaultValueAsBytes( QuantitationType quantitationType ) {
+        PrimitiveType pt = quantitationType.getRepresentation();
+        switch ( pt ) {
+            case DOUBLE:
+                double d;
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    d = getDefaultCountValueAsDouble( quantitationType );
+                } else {
+                    d = Double.NaN;
+                }
+                return ByteArrayUtils.doubleArrayToBytes( new double[] { d } );
+            case FLOAT:
+                float f;
+                if ( quantitationType.getType() == StandardQuantitationType.COUNT ) {
+                    f = getDefaultCountValueAsFloat( quantitationType );
+                } else {
+                    f = Float.NaN;
+                }
+                return ByteArrayUtils.floatArrayToBytes( new float[] { f } );
+            case STRING:
+            case BOOLEAN:
+                return new byte[] { 0 };
+            case CHAR:
+                return new byte[] { 0, 0 };
+            case INT:
+                return new byte[] { 0, 0, 0, 0 };
+            case LONG:
+                return new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+            default:
+                throw new UnsupportedOperationException( "Missing values in data vectors of type " + quantitationType + " is not supported." );
         }
     }
 
@@ -177,11 +248,41 @@ public class QuantitationTypeUtils {
     public static void appendToDescription( QuantitationType qt, String s ) {
         String description;
         if ( StringUtils.isNotBlank( qt.getDescription() ) ) {
-            description = StringUtils.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
+            description = Strings.CS.appendIfMissing( StringUtils.strip( qt.getDescription() ), "." ) + " ";
         } else {
             description = "";
         }
         description += s;
         qt.setDescription( description + s );
+    }
+
+    /**
+     * @return a unit, or null if the QT is unitless (e.g. ratio)
+     */
+    @Nullable
+    public static String getUnit( QuantitationType quantitationType ) {
+        if ( quantitationType.getIsRatio() ) {
+            // ratio are unitless
+            return null;
+        }
+        if ( quantitationType.getName().contains( "log2cpm" ) && quantitationType.getScale() == ScaleType.LOG2 ) {
+            return "log2cpm";
+        }
+        switch ( quantitationType.getScale() ) {
+            case COUNT:
+                return "count";
+            case PERCENT:
+                return "%";
+            case LOG1P:
+                return "log1p";
+            case LOG10:
+                return "log10";
+            case LOG2:
+                return "log2";
+            case LN:
+                return "ln";
+            default:
+                return "?";
+        }
     }
 }

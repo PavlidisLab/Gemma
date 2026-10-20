@@ -18,15 +18,14 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import ubic.gemma.model.genome.gene.GeneProduct;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.service.genome.GeneDao;
 
 import java.util.Collection;
@@ -51,11 +50,11 @@ public class GeneServiceImplTest {
     private Gene g3 = null;
     private GeneDao geneDaoMock;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         geneDaoMock = mock( GeneDao.class );
-        svc = new GeneServiceImpl( geneDaoMock );
+        svc = new GeneServiceImpl( geneDaoMock, new GeneReadServiceImpl( geneDaoMock ) );
 
         Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
@@ -81,8 +80,8 @@ public class GeneServiceImplTest {
         g3.setId( ( long ) 1234 );
 
         // For testing need to add physical locations to the gene products of a given gene.
-        Chromosome chromosome = new Chromosome( "fakeChromosome", t );
-        FieldUtils.writeField( chromosome, "id", 54321L, true );
+        Chromosome chromosome = Chromosome.Factory.newInstance( "fakeChromosome", t );
+        chromosome.setId( 54321L );
 
         // Gene product 1 (Min=100 max=200)
         PhysicalLocation ploc1 = PhysicalLocation.Factory.newInstance();
@@ -135,8 +134,8 @@ public class GeneServiceImplTest {
 
         // Gene Product 5 (right strand wrong chromosome should get regected, min 20 max 220)
 
-        Chromosome wrongChromosome = new Chromosome( "wrongFakeChromosome", t );
-        FieldUtils.writeField( chromosome, "id", 43215L, true );
+        Chromosome wrongChromosome = Chromosome.Factory.newInstance( "wrongFakeChromosome", t );
+        wrongChromosome.setId( 43215L );
 
         PhysicalLocation ploc5 = PhysicalLocation.Factory.newInstance();
         ploc5.setChromosome( wrongChromosome );
@@ -163,7 +162,7 @@ public class GeneServiceImplTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( geneDaoMock );
         justRab.clear();

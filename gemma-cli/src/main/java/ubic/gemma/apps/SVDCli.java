@@ -50,15 +50,13 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+    protected void processExpressionExperiment( ExpressionExperiment ee ) throws SVDException {
         if ( this.noNeedToRun( ee, PCAAnalysisEvent.class ) ) {
+            addSuccessObject( ee, "No need to perform SVD, experiment already has an up-to-date PCA analysis event." );
             return;
         }
         log.info( "Processing: " + ee );
-        try {
-            svdService.svd( ee );
-        } catch ( SVDException e ) {
-            throw new RuntimeException( e );
-        }
+        svdService.svd( ee );
+        addSuccessObject( ee, "Performed SVD." );
     }
 }

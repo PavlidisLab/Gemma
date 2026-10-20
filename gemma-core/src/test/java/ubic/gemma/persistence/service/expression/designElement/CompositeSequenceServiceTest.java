@@ -1,9 +1,9 @@
 package ubic.gemma.persistence.service.expression.designElement;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao;
@@ -13,7 +13,7 @@ import ubic.gemma.persistence.util.Slice;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class CompositeSequenceServiceTest extends BaseSpringContextTest {
+public class CompositeSequenceServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private CompositeSequenceService compositeSequenceService;
@@ -21,7 +21,7 @@ public class CompositeSequenceServiceTest extends BaseSpringContextTest {
     /* fixtures */
     private ArrayDesign arrayDesign;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         arrayDesign = getTestPersistentArrayDesign( 10, true );
     }

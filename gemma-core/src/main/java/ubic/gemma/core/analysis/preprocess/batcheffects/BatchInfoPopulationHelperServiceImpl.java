@@ -21,14 +21,17 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedOnError;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SingleBatchDeterminationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.SingletonBatchInvalidEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.UninformativeFASTQHeadersForBatchingEvent;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -75,27 +78,48 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     @Autowired
     private ExpressionExperimentService experimentService;
 
-    @Autowired
-    private AuditTrailService auditTrailService;
-
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Two failure modes are surfaced as exceptions so the
+     * {@link AuditedOnError} aspect (which runs {@code @AfterThrowing} on
+     * the proxy boundary) can write the matching audit row before the
+     * caller in {@code BatchInfoPopulationServiceImpl} catches them and
+     * converts them to a {@code null} return:
+     * <ul>
+     *   <li>{@link FASTQHeadersPresentButNotUsableException} &rarr;
+     *       {@link UninformativeFASTQHeadersForBatchingEvent}</li>
+     *   <li>{@link SingletonBatchesException} &rarr;
+     *       {@link SingletonBatchInvalidEvent}</li>
+     * </ul>
+     * The aspect picks the most-specific {@code exception} match, so the
+     * two declarations dispatch deterministically. The 4-arg
+     * {@code addUpdateEvent} detail string (the verbose
+     * "RNA-seq experiment, FASTQ headers ..." text) is dropped on
+     * migration pending the {@code AuditEventPayload} Phase A landing.
+     */
     @Override
-    @Transactional
+    // Both exceptions below are handled by the caller, which treats them as "no batch factor" and carries on.
+    // They descend from PreprocessingException, a RuntimeException, so without noRollbackFor this method -- which
+    // joins the caller's transaction -- marks it rollback-only on the way out. The caller's catch cannot clear that
+    // flag, so its own commit then fails with UnexpectedRollbackException and the graceful path never works.
+    @Transactional(noRollbackFor = { FASTQHeadersPresentButNotUsableException.class, SingletonBatchesException.class })
+    @AuditedOnError(value = UninformativeFASTQHeadersForBatchingEvent.class,
+            exception = FASTQHeadersPresentButNotUsableException.class,
+            message = "Batches unable to be determined")
+    @AuditedOnError(value = SingletonBatchInvalidEvent.class,
+            exception = SingletonBatchesException.class,
+            message = "At least one singleton batch")
     public ExperimentalFactor createRnaSeqBatchFactor( ExpressionExperiment ee, Map<BioMaterial, String> headers ) {
         /*
-         * Go through the headers and convert to factor values.
+         * Go through the headers and convert to factor values. The two
+         * batch-construction failure modes (FASTQHeadersPresentButNotUsableException,
+         * SingletonBatchesException) propagate to the proxy boundary so the
+         * @AuditedOnError aspect can write the audit row; the caller in
+         * BatchInfoPopulationServiceImpl catches them and treats the
+         * outcome as "no batch factor".
          */
-        Map<String, Collection<String>> batchIdToHeaders;
-        try {
-            batchIdToHeaders = convertHeadersToBatches( ee, headers.values() );
-        } catch ( FASTQHeadersPresentButNotUsableException e ) {
-            log.info( "Batches unable to be determined from headers: " + ee );
-            this.auditTrailService.addUpdateEvent( ee, UninformativeFASTQHeadersForBatchingEvent.class, "Batches unable to be determined", "RNA-seq experiment, FASTQ headers and platform not informative for batches" );
-            return null;
-        } catch ( SingletonBatchesException e ) {
-            log.info( "At least one singleton batch: " + ee + " " + e.getMessage() );
-            this.auditTrailService.addUpdateEvent( ee, SingletonBatchInvalidEvent.class, "At least one singleton batch", "RNA-seq experiment, FASTQ headers indicate at least one batch of just one sample" );
-            return null;
-        }
+        Map<String, Collection<String>> batchIdToHeaders = convertHeadersToBatches( ee, headers.values() );
 
         // other situations
         if ( batchIdToHeaders.isEmpty() ) {
@@ -137,6 +161,34 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         bioMaterialService.associateBatchFactor( dates, d2fv );
 
         return ef;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The {@link Audited} annotation drives emission through the
+     * {@code AuditedAspect}; this method body is intentionally a logging-only
+     * marker so the proxy-intercepted return triggers exactly one
+     * {@link SingleBatchDeterminationEvent}.
+     */
+    @Override
+    @Transactional
+    @Audited(value = SingleBatchDeterminationEvent.class, messageSpel = "#note")
+    public void recordSingleBatchDetermination( ExpressionExperiment ee, String note ) {
+        log.info( "Single-batch determination for " + ee.getShortName() + ": " + note );
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Companion to {@link #recordSingleBatchDetermination(ExpressionExperiment, String)};
+     * see that method for the dispatch rationale.
+     */
+    @Override
+    @Transactional
+    @Audited(value = BatchInformationFetchingEvent.class, messageSpel = "#note")
+    public void recordBatchInformationFetched( ExpressionExperiment ee, String note ) {
+        log.info( "Batch information fetched for " + ee.getShortName() + ": " + note );
     }
 
     /**
@@ -349,13 +401,12 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         }
 
         // switch to using string keys for batch identifiers, this forms the final set of batches
-        for ( FastqHeaderData fhd : batchInfos.keySet() ) {
-            String batchIdentifier = fhd.toString();
+        for ( Map.Entry<FastqHeaderData, Collection<String>> bEntry : batchInfos.entrySet() ) {
+            String batchIdentifier = bEntry.getKey().toString();
             if ( !result.containsKey( batchIdentifier ) ) {
                 result.put( batchIdentifier, new HashSet<String>() );
             }
-            Collection<String> headersInBatch = batchInfos.get( fhd );
-            result.get( batchIdentifier ).addAll( headersInBatch );
+            result.get( batchIdentifier ).addAll( bEntry.getValue() );
         }
 
         // DEBUG CODE
@@ -383,8 +434,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         } else {
             //check for singleton batches
             boolean singleton = false;
-            for ( String batchid : result.keySet() ) {
-                if ( result.get( batchid ).size() == 1 ) {
+            for ( Collection<String> batchMembers : result.values() ) {
+                if ( batchMembers.size() == 1 ) {
                     singleton = true;
                 }
             }
@@ -425,8 +476,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         int numBatches = batchInfos.size();
 
         boolean anyTooSmallBatches = false;
-        for ( FastqHeaderData hd : batchInfos.keySet() ) {
-            if ( batchInfos.get( hd ).size() < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
+        for ( Collection<String> batchMembers : batchInfos.values() ) {
+            if ( batchMembers.size() < MINIMUM_SAMPLES_PER_RNASEQ_BATCH ) {
                 anyTooSmallBatches = true;
                 break;
             }
@@ -469,7 +520,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     private static Map<FastqHeaderData, Collection<String>> dropResolution( Map<FastqHeaderData, Collection<String>> batchInfos ) {
 
         Map<FastqHeaderData, Collection<String>> result = new HashMap<>();
-        for ( FastqHeaderData fhd : batchInfos.keySet() ) {
+        for ( Map.Entry<FastqHeaderData, Collection<String>> bEntry : batchInfos.entrySet() ) {
+            FastqHeaderData fhd = bEntry.getKey();
 
             FastqHeaderData updated = fhd.dropResolution();
 
@@ -483,7 +535,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
             }
 
             // reassociate the samples with the new batch info
-            result.get( updated ).addAll( batchInfos.get( fhd ) );
+            result.get( updated ).addAll( bEntry.getValue() );
             // make sure the old one is gone.
             result.remove( fhd );
         }
@@ -887,7 +939,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
             ef = this.makeFactorForBatch( ee );
 
-            for ( String batchId : descriptorsToBatch.keySet() ) {
+            for ( Map.Entry<String, Collection<T>> dEntry : descriptorsToBatch.entrySet() ) {
+                String batchId = dEntry.getKey();
                 FactorValue fv = FactorValue.Factory.newInstance();
                 fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
                 fv.setValue( batchId );
@@ -908,7 +961,7 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                 fv.setCharacteristics( chars );
                 experimentService.addFactorValue( ee, fv );
 
-                for ( T d : descriptorsToBatch.get( batchId ) ) {
+                for ( T d : dEntry.getValue() ) {
                     d2fv.put( d, fv );
                 }
             }

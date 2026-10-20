@@ -22,8 +22,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.FileUtils;
@@ -37,13 +37,15 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
-import static ubic.gemma.cli.util.EntityOptionsUtils.addPlatformOption;
+import static ubic.gemma.cli.util.EntityOptionsUtils.addCommaDelimitedPlatformOption;
 
 /**
  * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
@@ -53,10 +55,15 @@ import static ubic.gemma.cli.util.EntityOptionsUtils.addPlatformOption;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSeekingCLI<ArrayDesign> {
 
+    /**
+     * @see #getMarkOnlyReason(CommandLine, String...)
+     */
+    protected static final String MARK_ONLY_OPTION = "markOnly";
+
     @Autowired
-    private ArrayDesignReportService arrayDesignReportService;
+    protected ArrayDesignReportService arrayDesignReportService;
     @Autowired
-    private ArrayDesignService arrayDesignService;
+    protected ArrayDesignService arrayDesignService;
     @Autowired
     protected AuditTrailService auditTrailService;
     @Autowired
@@ -64,11 +71,29 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     @Autowired
     protected EntityLocator entityLocator;
 
-    private Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
+    private boolean all;
+    private Set<String> platformIdentifiers;
+
+    /**
+     * Refuse {@code -all}, so this CLI can never be pointed at every platform in the system; platforms must always
+     * be named with {@code -a} or {@code -f}.
+     */
+    private boolean explicitADsOnly = false;
 
     protected ArrayDesignSequenceManipulatingCli() {
         super( ArrayDesign.class );
         setRequireLogin();
+    }
+
+    /**
+     * Refuse {@code -all}, so this CLI can never be pointed at every platform in the system.
+     * <p>
+     * Intended for destructive CLIs ({@code detachSequences}, {@code deletePlatformElements}) where {@code -all}
+     * wiping every platform's sequences or elements is a mistake with no undo.
+     */
+    protected void setExplicitADsOnly() {
+        Assert.state( !this.explicitADsOnly, "Explicit ADs only is already enabled." );
+        this.explicitADsOnly = true;
     }
 
     @Override
@@ -76,47 +101,153 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
         return CommandGroup.PLATFORM;
     }
 
-    protected Collection<ArrayDesign> getArrayDesignsToProcess() {
-        return arrayDesignsToProcess;
-    }
-
     @Override
-    protected void buildOptions( Options options ) {
-        addPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
-
-        Option eeFileListOption = Option.builder( "f" ).hasArg().argName( "File containing platform identifiers" )
+    protected final void buildOptions( Options options ) {
+        if ( !explicitADsOnly ) {
+            options.addOption( "all", "all", false, "Process all platforms." );
+        }
+        addCommaDelimitedPlatformOption( options, "a", "array", "Platform ID, short name or name; or comma-delimited list of these" );
+        options.addOption( Option.builder( "f" )
+                .hasArg().argName( "File containing platform identifiers" )
                 .desc( "File with list of short names or IDs of platforms (one per line; use instead of '-a')" )
-                .longOpt( "adListFile" ).build();
-        options.addOption( eeFileListOption );
-
+                .longOpt( "adListFile" )
+                .type( Path.class )
+                .get() );
         this.addLimitingDateOption( options );
         this.addAutoOption( options );
         this.addBatchOption( options );
+        buildArrayDesignOptions( options );
+    }
+
+    protected void buildArrayDesignOptions( Options options ) {
+
     }
 
     @Override
     @OverridingMethodsMustInvokeSuper
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
+    protected final void processOptions( CommandLine commandLine ) throws ParseException {
         super.processOptions( commandLine );
+        this.all = commandLine.hasOption( "all" );
+        this.platformIdentifiers = new HashSet<>();
         if ( commandLine.hasOption( 'a' ) ) {
-            this.arraysFromCliList( commandLine );
-        } else if ( commandLine.hasOption( 'f' ) ) {
-            String experimentListFile = commandLine.getOptionValue( 'f' );
+            String[] shortNames = commandLine.getOptionValues( 'a' );
+            this.platformIdentifiers.addAll( Arrays.asList( shortNames ) );
+        }
+        if ( commandLine.hasOption( 'f' ) ) {
+            Path experimentListFile = commandLine.getParsedOptionValue( 'f' );
             log.info( "Reading arrayDesigns list from " + experimentListFile );
             try {
-                this.arrayDesignsToProcess = this.readListFile( experimentListFile );
+                this.platformIdentifiers.addAll( FileUtils.readListFileToStrings( experimentListFile ) );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
         }
+        processArrayDesignOptions( commandLine );
     }
 
-    protected ArrayDesignReportService getArrayDesignReportService() {
-        return arrayDesignReportService;
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
+
     }
 
-    protected ArrayDesignService getArrayDesignService() {
-        return arrayDesignService;
+    /**
+     * Read the reason given for {@code -markOnly}, or return null if it was not used.
+     * <p>
+     * A platform's BLAT results and gene mappings are held per sequence, so running one platform does the work for
+     * every platform that shares its sequences — but the audit event propagates only down the merge tree, leaving
+     * those platforms with fresh data and an audit trail that says they were never processed. {@code -markOnly}
+     * writes the event and nothing else.
+     * <p>
+     * The event is a claim that the work was done, so the platforms have to be ones the operator named: {@code -all},
+     * {@code -auto} and {@code -mdate} each select a set nobody enumerated.
+     *
+     * @param optionsThatDoWork options of the calling CLI that make it do work, which {@code -markOnly} contradicts
+     */
+    @Nullable
+    protected String getMarkOnlyReason( CommandLine commandLine, String... optionsThatDoWork ) throws ParseException {
+        if ( !commandLine.hasOption( MARK_ONLY_OPTION ) ) {
+            return null;
+        }
+        String reason = commandLine.getOptionValue( MARK_ONLY_OPTION );
+        if ( reason == null || reason.trim().isEmpty() ) {
+            throw new ParseException( "Give a reason with -" + MARK_ONLY_OPTION
+                    + " (e.g. 'sequences mapped by GPL6887'); it is recorded in the audit event." );
+        }
+        List<String> conflicting = new ArrayList<>();
+        for ( String option : optionsThatDoWork ) {
+            if ( commandLine.hasOption( option ) ) {
+                conflicting.add( option );
+            }
+        }
+        if ( !conflicting.isEmpty() ) {
+            throw new ParseException( "-" + MARK_ONLY_OPTION + " does no work, so it cannot be combined with -"
+                    + String.join( ", -", conflicting ) + "." );
+        }
+        for ( String option : new String[] { "all", "auto", "mdate" } ) {
+            if ( commandLine.hasOption( option ) ) {
+                throw new ParseException( "-" + MARK_ONLY_OPTION + " records that a platform was processed, "
+                        + "so name the platforms to mark with -a or -f rather than selecting them with -" + option + "." );
+            }
+        }
+        if ( !commandLine.hasOption( 'a' ) && !commandLine.hasOption( 'f' ) ) {
+            throw new ParseException( "Name the platforms to mark with -a or -f." );
+        }
+        return reason.trim();
+    }
+
+    @Override
+    protected final void doAuthenticatedWork() throws Exception {
+        Collection<ArrayDesign> arrayDesignsToProcess;
+        if ( all ) {
+            log.info( "Loading all platforms, this might take a while..." );
+            arrayDesignsToProcess = arrayDesignService.loadAll();
+        } else {
+            arrayDesignsToProcess = platformIdentifiers.stream()
+                    .map( entityLocator::locateArrayDesign )
+                    .collect( Collectors.toSet() );
+        }
+        if ( arrayDesignsToProcess.isEmpty() ) {
+            if ( selectsOwnPlatforms() ) {
+                processArrayDesigns( arrayDesignsToProcess );
+                return;
+            }
+            throw new RuntimeException( explicitADsOnly
+                    ? "No platforms matched the given options; name them with -a or -f (this command never operates on all platforms)."
+                    : "No platforms matched the given options (none named with -a or -f, and -all not given)." );
+        } else if ( arrayDesignsToProcess.size() == 1 ) {
+            setEstimatedMaxTasks( 1 );
+            log.info( "Final platform: " + arrayDesignsToProcess.iterator().next() );
+            // TODO: bypass processArrayDesigns and call processArrayDesign() directly
+            processArrayDesigns( arrayDesignsToProcess );
+        } else {
+            log.info( String.format( "Final list: %d platforms", arrayDesignsToProcess.size() ) );
+            setEstimatedMaxTasks( arrayDesignsToProcess.size() );
+            processArrayDesigns( arrayDesignsToProcess );
+        }
+    }
+
+    /**
+     * Whether the options of this CLI select platforms by some means other than {@code -a}, {@code -f} or
+     * {@code -all}.
+     * <p>
+     * If so, an empty selection from those options is not an error: {@link #processArrayDesigns(Collection)} is
+     * invoked with an empty collection and is responsible for finding its own platforms.
+     */
+    protected boolean selectsOwnPlatforms() {
+        return false;
+    }
+
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        for ( ArrayDesign arrayDesign : arrayDesigns ) {
+            try {
+                processArrayDesign( arrayDesign );
+            } catch ( Exception e ) {
+                addErrorObject( arrayDesign, e );
+            }
+        }
+    }
+
+    protected void processArrayDesign( ArrayDesign arrayDesign ) {
+
     }
 
     protected Serializable toBatchObject( @Nullable ArrayDesign object ) {
@@ -126,8 +257,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
     /**
      * @param arrayDesign the array design to check
      * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
-     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
-     *         subsuming status. (the analysis is not done as part of this call).
+     * design. In the case of subsumption, this only works if the array design has been either analyzed for
+     * subsuming status. (the analysis is not done as part of this call).
      */
     protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
@@ -149,7 +280,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
             log.warn( design + " is not a microarray platform (it doesn't have sequences) so it will not be run" );
             // not really an error, but nice to get notification.
             // TODO: use a warning instead of an error as it will cause a non-zero exit code
-            addErrorObject( design, "Skipped because it is not a microarray platform." );
+            addWarningObject( design, "Skipped because it is not a microarray platform." );
             return false;
         }
 
@@ -159,15 +290,15 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
             // not really an error, but nice to get notification.
             // TODO: use a warning instead of an error as it will cause a non-zero exit code
-            addErrorObject( design, "Skipped because it is subsumed by or merged into another design." );
+            addWarningObject( design, "Skipped because it is subsumed by or merged into another design." );
             return false;
         }
 
         if ( !this.needToRun( skipIfLastRunLaterThan, design, cls ) ) {
             if ( skipIfLastRunLaterThan != null ) {
-                addErrorObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
+                addWarningObject( design, "Skipped because it was last run after " + skipIfLastRunLaterThan );
             } else {
-                addErrorObject( design, "Seems to be up to date or is not ready to run" );
+                addWarningObject( design, "Seems to be up to date or is not ready to run" );
             }
             return false;
         }
@@ -180,7 +311,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
      * @param design a platform
      * @return related platforms
      */
-    Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
+    protected Collection<ArrayDesign> getRelatedDesigns( ArrayDesign design ) {
         Collection<ArrayDesign> toUpdate = new HashSet<>();
         toUpdate.addAll( design.getMergees() );
         toUpdate.addAll( design.getSubsumedArrayDesigns() );
@@ -191,11 +322,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
      *
      * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
      * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
-     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
+     * analysis was run before skipIfLastRunLaterThan. false otherwise.
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     // Better semantics
-    protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
+    protected boolean needToRun( @Nullable Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
         if ( isAutoSeek() ) {
@@ -215,26 +346,11 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
     }
 
-    private void arraysFromCliList( CommandLine commandLine ) {
-        String arrayShortNames = commandLine.getOptionValue( 'a' );
-        String[] shortNames = arrayShortNames.split( "," );
-
-        for ( String shortName : shortNames ) {
-            if ( StringUtils.isBlank( shortName ) )
-                continue;
-            ArrayDesign ad = entityLocator.locateArrayDesign( shortName );
-            arrayDesignsToProcess.add( ad );
-        }
-        if ( arrayDesignsToProcess.isEmpty() ) {
-            throw new RuntimeException( "There were no valid platforms specified" );
-        }
-    }
-
     /**
      * @param eventClass if null, then all events are added.
      */
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign,
-            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+            @Nullable Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : this.auditEventService.getEvents( arrayDesign ) ) {
@@ -268,7 +384,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
         }
 
         List<AuditEvent> eventsOfCurrentType = this.getEvents( arrayDesign, eventClass );
-        List<AuditEvent> allEvents = arrayDesign.getAuditTrail().getEvents();
+        List<AuditEvent> allEvents = auditEventService.getEvents( arrayDesign );
 
         if ( eventsOfCurrentType.isEmpty() ) {
             // it's never been run.
@@ -280,7 +396,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
 
         if ( lastEventOfCurrentType.getEventType() != null && eventClass.isAssignableFrom( lastEventOfCurrentType.getEventType().getClass() ) ) {
             // then definitely don't run it. The last event was the same as the one we're trying to renew.
-            log.debug( "Last event on " + arrayDesign + " was also a " + eventClass + ", skipping." );
+            log.debug( String.format( "Last event on %s was also a %s, skipping.", arrayDesign, eventClass ) );
             return false;
         }
 
@@ -300,43 +416,15 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractAutoSee
             }
 
             if ( currentEvent.getDate().after( lastEventOfCurrentType.getDate() ) ) {
-                log
-                        .info( arrayDesign + " needs update, last " + eventClass.getSimpleName() + " was before last "
-                                + currentEvent.getEventType().getClass().getSimpleName() );
+                log.info( String.format( "%s needs update, last %s was before last %s", arrayDesign,
+                        eventClass.getSimpleName(), currentEvent.getEventType().getClass().getSimpleName() ) );
                 return true;
             }
-            log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last " + currentEvent
-                    .getEventType().getClass().getSimpleName() + " (OK)" );
+            log.debug( String.format( "%s %s was after last %s (OK)", arrayDesign, eventClass.getSimpleName(),
+                    currentEvent.getEventType().getClass().getSimpleName() ) );
 
         }
         log.debug( arrayDesign + " does not need an update" );
         return false;
-    }
-
-    /**
-     * Load expression experiments based on a list of short names or IDs in a file.
-     */
-    private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
-        Set<ArrayDesign> ees = new HashSet<>();
-        for ( String eeName : FileUtils.readListFileToStrings( fileName ) ) {
-            ArrayDesign ee = arrayDesignService.findByShortName( eeName );
-            if ( ee == null ) {
-
-                try {
-                    Long id = Long.parseLong( eeName );
-                    ee = arrayDesignService.load( id );
-                    if ( ee == null ) {
-                        addErrorObject( ( ArrayDesign ) null, "No ArrayDesign found with ID " + eeName );
-                        continue;
-                    }
-                } catch ( NumberFormatException e ) {
-                    addErrorObject( ( ArrayDesign ) null, "No ArrayDesign found with ID " + eeName );
-                    continue;
-                }
-
-            }
-            ees.add( ee );
-        }
-        return ees;
     }
 }

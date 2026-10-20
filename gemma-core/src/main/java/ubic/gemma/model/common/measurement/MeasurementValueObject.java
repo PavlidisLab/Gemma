@@ -2,17 +2,23 @@ package ubic.gemma.model.common.measurement;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 
 @SuppressWarnings("unused") // Used in frontend through FVBasicVO
+@Getter
+@Setter
 public class MeasurementValueObject extends IdentifiableValueObject<Measurement> {
 
     private String value;
     private String unit;
     @JsonIgnore
     private Long unitId;
+    @Schema(implementation = MeasurementType.class)
     private String type;
+    @Schema(implementation = PrimitiveType.class)
     private String representation;
 
     public MeasurementValueObject() {
@@ -29,47 +35,5 @@ public class MeasurementValueObject extends IdentifiableValueObject<Measurement>
         this.type = measurement.getType() == null ? null : measurement.getType().name();
         this.representation =
                 measurement.getRepresentation() == null ? null : measurement.getRepresentation().name();
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public String getUnit() {
-        return unit;
-    }
-
-    public Long getUnitId() {
-        return unitId;
-    }
-
-    @Schema(implementation = MeasurementType.class)
-    public String getType() {
-        return type;
-    }
-
-    @Schema(implementation = PrimitiveType.class)
-    public String getRepresentation() {
-        return representation;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public void setUnit( String unit ) {
-        this.unit = unit;
-    }
-
-    public void setUnitId( Long unitId ) {
-        this.unitId = unitId;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
-    }
-
-    public void setRepresentation( String representation ) {
-        this.representation = representation;
     }
 }

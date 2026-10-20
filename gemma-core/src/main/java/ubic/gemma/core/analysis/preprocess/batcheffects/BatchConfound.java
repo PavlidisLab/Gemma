@@ -14,77 +14,47 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
+import lombok.Value;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-
-import java.io.Serializable;
 
 /**
  * Represents a summary of a batch effect confound.
  *
  * @author paul
  */
-@SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
-public class BatchConfound implements Serializable {
+@Value
+public class BatchConfound {
 
-    private double chiSquare;
-    private int df;
-    private BioAssaySet ee;
-    private ExperimentalFactor ef;
-    private double p;
-    private int numBatches;
-
-    public BatchConfound() {
-
-    }
-
-    public BatchConfound( BioAssaySet ee, ExperimentalFactor ef, double chiSquare, int df, double p,
-            int numBatches ) {
-        this.ee = ee;
-        this.ef = ef;
-        this.chiSquare = chiSquare;
-        this.df = df;
-        this.p = p;
-        this.numBatches = numBatches;
-    }
-
-    public double getChiSquare() {
-        return chiSquare;
-    }
-
-    public int getDf() {
-        return df;
-    }
-
-    public BioAssaySet getEe() {
-        return ee;
-    }
-
-    public ExperimentalFactor getEf() {
-        return ef;
-    }
-
-    public int getNumBatches() {
-        return numBatches;
-    }
-
-    public double getP() {
-        return p;
-    }
+    /**
+     * Experiment or subset this confound is applicable to.
+     */
+    BioAssaySet bioAssaySet;
+    /**
+     * Factor being confounded with the batches.
+     */
+    ExperimentalFactor factor;
+    double chiSquare;
+    int df;
+    double pValue;
+    /**
+     * Number of batches.
+     */
+    int numBatches;
 
     @Override
     public String toString() {
-        String name = null;
-        if ( ee instanceof ExpressionExperimentSubSet ) {
-            name = ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getShortName();
+        String name;
+        if ( bioAssaySet instanceof ExpressionExperimentSubSet ) {
+            name = ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getShortName();
         } else {
-            name = " Subset " + ee.getName() + " of " + ( ( ExpressionExperiment ) ee ).getShortName();
+            name = "Subset " + bioAssaySet.getName() + " of " + ( ( ExpressionExperiment ) bioAssaySet ).getShortName();
         }
-        return ee.getId() + "\t" + name + "\t" + ef.getId() + "\t" + ( ef.getCategory() != null ? ef.getCategory().getCategory() : ef.getName() ) + "\t"
-                + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p ) + "\t"
-                + numBatches;
+        return String.format( "%d\t%s\t%d\t%s\t%s\t%d\t%s\t%d", bioAssaySet.getId(), name, factor.getId(),
+                factor.getCategory() != null ? factor.getCategory().getCategory() : factor.getName(),
+                String.format( "%.2f", chiSquare ), df, String.format( "%.2g", pValue ), numBatches );
     }
 
 }

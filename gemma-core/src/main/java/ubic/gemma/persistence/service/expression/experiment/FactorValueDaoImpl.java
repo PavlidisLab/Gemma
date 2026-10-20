@@ -18,27 +18,28 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.AbstractNoopFilteringVoEnabledDao;
-import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.springframework.lang.Nullable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
+import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
@@ -75,17 +76,90 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     @Override
-    public Collection<FactorValue> findByValue( String valuePrefix, int maxResults ) {
+    public Slice<FactorValue> loadAll( int offset, int limit ) {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select fv from FactorValue fv join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee"
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and ee.experimentalDesign = ed" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from FactorValue where value like :q" )
-                .setParameter( "q", valuePrefix + "%" )
-                .setMaxResults( maxResults )
+        return new Slice<>( ( List<FactorValue> ) query
+                .setFirstResult( offset )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                .list(), null, offset, limit, countAllWithAcls() );
+    }
+
+    @Override
+    public Collection<Long> loadAllIds() {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select fv.id from FactorValue fv join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and ee.experimentalDesign = ed" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        //noinspection unchecked
+        return query.list();
+    }
+
+    @Override
+    public Slice<Long> loadAllIds( int offset, int limit ) {
+        Query query = getSessionFactory().getCurrentSession()
+                .createQuery( "select fv.id from FactorValue fv join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and ee.experimentalDesign = ed" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        //noinspection unchecked
+        return new Slice<>( ( List<Long> ) query
+                .setFirstResult( offset )
+                // HB6 rejects setMaxResults(<0); pagination contract treats <=0 as "no limit".
+                .setMaxResults( limit > 0 ? limit : Integer.MAX_VALUE )
+                .list(), null, offset, limit, countAllWithAcls() );
+    }
+
+    private long countAllWithAcls() {
+        Query countQuery = getSessionFactory().getCurrentSession()
+                .createQuery( "select count(fv) from FactorValue fv "
+                        + "join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and ee.experimentalDesign = ed" );
+        AclQueryUtils.addAclParameters( countQuery, ExpressionExperiment.class );
+        return ( Long ) countQuery.uniqueResult();
+    }
+
+    @Override
+    public Collection<FactorValue> findByValueStartingWith( String valuePrefix, int maxResults ) {
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select fv from FactorValue fv join fv.experimentalFactor ef join ef.experimentalDesign ed, ExpressionExperiment ee "
+                        + AclQueryUtils.formAclRestrictionClause( "ee.id" ) + " "
+                        + "and ee.experimentalDesign = ed "
+                        + "and fv.value like :q" );
+        AclQueryUtils.addAclParameters( query, ExpressionExperiment.class );
+        //noinspection unchecked
+        return query
+                .setParameter( "q", escapeLike( valuePrefix ) + "%" )
+                .setMaxResults( maxResults > 0 ? maxResults : Integer.MAX_VALUE )
+                .list();
+    }
+
+    @Override
+    public Collection<FactorValue> loadByExperimentalDesignWithCharacteristics( ExperimentalDesign ed ) {
+        // fv.measurement is mapped fetch="join" lazy="false" on FactorValue itself, so it would already
+        // ride along with the FV SELECT, but include it explicitly so the intent (and the round-trip
+        // count: one) is obvious in the query and survives future mapping changes.
+        //noinspection unchecked
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select distinct fv from FactorValue fv "
+                        + "join fv.experimentalFactor ef "
+                        + "left join fetch fv.characteristics "
+                        + "left join fetch fv.measurement "
+                        + "where ef.experimentalDesign = :ed" )
+                .setParameter( "ed", ed )
                 .list();
     }
 
     @Override
     @Deprecated
+    @Nullable
     public FactorValue loadWithOldStyleCharacteristics( Long id, boolean readOnly ) {
         boolean previousReadOnly = getSessionFactory().getCurrentSession().isDefaultReadOnly();
         try {
@@ -120,6 +194,40 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
     }
 
     @Override
+    public Map<FactorValue, Characteristic> getExperimentalFactorCategories( Collection<FactorValue> factorValues ) {
+        Map<Long, FactorValue> fvById = IdentifiableUtils.getIdMap( factorValues );
+        return QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
+                                .createQuery( "select fv.id, ef.category from FactorValue fv "
+                                        + "join fv.experimentalFactor ef "
+                                        + "where fv.id in :fvIds" ),
+                        "fvIds", fvById.keySet(), 2048 )
+                .collect( Collectors.toMap( row -> fvById.get( ( Long ) row[0] ), row -> ( Characteristic ) row[1] ) );
+    }
+
+    @Override
+    public Map<FactorValue, ExpressionExperiment> getExpressionExperimentsIgnoreAcls( Collection<FactorValue> factorValues ) {
+        Map<Long, FactorValue> fvById = IdentifiableUtils.getIdMap( factorValues );
+        Map<Long, ExpressionExperiment> eeCache = new HashMap<>();
+        return QueryUtils.<Long, Object[]>streamByBatch( getSessionFactory().getCurrentSession()
+                                .createQuery( "select fv.id, ee.id, ee.shortName, ee.name from FactorValue fv "
+                                        + "join fv.experimentalFactor ef "
+                                        + "join ef.experimentalDesign ed, ExpressionExperiment ee "
+                                        + "where ee.experimentalDesign = ed and fv.id in :fvIds" ),
+                        "fvIds", fvById.keySet(), 2048 )
+                .collect( Collectors.toMap( row -> fvById.get( ( Long ) row[0] ), row -> createEE( row, eeCache ) ) );
+    }
+
+    private ExpressionExperiment createEE( Object[] row, Map<Long, ExpressionExperiment> eeCache ) {
+        return eeCache.computeIfAbsent( ( Long ) row[1], k -> {
+            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+            ee.setId( ( Long ) row[1] );
+            ee.setShortName( ( String ) row[2] );
+            ee.setName( ( String ) row[3] );
+            return ee;
+        } );
+    }
+
+    @Override
     public void updateIgnoreAcl( FactorValue fv ) {
         update( fv );
     }
@@ -135,8 +243,10 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         // detach from any sample
         //noinspection unchecked
         List<BioMaterial> bms = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct bm from BioMaterial bm "
-                        + "join bm.factorValues fv where fv = :fv" )
+                .createQuery( "select bm from BioMaterial bm "
+                        + "join bm.factorValues fv "
+                        + "where fv = :fv "
+                        + "group by bm" )
                 .setParameter( "fv", factorValue )
                 .list();
         for ( BioMaterial bm : bms ) {
@@ -144,15 +254,23 @@ public class FactorValueDaoImpl extends AbstractNoopFilteringVoEnabledDao<Factor
         }
         log.debug( String.format( "%s was detached from %d samples.", factorValue, bms.size() ) );
 
+        // github #1497: force the BIO_MATERIAL_FACTOR_VALUES join-table deletes to run BEFORE
+        // the FACTOR_VALUE row delete that super.remove() schedules. Hibernate's default flush
+        // ordering does not guarantee collection-table mutations precede owning-side deletes on
+        // unrelated entities, so without this flush the join-table rows can still reference the
+        // FV when the FV row is deleted, tripping BIO_MATERIAL_FACTOR_VALUES_FKC. The above loop
+        // only mutates the in-memory collections; the SQL DELETE on the join table is queued
+        // until the session flushes.
+        if ( !bms.isEmpty() ) {
+            this.getSessionFactory().getCurrentSession().flush();
+        }
+
         super.remove( factorValue );
     }
 
     @Override
     public FactorValue find( FactorValue factorValue ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
-        BusinessKey.checkKey( factorValue );
-        BusinessKey.createQueryObject( queryObject, factorValue );
-        return ( FactorValue ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), factorValue );
     }
 
     @Override

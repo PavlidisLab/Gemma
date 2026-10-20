@@ -14,11 +14,15 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Gene;
@@ -28,9 +32,11 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
 
@@ -49,38 +55,46 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Override
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
-        Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                .createCriteria( AnnotationAssociation.class );
-        BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
-
-        //noinspection unchecked
-        return queryObject.list();
+        Session session = this.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<AnnotationAssociation> cq = cb.createQuery( AnnotationAssociation.class );
+        Root<AnnotationAssociation> root = cq.from( AnnotationAssociation.class );
+        List<Predicate> preds = new ArrayList<>();
+        BusinessKey.attachBioSequence( cb, root, "bioSequence", bioSequence, preds );
+        cq.select( root );
+        if ( !preds.isEmpty() ) {
+            cq.where( preds.toArray( new Predicate[0] ) );
+        }
+        return session.createQuery( cq ).list();
     }
 
     @Override
     public Collection<AnnotationAssociation> find( Gene gene ) {
-        if ( gene.getProducts().size() == 0 ) {
+        if ( gene.getProducts().isEmpty() ) {
             throw new IllegalArgumentException( "Gene has no products" );
         }
 
         Collection<AnnotationAssociation> result = new HashSet<>();
+        Session session = this.getSessionFactory().getCurrentSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
 
         for ( GeneProduct geneProduct : gene.getProducts() ) {
-
             BusinessKey.checkValidKey( geneProduct );
-            Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                    .createCriteria( AnnotationAssociation.class );
-            Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
-
+            CriteriaQuery<AnnotationAssociation> cq = cb.createQuery( AnnotationAssociation.class );
+            Root<AnnotationAssociation> root = cq.from( AnnotationAssociation.class );
+            Join<AnnotationAssociation, GeneProduct> gpJoin = root.join( "geneProduct" );
+            List<Predicate> preds = new ArrayList<>();
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
-                innerQuery.add( Restrictions.eq( "ncbiGi", geneProduct.getNcbiGi() ) );
+                preds.add( cb.equal( gpJoin.get( "ncbiGi" ), geneProduct.getNcbiGi() ) );
             }
             if ( StringUtils.isNotBlank( geneProduct.getName() ) ) {
-                innerQuery.add( Restrictions.eq( "name", geneProduct.getName() ) );
+                preds.add( cb.equal( gpJoin.get( "name" ), geneProduct.getName() ) );
             }
-
-            //noinspection unchecked
-            result.addAll( queryObject.list() );
+            cq.select( root );
+            if ( !preds.isEmpty() ) {
+                cq.where( preds.toArray( new Predicate[0] ) );
+            }
+            result.addAll( session.createQuery( cq ).list() );
         }
 
         return result;

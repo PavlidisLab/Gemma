@@ -1,10 +1,10 @@
 package ubic.gemma.core.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static ubic.gemma.core.util.StringUtils.abbreviateInBytes;
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 

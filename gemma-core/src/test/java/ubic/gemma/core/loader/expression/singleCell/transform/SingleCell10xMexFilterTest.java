@@ -1,0 +1,228 @@
+package ubic.gemma.core.loader.expression.singleCell.transform;
+
+import org.apache.commons.io.file.PathUtils;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.config.SettingsConfig;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
+import ubic.gemma.core.loader.expression.geo.model.GeoSample;
+import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.loader.expression.geo.service.*;
+import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
+import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
+import ubic.gemma.core.loader.expression.singleCell.SingleCellDataType;
+import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
+import ubic.gemma.core.loader.util.ftp.FTPConfig;
+import ubic.gemma.core.util.FileUtils;
+import ubic.gemma.core.util.test.BaseTest5;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.zip.GZIPInputStream;
+
+import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
+
+@ContextConfiguration
+@ExtendWith(NetworkAvailableExtension.class)
+public class SingleCell10xMexFilterTest extends BaseTest5 {
+
+    @Configuration
+    @TestComponent
+    @Import({ SettingsConfig.class, FTPConfig.class, SingleCellTransformationConfig.class })
+    static class Config {
+
+    }
+
+    @Autowired
+    private ApplicationContext ctx;
+
+    @Autowired
+    private FTPClientFactory ftpClientFactory;
+
+    @Value("${gemma.download.path}/singleCellData/GEO")
+    private Path downloadDir;
+
+    @Test
+    @Tag("geo")
+    @Tag("slow")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testGSM8316309() throws IOException, NoSingleCellDataFoundException {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
+        assumeThat( filter.getCellRangerExecutable() ).exists();
+        assumeThat( filter.getPythonExecutable() ).exists();
+        Path dataPath;
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            detector.setFTPClientFactory( ftpClientFactory );
+            detector.setDownloadDirectory( downloadDir );
+            GeoSample sample = readSeriesFromGeo( "GSE269482" ).getSamples().stream()
+                    .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM8316309" ) )
+                    .findFirst()
+                    .get();
+            dataPath = detector.downloadSingleCellData( sample );
+        }
+        filter.setInputFile( dataPath, SingleCellDataType.MEX );
+        Path outputFile = Files.createTempDirectory( "test" );
+        try {
+            filter.setOutputFile( outputFile, SingleCellDataType.MEX );
+            filter.setGenome( "Mus musculus" );
+            filter.setChemistry( null );
+            filter.perform();
+            assertThat( outputFile )
+                    .exists()
+                    .isDirectoryContaining( "glob:**/barcodes.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/features.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/matrix.mtx.gz" );
+            assertThat( FileUtils.openCompressedFile( outputFile.resolve( "barcodes.tsv.gz" ) ) )
+                    .asString( StandardCharsets.UTF_8 )
+                    .hasLineCount( 3484 );
+        } finally {
+            PathUtils.delete( outputFile );
+        }
+    }
+
+    /**
+     * This example uses 3 GEMs.
+     */
+    @Test
+    @Tag("geo")
+    @Tag("slow")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testGSM4871780() throws IOException, NoSingleCellDataFoundException {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
+        assumeThat( filter.getCellRangerExecutable() ).exists();
+        assumeThat( filter.getPythonExecutable() ).exists();
+        Path dataPath;
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            detector.setFTPClientFactory( ftpClientFactory );
+            detector.setDownloadDirectory( downloadDir );
+            GeoSample sample = readSeriesFromGeo( "GSE149931" ).getSamples().stream()
+                    .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM4871780" ) )
+                    .findFirst()
+                    .get();
+            dataPath = detector.downloadSingleCellData( sample );
+        }
+        filter.setInputFile( dataPath, SingleCellDataType.MEX );
+        Path outputFile = Files.createTempDirectory( "test" );
+        try {
+            filter.setOutputFile( outputFile, SingleCellDataType.MEX );
+            filter.setGenome( "Mus musculus" );
+            filter.setChemistry( null );
+            filter.perform();
+            assertThat( outputFile )
+                    .exists()
+                    .isDirectoryContaining( "glob:**/barcodes.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/features.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/matrix.mtx.gz" );
+            assertThat( FileUtils.openCompressedFile( outputFile.resolve( "barcodes.tsv.gz" ) ) )
+                    .asString( StandardCharsets.UTF_8 )
+                    .hasLineCount( 19157 );
+        } finally {
+            PathUtils.delete( outputFile );
+        }
+    }
+
+    @Test
+    @Tag("geo")
+    @Tag("slow")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testGSM3559978() throws IOException, NoSingleCellDataFoundException {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
+        assumeThat( filter.getCellRangerExecutable() ).exists();
+        assumeThat( filter.getPythonExecutable() ).exists();
+        Path dataPath;
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            detector.setFTPClientFactory( ftpClientFactory );
+            detector.setDownloadDirectory( downloadDir );
+            GeoSample sample = readSeriesFromGeo( "GSE124952" ).getSamples().stream()
+                    .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM3559978" ) )
+                    .findFirst()
+                    .get();
+            dataPath = detector.downloadSingleCellData( sample );
+        }
+        filter.setInputFile( dataPath, SingleCellDataType.MEX );
+        Path outputFile = Files.createTempDirectory( "test" );
+        try {
+            filter.setOutputFile( outputFile, SingleCellDataType.MEX );
+            filter.setGenome( "Mus musculus" );
+            filter.setChemistry( null );
+            filter.perform();
+            assertThat( outputFile )
+                    .exists()
+                    .isDirectoryContaining( "glob:**/barcodes.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/features.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/matrix.mtx.gz" );
+            assertThat( FileUtils.openCompressedFile( outputFile.resolve( "barcodes.tsv.gz" ) ) )
+                    .asString( StandardCharsets.UTF_8 )
+                    .hasLineCount( 1468 );
+        } finally {
+            PathUtils.delete( outputFile );
+        }
+    }
+
+    @Test
+    @Disabled("Filtering old 10x datasets without GEMs is not supported.")
+    public void testGSM6925121() throws IOException, NoSingleCellDataFoundException {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
+        assumeThat( filter.getCellRangerExecutable() ).exists();
+        assumeThat( filter.getPythonExecutable() ).exists();
+        Path dataPath;
+        try ( GeoSingleCellDetector detector = new GeoSingleCellDetector() ) {
+            detector.setFTPClientFactory( ftpClientFactory );
+            detector.setDownloadDirectory( downloadDir );
+            GeoSample sample = readSeriesFromGeo( "GSE222510" ).getSamples().stream()
+                    .filter( s -> s.getGeoAccession() != null && s.getGeoAccession().equals( "GSM6925121" ) )
+                    .findFirst()
+                    .get();
+            dataPath = detector.downloadSingleCellData( sample );
+        }
+        filter.setInputFile( dataPath, SingleCellDataType.MEX );
+        Path outputFile = Files.createTempDirectory( "test" );
+        try {
+            filter.setOutputFile( outputFile, SingleCellDataType.MEX );
+            filter.setGenome( "Mus musculus" );
+            filter.setChemistry( null );
+            filter.perform();
+            assertThat( outputFile )
+                    .exists()
+                    .isDirectoryContaining( "glob:**/barcodes.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/features.tsv.gz" )
+                    .isDirectoryContaining( "glob:**/matrix.mtx.gz" );
+            assertThat( FileUtils.openCompressedFile( outputFile.resolve( "barcodes.tsv.gz" ) ) )
+                    .asString( StandardCharsets.UTF_8 )
+                    .hasLineCount( 1468 );
+        } finally {
+            PathUtils.delete( outputFile );
+        }
+    }
+
+    private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
+        URL url = GeoUtils.getUrl( accession, GeoSource.FTP, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
+        try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
+            GeoFamilyParser parser = new GeoFamilyParser();
+            parser.parse( is );
+            return requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );
+        }
+    }
+}

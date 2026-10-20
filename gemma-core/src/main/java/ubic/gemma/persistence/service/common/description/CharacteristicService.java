@@ -28,7 +28,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.FilteringVoEnabledService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +42,8 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     /**
      * Browse through the characteristics, excluding GO annotations.
      *
-     * @param  start How far into the list to start
-     * @param  limit Maximum records to retrieve
+     * @param start How far into the list to start
+     * @param limit Maximum records to retrieve
      * @return characteristics
      */
     List<Characteristic> browse( int start, int limit );
@@ -51,21 +51,27 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     /**
      * Browse through the characteristics, excluding GO annotations.
      *
-     * @param  start      How far into the list to start
-     * @param  limit      Maximum records to retrieve
-     * @param  sortField  sort field
-     * @param  descending sor order
+     * @param start      How far into the list to start
+     * @param limit      Maximum records to retrieve
+     * @param sortField  sort field
+     * @param descending sor order
      * @return characteristics
      */
     List<Characteristic> browse( int start, int limit, String sortField, boolean descending );
 
     /**
-     * @see CharacteristicDao#findExperimentsByUris(Collection, Taxon, int, boolean)
+     * @see CharacteristicDao#findExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, int, boolean)
      */
-    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
+    Map<Class<? extends Identifiable>, Map<String, Set<ExpressionExperiment>>> findExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, int limit, boolean loadEEs, boolean rankByLevel );
+
+    /**
+     * @see CharacteristicDao#countExperimentsByUris(Collection, boolean, boolean, boolean, Taxon, Collection)
+     */
+    Map<String, Long> countExperimentsByUris( Collection<String> uris, boolean includeSubjects, boolean includePredicates, boolean includeObjects, @Nullable Taxon taxon, Collection<Long> excludedExperimentIds );
 
     /**
      * Find characteristics that have a particular parent class or lack thereof.
+     *
      * @throws IllegalArgumentException if parentClasses is
      */
     Collection<Characteristic> findByParentClasses( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, @Nullable String category, int maxResults );
@@ -82,6 +88,14 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Characteristic findBestByUri( String uri );
 
     /**
+     * For each value URI, return one representative ACL-visible usage (or omit it when none is accessible), so
+     * a search hit can be shown in the context it has actually been applied.
+     *
+     * @see CharacteristicDao#findRepresentativeUsageByValueUris(Collection)
+     */
+    Map<String, CharacteristicDao.UsageExample> findRepresentativeUsageByValueUris( Collection<String> valueUris );
+
+    /**
      * Returns a collection of characteristics that have a value starting with the given string.
      * <p>
      * The value is usually a human-readable form of the termURI. SQL {@code LIKE} patterns are escaped. Use
@@ -96,22 +110,49 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
 
     /**
      * Find characteristics that have a value (prefix) or value URI (exact match) matching the given string.
+     *
+     * @param parentClasses    if not null, restrict to characteristics that have parents of the given classes.
+     * @param includeNoParents if true, include characteristics that have no parents.
      * @see CharacteristicDao#findByValueLikeGroupedByNormalizedValue(String, Collection, boolean)
      * @see CharacteristicDao#findByValueUriGroupedByNormalizedValue(String, Collection, boolean)
-     * @param parentClasses if not null, restrict to characteristics that have parents of the given classes.
-     * @param includeNoParents if true, include characteristics that have no parents.
      */
     Map<String, Characteristic> findByValueUriOrValueStartingWith( String search, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     Map<String, Long> countByValueUri( Collection<String> uris, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents );
 
     /**
-     * @see CharacteristicDao#getParents(Collection, Collection, boolean)
+     * @see CharacteristicDao#findEeCountsByUriGroupedByCategory(Collection)
+     */
+    Map<String, Map<String, Long>> findEeCountsByUriGroupedByCategory( Collection<String> uris );
+
+    /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue );
+
+    /**
+     * @see CharacteristicDao#findEeCountsByUriForOriginalValue(Collection, String, Collection)
+     */
+    Map<String, Long> findEeCountsByUriForOriginalValue( Collection<String> uris, String originalValue, Collection<Long> excludedExperimentIds );
+
+    /**
+     * @see CharacteristicDao#findPriorCurationByOriginalValue(String, int, Collection)
+     */
+    List<CharacteristicDao.PriorCurationUsage> findPriorCurationByOriginalValue( String originalValue, int maxResults, Collection<Long> excludedExperimentIds );
+
+    /**
+     * @see CharacteristicDao#findValueGroupedByValueUri(Collection, boolean, boolean, boolean, int)
+     */
+    Map<String, String> findValueGroupedByValueUri( @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean includePredicates, boolean includeObjects, int maxResults );
+
+    /**
      * @param thawParents if true, the parents will be initialized if they are proxies
+     * @see CharacteristicDao#getParents(Collection, Collection, boolean)
      */
     @Secured({ "GROUP_ADMIN" })
     // FIXME: this is too slow when large number of results are returned
-    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    //        @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    //        @PostFilter("hasPermission(filterObject.value, 'READ') or hasPermission(filterObject.value, 'ADMINISTRATION')")
     Map<Characteristic, Identifiable> getParents( Collection<Characteristic> characteristics, @Nullable Collection<Class<? extends Identifiable>> parentClasses, boolean includeNoParents, boolean thawParents );
 
     //    /**
@@ -154,10 +195,30 @@ public interface CharacteristicService extends BaseService<Characteristic>, Filt
     Characteristic create( Characteristic c );
 
     @Override
-    @Secured({ "GROUP_ADMIN" })
-    void remove( Long id );
+    @Secured({ "GROUP_USER" })
+    Collection<Characteristic> create( Collection<Characteristic> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Collection<Characteristic> save( Collection<Characteristic> entities );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    Characteristic save( Characteristic entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Characteristic entity );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void update( Collection<Characteristic> entities );
 
     @Override
     @Secured({ "GROUP_USER" })
     void remove( Characteristic c );
+
+    @Override
+    @Secured({ "GROUP_USER" })
+    void remove( Collection<Characteristic> entities );
 }

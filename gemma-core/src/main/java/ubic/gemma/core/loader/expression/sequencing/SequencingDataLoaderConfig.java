@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import ubic.gemma.core.loader.expression.DataLoaderConfig;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.file.Path;
 
 /**

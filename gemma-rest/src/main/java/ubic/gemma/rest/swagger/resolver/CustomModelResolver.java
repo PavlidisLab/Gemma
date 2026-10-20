@@ -13,21 +13,24 @@ import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.MarkdownUtils;
 import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.rest.SearchWebService;
 import ubic.gemma.rest.util.args.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.nio.charset.StandardCharsets;
@@ -45,25 +48,25 @@ import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
  * @author poirigui
  */
 @Component
-@CommonsLog
+@Slf4j
+@ParametersAreNonnullByDefault
 public class CustomModelResolver extends ModelResolver {
-
-    private final SearchService searchService;
 
     @Autowired
     private List<EntityArgService<?, ?>> entityArgServices;
 
     @Autowired
-    private MessageSource messageSource;
+    private SearchService searchService;
 
     @Autowired
-    public CustomModelResolver( SearchService searchService ) {
+    private MessageSource messageSource;
+
+    public CustomModelResolver() {
         super( Json.mapper() );
-        this.searchService = searchService;
     }
 
     @Override
-    public Schema resolve( AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain ) {
+    public Schema<?> resolve( AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain ) {
         JavaType t;
         if ( type.getType() instanceof JavaType ) {
             t = ( JavaType ) type.getType();
@@ -73,11 +76,12 @@ public class CustomModelResolver extends ModelResolver {
         if ( t.isTypeOrSubTypeOf( FilterArg.Filter.class ) || t.isTypeOrSubTypeOf( SortArg.Sort.class ) ) {
             return null; // ignore those...
         } else if ( t.isTypeOrSubTypeOf( FilterArg.class ) || t.isTypeOrSubTypeOf( SortArg.class ) || t.isTypeOrSubTypeOf( QueryArg.class ) ) {
-            Schema resolved = super.resolve( type, context, chain );
+            Schema<?> resolved = super.resolve( type, context, chain );
             String ref = resolved.get$ref();
             // FilterArg and SortArg schemas in parameters are refs to globally-defined schemas and those are
             // unfortunately not holding the right type, so we need to override them
             // see https://github.com/PavlidisLab/Gemma/issues/524 for details
+            //noinspection unchecked
             context.getDefinedModels()
                     .get( ref.replaceFirst( "^#/components/schemas/", "" ) )
                     .type( "string" )
@@ -86,10 +90,11 @@ public class CustomModelResolver extends ModelResolver {
         } else if ( t.isTypeOrSubTypeOf( Arg.class ) && t.getRawClass() != null ) {
             // I'm suspecting there's a bug in Swagger that causes request parameters annotations to shadow the
             // definitions in the class's Schema annotation
-            Schema resolvedSchema = super.resolve( new AnnotatedType( t.getRawClass() ), context, chain );
+            Schema<?> resolvedSchema = super.resolve( new AnnotatedType( t.getRawClass() ), context, chain );
             // There's a bug with abstract class such as TaxonArg and GeneArg that result in the schema containing 'type'
             // and 'properties' fields instead of solely emitting the oneOf
             if ( t.isAbstract() ) {
+                //noinspection unchecked
                 return resolvedSchema.type( null ).properties( null );
             } else {
                 return resolvedSchema;
@@ -100,14 +105,14 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     /**
-     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search(QueryArg, TaxonArg, PlatformArg, List, LimitArg, ExcludeArg)}
+     * Resolves allowed values for the {@link ubic.gemma.rest.SearchWebService#search}
      * resultTypes argument.
      * <p>
      * This ensures that the OpenAPI specification exposes all supported search result types in the {@link SearchService} as
      * allowable values.
      */
     @Override
-    protected List<String> resolveAllowableValues( Annotated a, Annotation[] annotations, io.swagger.v3.oas.annotations.media.Schema schema ) {
+    protected List<String> resolveAllowableValues( Annotated a, Annotation[] annotations, @Nullable io.swagger.v3.oas.annotations.media.Schema schema ) {
         if ( schema != null && schema.name().equals( SearchWebService.RESULT_TYPES_SCHEMA_NAME ) ) {
             return searchService.getSupportedResultTypes().stream().map( Class::getName ).collect( Collectors.toList() );
         }
@@ -115,7 +120,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     @Override
-    protected String resolveDescription( Annotated a, Annotation[] annotations, io.swagger.v3.oas.annotations.media.Schema schema ) {
+    protected String resolveDescription( @Nullable Annotated a, Annotation[] annotations, @Nullable io.swagger.v3.oas.annotations.media.Schema schema ) {
         String description = super.resolveDescription( a, annotations, schema );
 
         // append available properties to the description
@@ -127,7 +132,7 @@ public class CustomModelResolver extends ModelResolver {
         if ( a != null && QueryArg.class.isAssignableFrom( a.getRawType() ) ) {
             try {
                 return ( description != null ? description + "\n\n" : "" )
-                        + IOUtils.toString( new ClassPathResource( "/restapidocs/fragments/QueryType.md" ).getInputStream(), StandardCharsets.UTF_8 )
+                        + IOUtils.toString( new ClassPathResource( "/restapidocs/fragments/QueryArg.md" ).getInputStream(), StandardCharsets.UTF_8 )
                         // this part of the template is using embedded HTML in Markdown
                         .replace( "{searchableProperties}", getSearchableProperties().entrySet().stream()
                                 .map( e -> "<h2>" + escapeHtml4( e.getKey() ) + "</h2>"
@@ -142,7 +147,7 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     @Override
-    protected Map<String, Object> resolveExtensions( Annotated a, Annotation[] annotations, io.swagger.v3.oas.annotations.media.Schema schema ) {
+    protected Map<String, Object> resolveExtensions( @Nullable Annotated a, Annotation[] annotations, @Nullable io.swagger.v3.oas.annotations.media.Schema schema ) {
         Map<String, Object> extensions = super.resolveExtensions( a, annotations, schema );
         if ( a != null && ( FilterArg.class.isAssignableFrom( a.getRawType() ) || SortArg.class.isAssignableFrom( a.getRawType() ) ) ) {
             extensions = extensions != null ? new HashMap<>( extensions ) : new HashMap<>();
@@ -158,13 +163,18 @@ public class CustomModelResolver extends ModelResolver {
     }
 
     private final Comparator<String> FIELD_COMPARATOR = Comparator
-            .comparing( ( String s ) -> StringUtils.countOccurrencesOf( s, "." ), Comparator.naturalOrder() )
+            .comparing( ( String s ) -> StringUtils.countMatches( s, '.' ), Comparator.naturalOrder() )
             .thenComparing( s -> s );
 
     private Map<String, List<String>> getSearchableProperties() {
         Map<String, List<String>> sp = new HashMap<>();
         for ( Class<? extends Identifiable> resultType : searchService.getSupportedResultTypes() ) {
-            List<String> fields = searchService.getFields( resultType ).stream().sorted( FIELD_COMPARATOR ).collect( Collectors.toList() );
+            List<String> fields = searchService
+                    // use accurate search mode to make sure we capture all the fields
+                    .getFields( resultType, SearchSettings.SearchMode.ACCURATE )
+                    .stream()
+                    .sorted( FIELD_COMPARATOR )
+                    .collect( Collectors.toList() );
             if ( !fields.isEmpty() ) {
                 sp.put( resultType.getName(), fields );
             }
@@ -183,6 +193,8 @@ public class CustomModelResolver extends ModelResolver {
         @Nullable
         @JsonInclude(JsonInclude.Include.NON_NULL)
         SecurityRequirement security;
+        @JsonInclude(JsonInclude.Include.NON_DEFAULT)
+        boolean deprecated;
     }
 
     @Value
@@ -211,10 +223,11 @@ public class CustomModelResolver extends ModelResolver {
                 .sorted()
                 .map( p -> new FilterablePropMeta( p,
                         resolveType( SimpleType.constructUnsafe( filteringService.getFilterablePropertyType( p ) ) )
-                                + ( filteringService.getFilterablePropertyIsUsingSubquery( p ) ? "[]" : "" ),
+                                + ( filteringService.isFilterablePropertyUsingSubquery( p ) ? "[]" : "" ),
                         filteringService.getFilterablePropertyDescription( p ),
                         resolveAllowedValues( filteringService, p, locale ),
-                        securityRequirementFromConfigAttributes( filteringService.getFilterablePropertyConfigAttributes( p ) ) ) )
+                        securityRequirementFromConfigAttributes( filteringService.getFilterablePropertyConfigAttributes( p ) ),
+                        filteringService.isFilterablePropertyDeprecated( p ) ) )
                 .collect( Collectors.toList() );
     }
 
@@ -248,10 +261,14 @@ public class CustomModelResolver extends ModelResolver {
     private String resolveAvailablePropertiesAsString( Annotated a ) {
         return String.format( "Available properties:\n\n%s",
                 resolveAvailableProperties( a ).stream()
-                        .map( p -> String.format( "- %s `%s`%s",
-                                p.name,
-                                p.type,
-                                resolvePropDescription( p ) ) )
+                        .map( p -> "- "
+                                + ( p.deprecated ? "<s>" : "" )
+                                + MarkdownUtils.escapeMarkdown( p.name )
+                                + ( p.deprecated ? "</s>" : "" )
+                                + " "
+                                + MarkdownUtils.formatMarkdownCodeSpan( p.type )
+                                + MarkdownUtils.escapeMarkdown( resolvePropDescription( p ) )
+                        )
                         .collect( Collectors.joining( "\n" ) ) );
     }
 

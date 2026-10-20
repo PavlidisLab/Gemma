@@ -23,10 +23,11 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.completion.CompletionUtils;
 import ubic.gemma.cli.util.EnumeratedByCommandStringConverter;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 
@@ -38,6 +39,9 @@ import java.util.*;
  * @author pavlidis
  */
 public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipulatingCli {
+
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private Collection<String> otherArrayDesignNames;
     private boolean allWays = false;
@@ -55,40 +59,38 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
         Option otherArrayDesignOption = Option.builder( "o" ).required().hasArg().argName( "Other platform" )
                 .desc( "Short name(s) of platforms to compare to the first one, comma-delimited" )
                 .longOpt( "other" )
                 .converter( EnumeratedByCommandStringConverter.of( CompletionUtils.generateCompleteCommand( CompletionType.PLATFORM ) ) )
                 .build();
-        Option allways = Option.builder( "all" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
+        Option allways = Option.builder( "allWays" ).desc( "Test all platforms listed against all (not just to the first one)" ).build();
 
         options.addOption( otherArrayDesignOption );
         options.addOption( allways );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         if ( commandLine.hasOption( 'o' ) ) {
             String otherArrayDesignName = commandLine.getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesignName, ',' );
             this.otherArrayDesignNames = new HashSet<>();
             this.otherArrayDesignNames.addAll( Arrays.asList( names ) );
         }
-        this.allWays = commandLine.hasOption( "all" );
+        this.allWays = commandLine.hasOption( "allWays" );
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
-        if ( this.getArrayDesignsToProcess().size() > 1 ) {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
+        if ( arrayDesignsToProcess.size() > 1 ) {
             throw new IllegalArgumentException(
                     "Cannot be applied to more than one array design given to the '-a' option" );
         }
 
-        ArrayDesign arrayDesign = this.getArrayDesignsToProcess().iterator().next();
-        arrayDesign = getArrayDesignService().thaw( arrayDesign );
+        ArrayDesign arrayDesign = arrayDesignsToProcess.iterator().next();
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
         if ( arrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
             throw new IllegalArgumentException( // note that GENELIST is also invalid but this is the likely case that could be encountered
                     "This tool is only for microarray platforms; " + arrayDesign.getShortName() + " is a sequencing platform" );
@@ -104,7 +106,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
                 continue;
             }
 
-            otherArrayDesign = getArrayDesignService().thaw( otherArrayDesign );
+            otherArrayDesign = arrayDesignService.thaw( otherArrayDesign );
 
             if ( otherArrayDesign.getTechnologyType().equals( TechnologyType.SEQUENCING ) ) {
                 throw new IllegalArgumentException(
@@ -114,7 +116,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
             if ( allWays ) {
                 allToCompare.add( otherArrayDesign );
             } else {
-                Boolean aSubsumes = this.getArrayDesignService().updateSubsumingStatus( arrayDesign, otherArrayDesign );
+                Boolean aSubsumes = arrayDesignService.updateSubsumingStatus( arrayDesign, otherArrayDesign );
             }
 //            if ( !aSubsumes ) {
 //                // test other way around, but only if first way failed (to avoid cycles)
@@ -137,7 +139,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
                     log.info( "--- comparing " + a.getShortName() + " to " + b.getShortName() );
 
-                    boolean subsumes = this.getArrayDesignService().updateSubsumingStatus( a, b );
+                    boolean subsumes = arrayDesignService.updateSubsumingStatus( a, b );
 
                     if ( subsumes ) {
                         done.add( b );
@@ -151,6 +153,6 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSubsumeCheckEvent.class, note );
+        cliArrayDesignAuditService.recordSubsumeCheck( arrayDesign, note );
     }
 }

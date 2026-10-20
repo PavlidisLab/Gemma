@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * The updating of the sequences associated with an ArrayDesign
  */
+@Entity
+@DiscriminatorValue("ArrayDesignSequenceUpdateEvent")
 public class ArrayDesignSequenceUpdateEvent extends ArrayDesignAnalysisEvent {
 
 }

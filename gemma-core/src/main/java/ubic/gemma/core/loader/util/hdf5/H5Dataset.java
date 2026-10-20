@@ -3,7 +3,7 @@ package ubic.gemma.core.loader.util.hdf5;
 import hdf.hdf5lib.HDF5Constants;
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.WillClose;
 import java.util.Optional;
 
@@ -24,7 +24,7 @@ public class H5Dataset implements AutoCloseable {
     private final long datasetId;
 
     private H5Dataset( long datasetId ) {
-        Assert.isTrue( datasetId != H5I_INVALID_HID );
+        Assert.isTrue( datasetId != H5I_INVALID_HID , "expected true");
         this.datasetId = datasetId;
     }
 

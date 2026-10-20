@@ -1,15 +1,17 @@
 package ubic.gemma.persistence.service.maintenance;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
+import ubic.gemma.core.util.test.TestAuthenticationUtils;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -21,21 +23,26 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author poirigui
  */
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class TableMaintenanceUtilIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
 
+    @Autowired
+    private TestAuthenticationUtils testAuthenticationUtils;
+
     @Value("${gemma.gene2cs.path}")
     private Path gene2CsPath;
 
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void removeGene2CsStatusFileAndDirectory() {
         File f = gene2CsPath.toFile();
         if ( f.exists() ) {
@@ -46,16 +53,28 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
     }
 
     @Test
+    @WithMockUser(authorities = "GROUP_ADMIN")
+    public void test() {
+        tableMaintenanceUtil.updateGene2CsEntries();
+        assertThatThrownBy( () -> tableMaintenanceUtil.updateGene2CsEntries( new Date(), true, true ) )
+                .isInstanceOf( IllegalArgumentException.class );
+        tableMaintenanceUtil.updateGene2CsEntries( null, true, true );
+        ArrayDesign ad = new ArrayDesign();
+        ad.setId( 1L );
+        tableMaintenanceUtil.updateGene2CsEntries( ad, true );
+    }
+
+    @Test
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testWhenUserIsAgent() {
         tableMaintenanceUtil.updateGene2CsEntries();
         assertThat( gene2CsPath ).exists();
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     public void testWhenUserIsAnonymous() {
-        this.runAsAnonymous();
-        tableMaintenanceUtil.updateGene2CsEntries();
+        testAuthenticationUtils.runAsAnonymous();
+        assertThrows( AccessDeniedException.class, () -> tableMaintenanceUtil.updateGene2CsEntries() );
     }
 
     @Test
@@ -70,17 +89,24 @@ public class TableMaintenanceUtilIntegrationTest extends BaseSpringContextTest {
         tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( new Date(), false );
         assertThatThrownBy( () -> tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( new Date(), true ) )
                 .isInstanceOf( IllegalArgumentException.class );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, null );
+        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( ee, ExperimentalDesign.class );
     }
 
-    @Test(expected = AccessDeniedException.class)
+    @Test
     public void testUpdateEE2CAsUser() {
-        this.runAsAnonymous();
-        tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false );
+        testAuthenticationUtils.runAsAnonymous();
+        assertThrows( AccessDeniedException.class, () -> tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( null, false ) );
     }
 
     @Test
     @WithMockUser(authorities = "GROUP_AGENT")
     public void testUpdateExpressionExperiment2ArrayDesignEntries() {
-        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( null );
+        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( null, false );
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        tableMaintenanceUtil.updateExpressionExperiment2ArrayDesignEntries( ee );
     }
 }

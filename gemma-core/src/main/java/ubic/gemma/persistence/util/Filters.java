@@ -3,7 +3,7 @@ package ubic.gemma.persistence.util;
 import lombok.EqualsAndHashCode;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -222,6 +222,7 @@ public class Filters implements Iterable<List<Filter>> {
                 .filter( conjunction -> !conjunction.isEmpty() )
                 .map( conjunction -> conjunction.stream()
                         .map( f -> withOriginalProperties ? f.toOriginalString() : f.toString() )
+                        .distinct()
                         .collect( Collectors.joining( " or " ) ) )
                 .collect( Collectors.joining( " and " ) );
     }

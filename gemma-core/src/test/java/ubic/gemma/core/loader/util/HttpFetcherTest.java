@@ -18,39 +18,61 @@
  */
 package ubic.gemma.core.loader.util;
 
-import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
-import ubic.gemma.core.util.test.category.SlowTest;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
-@Category(SlowTest.class)
-public class HttpFetcherTest extends TestCase {
+public class HttpFetcherTest {
 
     private static final Log log = LogFactory.getLog( HttpFetcherTest.class.getName() );
     private File f;
 
+    /**
+     * Regression guard for the Settings-retirement refactor (commit {@code f31cba192d}):
+     * {@link HttpFetcher#fetch(String)} no longer reads {@code gemma.download.path} from
+     * {@code Settings}; the caller must call {@link HttpFetcher#setLocalBasePath} first.
+     * This test runs WITHOUT network access — the precondition fires before any fetch
+     * attempt, so it stays in the fast default-run suite (no {@code @Tag("slow")}).
+     */
+    @Test
+    public void fetch_withoutSetLocalBasePath_throwsIllegalState() {
+        HttpFetcher fetcher = new HttpFetcher();
+        IllegalStateException ise = assertThrows( IllegalStateException.class,
+                () -> fetcher.fetch( "http://example.invalid/anything" ) );
+        assertTrue( ise.getMessage().contains( "localBasePath" ),
+                "exception message should explain the missing setter: " + ise.getMessage() );
+    }
+
     /*
      * Test method for 'ubic.gemma.core.loader.loaderutils.HttpFetcher.fetch(String)'
      */
+    @Test
+    @Tag("slow")
     public void testFetch() {
         HttpFetcher hf = new HttpFetcher();
+        hf.setLocalBasePath( System.getProperty( "java.io.tmpdir" ) );
 
         try {
             hf.setForce( true );
             Collection<File> results = hf.fetch( "http://www.yahoo.com" );
-            TestCase.assertNotNull( results );
-            TestCase.assertTrue( results.size() > 0 && results.iterator().next() != null );
+            assertNotNull( results );
+            assertTrue( results.size() > 0 && results.iterator().next() != null );
             f = results.iterator().next();
-            TestCase.assertTrue( f.length() > 0 );
+            assertTrue( f.length() > 0 );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException ) {
                 HttpFetcherTest.log.error( "Got IOException, skipping test" );
@@ -59,9 +81,8 @@ public class HttpFetcherTest extends TestCase {
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored") // Does not matter
-    @Override
+    @AfterEach
     protected void tearDown() throws Exception {
-        super.tearDown();
         if ( f != null ) {
             f.delete();
             f.getParentFile().delete();

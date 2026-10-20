@@ -1,6 +1,7 @@
 package ubic.gemma.core.logging.log4j;
 
 import com.slack.api.Slack;
+import com.slack.api.SlackConfig;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.model.Attachment;
@@ -27,7 +28,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.util.Assert;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.util.*;
 
@@ -71,17 +72,30 @@ public class SlackAppender extends AbstractAppender {
         return new Builder();
     }
 
+    // volatile: written under synchronized in getSlackInstance() / setSlackInstance(),
+    // but read unsynchronized in stop() — without volatile, stop() may observe a stale null
+    // (and skip close()) or an under-published reference on another thread's first access.
     @Nullable
-    private Slack slackInstance;
+    private volatile Slack slackInstance;
 
     private final String token;
     private final String channel;
+    /**
+     * Whether a usable token was supplied.
+     * <p>
+     * 🛑 An unresolved {@code ${gemma.slack.token}} is not a token. A deployment that does not set
+     * one gets the placeholder verbatim, and every ERROR then became three lines instead of one:
+     * the error, a Slack SDK warning, and {@code auth.test API (error: invalid_auth)} from the
+     * failed post. Measured on frink during the GEO metadata backfill, 2026-08-29.
+     */
+    private final boolean configured;
     private final MessageSource messageSource;
 
     private SlackAppender( final String name, final Filter filter, final boolean ignoreExceptions, final Property[] properties, String token, String channel ) {
         super( name, filter, null, ignoreExceptions, properties );
         this.token = token;
         this.channel = channel;
+        this.configured = token != null && !token.trim().isEmpty() && !token.contains( "${" );
         ReloadableResourceBundleMessageSource bundle = new ReloadableResourceBundleMessageSource();
         bundle.setBasenames( "classpath:ubic/gemma/core/logging/log4j/messages" );
         this.messageSource = bundle;
@@ -94,11 +108,19 @@ public class SlackAppender extends AbstractAppender {
 
     @Override
     public void append( LogEvent loggingEvent ) {
+        if ( !configured ) {
+            // nowhere to post; the event has already gone to the console, the file and the error file
+            return;
+        }
         try {
             Locale locale = Locale.getDefault();
             ChatPostMessageRequest.ChatPostMessageRequestBuilder request = ChatPostMessageRequest.builder()
                     .channel( channel )
                     .metadata( metadataFromLogEvent( loggingEvent ) )
+                    // the blocks carry the real content; `text` is the fallback Slack uses where
+                    // blocks cannot be rendered -- push notifications, screen readers -- and
+                    // omitting it makes the SDK warn on every single post
+                    .text( loggingEvent.getMessage().getFormattedMessage() )
                     .blocks( blocksFromLogEvent( loggingEvent, locale ) );
 
             // attach a stacktrace if available
@@ -112,10 +134,18 @@ public class SlackAppender extends AbstractAppender {
     }
 
     private synchronized Slack getSlackInstance() {
-        if ( slackInstance == null ) {
-            slackInstance = Slack.getInstance();
+        Slack instance = slackInstance;
+        if ( instance == null ) {
+            // Use a fresh SlackConfig (NOT SlackConfig.DEFAULT) so that the metrics-datastore
+            // background thread + per-config ThreadPools are owned by THIS instance and can
+            // actually be released on stop(). Slack.getInstance() (the JVM-static singleton)
+            // would otherwise reuse SlackConfig.DEFAULT whose close() is a no-op, leaking
+            // the "slack-api-metrics" ScheduledExecutorService across Tomcat redeploys (#1074).
+            instance = Objects.requireNonNull( Slack.getInstance( new SlackConfig() ),
+                    "Slack.getInstance(SlackConfig) returned null" );
+            slackInstance = instance;
         }
-        return slackInstance;
+        return instance;
     }
 
     @Override

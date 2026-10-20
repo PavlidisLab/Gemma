@@ -19,6 +19,10 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Used to indicate that the suitability status of an experiment is the default. This should be used only after an
  * {@link UnsuitableForDifferentialExpressionAnalysisEvent}
@@ -26,6 +30,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * @author paul
  */
+@Entity
+@DiscriminatorValue("ResetSuitabilityForDifferentialExpressionAnalysisEvent")
 public class ResetSuitabilityForDifferentialExpressionAnalysisEvent extends DifferentialExpressionSuitabilityEvent {
 
 }

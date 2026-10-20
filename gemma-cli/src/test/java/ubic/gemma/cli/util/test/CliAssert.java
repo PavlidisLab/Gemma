@@ -4,9 +4,10 @@ import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ByteArrayAssert;
+import org.assertj.core.api.ThrowableAssert;
 import org.assertj.core.description.Description;
 import ubic.gemma.cli.util.CLI;
-import ubic.gemma.cli.util.TestCliContext;
+import ubic.gemma.cli.util.TestCLIContext;
 import ubic.gemma.core.util.ShellUtils;
 
 import java.io.*;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class CliAssert extends AbstractAssert<CliAssert, CLI> {
 
-    private final TestCliContext cliContext = new TestCliContext( null, new String[0] );
+    private final TestCLIContext cliContext = new TestCLIContext( null, new String[0] );
     private final ByteArrayOutputStream in = new ByteArrayOutputStream();
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private final ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -92,7 +93,8 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
      * Asserts that the command succeeds with a zero exit status.
      */
     public CliAssert succeeds() {
-        objects.assertEqual( info, actual.executeCommand( cliContext ), 0 );
+        actual.executeCommand( cliContext );
+        objects.assertEqual( info, cliContext.getExitStatus(), 0 );
         return myself;
     }
 
@@ -100,7 +102,8 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
      * Assert that the command fails.
      */
     public CliAssert fails() {
-        objects.assertNotEqual( info, actual.executeCommand( cliContext ), 0 );
+        actual.executeCommand( cliContext );
+        objects.assertNotEqual( info, cliContext.getExitStatus(), 0 );
         return myself;
     }
 
@@ -108,8 +111,13 @@ public class CliAssert extends AbstractAssert<CliAssert, CLI> {
      * Assert that the command fails with the given exit status.
      */
     public CliAssert failsWith( int exitStatus ) {
-        objects.assertEqual( info, actual.executeCommand( cliContext ), exitStatus );
+        actual.executeCommand( cliContext );
+        objects.assertEqual( info, cliContext.getExitStatus(), exitStatus );
         return myself;
+    }
+
+    public ThrowableAssert<Exception> exitCause() {
+        return new ThrowableAssert<>( cliContext.getExitCause() );
     }
 
     public ByteArrayAssert standardOutput() {

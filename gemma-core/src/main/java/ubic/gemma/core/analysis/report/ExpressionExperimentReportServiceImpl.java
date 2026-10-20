@@ -25,11 +25,14 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
+import ubic.gemma.core.security.audit.AuditedConditional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
@@ -40,7 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueOb
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 
@@ -76,8 +78,14 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             DifferentialExpressionAnalysisEvent.class, BatchInformationFetchingEvent.class,
             PCAAnalysisEvent.class, BatchInformationMissingEvent.class );
 
+    /**
+     * This bean, through its proxy, so that calls from one of its methods to an audited one record the event.
+     * {@code @Lazy} breaks the self-reference cycle at construction.
+     */
+    @Lazy
     @Autowired
-    private AuditTrailService auditTrailService;
+    private ExpressionExperimentReportService self;
+
     @Autowired
     private AuditEventService auditEventService;
     @Autowired
@@ -245,6 +253,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateDifferentialAnalysis( date );
+                    if ( event.getEventType() != null ) {
+                        eeVo.setDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    }
                 }
             }
 
@@ -286,11 +297,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             if ( sampleRemovalEvents.containsKey( id ) ) {
                 Collection<AuditEvent> removalEvents = sampleRemovalEvents.get( id );
+                // we find we are getting lazy-load exceptions from this guy.
                 Collection<AuditEventValueObject> converted = removalEvents.stream()
                         .map( AuditEventValueObject::new )
                         .collect( Collectors.toSet() );
-                // we find we are getting lazy-load exceptions from this guy.
                 eeVo.setSampleRemovedFlags( converted );
+
             }
         }
 
@@ -361,37 +373,76 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     @Transactional
+    public void recalculateExperimentBatchInfoAsAdmin( ExpressionExperiment ee ) {
+        recalculateExperimentBatchInfo( ee );
+    }
+
+    @Override
+    @Transactional
     public void recalculateExperimentBatchInfo( ExpressionExperiment ee ) {
         ee = expressionExperimentService.thaw( ee );
+        self.recalculateExperimentBatchConfound( ee );
+        self.recalculateExperimentBatchEffect( ee );
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional( value = BatchProblemsUpdateEvent.class,
+            when = "#result != null",
+            messageSpel = "'" + ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT + ": ' + #result" )
+    @Nullable
+    public String recalculateExperimentBatchEffect( ExpressionExperiment ee ) {
         BatchEffectDetails details = expressionExperimentBatchInformationService.getBatchEffectDetails( ee );
         BatchEffectType effect = getBatchEffectType( details );
         String effectStatistics = getBatchEffectStatistics( details );
         String effectSummary = effectStatistics != null ? effectStatistics : effect.name();
-        String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
-        String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
-
-        if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
-            ee.setBatchConfound( confound );
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND, confoundSummary );
-            log.info( "New batch confound for " + ee + ": " + confoundSummary );
-        }
-
+        ee.setBatchEffect( getBatchEffectType( details ) );
+        ee.setBatchEffectStatistics( getBatchEffectStatistics( details ) );
         if ( !Objects.equals( effect, ee.getBatchEffect() ) || !Objects.equals( effectStatistics, ee.getBatchEffectStatistics() ) ) {
             ee.setBatchEffect( effect );
             ee.setBatchEffectStatistics( effectStatistics );
-            auditTrailService.addUpdateEvent( ee, BatchProblemsUpdateEvent.class,
-                    ExpressionExperimentReportServiceImpl.NOTE_UPDATED_EFFECT, effectSummary );
             log.info( "New batch effect for " + ee + ": " + effectSummary );
+            // Audit row written by @AuditedConditional via AuditedAspect; the
+            // SpEL guard `#result != null` skips the no-change branch and the
+            // returned summary is folded into the NOTE column ("Updated batch
+            // effect: <summary>"). Phase C #7: the legacy 4-arg call wrote the
+            // summary into the DETAIL column; the AuditEventPayload-backed
+            // typed-payload refactor will re-split note/detail once it lands.
+            return effectSummary;
         }
+        log.debug( "Batch effect for " + ee + " remains unchanged: " + effectSummary );
+        return null;
+    }
+
+    @Override
+    @Transactional
+    @AuditedConditional( value = BatchProblemsUpdateEvent.class,
+            when = "#result != null",
+            messageSpel = "'" + ExpressionExperimentReportServiceImpl.NOTE_UPDATED_CONFOUND + ": ' + #result" )
+    @Nullable
+    public String recalculateExperimentBatchConfound( ExpressionExperiment ee ) {
+        String confound = expressionExperimentBatchInformationService.getBatchConfoundAsHtmlString( ee );
+        String confoundSummary = confound != null ? confound : escapeHtml4( "<no confound>" );
+        if ( !Objects.equals( confound, ee.getBatchConfound() ) ) {
+            ee.setBatchConfound( confound );
+            log.info( "New batch confound for " + ee + ": " + confoundSummary );
+            // Audit row written by @AuditedConditional via AuditedAspect; the
+            // SpEL guard `#result != null` skips the no-change branch and the
+            // returned summary is folded into the NOTE column ("Updated batch
+            // confound: <summary>"). Phase C #8: same DETAIL-to-NOTE motion as
+            // the sibling batch-effect method above.
+            return confoundSummary;
+        }
+        log.debug( "Batch confound for " + ee + " remains unchanged: " + confoundSummary );
+        return null;
     }
 
     private Map<Long, Collection<AuditEvent>> getSampleRemovalEvents( Collection<ExpressionExperiment> ees ) {
         Map<Long, Collection<AuditEvent>> result = new HashMap<>();
         Map<ExpressionExperiment, Collection<AuditEvent>> rawr = expressionExperimentService
                 .getSampleRemovalEvents( ees );
-        for ( ExpressionExperiment e : rawr.keySet() ) {
-            result.put( e.getId(), rawr.get( e ) );
+        for ( Map.Entry<ExpressionExperiment, Collection<AuditEvent>> entry : rawr.entrySet() ) {
+            result.put( entry.getKey().getId(), entry.getValue() );
         }
         return result;
     }
@@ -419,8 +470,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Long id = eeVo.getId();
         assert id != null;
 
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> analysis = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( Collections.singleton( id ) );
+        Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysis = differentialExpressionAnalysisService
+                .findByExperimentIds( Collections.singleton( id ), true, true );
         if ( analysis != null && analysis.containsKey( eeVo ) ) {
             eeVo.setDifferentialExpressionAnalyses( analysis.get( eeVo ) );
         }

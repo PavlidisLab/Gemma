@@ -1,9 +1,11 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
+import ubic.gemma.model.analysis.CellTypeAssignmentValueObject;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -13,8 +15,8 @@ import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.util.UninitializedList;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -29,7 +31,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@CommonsLog
+@Slf4j
 public class SingleCellDimensionValueObject extends IdentifiableValueObject<SingleCellDimension> {
 
     /**
@@ -46,7 +48,7 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
      * <p>
      * This is always equal to the length of {@link #cellIds}.
      */
-    private int numberOfCells;
+    private int numberOfCellIds;
 
     /**
      * A list of {@link ubic.gemma.model.expression.bioAssay.BioAssay} IDs that are applicable to the cells.
@@ -58,13 +60,13 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
      * All the cell type assignments.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<CellTypeAssignmentValueObject> cellTypeAssignments;
+    private Set<CellTypeAssignmentValueObject> cellTypeAssignments;
 
     /**
      * All the other cell-level characteristics.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<CellLevelCharacteristicsValueObject> cellLevelCharacteristics;
+    private Set<CellLevelCharacteristicsValueObject> cellLevelCharacteristics;
 
     public SingleCellDimensionValueObject( SingleCellDimension singleCellDimension, boolean excludeBioAssayIds, boolean excludeCellTypeIds, boolean excludeCharacteristicIds ) {
         super( singleCellDimension );
@@ -73,11 +75,11 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
         } else {
             this.cellIds = singleCellDimension.getCellIds();
         }
-        this.numberOfCells = singleCellDimension.getNumberOfCells();
+        this.numberOfCellIds = singleCellDimension.getNumberOfCellIds();
         if ( !excludeBioAssayIds ) {
-            this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCells() );
+            this.bioAssayIds = new ArrayList<>( singleCellDimension.getNumberOfCellIds() );
             try {
-                for ( int i = 0; i < singleCellDimension.getNumberOfCells(); i++ ) {
+                for ( int i = 0; i < singleCellDimension.getNumberOfCellIds(); i++ ) {
                     this.bioAssayIds.add( requireNonNull( singleCellDimension.getBioAssay( i ).getId() ) );
                 }
             } catch ( IllegalArgumentException | IndexOutOfBoundsException e ) {
@@ -86,15 +88,22 @@ public class SingleCellDimensionValueObject extends IdentifiableValueObject<Sing
         }
         if ( ModelUtils.isInitialized( singleCellDimension.getCellTypeAssignments() ) ) {
             this.cellTypeAssignments = singleCellDimension.getCellTypeAssignments().stream()
-                    .sorted( Comparator.comparing( CellTypeAssignment::isPreferred, Comparator.reverseOrder() ).thenComparing( CellTypeAssignment.COMPARATOR ) )
                     .map( cellTypeAssignment -> new CellTypeAssignmentValueObject( cellTypeAssignment, excludeCellTypeIds ) )
-                    .collect( Collectors.toList() );
+                    .collect( Collectors.toSet() );
         }
         if ( ModelUtils.isInitialized( singleCellDimension.getCellLevelCharacteristics() ) ) {
             this.cellLevelCharacteristics = singleCellDimension.getCellLevelCharacteristics().stream()
-                    .sorted( CellLevelCharacteristics.COMPARATOR )
                     .map( ( CellLevelCharacteristics clc ) -> new CellLevelCharacteristicsValueObject( clc, excludeCharacteristicIds ) )
-                    .collect( Collectors.toList() );
+                    .collect( Collectors.toSet() );
         }
+    }
+
+    /**
+     * @deprecated use {@link #getNumberOfCellIds()} instead
+     */
+    @Deprecated
+    @Schema(description = "Use numberOfCellIds instead.", deprecated = true)
+    public int getNumberOfCells() {
+        return numberOfCellIds;
     }
 }

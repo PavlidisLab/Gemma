@@ -23,8 +23,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
-import ubic.basecode.math.StringDistance;
-import ubic.basecode.util.StringUtil;
+import ubic.gemma.core.util.StringUtil;
+import ubic.gemma.core.util.math.StringDistance;
 import ubic.gemma.core.loader.entrez.EutilFetch;
 import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.util.XMLUtils;
@@ -368,8 +368,9 @@ public class DatasetCombiner {
 
         Map<GeoPlatform, List<GeoSample>> platformSamples = DatasetCombiner.getPlatformSampleMap( series );
 
-        for ( GeoPlatform platform : platformSamples.keySet() ) {
-            for ( GeoSample sample : platformSamples.get( platform ) ) {
+        for ( Map.Entry<GeoPlatform, List<GeoSample>> psEntry : platformSamples.entrySet() ) {
+            GeoPlatform platform = psEntry.getKey();
+            for ( GeoSample sample : psEntry.getValue() ) {
                 assert sample != null : "Null sample for platform " + platform.getDescription();
                 this.fillAccessionMap( sample, platform );
             }
@@ -637,7 +638,7 @@ public class DatasetCombiner {
                             .suffixWeightedHammingDistance( targetAcc, bestMatchAcc, 1.0 );
                     double suffixWeightedDistanceB = StringDistance
                             .suffixWeightedHammingDistance( targetAcc, testAcc, 1.0 );
-                    if ( prefixWeightedDistanceA == prefixWeightedDistanceB ) {
+                    if ( suffixWeightedDistanceA == suffixWeightedDistanceB ) {
                         continue; // still tied, keep old one
                     } else if ( suffixWeightedDistanceA < suffixWeightedDistanceB ) {
                         // new one is better.
@@ -742,9 +743,9 @@ public class DatasetCombiner {
      */
     private Collection<String> getMicroarrayStringsToMatch( String title ) {
         Collection<String> result = new HashSet<>();
-        for ( String key : DatasetCombiner.microarrayNameStrings.keySet() ) {
-            if ( title.contains( key ) ) {
-                for ( String value : DatasetCombiner.microarrayNameStrings.get( key ) ) {
+        for ( Map.Entry<String, Collection<String>> mnsEntry : DatasetCombiner.microarrayNameStrings.entrySet() ) {
+            if ( title.contains( mnsEntry.getKey() ) ) {
+                for ( String value : mnsEntry.getValue() ) {
                     if ( title.contains( value ) ) {
                         result.add( value );
                     }

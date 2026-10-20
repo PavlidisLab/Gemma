@@ -13,7 +13,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -107,7 +107,7 @@ public class SingleCellDataBoxplot {
     }
 
     public void setBioAssays( List<BioAssay> bioAssays ) {
-        Assert.isTrue( new HashSet<>( vector.getSingleCellDimension().getBioAssays() ).containsAll( bioAssays ) );
+        Assert.isTrue( new HashSet<>( vector.getSingleCellDimension().getBioAssays() ).containsAll( bioAssays ) , "expected true");
         this.bioAssays = bioAssays;
     }
 
@@ -139,7 +139,7 @@ public class SingleCellDataBoxplot {
                 columnIndex.put( ba.getName(), i++ );
             }
             columnKeys = bioAssays.stream()
-                    .map( BioAssay::getName )
+                    .map( ba -> ba.getShortName() != null ? ba.getShortName() : ba.getName() )
                     .collect( Collectors.toList() );
             if ( cellLevelCharacteristics != null ) {
                 if ( focusedCharacteristic != null ) {

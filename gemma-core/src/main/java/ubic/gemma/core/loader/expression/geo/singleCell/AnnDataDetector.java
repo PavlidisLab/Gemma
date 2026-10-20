@@ -1,11 +1,13 @@
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.util.anndata.AnnDataException;
 
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,8 +18,11 @@ import java.nio.file.Path;
  * This detector has additional heuristics for detecting sample names.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class AnnDataDetector extends AbstractSingleH5FileInSeriesSingleCellDetector implements SingleCellDetector {
+
+    @Nullable
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
     public AnnDataDetector() {
         super( "AnnData", ".h5ad" );
@@ -38,11 +43,15 @@ public class AnnDataDetector extends AbstractSingleH5FileInSeriesSingleCellDetec
         }
     }
 
+    public void setSingleCellDataTransformationFactory( @Nullable SingleCellDataTransformationFactory singleCellDataTransformationFactory ) {
+        this.singleCellDataTransformationFactory = singleCellDataTransformationFactory;
+    }
+
     @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
         Path annDataFile = getDest( series );
         if ( Files.exists( annDataFile ) ) {
-            return new GeoAnnDataSingleCellDataLoaderConfigurer( annDataFile, series )
+            return new GeoAnnDataSingleCellDataLoaderConfigurer( annDataFile, series, singleCellDataTransformationFactory )
                     .configureLoader( config );
         }
         throw new NoSingleCellDataFoundException( "Could not find " + annDataFile + " for " + series.getGeoAccession() );

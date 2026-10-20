@@ -18,16 +18,36 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexingDependency;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Taxon;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Objects;
 import java.util.Set;
 
@@ -40,21 +60,64 @@ import java.util.Set;
  * of nucleotides associated with a gene product. This class only represents the sequence itself ("ATCGCCG..."), not the
  * physical item, and not the database entry for the sequence.
  * </p>
+ * <p>
+ * Hibernate Search 7 mapping: indexed root and embedded contributor via
+ * {@link ubic.gemma.model.expression.designElement.CompositeSequence#getBiologicalCharacteristic()}.
  */
+@Entity
+@Table(name = "BIO_SEQUENCE", indexes = @Index(name = "BIO_SEQUENCE_NAME", columnList = "NAME"))
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Indexed
 public class BioSequence extends AbstractDescribable {
 
+    @Nullable
+    @Column(name = "LENGTH", columnDefinition = "BIGINT")
     private Long length;
+
+    @Nullable
+    @Lob
+    @Column(name = "SEQUENCE", columnDefinition = "longtext")
     private String sequence;
+
+    @Nullable
+    @Column(name = "IS_APPROXIMATE_LENGTH", columnDefinition = "TINYINT")
     private Boolean isApproximateLength;
+
+    @Nullable
+    @Column(name = "IS_CIRCULAR", columnDefinition = "TINYINT")
     private Boolean isCircular;
+
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "POLYMER_TYPE", columnDefinition = "VARCHAR(255)")
     private PolymerType polymerType;
+
     @Nullable
+    @Enumerated(EnumType.STRING)
+    @Column(name = "TYPE", columnDefinition = "VARCHAR(255)")
     private SequenceType type;
+
+    @Nullable
+    @Column(name = "FRACTION_REPEATS", columnDefinition = "DOUBLE")
     private Double fractionRepeats;
-    private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
+
+    // cascade=all is a problem since same entry can be associated with geneproduct - see chromosomefeature configuration
+    // this must be eager because BioSequenceValueObject assumes it is readily available
+    @Nullable
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.JOIN)
+    @JoinColumn(name = "SEQUENCE_DATABASE_ENTRY_FK", unique = true, columnDefinition = "BIGINT")
+    private DatabaseEntry sequenceDatabaseEntry;
+
+    // assumed readily available in BioSequenceValueObject
+    // this should be accessed via a select because taxa are shared for many, many probes
+    @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    @JoinColumn(name = "TAXON_FK", nullable = false, columnDefinition = "BIGINT")
     private Taxon taxon;
+
+    @OneToMany(mappedBy = "bioSequence", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
 
     @Override
@@ -64,7 +127,7 @@ public class BioSequence extends AbstractDescribable {
     }
 
     @Override
-    @Field
+    @FullTextField
     public String getName() {
         return super.getName();
     }
@@ -132,6 +195,7 @@ public class BioSequence extends AbstractDescribable {
         this.sequence = sequence;
     }
 
+    @IndexingDependency(reindexOnUpdate = ReindexOnUpdate.SHALLOW)
     @IndexedEmbedded
     public DatabaseEntry getSequenceDatabaseEntry() {
         return this.sequenceDatabaseEntry;
@@ -180,7 +244,7 @@ public class BioSequence extends AbstractDescribable {
         final BioSequence that = ( BioSequence ) object;
         if ( this.getId() != null && that.getId() != null )
             return this.getId().equals( that.getId() );
-        return Objects.equals( getName(), that.getName() )
+        return DescribableUtils.equalsByName( this, that )
                 && Objects.equals( getSequenceDatabaseEntry(), that.getSequenceDatabaseEntry() )
                 && Objects.equals( getTaxon(), that.getTaxon() )
                 && Objects.equals( getLength(), that.getLength() )
@@ -192,14 +256,20 @@ public class BioSequence extends AbstractDescribable {
             return new BioSequence();
         }
 
+        public static BioSequence newInstance( String name ) {
+            BioSequence entity = newInstance();
+            entity.setName( name );
+            return entity;
+        }
+
         public static BioSequence newInstance( Taxon taxon ) {
-            final BioSequence entity = new BioSequence();
+            final BioSequence entity = newInstance();
             entity.setTaxon( taxon );
             return entity;
         }
 
         public static BioSequence newInstance( String name, Taxon taxon ) {
-            final BioSequence entity = new BioSequence();
+            final BioSequence entity = newInstance();
             entity.setName( name );
             entity.setTaxon( taxon );
             return entity;

@@ -1,9 +1,10 @@
 package ubic.gemma.apps;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,12 +12,14 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.cli.util.TestCLIContext;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.cli.util.TestCliContext;
-import ubic.gemma.cli.util.test.BaseCliTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -24,11 +27,13 @@ import ubic.gemma.persistence.service.common.description.ExternalDatabaseService
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import static org.mockito.Mockito.*;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@ExtendWith(NetworkAvailableExtension.class)
+@Disabled("This test is too slow, see https://github.com/PavlidisLab/Gemma/issues/1056 for details")
+public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -80,16 +85,15 @@ public class NCBIGene2GOAssociationLoaderCLITest extends BaseCliTest {
     private ExternalDatabaseService externalDatabaseService;
 
     @Test
-    @Ignore("This test is too slow, see https://github.com/PavlidisLab/Gemma/issues/1056 for details")
-    @Category(SlowTest.class)
+    @Tag("slow")
     @WithMockUser(authorities = { "GROUP_ADMIN" })
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz")
     public void test() throws Exception {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nih.gov/gene/DATA/gene2go.gz" );
-        ExternalDatabase gene2go = ExternalDatabase.Factory.newInstance( "go", DatabaseType.OTHER );
-        when( externalDatabaseService.findByNameWithAuditTrail( "go" ) ).thenReturn( gene2go );
-        ncbiGene2GOAssociationLoaderCLI.executeCommand( new TestCliContext( null, new String[] {} ) );
+        ExternalDatabase gene2go = ExternalDatabase.Factory.newInstance( ExternalDatabases.GO, DatabaseType.OTHER );
+        when( externalDatabaseService.findByNameWithAuditTrail( ExternalDatabases.GO ) ).thenReturn( gene2go );
+        ncbiGene2GOAssociationLoaderCLI.executeCommand( new TestCLIContext( null, new String[] {} ) );
         verify( gene2GOAssociationService ).removeAll();
-        verify( externalDatabaseService ).findByNameWithAuditTrail( "go" );
+        verify( externalDatabaseService ).findByNameWithAuditTrail( ExternalDatabases.GO );
         verify( externalDatabaseService ).updateReleaseLastUpdated( same( gene2go ), isNull(), any() );
     }
 }

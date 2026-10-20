@@ -70,8 +70,12 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<ExpressionExp
                 throw new IllegalStateException( "Failed to load anything" );
             }
 
-            log.info( "Loading done, starting postprocessing" );
-            this.postProcess( datasets );
+            if ( getTaskCommand().isSuppressPostProcessing() ) {
+                log.info( "Loading done, postprocessing suppressed by request" );
+            } else {
+                log.info( "Loading done, starting postprocessing" );
+                this.postProcess( datasets );
+            }
 
             /* Don't send the full experiments to space. Instead, create a minimal result. */
             ArrayList<ExpressionExperiment> minimalDatasets = new ArrayList<>();

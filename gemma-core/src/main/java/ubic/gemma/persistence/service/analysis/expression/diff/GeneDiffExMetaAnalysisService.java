@@ -20,6 +20,7 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
@@ -36,10 +37,12 @@ import java.util.Collection;
  */
 public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDifferentialExpressionMetaAnalysis>, SecurableBaseService<GeneDifferentialExpressionMetaAnalysis> {
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 
     Collection<IncludedResultSetInfoValueObject> findIncludedResultSetsInfoById( long analysisId );

@@ -15,7 +15,7 @@
 package ubic.gemma.persistence.service.analysis.expression.pca;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -23,8 +23,8 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseImmutableService;
-import ubic.gemma.persistence.service.BaseService;
 
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**
@@ -43,6 +43,24 @@ public interface PrincipalComponentAnalysisService extends BaseImmutableService<
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeForExperiment( ExpressionExperiment ee );
 
+    /**
+     * Remove the experiment's PCA and store the given one, in a single transaction.
+     * <p>
+     * 🛑 The two halves must not be separate transactions. {@code SVDServiceImpl.svd} is
+     * {@code Propagation.NEVER} — the decomposition between its read and its write takes long enough that a
+     * transaction must not be open across it — so calling {@link #removeForExperiment} and {@link #create}
+     * from there would commit the removal, then fail, and leave the experiment with no PCA at all. Same shape
+     * as {@code replaceProcessedDataVectors}.
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    PrincipalComponentAnalysis replaceForExperiment( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
+            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad, int numComponentsToStore,
+            int numLoadingsToStore );
+
+    @Nullable
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    boolean existsByExperiment( ExpressionExperiment ee );
 }

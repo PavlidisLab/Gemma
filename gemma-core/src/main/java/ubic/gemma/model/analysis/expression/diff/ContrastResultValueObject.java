@@ -1,13 +1,17 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import ubic.gemma.core.util.RoundingUtils;
 import ubic.gemma.model.util.ModelUtils;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Represents a contrast result.
@@ -18,21 +22,34 @@ import ubic.gemma.model.expression.experiment.FactorValueBasicValueObject;
 @ToString
 public class ContrastResultValueObject extends IdentifiableValueObject<ContrastResult> {
 
+    /**
+     * The four contrast statistics are rounded to {@link RoundingUtils#JSON_SIGNIFICANT_DIGITS} significant
+     * digits on the way out; see {@link DifferentialExpressionAnalysisResultValueObject} for why significant
+     * digits and why at serialization time rather than in the constructor.
+     */
+    @Nullable
+    @JsonSerialize(using = RoundingUtils.SignificantDigitsSerializer.class)
     private Double pvalue;
+    @Nullable
+    @JsonSerialize(using = RoundingUtils.SignificantDigitsSerializer.class)
     private Double tStat;
+    @Nullable
+    @JsonSerialize(using = RoundingUtils.SignificantDigitsSerializer.class)
     private Double coefficient;
+    @Nullable
+    @JsonSerialize(using = RoundingUtils.SignificantDigitsSerializer.class)
     private Double logFoldChange;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "This property is mutually exclusive with `factorValue`.")
+    @Schema(description = "This property is mutually exclusive with `factorValue`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     private Long factorValueId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "This property is mutually exclusive with `factorValueId`.")
+    @Schema(description = "This property is mutually exclusive with `factorValueId`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     private FactorValueBasicValueObject factorValue;
-    @Schema(description = "This property is mutually exclusive with `secondFactorValue`.")
+    @Schema(description = "This property is mutually exclusive with `secondFactorValue`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Long secondFactorValueId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @Schema(description = "This property is mutually exclusive with `secondFactorValueId`.")
+    @Schema(description = "This property is mutually exclusive with `secondFactorValueId`. Which of the two is populated is chosen by `includeFactorValuesInContrasts`: true gives the full value, false gives only the id.")
     private FactorValueBasicValueObject secondFactorValue;
 
     public ContrastResultValueObject() {

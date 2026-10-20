@@ -1,10 +1,12 @@
 package ubic.gemma.core.search;
 
+import ubic.gemma.model.common.search.SearchResult;
+
 import java.util.Map;
 
 /**
  * Custom highlighter for search results.
- * @see ubic.gemma.core.search.SearchResult#setHighlights(Map)
+ * @see SearchResult#getHighlights()
  * @author poirigui
  */
 public interface Highlighter {

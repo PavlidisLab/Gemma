@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.entrez;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -15,7 +15,7 @@ import java.util.WeakHashMap;
  * Resolve a bunch of NCBI DTDs in the classpath.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 class NcbiEntityResolver implements EntityResolver {
 
     private static final Map<String, byte[]> dtdCache = new WeakHashMap<>();

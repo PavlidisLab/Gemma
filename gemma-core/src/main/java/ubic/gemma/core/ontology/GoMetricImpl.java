@@ -24,13 +24,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
-import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.SparseDoubleMatrix;
+import ubic.gemma.core.ontology.model.OntologyTerm;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationReadService;
 
 import java.util.*;
 
@@ -52,7 +52,7 @@ public class GoMetricImpl implements GoMetric {
     private boolean partOf = true;
 
     @Autowired
-    private Gene2GOAssociationService gene2GOAssociationService;
+    private Gene2GOAssociationReadService gene2GOAssociationService;
     @Autowired
     private GeneOntologyService geneOntologyService;
 
@@ -337,7 +337,7 @@ public class GoMetricImpl implements GoMetric {
      * @param gene2GOAssociationService the gene2GOAssociationService to set
      */
     @Override
-    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+    public void setGene2GOAssociationReadService( Gene2GOAssociationReadService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
     }
 
@@ -424,9 +424,9 @@ public class GoMetricImpl implements GoMetric {
     private Map<String, Integer> getTermOccurrence( Map<Long, Collection<String>> Gene2GOMap ) {
 
         Map<String, Integer> countMap = new HashMap<>();
-        for ( Long gene : Gene2GOMap.keySet() ) {
+        for ( Collection<String> goUris : Gene2GOMap.values() ) {
 
-            for ( String uri : Gene2GOMap.get( gene ) ) {
+            for ( String uri : goUris ) {
 
                 if ( ( uri.equalsIgnoreCase( GoMetricImpl.BASE_GO_URI + "GO_0008150" ) ) || ( uri
                         .equalsIgnoreCase( GoMetricImpl.BASE_GO_URI + "GO_0003674" ) )
@@ -612,9 +612,9 @@ public class GoMetricImpl implements GoMetric {
     private Map<String, Double> createWeightMap( Map<String, Integer> GOFreq, Integer N ) {
 
         Map<String, Double> weightMap = new HashMap<>();
-        for ( String id : GOFreq.keySet() ) {
-            Double weightedGO = Math.log10( ( double ) N / GOFreq.get( id ) );
-            weightMap.put( id, weightedGO );
+        for ( Map.Entry<String, Integer> fEntry : GOFreq.entrySet() ) {
+            Double weightedGO = Math.log10( ( double ) N / fEntry.getValue() );
+            weightMap.put( fEntry.getKey(), weightedGO );
         }
         return weightMap;
     }

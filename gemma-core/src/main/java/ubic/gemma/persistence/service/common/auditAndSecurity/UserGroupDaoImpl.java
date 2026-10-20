@@ -18,7 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import gemma.gsec.AuthorityConstants;
+import ubic.gemma.core.security.AuthorityConstants;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;

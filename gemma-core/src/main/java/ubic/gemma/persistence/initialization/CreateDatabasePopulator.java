@@ -1,6 +1,6 @@
 package ubic.gemma.persistence.initialization;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 
 import java.sql.Connection;
@@ -15,7 +15,7 @@ import java.sql.SQLException;
  * @author poirigui
  * @see BootstrappedDataSourceFactory
  */
-@CommonsLog
+@Slf4j
 public class CreateDatabasePopulator implements DatabasePopulator {
 
     private final String databaseName;
@@ -27,6 +27,14 @@ public class CreateDatabasePopulator implements DatabasePopulator {
 
     @Override
     public void populate( Connection connection ) throws SQLException {
+        // Phase 2 multi-context guard: only the first Spring ApplicationContext in this JVM gets
+        // to drop + create the test DB. Subsequent contexts find the DB already there (with its
+        // schema materialized + seed data loaded by earlier siblings) and skip. See
+        // TestBootstrapState for the rationale.
+        if ( !TestBootstrapState.claimDatabaseCreation() ) {
+            log.info( "Test database " + databaseName + " already created by an earlier ApplicationContext in this JVM; skipping drop+create." );
+            return;
+        }
         if ( dropIfExists ) {
             try ( PreparedStatement ps = connection.prepareStatement( "drop database if exists " + databaseName ) ) {
                 log.warn( "Dropping database " + databaseName + "..." );

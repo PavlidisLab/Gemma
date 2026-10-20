@@ -18,11 +18,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.mail.MailService;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.MailEngine;
 import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
@@ -34,7 +33,7 @@ public class TaskMailUtilsImpl implements TaskMailUtils {
     private static final Log log = LogFactory.getLog( TaskMailUtilsImpl.class );
 
     @Autowired
-    private MailEngine mailEngine;
+    private MailService mailService;
 
     @Autowired
     private UserManager userManager;
@@ -42,28 +41,34 @@ public class TaskMailUtilsImpl implements TaskMailUtils {
     @Override
     public void sendTaskCompletedNotificationEmail( EmailNotificationContext emailNotificationContext,
             TaskResult taskResult ) {
-        String taskId = emailNotificationContext.getTaskId();
         String submitter = emailNotificationContext.getSubmitter();
-        String taskName = emailNotificationContext.getTaskName();
-
-        if ( StringUtils.isNotBlank( submitter ) ) {
-            User user = userManager.findByUserName( submitter );
-
-            assert user != null;
-
-            String emailAddress = user.getEmail();
-
-            if ( emailAddress != null ) {
-                TaskMailUtilsImpl.log.info( "Sending email notification to " + emailAddress );
-                SimpleMailMessage msg = new SimpleMailMessage();
-                String logs = "";
-                if ( taskResult.getException() != null ) {
-                    logs += "Task failed with :\n";
-                    logs += taskResult.getException().getMessage();
-                }
-                String body = "A job you started on Gemma is completed (taskId=" + taskId + ", " + taskName + ")\n\n" + logs + "\n";
-                mailEngine.sendMessage( emailAddress, "Gemma task completed", body );
-            }
+        if ( StringUtils.isBlank( submitter ) ) {
+            log.warn( "Submitted in blank in email notification context, not sending email." );
+            return;
         }
+
+        User user = userManager.findByUserName( submitter );
+        if ( user == null ) {
+            log.warn( "User with username '" + submitter + "' not found, not sending email." );
+            return;
+        }
+
+        String emailAddress = user.getEmail();
+        if ( StringUtils.isBlank( emailAddress ) ) {
+            log.warn( "Email address for user '" + submitter + "' is blank, not sending email." );
+            return;
+        }
+
+        String taskId = emailNotificationContext.getTaskId();
+        String taskName = emailNotificationContext.getTaskName();
+        String taskStatus = taskResult.getException() != null ? "FAILURE" : "SUCCESS";
+        String taskLogs;
+        if ( taskResult.getException() != null ) {
+            taskLogs = taskResult.getException().getMessage();
+        } else {
+            taskLogs = "<empty>";
+        }
+
+        mailService.sendTaskCompletedEmail( user, taskId, taskName, taskStatus, taskLogs );
     }
 }

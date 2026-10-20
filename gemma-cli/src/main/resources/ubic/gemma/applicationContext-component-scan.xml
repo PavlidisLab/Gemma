@@ -1,34 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:context="http://www.springframework.org/schema/context"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-   http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context.xsd"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
        profile="cli">
-
-    <!-- CLI-specific components -->
-    <context:component-scan base-package="ubic.gemma.cli"
-                            name-generator="ubic.gemma.core.context.BeanNameGenerator">
-        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
-    </context:component-scan>
-
-    <!-- Standard CLI tools -->
-    <context:component-scan base-package="ubic.gemma.apps"
-                            name-generator="ubic.gemma.core.context.BeanNameGenerator"
-                            use-default-filters="false"
-                            scope-resolver="ubic.gemma.cli.util.PrototypeScopeResolver">
-        <context:include-filter type="assignable" expression="ubic.gemma.cli.util.CLI"/>
-        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
-    </context:component-scan>
-
-    <!-- CLI tools from contrib packages -->
-    <context:component-scan base-package="ubic.gemma.contrib.apps"
-                            name-generator="ubic.gemma.core.context.BeanNameGenerator"
-                            use-default-filters="false"
-                            scope-resolver="ubic.gemma.cli.util.PrototypeScopeResolver">
-        <context:include-filter type="assignable" expression="ubic.gemma.cli.util.CLI"/>
-        <context:exclude-filter type="annotation" expression="ubic.gemma.core.context.TestComponent"/>
-    </context:component-scan>
-
-    <bean class="ubic.gemma.core.context.LazyInitByDefaultPostProcessor"/>
+    <!--
+        Renovations Phase 3: the three <context:component-scan> blocks plus the
+        LazyInitByDefaultPostProcessor <bean> that used to live here have moved to the Java
+        @Configuration class ubic.gemma.cli.config.CliComponentScanConfig. This XML stub
+        remains so the gemma-cli module continues to be picked up by the wildcard loader
+        (classpath*:ubic/gemma/applicationContext-*.xml in SpringContextUtils and the CLI
+        bootstrap) without any classpath-order surgery. The profile="cli" attribute is
+        retained as belt-and-suspenders alongside the @Profile("cli") on the @Configuration.
+    -->
+    <bean class="ubic.gemma.cli.config.CliComponentScanConfig"/>
 </beans>

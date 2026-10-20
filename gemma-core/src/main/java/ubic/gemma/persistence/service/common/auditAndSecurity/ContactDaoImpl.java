@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -41,8 +40,6 @@ public class ContactDaoImpl extends AbstractDao<Contact> implements ContactDao {
     @Override
     public Contact find( Contact contact ) {
         BusinessKey.checkKey( contact );
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Contact.class );
-        BusinessKey.addRestrictions( queryObject, contact );
-        return ( Contact ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), contact );
     }
 }

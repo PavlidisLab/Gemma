@@ -25,7 +25,7 @@ import lombok.ToString;
 
 /**
  * Represents administrative geeq information. On top of the classic VO, this one also exposes
- * the underlying variables behind the public scores for suitability, quality, batch effect and batch confound.
+ * the underlying variables behind the public scores for quality, batch effect and batch confound.
  *
  * @author paul, tesarst
  */
@@ -39,9 +39,6 @@ public class GeeqAdminValueObject extends GeeqValueObject {
     private double manualQualityScore;
     private boolean manualQualityOverride;
 
-    private double detectedSuitabilityScore;
-    private double manualSuitabilityScore;
-    private boolean manualSuitabilityOverride;
 
     private double qScoreBatchEffect;
     private boolean manualHasStrongBatchEffect;
@@ -65,9 +62,6 @@ public class GeeqAdminValueObject extends GeeqValueObject {
         this.detectedQualityScore = g.getDetectedQualityScore();
         this.manualQualityScore = g.getManualQualityScore();
         this.manualQualityOverride = g.isManualQualityOverride();
-        this.detectedSuitabilityScore = g.getDetectedSuitabilityScore();
-        this.manualSuitabilityScore = g.getManualSuitabilityScore();
-        this.manualSuitabilityOverride = g.isManualSuitabilityOverride();
 
         this.qScoreBatchEffect = g.getqScoreBatchEffect();
         this.manualHasStrongBatchEffect = g.isManualHasStrongBatchEffect();

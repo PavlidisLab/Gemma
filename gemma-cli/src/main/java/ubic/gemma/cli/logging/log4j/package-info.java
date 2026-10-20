@@ -1,7 +1,7 @@
 /**
  *
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.cli.logging.log4j;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

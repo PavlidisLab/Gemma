@@ -27,6 +27,7 @@ import ubic.gemma.core.util.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -60,7 +61,7 @@ public class GeoPlatform extends GeoData {
         affyExonArrays.add( "GPL6543" ); // RaEx-1_0-st, gene-level version
         affyExonArrays.add( "GPL17586" ); // HTA-2_0, gene-level version
 
-        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/loader/affy.altmappings.txt" ).getInputStream() ) ) ) {
+        try ( BufferedReader in = new BufferedReader( new InputStreamReader( new ClassPathResource( "/ubic/gemma/core/loader/affy.altmappings.txt" ).getInputStream(), StandardCharsets.UTF_8 ) ) ) {
             while ( in.ready() ) {
                 String geoId = in.readLine().trim();
 

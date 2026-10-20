@@ -18,7 +18,10 @@
  */
 package ubic.gemma.model.common.description;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedUtils;
 
 import java.io.Serializable;
 import java.util.*;
@@ -32,16 +35,15 @@ import java.util.*;
  * @see BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
  */
 @SuppressWarnings({ "WeakerAccess", "unused" }) // Used in frontend
+@Getter
+@Setter
 public class CitationValueObject implements Comparable<CitationValueObject>, Serializable {
 
-    // for constructing pubmedURLs
-    @SuppressWarnings("WeakerAccess") // Might be accessed in the front end
-    final static String PUBMED_URL_ROOT = "https://www.ncbi.nlm.nih.gov/pubmed/";
-    private String citation;
     /**
-     * the DB id of the BibliographicReference being represented
+     * The ID of the {@link BibliographicReference} being represented.
      */
     private Long id;
+    private String citation;
     private String pubmedAccession;
     private String pubmedURL;
     private boolean retracted = false;
@@ -92,7 +94,7 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
         this.setCitation( buf.toString() );
         if ( ref.getPubAccession() != null ) {
             this.setPubmedAccession( ref.getPubAccession().getAccession() );
-            this.setPubmedURL( CitationValueObject.PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
+            this.setPubmedURL( PubMedUtils.getUri( ref.getPubAccession().getAccession() ) );
         }
         this.setId( ref.getId() );
         this.retracted = ref.getRetracted();
@@ -102,8 +104,8 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
     /**
      * @param ref ref
      * @return a citation value object constructed from a BibliographicReference or null if the BibliographicReference
-     *         param
-     *         was null
+     * param
+     * was null
      */
     public static CitationValueObject convert2CitationValueObject( BibliographicReference ref ) {
 
@@ -117,7 +119,7 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
     /**
      * @param refs refs
      * @return a collection of citation value objects constructed from a collection of BibliographicReference objects
-     *         or an empty list if all the BibliographicReference list param was null or empty
+     * or an empty list if all the BibliographicReference list param was null or empty
      */
     public static List<CitationValueObject> convert2CitationValueObjects( Collection<BibliographicReference> refs ) {
 
@@ -139,38 +141,6 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
             return this.getCitation().toLowerCase().compareTo( o.getCitation().toLowerCase() );
         }
         return -1;
-    }
-
-    public String getCitation() {
-        return citation;
-    }
-
-    public void setCitation( String citation ) {
-        this.citation = citation;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public String getPubmedAccession() {
-        return pubmedAccession;
-    }
-
-    public void setPubmedAccession( String pubmedID ) {
-        this.pubmedAccession = pubmedID;
-    }
-
-    public String getPubmedURL() {
-        return pubmedURL;
-    }
-
-    public void setPubmedURL( String pubmedURL ) {
-        this.pubmedURL = pubmedURL;
     }
 
     @Override
@@ -195,13 +165,4 @@ public class CitationValueObject implements Comparable<CitationValueObject>, Ser
         }
         return pubmedAccession.equals( other.pubmedAccession );
     }
-
-    public boolean isRetracted() {
-        return retracted;
-    }
-
-    public void setRetracted( boolean retracted ) {
-        this.retracted = retracted;
-    }
-
 }

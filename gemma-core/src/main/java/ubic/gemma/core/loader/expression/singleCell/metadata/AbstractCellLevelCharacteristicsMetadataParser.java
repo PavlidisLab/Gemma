@@ -16,9 +16,11 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
+import ubic.gemma.core.ontology.OntologyUtils;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -42,6 +44,8 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
     private final BioAssayMapper bioAssayMapper;
     @Nullable
     private final List<String> names;
+    private final List<String> defaultValues;
+    private final List<String> defaultValueUris;
 
     /**
      * If the sample name is missing, use the cell ID to infer it. If the cell ID is ambiguous (i.e. a barcode
@@ -74,12 +78,18 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
      * @param bioAssayMapper      strategy to use to match sample name from the file to bioassays
      * @param names               names to use for naming the resulting CLCs, those must match the number and ordering
      *                            encountered by the parser
+     * @param defaultValues       default values to use for unassigned cells for each characteristic
+     * @param defaultValueUris    default value URIs to use for unassigned cells for each characteristic
      */
-    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension, BioAssayMapper bioAssayMapper, @Nullable List<String> names ) {
+    protected AbstractCellLevelCharacteristicsMetadataParser( SingleCellDimension singleCellDimension,
+            BioAssayMapper bioAssayMapper, @Nullable List<String> names, @Nullable List<String> defaultValues,
+            @Nullable List<String> defaultValueUris ) {
         this.singleCellDimension = singleCellDimension;
         this.bioAssayMapper = bioAssayMapper;
         this.cellIds = singleCellDimension.getCellIds();
         this.names = names;
+        this.defaultValues = defaultValues;
+        this.defaultValueUris = defaultValueUris;
         this.bioAssayToIndex = ListUtils.indexOfElements( singleCellDimension.getBioAssays() );
         // we don't need the position in the bioassay
         reverseIndex = createReverseIndex( singleCellDimension ).entrySet()
@@ -114,7 +124,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                 Category category = getCategory( record );
                 String categoryId = getCategoryId( record );
                 String value = getValue( record );
-                String valueUri = getValueUri( record );
+                String valueUri = normalizeValueUri( getValueUri( record ), record );
                 if ( value == null && valueUri != null ) {
                     throw new IllegalArgumentException( "A value with a non-blank URI must have a label." );
                 }
@@ -125,7 +135,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                         String sampleNameCandidates = EntityMapperUtils.getPossibleIdentifiers( singleCellDimension.getBioAssays(), bioAssayMapper );
                         Set<BioAssay> bas = bioAssayMapper.matchAll( singleCellDimension.getBioAssays(), sampleName );
                         if ( bas.isEmpty() ) {
-                            String m = String.format( "No assay found for %s. Possible values are:\n\t%s",
+                            String m = String.format( "No assay found for %s. Possible values are:%n\t%s",
                                     sampleName, sampleNameCandidates );
                             if ( ignoreUnmatchedSamples ) {
                                 log.warn( m );
@@ -134,7 +144,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
                                 throw new IllegalArgumentException( m );
                             }
                         } else if ( bas.size() > 1 ) {
-                            throw new IllegalArgumentException( String.format( "More than one assay match %s. There might be a better identifier to use, possible values are: \n\t%s",
+                            throw new IllegalArgumentException( String.format( "More than one assay match %s. There might be a better identifier to use, possible values are: %n\t%s",
                                     sampleName, sampleNameCandidates ) );
                         }
                         return bas.iterator().next();
@@ -243,6 +253,59 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
             nameByCategoryId = null;
         }
 
+        if ( defaultValues != null ) {
+            if ( defaultValues.size() != categoryIds.size() ) {
+                throw new IllegalStateException( "The number of default values provided (" + defaultValues.size() + ") does not match the number of categories found in the metadata file (" + categoryIds.size() + ")." );
+            }
+            if ( defaultValueUris != null ) {
+                if ( defaultValueUris.size() != categoryIds.size() ) {
+                    throw new IllegalStateException( "The number of default value URIs provided (" + defaultValueUris.size() + ") does not match the number of categories found in the metadata file (" + categoryIds.size() + ")." );
+                }
+            }
+            int i = 0;
+            for ( String cid : categoryIds ) {
+                List<Characteristic> characteristics = characteristicsByCategoryId.get( cid );
+                Map<Characteristic, Integer> cellTypesToId = cellTypesToIdByCategoryId.get( cid );
+                Characteristic sampleC = characteristicsByCategoryId.get( cid ).iterator().next();
+                String defaultValue = defaultValues.get( i );
+                String defaultValueUri = defaultValueUris != null ? defaultValueUris.get( i ) : null;
+                if ( defaultValue == null ) {
+                    if ( defaultValueUri != null ) {
+                        throw new IllegalArgumentException( "A default value URI (" + defaultValueUri + ") without a default value is not allowed." );
+                    }
+                    continue;
+                }
+                if ( defaultValueUri != null ) {
+                    // Same boundary as the file's own value_uri column, different source: this one comes from an
+                    // operator argument, so an unrecognizable value is a command to fix rather than a cell to skip.
+                    String normalizedDefault = OntologyUtils.termIdOrUriToUri( defaultValueUri );
+                    if ( normalizedDefault == null ) {
+                        throw new IllegalArgumentException( "The default value URI '" + defaultValueUri
+                                + "' is neither a URI nor a recognized term identifier." );
+                    }
+                    defaultValueUri = normalizedDefault;
+                }
+                Characteristic defaultC = Characteristic.Factory.newInstance( sampleC.getCategory(), sampleC.getCategoryUri(), defaultValue, defaultValueUri );
+                cellTypesToIdByCategoryId.get( cid ).get( defaultC );
+                int defaultCode;
+                if ( cellTypesToId.containsKey( defaultC ) ) {
+                    defaultCode = cellTypesToId.get( defaultC );
+                } else {
+                    defaultCode = characteristics.size();
+                    characteristics.add( defaultC );
+                    cellTypesToId.put( defaultC, defaultCode );
+                }
+                log.debug( "Filling-in default values for category " + cid + ": " + defaultValue );
+                int[] indices = indicesByCategoryId.get( cid );
+                for ( int j = 0; j < indices.length; j++ ) {
+                    if ( indices[j] == CellLevelCharacteristics.UNKNOWN_CHARACTERISTIC ) {
+                        indices[j] = defaultCode;
+                    }
+                }
+                i++;
+            }
+        }
+
         StringBuilder descriptionBuilder = new StringBuilder();
 
         if ( collisions > 0 ) {
@@ -299,10 +362,39 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
     @Nullable
     protected abstract String getCategoryId( CSVRecord record );
 
+    @Nullable
     protected abstract String getValue( CSVRecord record );
 
     @Nullable
     protected abstract String getValueUri( CSVRecord record );
+
+    /**
+     * Normalize a term identifier read verbatim from the metadata file into the URI form Gemma stores.
+     *
+     * <p>🛑 The category side of this parser resolves through {@link #getCategory(CSVRecord)} while the value
+     * side was passed through untouched, and that asymmetry is the defect: a file written in CELLxGENE's
+     * native CURIE form ({@code CL:0000129}) put the CURIE in {@code VALUE_URI} while {@code CATEGORY_URI} on
+     * the same row held a resolved PURL. 64,728 such rows on production, measured 2026-09-10.</p>
+     *
+     * <p>Something that is not an identifier at all — a label like {@code MacroEC}, or {@code NA} — is dropped
+     * to null with a warning rather than stored. The label already lives in the value column; the same text in
+     * the URI column resolves nowhere and would satisfy every {@code valueUri != null} test in the codebase.
+     * Dropping it is not lossy, and failing the whole load over one malformed cell would be worse.</p>
+     */
+    @Nullable
+    private String normalizeValueUri( @Nullable String valueUri, CSVRecord record ) {
+        if ( valueUri == null ) {
+            return null;
+        }
+        String normalized = OntologyUtils.termIdOrUriToUri( valueUri );
+        if ( normalized == null ) {
+            log.warn( "Ignoring '" + valueUri + "' on line " + record.getRecordNumber()
+                    + ": it is neither a URI nor a recognized term identifier, so it cannot be stored as one." );
+        } else if ( !normalized.equals( valueUri ) ) {
+            log.debug( "Normalized term identifier '" + valueUri + "' to '" + normalized + "'." );
+        }
+        return normalized;
+    }
 
     /**
      * Create a cell-level characteristics object from the parsed data.
@@ -340,7 +432,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
     private CSVParser openMetadataFile( Path metadataFile ) throws IOException {
         if ( metadataFile.toString().endsWith( ".gz" ) ) {
-            return getTsvFormat().parse( new InputStreamReader( FileUtils.openCompressedFile( metadataFile ) ) );
+            return getTsvFormat().parse( new InputStreamReader( FileUtils.openCompressedFile( metadataFile ), StandardCharsets.UTF_8 ) );
         } else {
             return getTsvFormat().parse( Files.newBufferedReader( metadataFile ) );
         }

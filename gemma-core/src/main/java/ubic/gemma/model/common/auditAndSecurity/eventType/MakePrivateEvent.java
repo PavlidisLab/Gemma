@@ -19,10 +19,16 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicate that an entity has been made private.
  * @author paul
  */
+@Entity
+@DiscriminatorValue("MakePrivateEvent")
 public class MakePrivateEvent extends PermissionChangeEvent {
 
 

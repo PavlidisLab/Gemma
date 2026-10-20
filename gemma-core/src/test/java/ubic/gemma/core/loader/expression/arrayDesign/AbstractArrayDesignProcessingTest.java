@@ -18,13 +18,13 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -37,7 +37,7 @@ import java.util.Collection;
  *
  * @author pavlidis
  */
-public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest {
+public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContextTest5 {
 
     private final static String ACCESSION = "GPL140";
     ArrayDesign ad;
@@ -55,7 +55,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         return ad;
     }
 
-    @Before
+    @BeforeEach
     public void setupArrayDesign() {
         ad = arrayDesignService.findByShortName( AbstractArrayDesignProcessingTest.ACCESSION );
 
@@ -83,7 +83,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         Collection<Gene> genes = geneService.loadAll();
         for ( Gene gene : genes ) {

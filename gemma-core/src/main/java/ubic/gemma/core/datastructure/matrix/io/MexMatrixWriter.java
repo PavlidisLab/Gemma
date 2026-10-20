@@ -1,7 +1,7 @@
 package ubic.gemma.core.datastructure.matrix.io;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.io.MatrixInfo;
 import no.uib.cipr.matrix.io.MatrixSize;
 import no.uib.cipr.matrix.io.MatrixVectorWriter;
@@ -15,7 +15,7 @@ import ubic.gemma.core.analysis.preprocess.convert.UnsupportedQuantitationTypeCo
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataIntMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
-import ubic.gemma.core.util.TsvUtils;
+import ubic.gemma.core.util.GzipUtils;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -24,7 +24,7 @@ import ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,10 +36,8 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPOutputStream;
 
 import static ubic.gemma.core.analysis.service.ExpressionDataFileUtils.formatBioAssayFilename;
-import static ubic.gemma.core.util.TsvUtils.SUB_DELIMITER;
 import static ubic.gemma.core.util.TsvUtils.format;
 import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataVectorUtils.getSampleEnd;
 
@@ -51,7 +49,7 @@ import static ubic.gemma.model.expression.bioAssayData.SingleCellExpressionDataV
  * files are compressed and will have a {@code .gz} extension.
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 @Setter
 public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
@@ -71,13 +69,13 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     private Executor executorService;
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, Writer stream ) throws IOException {
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, Writer stream ) throws IOException {
         throw new UnsupportedOperationException( "MEX is a binary format as it bundles the files in a TAR archive." );
     }
 
     @Override
-    public int write( SingleCellExpressionDataMatrix<?> matrix, OutputStream stream ) throws IOException {
-        return write( matrix, null, stream );
+    public int write( SingleCellExpressionDataMatrix<?> matrix, Class<? extends SingleCellExpressionDataVector> vectorType, OutputStream stream ) throws IOException {
+        return write( matrix, ( Map<CompositeSequence, Set<Gene>> ) null, stream );
     }
 
     /**
@@ -216,7 +214,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
             matrices = new FastMatrixVectorWriter[dimension.getBioAssays().size()];
             for ( int i = 0; i < dimension.getBioAssays().size(); i++ ) {
                 BioAssay ba = dimension.getBioAssays().get( i );
-                int numberOfCells = dimension.getNumberOfCellsBySample( i );
+                int numberOfCells = dimension.getNumberOfCellIdsBySample( i );
                 matrices[i] = new FastMatrixVectorWriter( newWriter( Files.newOutputStream( outputDir.resolve( formatBioAssayFilename( ba ) ).resolve( "matrix.mtx.gz" ) ) ), autoFlush );
                 MatrixInfo.MatrixField field;
                 if ( scaleType != null ) {
@@ -308,34 +306,34 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     private void writeMatrix( SingleCellExpressionDataMatrix<?> mat, int sampleIndex, Writer out, boolean autoFlush ) {
         if ( mat instanceof SingleCellExpressionDataDoubleMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
-            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
+            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellIdsBySample( sampleIndex );
             writeDoubleMatrix( ( ( SingleCellExpressionDataDoubleMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out, autoFlush );
         } else if ( mat instanceof SingleCellExpressionDataIntMatrix ) {
             int sampleOffset = mat.getSingleCellDimension().getBioAssaysOffset()[sampleIndex];
-            int numberOfCells = mat.getSingleCellDimension().getNumberOfCellsBySample( sampleIndex );
+            int numberOfCellIds = mat.getSingleCellDimension().getNumberOfCellIdsBySample( sampleIndex );
             if ( scaleType != null ) {
                 // conversions always produce double data vectors
-                writeDoubleMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCells, out, autoFlush );
+                writeDoubleMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), mat.getQuantitationType(), sampleOffset, numberOfCellIds, out, autoFlush );
             } else {
-                writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCells, out );
+                writeIntMatrix( ( ( SingleCellExpressionDataIntMatrix ) mat ).getMatrix(), sampleOffset, numberOfCellIds, out );
             }
         } else {
             throw new UnsupportedOperationException( "Unsupported matrix type " + mat.getClass().getName() );
         }
     }
 
-    private void writeDoubleMatrix( CompRowMatrix matrix, QuantitationType qt, int sampleOffset, int numberOfCells, Writer out, boolean autoFlush ) {
+    private void writeDoubleMatrix( CompRowMatrix matrix, QuantitationType qt, int sampleOffset, int numberOfCellIds, Writer out, boolean autoFlush ) {
         int[] rowptr = matrix.getRowPointers();
         int[] colind = matrix.getColumnIndices();
         double[] data = matrix.getData();
 
-        int nextSampleOffset = sampleOffset + numberOfCells;
+        int nextSampleOffset = sampleOffset + numberOfCellIds;
 
         int sampleNnz = 0;
         for ( int j : colind ) {
@@ -375,7 +373,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
 
         try ( MatrixVectorWriter writer = new FastMatrixVectorWriter( out, autoFlush ) ) {
             writer.printMatrixInfo( new MatrixInfo( true, MatrixInfo.MatrixField.Real, MatrixInfo.MatrixSymmetry.General ) );
-            writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCells, sampleData.length ) );
+            writer.printMatrixSize( new MatrixSize( matrix.numRows(), numberOfCellIds, sampleData.length ) );
             writer.printCoordinate( sampleRows, sampleCols, sampleData );
         }
     }
@@ -597,7 +595,7 @@ public class MexMatrixWriter implements SingleCellExpressionDataMatrixWriter {
     }
 
     private Writer newWriter( OutputStream outputStream ) throws IOException {
-        return new OutputStreamWriter( new GZIPOutputStream( outputStream ), StandardCharsets.UTF_8 );
+        return new OutputStreamWriter( GzipUtils.newGzipOutputStream( outputStream ), StandardCharsets.UTF_8 );
     }
 }
 

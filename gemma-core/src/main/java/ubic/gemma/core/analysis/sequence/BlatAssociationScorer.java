@@ -94,10 +94,11 @@ public class BlatAssociationScorer {
 
         // compute specificity at the level of genes. First, get the best score for each gene cluster.
         Map<PhysicalLocation, Double> scores = new HashMap<>();
-        for ( PhysicalLocation pl : geneClusters.keySet() ) {
+        for ( Map.Entry<PhysicalLocation, Collection<Gene>> gcEntry : geneClusters.entrySet() ) {
+            PhysicalLocation pl = gcEntry.getKey();
             Double geneScore = 0.0;
 
-            for ( Gene cgene : geneClusters.get( pl ) ) {
+            for ( Gene cgene : gcEntry.getValue() ) {
                 for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
                     Double alignScore = blatAssociation.getScore();
                     if ( alignScore > geneScore ) {
@@ -108,11 +109,12 @@ public class BlatAssociationScorer {
             scores.put( pl, geneScore );
         }
 
-        for ( PhysicalLocation pl : geneClusters.keySet() ) {
+        for ( Map.Entry<PhysicalLocation, Collection<Gene>> gcEntry : geneClusters.entrySet() ) {
+            PhysicalLocation pl = gcEntry.getKey();
 
             Double alignScore = scores.get( pl );
 
-            for ( Gene cgene : geneClusters.get( pl ) ) {
+            for ( Gene cgene : gcEntry.getValue() ) {
                 // All members of the cluster get the same specificity.
                 for ( BlatAssociation blatAssociation : genes2Associations.get( cgene ) ) {
                     blatAssociation
@@ -172,9 +174,10 @@ public class BlatAssociationScorer {
 
         Map<PhysicalLocation, Collection<Gene>> clusters = new HashMap<>();
 
-        for ( Gene gene : associations.keySet() ) {
+        for ( Map.Entry<Gene, List<BlatAssociation>> assocEntry : associations.entrySet() ) {
+            Gene gene = assocEntry.getKey();
 
-            List<BlatAssociation> geneAssoc = associations.get( gene );
+            List<BlatAssociation> geneAssoc = assocEntry.getValue();
 
             for ( BlatAssociation ba : geneAssoc ) {
                 PhysicalLocation pl = ba.getBlatResult().getTargetAlignedRegion();
@@ -187,11 +190,12 @@ public class BlatAssociationScorer {
 
         // debugging information about clusters.
         if ( BlatAssociationScorer.log.isDebugEnabled() ) {
-            for ( PhysicalLocation pl : clusters.keySet() ) {
-                if ( clusters.get( pl ).size() > 1 ) {
+            for ( Map.Entry<PhysicalLocation, Collection<Gene>> cEntry : clusters.entrySet() ) {
+                Collection<Gene> members = cEntry.getValue();
+                if ( members.size() > 1 ) {
                     BlatAssociationScorer.log
-                            .debug( "Cluster at " + pl + " with " + clusters.get( pl ).size() + " members:\n"
-                                    + StringUtils.join( clusters.get( pl ).iterator(), "\n" ) );
+                            .debug( "Cluster at " + cEntry.getKey() + " with " + members.size() + " members:\n"
+                                    + StringUtils.join( members.iterator(), "\n" ) );
                 }
             }
         }
@@ -274,9 +278,8 @@ public class BlatAssociationScorer {
         BlatAssociation globalBest = null;
         List<BlatAssociation> keepers = new ArrayList<>();
 
-        for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
-            List<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
-
+        for ( Map.Entry<GeneProduct, List<BlatAssociation>> gpEntry : geneProduct2BlatAssociations.entrySet() ) {
+            List<BlatAssociation> geneProductBlatAssociations = gpEntry.getValue();
             if ( geneProductBlatAssociations.isEmpty() )
                 continue;
 
@@ -297,7 +300,7 @@ public class BlatAssociationScorer {
             List<BlatAssociation> toKeep = new ArrayList<>();
             toKeep.add( best );
             keepers.add( best );
-            geneProduct2BlatAssociations.put( geneProduct, toKeep );
+            gpEntry.setValue( toKeep );
 
             if ( best.getScore() > globalMaxScore ) {
                 globalMaxScore = best.getScore();
@@ -314,9 +317,9 @@ public class BlatAssociationScorer {
      * to be the same as regular matches.
      *
      * @return Value between 0 and 1, representing the fraction of matches, minus a gap penalty.
-     * @param blatResult
+     * @param blatResult a BLAT result to score
      */
-    public static Double score( BlatResult blatResult ) {
+    public static double score( BlatResult blatResult ) {
 
         long length;
         if ( blatResult.getQuerySequence() == null ) {
@@ -378,9 +381,9 @@ public class BlatAssociationScorer {
      * See <a href="http://genome.ucsc.edu/FAQ/FAQblat#blat4">Blat4 at UCSC</a>.
      *
      * @return Value between 0 and 1.
-     * @param blatResult
+     * @param blatResult a blat result to compute identity for
      */
-    public static Double identity( BlatResult blatResult ) {
+    public static double identity( BlatResult blatResult ) {
         int sizeMul = 1; // assuming DNA; use 3 for protein.
         long qAliSize = sizeMul * ( blatResult.getQueryEnd() - blatResult.getQueryStart() );
         long tAliSize = blatResult.getTargetEnd() - blatResult.getTargetStart();

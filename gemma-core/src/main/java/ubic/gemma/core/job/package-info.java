@@ -3,7 +3,7 @@
  * <p>
  * Tasks are declared with {@link ubic.gemma.core.job.Task} and launched with {@link ubic.gemma.core.job.TaskCommand}.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.job;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

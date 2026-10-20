@@ -1,8 +1,8 @@
 package ubic.gemma.persistence.service.expression.designElement;
 
 import org.hibernate.SessionFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,19 +10,20 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.core.context.TestComponent;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class CompositeSequenceDaoTest extends BaseDatabaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class CompositeSequenceDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -41,7 +42,7 @@ public class CompositeSequenceDaoTest extends BaseDatabaseTest {
     private Gene gene;
     private CompositeSequence cs;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
@@ -57,12 +58,28 @@ public class CompositeSequenceDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testFindByGene() {
-        compositeSequenceDao.findByGene( gene );
+        compositeSequenceDao.findByGene( gene, false );
+    }
+
+    @Test
+    public void testFindByGeneWithGene2Cs() {
+        compositeSequenceDao.findByGene( gene, true );
     }
 
     @Test
     public void testFindByGeneSlice() {
-        Slice<CompositeSequence> slice = compositeSequenceDao.findByGene( gene, 0, 10 );
+        Slice<CompositeSequence> slice = compositeSequenceDao.findByGene( gene, 0, 10, false );
+        assertNull( slice.getSort() );
+        assertNotNull( slice.getOffset() );
+        assertEquals( 0, ( int ) slice.getOffset() );
+        assertNotNull( slice.getLimit() );
+        assertEquals( 10, ( int ) slice.getLimit() );
+        assertNotNull( slice.getTotalElements() );
+    }
+
+    @Test
+    public void testFindByGeneSliceWithGene2Cs() {
+        Slice<CompositeSequence> slice = compositeSequenceDao.findByGene( gene, 0, 10, true );
         assertNull( slice.getSort() );
         assertNotNull( slice.getOffset() );
         assertEquals( 0, ( int ) slice.getOffset() );
@@ -73,12 +90,28 @@ public class CompositeSequenceDaoTest extends BaseDatabaseTest {
 
     @Test
     public void testFindByGeneAndPlatform() {
-        compositeSequenceDao.findByGene( gene, platform );
+        compositeSequenceDao.findByGene( gene, platform, false );
+    }
+
+    @Test
+    public void testFindByGeneAndPlatformWithGene2Cs() {
+        compositeSequenceDao.findByGene( gene, platform, true );
     }
 
     @Test
     public void testGetGenes() {
-        Slice<Gene> slice = compositeSequenceDao.getGenes( cs, 0, 10 );
+        Slice<Gene> slice = compositeSequenceDao.getGenes( cs, 0, 10, false );
+        assertNull( slice.getSort() );
+        assertNotNull( slice.getOffset() );
+        assertEquals( 0, ( int ) slice.getOffset() );
+        assertNotNull( slice.getLimit() );
+        assertEquals( 10, ( int ) slice.getLimit() );
+        assertNotNull( slice.getTotalElements() );
+    }
+
+    @Test
+    public void testGetGenesWithGene2Cs() {
+        Slice<Gene> slice = compositeSequenceDao.getGenes( cs, 0, 10, true );
         assertNull( slice.getSort() );
         assertNotNull( slice.getOffset() );
         assertEquals( 0, ( int ) slice.getOffset() );

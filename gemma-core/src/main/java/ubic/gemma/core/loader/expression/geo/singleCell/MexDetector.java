@@ -15,14 +15,18 @@ import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.singleCell.MexSingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoader;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderConfig;
+import ubic.gemma.core.loader.expression.singleCell.TenXCellRangerUtils;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.util.ProgressInputStream;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,13 +36,21 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 
 /**
- * Detects 10X MEX data from GEO series and samples.
+ * Detects MEX data from GEO series and samples.
  * <p>
- * Older MEX datasets use the {@code genes.tsv.gz} instead of {@code features.tsv.gz}. Those are copied using the new
+ * This detector is not specific to 10x MEX data since MEX itself is a widely used format in single-cell studies. Logic
+ * specific to 10x are stored in {@link TenXCellRangerUtils}.
+ * <p>
+ * Older 10x MEX datasets use the {@code genes.tsv.gz} instead of {@code features.tsv.gz}. Those are copied using the new
  * naming scheme into the download directory.
+ * <p>
+ * Glob patterns may be used in the suffixes for matching files as per {@link java.nio.file.FileSystem#getPathMatcher}.
+ * The {@code .gz} extension is optional.
+ * optional.
  * <p>
  * MEX data is only supported at the sample-level. However, we do support detecting its presence at the series-level,
  * but not downloading.
+ *
  * @author poirigui
  */
 @Setter
@@ -58,6 +70,10 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     @Nullable
     private String genesFileSuffix = DEFAULT_GENES_FILE_SUFFIX;
     private String matrixFileSuffix = DEFAULT_MATRIX_FILE_SUFFIX;
+
+    // for the 10x filter (if needed)
+    @Nullable
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
     private long maxEntrySizeInArchiveToSkip = DEFAULT_MAX_ENTRY_SIZE_IN_ARCHIVE_TO_SKIP;
     private long maxNumberOfEntriesToSkip = DEFAULT_MAX_NUMBER_OF_ENTRIES_TO_SKIP;
@@ -91,7 +107,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      */
     @Override
     public boolean hasSingleCellData( GeoSeries series ) {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         // don't bother looking up MEX files in archives at the series-level, it's just wasteful since we cannot
         // download them
         return hasSingleCellData( series.getGeoAccession(), series.getSupplementaryFiles(), false );
@@ -101,7 +117,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      * Check if a sample contains single-cell data in the context of its series.
      */
     public boolean hasSingleCellData( GeoSeries series, GeoSample sample ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return hasSingleCellData( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ), true );
     }
 
@@ -112,15 +128,17 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     /**
      * Check if a GEO sample contains single-cell data.
+     *
      * @param allowArchiveLookup allow looking into archives for MEX files
      */
     public boolean hasSingleCellData( GeoSample sample, boolean allowArchiveLookup ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return hasSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles(), allowArchiveLookup );
     }
 
     /**
      * Check if a sample or series has single-cell data.
+     *
      * @param geoAccession       GEO accession of the sample or series
      * @param supplementaryFiles list of supplementary file
      * @param allowArchiveLookup allow looking up archives for MEX data, use this with parsimony because it requires
@@ -133,7 +151,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
             if ( isMexFile( file, MexFileType.BARCODES ) ) {
                 barcodes = file;
             } else if ( isMexFile( file, MexFileType.FEATURES ) ) {
-                if ( genesFileSuffix != null && ( endsWith( file, genesFileSuffix ) ) ) {
+                if ( genesFileSuffix != null && endsWith( file, genesFileSuffix ) ) {
                     log.info( geoAccession + ": Found an old-style MEX file " + file + ", treating it as features.tsv." );
                 }
                 features = file;
@@ -143,11 +161,11 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
         }
 
         if ( barcodes != null && features != null && matrix != null ) {
-            log.info( String.format( "%s: Found MEX files in supplementary materials:\n\t%s\n\t%s\n\t%s",
+            log.info( String.format( "%s: Found MEX files in supplementary materials:%n\t%s%n\t%s%n\t%s",
                     geoAccession, barcodes, features, matrix ) );
             return true;
         } else if ( barcodes != null || features != null || matrix != null ) {
-            log.warn( String.format( "%s: Found incomplete MEX files in supplementary materials:\n\t%s",
+            log.warn( String.format( "%s: Found incomplete MEX files in supplementary materials:%n\t%s",
                     geoAccession,
                     Stream.of( barcodes, features, matrix ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
         }
@@ -183,7 +201,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                         break;
                                     }
                                 } else if ( isMexFile( te.getName(), MexFileType.FEATURES ) ) {
-                                    if ( genesFileSuffix != null && ( endsWith( te.getName(), genesFileSuffix ) ) ) {
+                                    if ( genesFileSuffix != null && endsWith( te.getName(), genesFileSuffix ) ) {
                                         log.info( geoAccession + ": Found an old-style MEX file " + te.getName() + " in an archive, treating it as features.tsv." );
                                     }
                                     featuresT = te.getName();
@@ -214,11 +232,11 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                 }
                             }
                             if ( barcodesT != null && featuresT != null && matrixT != null ) {
-                                log.info( String.format( "%s: Found MEX files bundled in an archive %s:\n\t\t%s\n\t\t%s\n\t\t%s",
+                                log.info( String.format( "%s: Found MEX files bundled in an archive %s:%n\t\t%s%n\t\t%s%n\t\t%s",
                                         geoAccession, file, barcodesT, featuresT, matrixT ) );
                                 return true;
                             } else if ( barcodesT != null || featuresT != null || matrixT != null ) {
-                                log.warn( String.format( "%s: Found incomplete MEX files bundled in an archive %s:\n\t%s",
+                                log.warn( String.format( "%s: Found incomplete MEX files bundled in an archive %s:%n\t%s",
                                         geoAccession, file,
                                         Stream.of( barcodesT, featuresT, matrixT ).filter( Objects::nonNull ).collect( Collectors.joining( "\n\t" ) ) ) );
                             }
@@ -255,8 +273,8 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      * can reuse the same files.
      */
     public Path downloadSingleCellData( GeoSeries series, GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
-        Assert.notNull( series.getGeoAccession() );
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         try {
             // first try only with the sample-level files, ideally this is enough
             downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
@@ -306,7 +324,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
      */
     @Override
     public Path downloadSingleCellData( GeoSample sample ) throws NoSingleCellDataFoundException, IOException {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return downloadSingleCellData( sample.getGeoAccession(), sample.getSupplementaryFiles() );
     }
 
@@ -424,7 +442,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                 if ( barcodesT != null ) {
                                     throw new UnsupportedOperationException( String.format( "%s: There is already an entry for barcodes: %s, %s cannot be downloaded.", geoAccession, barcodesT, fullEntryName ) );
                                 }
-                                if ( barcodeMetadataFileSuffix != null && ( te.getName().endsWith( barcodeMetadataFileSuffix ) || te.getName().endsWith( barcodeMetadataFileSuffix + ".gz" ) ) ) {
+                                if ( barcodeMetadataFileSuffix != null && endsWith( te.getName(), barcodeMetadataFileSuffix ) ) {
                                     throw new UnsupportedOperationException( "Barcode metadata files are not supported." );
                                 }
                                 dest = sampleDirectory.resolve( "barcodes.tsv.gz" );
@@ -473,7 +491,7 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
                                 if ( ctx.getAttempt() > 0 ) {
                                     what += " (attempt #" + ( ctx.getAttempt() + 1 ) + ")";
                                 }
-                                long c = IOUtils.copyLarge( new ProgressInputStream( tis, what, MexDetector.class.getName(), te.getSize() ), os );
+                                long c = IOUtils.copyLarge( new ProgressInputStream( tis, getProgressReporterFactory().createProgressReporter( what, MexDetector.class.getName() ), te.getSize() ), os );
                                 os.close();
                                 log.info( String.format( "%s: Done copying %s to %s.", geoAccession, fullEntryName, dest ) );
                                 if ( !existsAndHasExpectedSize( dest, fullEntryName, te.getSize(), false, true ) ) {
@@ -526,19 +544,19 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series ) {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         return getAdditionalSupplementaryFiles( series.getGeoAccession(), series.getSupplementaryFiles().stream().filter( f -> !f.endsWith( "_RAW.tar" ) ) );
     }
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSample sample ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return getAdditionalSupplementaryFiles( sample.getGeoAccession(), sample.getSupplementaryFiles().stream() );
     }
 
     @Override
     public List<String> getAdditionalSupplementaryFiles( GeoSeries series, GeoSample sample ) {
-        Assert.notNull( sample.getGeoAccession() );
+        Assert.notNull( sample.getGeoAccession() , "must not be null");
         return getAdditionalSupplementaryFiles( sample.getGeoAccession(), mergeSupplementaryFiles( series, sample ).stream() );
     }
 
@@ -594,12 +612,18 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
 
     @Override
     public SingleCellDataLoader getSingleCellDataLoader( GeoSeries series, SingleCellDataLoaderConfig config ) throws NoSingleCellDataFoundException {
-        Assert.notNull( series.getGeoAccession() );
+        Assert.notNull( series.getGeoAccession() , "must not be null");
         Assert.notNull( getDownloadDirectory(), "A download directory must be set." );
-        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series )
+        MexSingleCellDataLoader loader = new GeoMexSingleCellDataLoaderConfigurer( getDownloadDirectory(), series, singleCellDataTransformationFactory )
                 .configureLoader( config );
         if ( loader.getSampleNames().isEmpty() ) {
-            throw new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
+            NoSingleCellDataFoundException ex = new NoSingleCellDataFoundException( "No single-cell data was found for " + series.getGeoAccession() );
+            try {
+                loader.close();
+            } catch ( Exception e ) {
+                ex.addSuppressed( e );
+            }
+            throw ex;
         }
         return loader;
     }
@@ -628,7 +652,9 @@ public class MexDetector extends AbstractSingleCellDetector implements ArchiveBa
     }
 
     private boolean endsWith( String filename, String suffix ) {
-        return filename.endsWith( suffix ) || filename.endsWith( suffix + ".gz" );
+        return FileSystems.getDefault()
+                .getPathMatcher( "glob:*" + suffix + "{,.gz}" )
+                .matches( Paths.get( filename ).getFileName() );
     }
 
     /**

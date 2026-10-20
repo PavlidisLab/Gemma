@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
@@ -19,6 +20,50 @@ public class StatementUtils {
      */
     public static boolean hasSubject( Statement statement, Characteristic subject ) {
         return CharacteristicUtils.equals( statement.getSubject(), statement.getSubjectUri(), subject.getValue(), subject.getValueUri() );
+    }
+
+    /**
+     * Name the half of a predicate/object pair that is present without the other.
+     * <p>
+     * A label or a URI counts as present. A pair is written whole or not at all. Before the first pair was checked,
+     * six factor-value statements reached production with a predicate and no object (frinkbro, 2026-09-13).
+     *
+     * @return {@code "<predicateName> without <objectName>"}, the reverse, or {@code null} when the pair is whole
+     * or empty
+     */
+    @Nullable
+    public static String describeHalfPair( String predicateName, String objectName, @Nullable String predicate,
+            @Nullable String predicateUri, @Nullable String object, @Nullable String objectUri ) {
+        boolean hasPredicate = StringUtils.isNotBlank( predicate ) || StringUtils.isNotBlank( predicateUri );
+        boolean hasObject = StringUtils.isNotBlank( object ) || StringUtils.isNotBlank( objectUri );
+        if ( hasPredicate == hasObject ) {
+            return null;
+        }
+        return hasPredicate ? predicateName + " without " + objectName : objectName + " without " + predicateName;
+    }
+
+    /**
+     * The first half-present pair on a statement, first pair before second.
+     *
+     * @see #describeHalfPair(String, String, String, String, String, String)
+     */
+    @Nullable
+    public static String describeHalfPair( Statement s ) {
+        String first = describeHalfPair( "predicate", "object", s.getPredicate(), s.getPredicateUri(), s.getObject(), s.getObjectUri() );
+        return first != null ? first : describeHalfPair( "secondPredicate", "secondObject", s.getSecondPredicate(),
+                s.getSecondPredicateUri(), s.getSecondObject(), s.getSecondObjectUri() );
+    }
+
+    /**
+     * The first half-present pair on a proposed statement, first pair before second.
+     *
+     * @see #describeHalfPair(String, String, String, String, String, String)
+     */
+    @Nullable
+    public static String describeHalfPair( StatementValueObject s ) {
+        String first = describeHalfPair( "predicate", "object", s.getPredicate(), s.getPredicateUri(), s.getObject(), s.getObjectUri() );
+        return first != null ? first : describeHalfPair( "secondPredicate", "secondObject", s.getSecondPredicate(),
+                s.getSecondPredicateUri(), s.getSecondObject(), s.getSecondObjectUri() );
     }
 
     /**
@@ -41,8 +86,26 @@ public class StatementUtils {
         return formatStatement( statement, new String[0] );
     }
 
+    public static String formatStatement( StatementValueObject statementVo ) {
+        Statement statement = Statement.Factory.newInstance();
+        statement.setCategory( statementVo.getCategory() );
+        statement.setCategoryUri( statementVo.getCategoryUri() );
+        statement.setSubject( statementVo.getSubject() );
+        statement.setSubjectUri( statementVo.getSubjectUri() );
+        statement.setPredicate( statementVo.getPredicate() );
+        statement.setPredicateUri( statementVo.getPredicateUri() );
+        statement.setObject( statementVo.getObject() );
+        statement.setObjectUri( statementVo.getObjectUri() );
+        statement.setSecondPredicate( statementVo.getSecondPredicate() );
+        statement.setSecondPredicateUri( statementVo.getSecondPredicateUri() );
+        statement.setSecondObject( statementVo.getSecondObject() );
+        statement.setSecondObjectUri( statementVo.getSecondObjectUri() );
+        return formatStatement( statement, new String[0] );
+    }
+
     /**
      * Format a statement.
+     *
      * @param statement            statement to format.
      * @param ignoredPredicateUris list of predicate URIs that shouldn't be included in the formatted statement
      */
@@ -113,9 +176,14 @@ public class StatementUtils {
         String suffix;
         if ( StringUtils.equalsAnyIgnoreCase( objectUri,
                 "http://gemma.msl.ubc.ca/ont/TGEMO_00004", // overexpression
-                "http://gemma.msl.ubc.ca/ont/TGEMO_00007", // knockdown
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00005", // single-copy overexpression
+                " http://gemma.msl.ubc.ca/ont/TGEMO_00006", // double-copy overexpression
+                "http://gemma.msl.ubc.ca/ont/TGEMO_00007", // knockdown (removed from TGEMO, but still used)
                 "http://purl.obolibrary.org/obo/PATO_0001997", // decreased amount
-                "http://purl.obolibrary.org/obo/PATO_0000470" // increased amount
+                "http://purl.obolibrary.org/obo/PATO_0000470",// increased amount
+                "http://purl.obolibrary.org/obo/OBI_0001148", // gene knock out
+                "http://purl.obolibrary.org/obo/OBI_0001149", // gene knock in
+                "http://purl.obolibrary.org/obo/OBI_0002625" // gene knockdown
         ) ) {
             suffix = " of ";
         } else {

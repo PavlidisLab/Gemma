@@ -1,6 +1,6 @@
 package ubic.gemma.core.ontology;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.Statement;
 

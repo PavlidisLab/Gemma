@@ -23,6 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.core.analysis.sequence.Blat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
@@ -51,11 +52,14 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
     @Autowired
     private TaxonService taxonService;
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private Taxon taxon;
     private String blatResultFile = null;
     private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean sensitive = false;
+    private String markOnlyReason = null;
 
     @Override
     public String getCommandName() {
@@ -68,8 +72,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
+    protected void buildArrayDesignOptions( Options options ) {
 
         Option blatResultOption = Option.builder( "b" ).hasArg().argName( "PSL file" ).desc(
                         "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indicate "
@@ -93,11 +96,21 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         // this.addThreadsOption( options );
         options.addOption( blatScoreThresholdOption );
         options.addOption( blatResultOption );
+
+        options.addOption( Option.builder( MARK_ONLY_OPTION ).hasArg().argName( "reason" )
+                .desc( "Record the sequence analysis event for the platforms named with -a or -f and do nothing else: "
+                        + "no BLAT, no results persisted. For a platform whose sequences another platform's run has "
+                        + "already aligned — BLAT results are held per sequence, so the work is done, but the event "
+                        + "only propagates down the merge tree. The reason is recorded in the event, e.g. 'sequences "
+                        + "aligned by GPL6887'. Only the platforms named are marked, and platforms selected by "
+                        + "-taxon, -auto or -mdate are refused." )
+                .build() );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
+
+        this.markOnlyReason = getMarkOnlyReason( commandLine, "b", "s", "sensitive", "t" );
 
         if ( commandLine.hasOption( "sensitive" ) ) {
             this.sensitive = true;
@@ -122,23 +135,38 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
+    protected boolean selectsOwnPlatforms() {
+        // -t alone runs every platform of that taxon, found in processArrayDesigns()
+        return taxon != null;
+    }
+
+    @Override
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesignsToProcess ) {
         final Date skipIfLastRunLaterThan = this.getLimitingDate();
 
-        if ( !this.getArrayDesignsToProcess().isEmpty() ) {
+        if ( this.markOnlyReason != null ) {
+            for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
+                this.audit( arrayDesign, this.markOnlyReason );
+                addSuccessObject( arrayDesign, "marked as aligned without running: " + this.markOnlyReason );
+            }
+            return;
+        }
 
-            if ( this.blatResultFile != null && this.getArrayDesignsToProcess().size() > 1 ) {
+        if ( !arrayDesignsToProcess.isEmpty() ) {
+
+            if ( this.blatResultFile != null && arrayDesignsToProcess.size() > 1 ) {
                 throw new IllegalArgumentException(
                         "Cannot provide a blat result file when multiple arrays are being analyzed" );
             }
 
-            for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+            for ( ArrayDesign arrayDesign : arrayDesignsToProcess ) {
                 if ( !this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
+                    // shouldRun() has already recorded a warning object saying why
                     log.warn( arrayDesign + " does not meet criteria to be processed" );
-                    return;
+                    continue;
                 }
 
-                arrayDesign = getArrayDesignService().thaw( arrayDesign );
+                arrayDesign = arrayDesignService.thaw( arrayDesign );
                 log.info( "============== Start processing: " + arrayDesign.getShortName() + " ==================" );
                 Collection<BlatResult> persistedResults;
                 try {
@@ -171,7 +199,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
         } else if ( taxon != null ) {
 
-            Collection<ArrayDesign> allArrayDesigns = getArrayDesignService().findByTaxon( taxon );
+            Collection<ArrayDesign> allArrayDesigns = arrayDesignService.findByTaxon( taxon );
             log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
                     + allArrayDesigns.size() + " items]" );
 
@@ -185,8 +213,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceAnalysisEvent.class, note );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        cliArrayDesignAuditService.recordSequenceAnalysis( arrayDesign, note );
     }
 
     /**
@@ -209,7 +237,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         return parser.getResults();
     }
 
-    private void processArrayDesign( ArrayDesign design ) {
+    @Override
+    protected void processArrayDesign( ArrayDesign design ) {
 
         log.info( "============== Start processing: " + design.getShortName() + " ==================" );
         try {
@@ -239,7 +268,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         for ( ArrayDesign ad : toUpdate ) {
             log.info( "Marking subsumed or merged design as completed, updating report: " + ad );
             this.audit( ad, "Parent design was processed (merged or subsumed by this)" );
-            getArrayDesignReportService().generateArrayDesignReport( ad.getId() );
+            arrayDesignReportService.generateArrayDesignReport( ad.getId() );
         }
     }
 
@@ -261,7 +290,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             if ( !ArrayDesignBlatCli.this.shouldRun( skipIfLastRunLaterThan, arrayDesign, ArrayDesignSequenceAnalysisEvent.class ) ) {
                 return;
             }
-            arrayDesign = getArrayDesignService().thaw( arrayDesign );
+            arrayDesign = arrayDesignService.thaw( arrayDesign );
             ArrayDesignBlatCli.this.processArrayDesign( arrayDesign );
             addSuccessObject( arrayDesign );
         }

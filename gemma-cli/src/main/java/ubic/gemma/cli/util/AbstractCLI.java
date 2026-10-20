@@ -21,11 +21,10 @@ package ubic.gemma.cli.util;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.apache.commons.io.output.ProxyOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.ocpsoft.prettytime.shade.edu.emory.mathcs.backport.java.util.Collections;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
@@ -34,12 +33,13 @@ import ubic.gemma.core.metrics.binder.GenericExecutorMetrics;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -55,6 +55,7 @@ import static java.util.Objects.requireNonNull;
  * Use {@link AbstractAuthenticatedCLI} if you need to authenticate the user.
  *
  * @author pavlidis
+ * @author poirigui
  */
 public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
@@ -94,7 +95,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * CLI context.
      */
     @Nullable
-    private CliContext cliContext;
+    private CLIContext cliContext;
     /**
      * Indicate if this CLI allows positional arguments.
      */
@@ -126,6 +127,16 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      */
     private volatile BatchTaskExecutorService executorService = null;
 
+    /**
+     * Pipeline-job progress reporter. Resolved from the process environment on
+     * each {@code executeCommand} entry and pushed to the Gemma pipeline framework
+     * when {@code GEMMA_JOB_ID} is set. {@link ubic.gemma.cli.pipeline.PipelineJobReporter#NOOP}
+     * outside a pipeline context; subclasses call {@link #getPipelineJobReporter()}
+     * to emit per-stage progress without conditionals.
+     */
+    private volatile ubic.gemma.cli.pipeline.PipelineJobReporter pipelineJobReporter =
+            ubic.gemma.cli.pipeline.PipelineJobReporter.NOOP;
+
     @Override
     public String getCommandName() {
         return null;
@@ -133,7 +144,6 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
 
     @Override
     public List<String> getCommandAliases() {
-        //noinspection unchecked
         return Collections.emptyList();
     }
 
@@ -147,9 +157,15 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
         return CommandGroup.MISC;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Defining an option whose short or long name is already taken, whether by this class or by a base class, raises
+     * an {@link IllegalStateException}.
+     */
     @Override
     public Options getOptions() {
-        Options options = new Options();
+        Options options = new DuplicateRejectingOptions( getClass().getName() );
         buildStandardOptions( options );
         buildOptions( options );
         return options;
@@ -170,20 +186,20 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
      * objects will result in a value of {@link #FAILURE_FROM_ERROR_OBJECTS}.
      */
     @Override
-    public final int executeCommand( CliContext cliContext ) {
+    public final void executeCommand( CLIContext cliContext ) {
         Assert.state( this.cliContext == null, "There is already a CLI context." );
         try {
             this.cliContext = cliContext;
-            return executeCommandWithCliContext();
+            executeCommandWithCliContext( cliContext );
         } finally {
             this.cliContext = null;
         }
     }
 
     /**
-     * Execute a command with a {@link CliContext} set.
+     * Execute a command with a {@link CLIContext} set.
      */
-    private int executeCommandWithCliContext() {
+    private void executeCommandWithCliContext( CLIContext cliContext ) {
         Options options = getOptions();
         try {
             DefaultParser parser = new DefaultParser();
@@ -191,7 +207,7 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
             // check if -h/--help is provided before pursuing option processing
             if ( commandLine.hasOption( HELP_OPTION ) ) {
                 printHelp( options, new PrintWriter( getCliContext().getOutputStream(), true ) );
-                return SUCCESS;
+                return;
             }
             if ( !allowPositionalArguments && !commandLine.getArgList().isEmpty() ) {
                 throw new UnrecognizedOptionException( "The command line does not allow positional arguments." );
@@ -203,36 +219,72 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
                 // check if -h/--help was passed alongside a required argument
                 if ( ArrayUtils.containsAny( getCliContext().getArguments(), "-h", "--help" ) ) {
                     printHelp( options, new PrintWriter( getCliContext().getOutputStream(), true ) );
-                    return SUCCESS;
+                    return;
                 }
             }
             getCliContext().getErrorStream().println( e.getMessage() );
             printHelp( options, new PrintWriter( getCliContext().getErrorStream(), true ) );
-            return FAILURE;
+            cliContext.setExitStatus( FAILURE, e );
+            return;
+        }
+        // Resolve the pipeline reporter — NOOP unless GEMMA_JOB_ID env var is set.
+        this.pipelineJobReporter = ubic.gemma.cli.pipeline.PipelineJobReporter.fromEnv();
+        if ( this.pipelineJobReporter.isActive() ) {
+            this.pipelineJobReporter.stage( getActualCommandName() );
         }
         try ( BatchTaskExecutorService executorService = createBatchTaskExecutor() ) {
             this.executorService = executorService;
             doWork();
             executorService.shutdownAndAwaitTermination();
-            return executorService.getProgressReporter().hasErrorObjects() ? FAILURE_FROM_ERROR_OBJECTS : SUCCESS;
-        } catch ( Exception e ) {
+            if ( executorService.getProgressReporter().hasErrorObjects() ) {
+                cliContext.setExitStatus( FAILURE_FROM_ERROR_OBJECTS, null );
+                this.pipelineJobReporter.error( new RuntimeException( "completed with error objects" ) );
+            } else {
+                this.pipelineJobReporter.completed();
+            }
+        } catch ( Throwable t ) {
+            // Throwable, not Exception: an Error used to skip this block, so the batch executor was never shut down,
+            // its non-daemon threads kept the JVM alive, and GemmaCLI never reached System.exit(). An
+            // OutOfMemoryError does not get here: -XX:+ExitOnOutOfMemoryError ends the JVM first.
+            Exception e = t instanceof Exception ? ( Exception ) t : new RuntimeException( t.toString(), t );
             if ( e instanceof InterruptedException ) {
                 Thread.currentThread().interrupt();
             }
-            List<Runnable> stillRunning = executorService.shutdownNow();
-            if ( !stillRunning.isEmpty() ) {
-                log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+            // createBatchTaskExecutor() itself can throw -- it opens -batchOutputFile, which
+            // fails on an unwritable directory -- and that lands here before the field is
+            // assigned. Calling shutdownNow() on it then raised an NPE that REPLACED the real
+            // cause, so the run reported "executorService is null" and never named the file it
+            // could not open.
+            if ( executorService != null ) {
+                List<Runnable> stillRunning = executorService.shutdownNow();
+                if ( !stillRunning.isEmpty() ) {
+                    log.warn( String.format( "%d batch tasks were still running, those were interrupted.", stillRunning.size() ) );
+                }
             }
             if ( e instanceof WorkAbortedException ) {
                 log.warn( "Operation was aborted by the current user." );
-                return ABORTED;
+                cliContext.setExitStatus( ABORTED, e );
+                this.pipelineJobReporter.killed( e.getMessage() );
             } else {
-                log.error( String.format( "%s failed: %s", getActualCommandName(), ExceptionUtils.getRootCauseMessage( e ) ), e );
-                return FAILURE;
+                log.error( getActualCommandName() + " failed:", e );
+                cliContext.setExitStatus( FAILURE, e );
+                this.pipelineJobReporter.error( e );
             }
         } finally {
             this.executorService = null;
         }
+    }
+
+    /**
+     * Obtain the pipeline-job progress reporter for this run.
+     * <p>
+     * Returns {@link ubic.gemma.cli.pipeline.PipelineJobReporter#NOOP} when the
+     * CLI was launched outside a pipeline context (i.e. {@code GEMMA_JOB_ID}
+     * env var unset), so subclasses can call
+     * {@code getPipelineJobReporter().stage("phase")} unconditionally.
+     */
+    protected final ubic.gemma.cli.pipeline.PipelineJobReporter getPipelineJobReporter() {
+        return pipelineJobReporter;
     }
 
     /**
@@ -253,11 +305,43 @@ public abstract class AbstractCLI implements CLI, ApplicationContextAware {
     /**
      * Obtain the CLI context.
      * <p>
-     * This is only valid for the duration of the {@link #executeCommand(CliContext)} method.
+     * This is only valid for the duration of the {@link #executeCommand(CLIContext)} method.
      */
-    protected final CliContext getCliContext() {
+    protected final CLIContext getCliContext() {
         Assert.state( cliContext != null, "The CLI context can only be obtained during the execution of the command." );
         return cliContext;
+    }
+
+    /**
+     * Open the standard output for writing a result.
+     * <p>
+     * Closing the returned stream leaves the standard output open, then fails with an {@link IOException} if any
+     * write to it has failed. Use this instead of wrapping {@code getCliContext().getOutputStream()} directly: a
+     * try-with-resources over the latter closes the standard output, and every later write in the same run (the
+     * next quantitation type under {@code -allQts}, the batch summary) goes into a closed {@link PrintStream}, which
+     * drops it without throwing.
+     */
+    protected final OutputStream openStandardOutput() {
+        return new ProxyOutputStream( CloseShieldOutputStream.wrap( getCliContext().getOutputStream() ) ) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                checkStandardOutput();
+            }
+        };
+    }
+
+    /**
+     * Fail if a write to the standard output has failed.
+     * <p>
+     * {@link PrintStream} never throws on a failed write (closed stream, closed pipe, full disk): it sets a flag
+     * that only {@link PrintStream#checkError()} reads. A result that was never written was otherwise reported as
+     * written.
+     */
+    protected final void checkStandardOutput() throws IOException {
+        if ( getCliContext().getOutputStream().checkError() ) {
+            throw new IOException( "Writing to the standard output failed." );
+        }
     }
 
     private void printHelp( Options options, PrintWriter writer ) {

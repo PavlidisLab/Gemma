@@ -6,10 +6,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
-import ubic.gemma.core.util.ProgressInputStream;
-import ubic.gemma.core.util.SimpleRetry;
-import ubic.gemma.core.util.SimpleRetryCallable;
-import ubic.gemma.core.util.SimpleRetryPolicy;
+import ubic.gemma.core.util.*;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -28,6 +25,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
     private FTPClientFactory ftpClientFactory;
     private Path downloadDirectory;
     private SimpleRetry<IOException> retryTemplate = new SimpleRetry<>( new SimpleRetryPolicy( 3, 1000, 1.5 ), IOException.class, getClass().getName() );
+    private ProgressReporterFactory progressReporterFactory = new DefaultProgressReporterFactory();
 
     /**
      * Set the FTP client factory to use for downloading data over FTP.
@@ -55,8 +53,18 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
         this.retryTemplate = new SimpleRetry<>( retryPolicy, IOException.class, getClass().getName() );
     }
 
+    protected ProgressReporterFactory getProgressReporterFactory() {
+        return this.progressReporterFactory;
+    }
+
+    @Override
+    public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
+        this.progressReporterFactory = progressReporterFactory;
+    }
+
     /**
      * Retry the given callable a certain number of times before giving up.
+     *
      * @see SimpleRetry
      */
     protected <T> T retry( SimpleRetryCallable<T, IOException> callable, String what ) throws IOException {
@@ -65,6 +73,7 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
 
     /**
      * Check if a file at a given destination exists and has the size of a remote file.
+     *
      * @param dest                  file at destination
      * @param remoteFile            filename at origin
      * @param expectedContentLength expected size, or -1 if unknown
@@ -99,9 +108,9 @@ public abstract class AbstractSingleCellDetector implements SingleCellDetector {
         long sizeInBytes = getSizeInBytes( filename );
         InputStream stream;
         if ( url.getProtocol().equals( "ftp" ) ) {
-            stream = new BufferedInputStream( new ProgressInputStream( ftpClientFactory.openStream( url ), what, getClass().getName(), sizeInBytes ) );
+            stream = new BufferedInputStream( new ProgressInputStream( ftpClientFactory.openStream( url ), progressReporterFactory.createProgressReporter( what, getClass().getName() ), sizeInBytes ) );
         } else {
-            stream = new BufferedInputStream( new ProgressInputStream( url.openStream(), what, getClass().getName(), sizeInBytes ) );
+            stream = new BufferedInputStream( new ProgressInputStream( url.openStream(), progressReporterFactory.createProgressReporter( what, getClass().getName() ), sizeInBytes ) );
         }
         if ( decompressIfNeeded && filename.endsWith( ".gz" ) ) {
             try {

@@ -18,20 +18,18 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.util.ListUtils;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ReleaseDetailsUpdateEvent;
+import ubic.gemma.core.security.audit.payload.ReleaseDetailsUpdatePayload;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.URL;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author pavlidis
@@ -40,56 +38,66 @@ import java.util.stream.Collectors;
 @Service
 public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabase> implements ExternalDatabaseService {
 
-    private final ExternalDatabaseDao externalDatabaseDao;
+    @Autowired
+    private ExternalDatabaseReadService readService;
+
+    /**
+     * Co-bean carrying the {@code @Audited} hook for release-details
+     * writes. Replaces the imperative 5-arg
+     * {@code auditTrailService.addUpdateEvent(ed, ReleaseDetailsUpdateEvent.class,
+     * note, detail, lastUpdated)} previously used by
+     * {@link #updateReleaseDetails} and {@link #updateReleaseLastUpdated}.
+     * The audit row's {@code performedDate} is now {@code now()} rather
+     * than the supplied {@code lastUpdated} — the original moment is
+     * preserved in the JSON payload and on the entity.
+     */
+    @Autowired
+    private ExternalDatabaseReleaseAuditService releaseAuditService;
 
     @Autowired
     public ExternalDatabaseServiceImpl( ExternalDatabaseDao mainDao ) {
         super( mainDao );
-        externalDatabaseDao = mainDao;
     }
 
+    // =====================================================================
+    // Read methods -- delegate to ExternalDatabaseReadService.
+    // ACL @Secured annotations live on the ExternalDatabaseService interface
+    // and apply at the facade proxy boundary.
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public Collection<ExternalDatabase> loadAllWithAuditTrail() {
-        Collection<ExternalDatabase> eds = externalDatabaseDao.loadAll();
-        eds.forEach( ed -> Hibernate.initialize( ed.getAuditTrail() ) );
-        return eds;
+        return readService.loadAllWithAuditTrail();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExternalDatabase loadWithExternalDatabases( Long id ) {
-        ExternalDatabase ed = externalDatabaseDao.load( id );
-        if ( ed != null ) {
-            Hibernate.initialize( ed.getExternalDatabases() );
-        }
-        return ed;
+        return readService.loadWithExternalDatabases( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExternalDatabase findByName( String name ) {
-        return this.externalDatabaseDao.findByName( name );
+        return readService.findByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExternalDatabase findByNameWithExternalDatabases( String name ) {
-        ExternalDatabase ed = externalDatabaseDao.findByName( name );
-        if ( ed != null ) {
-            Hibernate.initialize( ed.getExternalDatabases() );
-        }
-        return ed;
+        return readService.findByNameWithExternalDatabases( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public ExternalDatabase findByNameWithAuditTrail( String name ) {
-        return this.externalDatabaseDao.findByNameWithAuditTrail( name );
+        return readService.findByNameWithAuditTrail( name );
     }
 
-    @Autowired
-    private AuditTrailService auditTrailService;
+    @Override
+    public List<ExternalDatabase> findAllByNameIn( List<String> names ) {
+        return readService.findAllByNameIn( names );
+    }
+
+    // =====================================================================
+    // Write methods -- stay on the facade.
+    // =====================================================================
 
     @Override
     @Transactional
@@ -105,8 +113,16 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
         ed.setReleaseVersion( releaseVersion );
         ed.setReleaseUrl( releaseUrl );
         ed.setLastUpdated( lastUpdated );
-        auditTrailService.addUpdateEvent( ed, ReleaseDetailsUpdateEvent.class, releaseNote, detail, lastUpdated );
         update( ed );
+        // Audit emission routed through a helper bean so the @Audited
+        // aspect can intercept; the legacy 5-arg form's explicit
+        // performedDate=lastUpdated is now carried in the JSON payload
+        // (the audit row's own performedDate is now() under the aspect).
+        // Inventory #9.
+        releaseAuditService.recordReleaseDetailsUpdate( ed, releaseNote,
+                new ReleaseDetailsUpdatePayload( releaseVersion,
+                        releaseUrl != null ? releaseUrl.toString() : null,
+                        lastUpdated, detail ) );
     }
 
     @Override
@@ -114,17 +130,12 @@ public class ExternalDatabaseServiceImpl extends AbstractService<ExternalDatabas
     public void updateReleaseLastUpdated( ExternalDatabase ed, @Nullable String releaseNote, Date lastUpdated ) {
         ed.setLastUpdated( lastUpdated );
         String detail = "Release last updated moment has been updated.";
-        auditTrailService.addUpdateEvent( ed, ReleaseDetailsUpdateEvent.class, releaseNote, detail, lastUpdated );
         update( ed );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExternalDatabase> findAllByNameIn( List<String> names ) {
-        // the database is case insensitive...
-        Map<String, Integer> namesIndex = ListUtils.indexOfCaseInsensitiveStringElements( names );
-        return externalDatabaseDao.findAllByNameIn( names ).stream()
-                .sorted( Comparator.comparing( ed -> namesIndex.get( ed.getName() ) ) )
-                .collect( Collectors.toList() );
+        // Audit emission routed through a helper bean; see the note on
+        // updateReleaseDetails above. Inventory #10.
+        releaseAuditService.recordReleaseDetailsUpdate( ed, releaseNote,
+                new ReleaseDetailsUpdatePayload( ed.getReleaseVersion(),
+                        ed.getReleaseUrl() != null ? ed.getReleaseUrl().toString() : null,
+                        lastUpdated, detail ) );
     }
 }

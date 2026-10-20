@@ -1,14 +1,15 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.analysis.singleCell.aggregate.AggregateConfig;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregatorService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSplitService;
-import ubic.gemma.core.analysis.singleCell.aggregate.SplitConfig;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellAggregationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExperimentSubSetsCreationConfig;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentAggregateService;
+import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellExpressionExperimentSubSetService;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.core.util.test.PersistentDummyObjectHelper;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -28,16 +29,16 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils.randomSingleCellVectors;
 
-public class SingleCellIntegrationTest extends BaseIntegrationTest {
+public class SingleCellIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
     @Autowired
-    private SingleCellExpressionExperimentSplitService singleCellExpressionExperimentSplitService;
+    private SingleCellExpressionExperimentSubSetService singleCellExpressionExperimentSubSetService;
     @Autowired
-    private SingleCellExpressionExperimentAggregatorService singleCellExpressionExperimentAggregatorService;
+    private SingleCellExpressionExperimentAggregateService singleCellExpressionExperimentAggregateService;
 
     @Autowired
     private PersistentDummyObjectHelper helper;
@@ -45,13 +46,13 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
     private ArrayDesign ad;
     private ExpressionExperiment ee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ad = helper.getTestPersistentArrayDesign( 100, true, false );
         ee = helper.getTestPersistentBasicExpressionExperiment( ad );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         // FIXME:
         // if ( ee != null ) {
@@ -62,8 +63,13 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         // }
     }
 
-    @Test
-    public void test() {
+    /**
+     * @param fetchSize -1 (the default) aggregates the single-cell vectors in memory; a positive value streams them from the database
+     *                  twice (library sizes, then aggregation), as {@code aggregateSingleCellData} does with 30
+     */
+    @ParameterizedTest
+    @ValueSource(ints = { -1, 30 })
+    public void test( int fetchSize ) {
         Random random = new Random( 123L );
         QuantitationType qt = new QuantitationType();
         qt.setName( "counts" );
@@ -72,26 +78,26 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         qt.setRepresentation( PrimitiveType.DOUBLE );
         qt.setScale( ScaleType.COUNT );
         qt.setIsSingleCellPreferred( true );
-        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, randomSingleCellVectors( ee, ad, qt ), null );
+        singleCellExpressionExperimentService.addSingleCellDataVectors( ee, qt, randomSingleCellVectors( ee, ad, qt ), null, true, false );
 
         SingleCellDimension scd = singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithCellLevelCharacteristics( ee )
                 .orElse( null );
         assertThat( scd ).isNotNull();
         assertThat( scd.getCellIds() ).isNotNull().hasSize( 8000 );
-        assertThat( scd.getNumberOfCells() ).isEqualTo( 8000 );
+        assertThat( scd.getNumberOfCellIds() ).isEqualTo( 8000 );
 
         // at some point, we add single cell labels
-        List<String> labels = new ArrayList<>( scd.getNumberOfCells() );
+        List<String> labels = new ArrayList<>( scd.getNumberOfCellIds() );
         for ( int i = 0; i < 8000; i++ ) {
             labels.add( String.valueOf( "ABCD".charAt( random.nextInt( 4 ) ) ) );
         }
-        CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, qt, scd, labels, null, null );
+        CellTypeAssignment cta = singleCellExpressionExperimentService.relabelCellTypes( ee, qt, scd, labels, null, null, true, false );
         assertThat( cta.getNumberOfCellTypes() ).isEqualTo( 4 );
         assertThat( cta.getNumberOfAssignedCells() ).isEqualTo( 8000 );
         assertThat( singleCellExpressionExperimentService.getCellTypeFactor( ee ) )
                 .isNotNull();
 
-        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSplitService.splitByCellType( ee, SplitConfig.builder().build() );
+        List<ExpressionExperimentSubSet> subsets = singleCellExpressionExperimentSubSetService.createSubSetsByCellType( ee, SingleCellExperimentSubSetsCreationConfig.builder().build() );
 
         // one for each cell type and subject
         assertThat( subsets )
@@ -111,8 +117,8 @@ public class SingleCellIntegrationTest extends BaseIntegrationTest {
         for ( ExpressionExperimentSubSet subset : subsets ) {
             cellBAs.addAll( subset.getBioAssays() );
         }
-        AggregateConfig config = AggregateConfig.builder().makePreferred( true ).build();
-        QuantitationType aggregatedQt = singleCellExpressionExperimentAggregatorService.aggregateVectorsByCellType( ee, cellBAs, config );
+        SingleCellAggregationConfig config = SingleCellAggregationConfig.builder().makePreferred( true ).fetchSize( fetchSize ).build();
+        QuantitationType aggregatedQt = singleCellExpressionExperimentAggregateService.aggregateVectorsByCellType( ee, cellBAs, config );
 
         assertThat( aggregatedQt.getName() ).isEqualTo( "counts aggregated by cell type (log2cpm)" );
         assertThat( aggregatedQt.getDescription() ).isEqualTo( "Expression data has been aggregated by cell type using SUM. The data was subsequently converted to log2cpm." );

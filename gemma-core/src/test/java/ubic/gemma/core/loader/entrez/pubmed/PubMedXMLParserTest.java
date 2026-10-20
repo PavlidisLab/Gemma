@@ -18,18 +18,19 @@
  */
 package ubic.gemma.core.loader.entrez.pubmed;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Keyword;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -37,13 +38,13 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeNoException;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
+@NetworkAvailable
+@ExtendWith(NetworkAvailableExtension.class)
 public class PubMedXMLParserTest {
 
     private static final Log log = LogFactory.getLog( PubMedXMLParserTest.class.getName() );
@@ -62,8 +63,6 @@ public class PubMedXMLParserTest {
             assertNotNull( br.getPages() );
             SimpleDateFormat f = new SimpleDateFormat( "mm/HH/MM/dd/yyyy", Locale.ENGLISH );
             assertEquals( "00/00/06/01/2004", f.format( br.getPublicationDate() ) );
-        } catch ( IOException e ) {
-            this.logOrThrowException( e );
         }
     }
 
@@ -94,8 +93,6 @@ public class PubMedXMLParserTest {
                     .startsWith( "This Institute of Medicine (IOM) study grew out of discussions" ) );
             assertTrue( br.getAbstractText().endsWith( "interested general public." ) );
 
-        } catch ( IOException e ) {
-            this.logOrThrowException( e );
         }
     }
 
@@ -126,8 +123,6 @@ public class PubMedXMLParserTest {
             assertTrue( br.getAbstractText().endsWith(
                     "offering custom prenatal testing if the disease-causing mutations in a family are known." ) );
 
-        } catch ( IOException e ) {
-            this.logOrThrowException( e );
         }
     }
 
@@ -144,8 +139,6 @@ public class PubMedXMLParserTest {
             // log.info( " qualifier: " + q.getTerm() + " " + q.getIsMajorTopic() );
             // }
             // }
-        } catch ( IOException e ) {
-            this.logOrThrowException( e );
         }
     }
 
@@ -153,8 +146,8 @@ public class PubMedXMLParserTest {
      * This uses a medline-format file, instead of the pubmed xml files we get from the eutils.
      */
     @Test
+    @NetworkAvailable(url = "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_190101.dtd")
     public void testParseMulti() throws Exception {
-        assumeThatResourceIsAvailable( "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_190101.dtd" );
         try ( InputStream testStream = new GZIPInputStream( new ClassPathResource( "/data/loader/medline.multi.xml.gz" ).getInputStream() ) ) {
             Collection<BibliographicReference> brl = PubMedXMLParser.parse( testStream );
             assertEquals( 147, brl.size() );
@@ -181,8 +174,29 @@ public class PubMedXMLParserTest {
             assertEquals( expectedNumberofKeywords, actualNumberofKeywords );
             assertEquals( expectedNumberofCompounds, actualNumberofCompounds );
 
-        } catch ( IOException e ) {
-            this.logOrThrowException( e );
+        }
+    }
+
+    /**
+     * PMID 37094356 carries a publisher-supplied {@code KeywordList Owner="NOTNLM"} whose first entry is a
+     * 1417-character abbreviations glossary. It used to abort the insert against a VARCHAR(255) TERM column;
+     * BIB_REF_ANNOTATION.TERM is now {@code text}, so the keyword must survive parsing in full rather than
+     * being truncated to fit.
+     */
+    @Test
+    public void testParseKeepsOverlongKeywordIntact() throws Exception {
+        try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-37094356-longkeyword.xml" ) ) {
+            Collection<BibliographicReference> brl = PubMedXMLParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertEquals( "37094356", br.getPubAccession().getAccession() );
+            assertEquals( 5, br.getKeywords().size() );
+            Keyword glossary = br.getKeywords().stream()
+                    .filter( k -> k.getTerm().startsWith( "BACH1 Abbreviations:" ) )
+                    .findFirst()
+                    .orElseThrow( () -> new AssertionError( "the abbreviations keyword was dropped" ) );
+            assertEquals( 1417, glossary.getTerm().length() );
+            assertTrue( glossary.getTerm().endsWith( "fluoromethylketone" ),
+                    "keyword was truncated: ends with " + StringUtils.right( glossary.getTerm(), 40 ) );
         }
     }
 
@@ -199,8 +213,6 @@ public class PubMedXMLParserTest {
             assertTrue(
                     br.getAbstractText().contains( "CONCLUSIONS: The SLO is useful for in vivo imaging of rat RGCs" ) );
             PubMedXMLParserTest.log.info( br.getAbstractText() );
-        } catch ( IOException e ) {
-            this.logOrThrowException( e );
         }
     }
 
@@ -208,8 +220,8 @@ public class PubMedXMLParserTest {
      * PMID 7914452 is an example of a retracted article.
      */
     @Test
+    @NetworkAvailable(url = "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_180101.dtd")
     public void testParseRetracted() throws Exception {
-        assumeThatResourceIsAvailable( "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_180101.dtd" );
         try ( InputStream testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-retracted.xml" ) ) {
             Collection<BibliographicReference> brl = PubMedXMLParser.parse( testStream );
             BibliographicReference br = brl.iterator().next();
@@ -220,18 +232,6 @@ public class PubMedXMLParserTest {
 
             assertTrue( br.getRetracted() );
 
-        } catch ( IOException e ) {
-            this.logOrThrowException( e );
-        }
-    }
-
-    private void logOrThrowException( IOException e ) throws IOException {
-        if ( e.getCause() instanceof java.net.ConnectException ) {
-            assumeNoException( "Test skipped due to connection exception", e );
-        } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
-            assumeNoException( "Test skipped due to unknown host exception", e );
-        } else {
-            throw ( e );
         }
     }
 }

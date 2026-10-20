@@ -40,13 +40,13 @@ public class RefreshExperimentCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment bas ) {
+    protected void processExpressionExperiment( ExpressionExperiment ee ) {
         getBatchTaskExecutor().execute( () -> {
             try {
-                refreshExpressionExperimentFromGemmaWeb( bas, refreshVectors, refreshReports );
-                addSuccessObject( "ExpressionExperiment with ID " + bas.getId() );
+                refreshExpressionExperimentFromGemmaWeb( ee, refreshVectors, refreshReports );
+                addSuccessObject( ee, "Refreshed experiment from Gemma Web." );
             } catch ( Exception e ) {
-                addErrorObject( "ExpressionExperiment with ID " + bas.getId(), e );
+                addErrorObject( ee, "Failed to refresh experiment from Gemma Web", e );
             }
         } );
     }

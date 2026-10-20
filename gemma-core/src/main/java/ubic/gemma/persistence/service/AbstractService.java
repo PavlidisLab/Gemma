@@ -7,11 +7,12 @@ import ubic.gemma.core.util.ListUtils;
 import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
@@ -43,7 +44,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         return mainDao.find( entity );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public O findOrFail( O entity ) {
@@ -91,11 +92,33 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<O> loadOrFail( Collection<Long> ids ) throws NullPointerException {
+        return loadOrFail( ids, NullPointerException::new );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public <T extends Exception> Collection<O> loadOrFail( Collection<Long> ids, Function<String, T> exceptionSupplier ) throws T {
+        ids = new HashSet<>( ids );
+        Collection<O> result = load( ids );
+        if ( result.size() < ids.size() ) {
+            for ( O o : result ) {
+                ids.remove( o.getId() );
+            }
+            throw exceptionSupplier.apply( String.format( "No %s with IDs %s found.",
+                    mainDao.getElementClass().getName(),
+                    ids.stream().sorted().map( String::valueOf ).collect( Collectors.joining( ", " ) ) ) );
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public O load( Long id ) {
         return mainDao.load( id );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public O loadOrFail( Long id ) {
@@ -103,7 +126,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
                 String.format( "No %s with ID %d.", mainDao.getElementClass().getName(), id ) );
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Supplier<T> exceptionSupplier ) throws T {
@@ -114,7 +137,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         return entity;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier ) throws T {
@@ -125,7 +148,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
         return entity;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     @Transactional(readOnly = true)
     public <T extends Exception> O loadOrFail( Long id, Function<String, T> exceptionSupplier, String message ) throws T {
@@ -168,12 +191,6 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     @Override
     @Transactional
-    public void remove( Long id ) {
-        mainDao.remove( id );
-    }
-
-    @Override
-    @Transactional
     @OverridingMethodsMustInvokeSuper
     public void remove( O entity ) {
         mainDao.remove( entity );
@@ -202,6 +219,13 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Deprecated
     @CheckReturnValue
     protected O ensureInSession( O entity ) {
+        // Tolerate null so test teardown can pass possibly-already-removed references without a
+        // pre-check. Pre-Phase-2 ensureInSession was a guarded `if (entity == null) return null;`
+        // path; the rewrite during the JPA-Criteria/Metamodel refactor dropped that. Re-add it —
+        // callers that need to fail loud on null can do so explicitly via Assert.notNull.
+        if ( entity == null ) {
+            return null;
+        }
         Long id = entity.getId();
         if ( id == null )
             return entity; // transient

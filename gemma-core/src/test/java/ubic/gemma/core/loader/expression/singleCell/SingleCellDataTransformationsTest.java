@@ -1,42 +1,53 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
-import ubic.gemma.core.config.Settings;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.config.SettingsConfig;
+import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.singleCell.transform.*;
 import ubic.gemma.core.loader.util.hdf5.H5Attribute;
 import ubic.gemma.core.loader.util.hdf5.H5File;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseTest5;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@Category(SlowTest.class)
-public class SingleCellDataTransformationsTest {
+@Tag("slow")
+@Tag("integration")
+@ContextConfiguration
+public class SingleCellDataTransformationsTest extends BaseTest5 {
 
-    private static final Path pythonExecutable = Paths.get( Settings.getString( "python.exe" ) );
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
 
-    @BeforeClass
-    public static void checkIfAnnDataAndScipyAreInstalled() throws IOException {
-        SingleCellDataTranspose transpose = new SingleCellDataTranspose();
-        transpose.setPythonExecutable( pythonExecutable );
-        assumeTrue( "scipy is required to run this test", transpose.isPackageInstalled( "scipy" ) );
-        assumeTrue( "anndata is required to run this test", transpose.isPackageInstalled( "anndata" ) );
+    @Configuration
+    @TestComponent
+    @Import({ SettingsConfig.class, SingleCellTransformationConfig.class })
+    public static class Config {
+
     }
+
+    @Autowired
+    public ApplicationContext ctx;
 
     @Test
     public void testTranspose() throws IOException {
-        SingleCellDataTranspose transpose = new SingleCellDataTranspose();
-        transpose.setPythonExecutable( pythonExecutable );
+        checkIfPackageIsInstalled( "scipy" );
+        checkIfPackageIsInstalled( "anndata" );
+        SingleCellDataTranspose transpose = ctx.getBean( SingleCellDataTranspose.class );
         transpose.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         transpose.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         transpose.perform();
@@ -44,8 +55,9 @@ public class SingleCellDataTransformationsTest {
 
     @Test
     public void testPack() throws IOException {
-        SingleCellDataPack pack = new SingleCellDataPack();
-        pack.setPythonExecutable( pythonExecutable );
+        checkIfPackageIsInstalled( "scipy" );
+        checkIfPackageIsInstalled( "anndata" );
+        SingleCellDataPack pack = ctx.getBean( SingleCellDataPack.class );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         pack.perform();
@@ -53,8 +65,9 @@ public class SingleCellDataTransformationsTest {
 
     @Test
     public void testSortBySample() throws IOException {
-        SingleCellDataSortBySample pack = new SingleCellDataSortBySample();
-        pack.setPythonExecutable( pythonExecutable );
+        checkIfPackageIsInstalled( "scipy" );
+        checkIfPackageIsInstalled( "anndata" );
+        SingleCellDataSortBySample pack = ctx.getBean( SingleCellDataSortBySample.class );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         pack.setSampleColumnName( "ID" );
@@ -63,12 +76,13 @@ public class SingleCellDataTransformationsTest {
 
     @Test
     public void testSample() throws IOException {
+        checkIfPackageIsInstalled( "anndata" );
+        checkIfPackageIsInstalled( "numpy" );
         Path outputFile = Files.createTempFile( "test", null );
-        SingleCellDataSample pack = new SingleCellDataSample();
-        pack.setPythonExecutable( pythonExecutable );
+        SingleCellDataSample pack = ctx.getBean( SingleCellDataSample.class );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pack.setOutputFile( outputFile, SingleCellDataType.ANNDATA );
-        pack.setNumberOfCells( 100 );
+        pack.setNumberOfCellIds( 100 );
         pack.setNumberOfGenes( 50 );
         pack.perform();
         try ( H5File f = H5File.open( outputFile ) ) {
@@ -83,8 +97,8 @@ public class SingleCellDataTransformationsTest {
 
     @Test
     public void testRewrite() throws IOException {
-        SingleCellDataRewrite pack = new SingleCellDataRewrite();
-        pack.setPythonExecutable( pythonExecutable );
+        checkIfPackageIsInstalled( "anndata" );
+        SingleCellDataRewrite pack = ctx.getBean( SingleCellDataRewrite.class );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         pack.perform();
@@ -92,8 +106,8 @@ public class SingleCellDataTransformationsTest {
 
     @Test
     public void testUnraw() throws IOException {
-        SingleCellDataUnraw pack = new SingleCellDataUnraw();
-        pack.setPythonExecutable( pythonExecutable );
+        checkIfPackageIsInstalled( "anndata" );
+        SingleCellDataUnraw pack = ctx.getBean( SingleCellDataUnraw.class );
         pack.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pack.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         pack.perform();
@@ -101,14 +115,28 @@ public class SingleCellDataTransformationsTest {
 
     @Test
     public void testPipeline() throws IOException {
-        SingleCellDataTransformationPipeline pipeline = new SingleCellDataTransformationPipeline( Arrays.asList(
-                new SingleCellDataRewrite(),
-                new SingleCellDataTranspose(),
-                new SingleCellDataPack()
+        checkIfPackageIsInstalled( "scipy" );
+        checkIfPackageIsInstalled( "anndata" );
+        SingleCellDataTransformationPipeline pipeline = singleCellDataTransformationFactory.createPipeline( Arrays.asList(
+                SingleCellDataRewrite.class,
+                SingleCellDataTranspose.class,
+                SingleCellDataPack.class
         ) );
-        pipeline.setPythonExecutable( pythonExecutable );
         pipeline.setInputFile( new ClassPathResource( "/data/loader/expression/singleCell/GSE225158_BU_OUD_Striatum_refined_all_SeuratObj_N22.h5ad" ).getFile().toPath(), SingleCellDataType.ANNDATA );
         pipeline.setOutputFile( Files.createTempFile( "test", null ), SingleCellDataType.ANNDATA );
         pipeline.perform();
+    }
+
+    private static final ConcurrentHashMap<String, Boolean> isPackageInstalled = new ConcurrentHashMap<>();
+
+    private void checkIfPackageIsInstalled( String packageName ) {
+        assumeTrue( isPackageInstalled.computeIfAbsent( packageName, ignored -> {
+            SingleCellDataTranspose transpose = ctx.getBean( SingleCellDataTranspose.class );
+            try {
+                return transpose.isPackageInstalled( packageName );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+        } ), packageName + " is required to run this test" );
     }
 }

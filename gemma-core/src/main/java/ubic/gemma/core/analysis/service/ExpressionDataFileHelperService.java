@@ -1,12 +1,13 @@
 package ubic.gemma.core.analysis.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatchInformationService;
-import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilterConfig;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataMatrix;
@@ -23,14 +24,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawAndProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetReadService;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,15 +40,18 @@ import java.util.stream.Stream;
 
 /**
  * This service provides transactional helpers to retrieve data for {@link ExpressionDataFileService}.
+ *
  * @author poirigui
  */
 @Service
 @Transactional(readOnly = true)
-@CommonsLog
+@Slf4j
 class ExpressionDataFileHelperService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService;
     @Autowired
     private ArrayDesignService arrayDesignService;
     @Autowired
@@ -59,8 +62,6 @@ class ExpressionDataFileHelperService {
     private RawAndProcessedExpressionDataVectorService rawAndProcessedExpressionDataVectorService;
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
-    @Autowired
-    private CoexpressionService gene2geneCoexpressionService;
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     @Autowired
@@ -79,9 +80,11 @@ class ExpressionDataFileHelperService {
         log.info( "Retrieving processed data matrix for " + ee + "..." );
         ee = expressionExperimentService.thawLite( ee );
         if ( filtered ) {
-            FilterConfig filterConfig = new FilterConfig();
-            filterConfig.setIgnoreMinimumSampleThreshold( true );
-            filterConfig.setIgnoreMinimumRowsThreshold( true );
+            ExpressionExperimentFilterConfig filterConfig = new ExpressionExperimentFilterConfig();
+            // we do not mask outliers here because this is meant for creating data files
+            filterConfig.setMaskOutliers( false );
+            filterConfig.setIgnoreMinimumSamplesThreshold( true );
+            filterConfig.setIgnoreMinimumDesignElementsThreshold( true );
             if ( samples != null ) {
                 throw new UnsupportedOperationException( "Slicing a filtered matrix is not supported yet." );
             }
@@ -115,7 +118,7 @@ class ExpressionDataFileHelperService {
         return matrix;
     }
 
-    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, int fetchSize, boolean useCursorFetchIfSupported ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, int fetchSize, boolean useCursorFetchIfSupported ) {
         long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
         if ( numVecs == 0 ) {
             throw new IllegalStateException( "There are no vectors for " + qt + " in " + ee + "." );
@@ -139,7 +142,7 @@ class ExpressionDataFileHelperService {
         return vectors;
     }
 
-    public Stream<SingleCellExpressionDataVector> getSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, Map<BioAssay, Long> nnzBySample, int fetchSize, boolean useCursorFetchIfSupported ) {
+    public Stream<SingleCellExpressionDataVector> streamSingleCellVectors( ExpressionExperiment ee, @Nullable List<BioAssay> samples, QuantitationType qt, Map<CompositeSequence, Set<Gene>> cs2gene, AtomicLong numVecs1, Map<BioAssay, Long> nnzBySample, int fetchSize, boolean useCursorFetchIfSupported ) {
         long numVecs = singleCellExpressionExperimentService.getNumberOfSingleCellDataVectors( ee, qt );
         if ( numVecs == 0 ) {
             throw new IllegalStateException( "There are no vectors for " + qt + " in " + ee + "." );
@@ -168,7 +171,7 @@ class ExpressionDataFileHelperService {
     private Map<CompositeSequence, Set<Gene>> getCs2Gene( ExpressionExperiment ee, QuantitationType qt ) {
         Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee, qt, SingleCellExpressionDataVector.class );
         ads = arrayDesignService.thawCompositeSequences( ads );
-        return arrayDesignService.getGenesByCompositeSequence( ads );
+        return arrayDesignService.getGenesByCompositeSequence( ads, true );
     }
 
     /**
@@ -176,8 +179,15 @@ class ExpressionDataFileHelperService {
      * id(s), ncbi id(s)].
      */
     public Map<CompositeSequence, String[]> getGeneAnnotationsAsStrings( BioAssaySet experimentAnalyzed ) {
-        Collection<ArrayDesign> ads = this.expressionExperimentService
-                .getArrayDesignsUsed( experimentAnalyzed );
+        Collection<ArrayDesign> ads;
+        experimentAnalyzed = ( BioAssaySet ) Hibernate.unproxy( experimentAnalyzed );
+        if ( experimentAnalyzed instanceof ExpressionExperiment ) {
+            ads = this.expressionExperimentService.getArrayDesignsUsed( ( ExpressionExperiment ) experimentAnalyzed );
+        } else if ( experimentAnalyzed instanceof ExpressionExperimentSubSet ) {
+            ads = this.expressionExperimentSubSetReadService.getArrayDesignsUsed( ( ExpressionExperimentSubSet ) experimentAnalyzed );
+        } else {
+            throw new UnsupportedOperationException( "Unsupported BioAssaySet type: " + experimentAnalyzed.getClass() );
+        }
         return getGeneAnnotationsAsStringsByProbe( ads );
     }
 
@@ -194,19 +204,8 @@ class ExpressionDataFileHelperService {
         return annotations;
     }
 
-    public Collection<CoexpressionValueObject> getGeneLinks( ExpressionExperiment ee ) {
-        ee = expressionExperimentService.thawLite( ee );
-        Taxon tax = expressionExperimentService.getTaxon( ee );
-        assert tax != null;
-        Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService.getCoexpression( ee, true );
-        if ( geneLinks.isEmpty() ) {
-            throw new IllegalStateException( "No coexpression links for this experiment, file will not be created: " + ee );
-        }
-        return geneLinks;
-    }
-
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment ee ) {
-        return differentialExpressionAnalysisService.getAnalyses( ee, true );
+        return differentialExpressionAnalysisService.findByExperiment( ee, true );
     }
 
     public DifferentialExpressionAnalysis getAnalysisById( Long analysisId ) {
@@ -215,8 +214,9 @@ class ExpressionDataFileHelperService {
 
     public DifferentialExpressionAnalysis getAnalysis( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis, Map<CompositeSequence, String[]> geneAnnotations, AtomicBoolean hasSignificantBatchConfound ) {
         geneAnnotations.putAll( getGeneAnnotationsAsStrings( experimentAnalyzed ) );
-        ExpressionExperiment ee = experimentForBioAssaySet( experimentAnalyzed );
-        hasSignificantBatchConfound.set( expressionExperimentBatchInformationService.hasSignificantBatchConfound( ee ) );
+        // For subset analyses, test against the subset's assays so a parent-EE-only confound does not
+        // trigger the warning in the per-subset result-file header (see #110).
+        hasSignificantBatchConfound.set( expressionExperimentBatchInformationService.hasSignificantBatchConfound( experimentAnalyzed ) );
 
         if ( analysis.getExperimentAnalyzed().getId() == null ) {// this can happen when using -nodb
             analysis.getExperimentAnalyzed().setId( experimentAnalyzed.getId() );
@@ -230,13 +230,4 @@ class ExpressionDataFileHelperService {
         return analysis;
     }
 
-    private ExpressionExperiment experimentForBioAssaySet( BioAssaySet bas ) {
-        ExpressionExperiment ee;
-        if ( bas instanceof ExpressionExperimentSubSet ) {
-            ee = ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
-        } else {
-            ee = ( ExpressionExperiment ) bas;
-        }
-        return ee;
-    }
 }

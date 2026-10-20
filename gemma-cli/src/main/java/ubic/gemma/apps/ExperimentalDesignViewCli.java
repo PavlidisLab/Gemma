@@ -112,19 +112,20 @@ public class ExperimentalDesignViewCli extends AbstractAuthenticatedCLI {
 
         }
 
-        for ( String category : categoryMap.keySet() ) {
+        for ( Map.Entry<String, Map<String, Collection<FactorValueBasicValueObject>>> categoryEntry : categoryMap.entrySet() ) {
 
+            String category = categoryEntry.getKey();
             log.info( "Category: " + category );
 
             if ( category.equals( "Time" ) || category.equals( "SamplingTimePoint" ) || category.equals( "Age" ) ) {
                 log.info( " *****  Details not shown for this category" );
             }
 
-            for ( String value : categoryMap.get( category ).keySet() ) {
+            for ( Map.Entry<String, Collection<FactorValueBasicValueObject>> valueEntry : categoryEntry.getValue().entrySet() ) {
 
-                log.info( "     Value: " + value );
+                log.info( "     Value: " + valueEntry.getKey() );
 
-                for ( FactorValueBasicValueObject fv : categoryMap.get( category ).get( value ) ) {
+                for ( FactorValueBasicValueObject fv : valueEntry.getValue() ) {
                     if ( fv.getMeasurementObject() != null ) continue; // don't list individual values.
 
                     Long factor = fv.getId();

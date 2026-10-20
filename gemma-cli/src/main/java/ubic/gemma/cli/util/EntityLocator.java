@@ -13,6 +13,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Locate various entities using identifiers supplied by the CLI.
@@ -30,7 +31,7 @@ public interface EntityLocator {
 
     <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Class<? extends T> vectorType );
 
-    <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorType );
+    <T extends DataVector> Map.Entry<Class<? extends T>, QuantitationType> locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorType );
 
     CellTypeAssignment locateCellTypeAssignment( ExpressionExperiment expressionExperiment, QuantitationType qt, String cta );
 

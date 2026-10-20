@@ -18,13 +18,14 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.BaseDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 /**
@@ -46,4 +47,6 @@ public interface ExpressionExperimentSubSetDao extends BaseDao<ExpressionExperim
      * @see #getFactorValuesUsed(ExpressionExperimentSubSet, ExperimentalFactor)
      */
     Collection<FactorValue> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
+
+    Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset );
 }

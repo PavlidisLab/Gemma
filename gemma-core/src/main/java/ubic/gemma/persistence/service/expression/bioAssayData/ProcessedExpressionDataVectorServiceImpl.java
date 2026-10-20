@@ -1,34 +1,44 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.security.audit.Audited;
+import ubic.gemma.core.security.audit.AuditedOnError;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.security.audit.payload.ProcessedVectorComputationPayload;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.VectorsReorderedEvent;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ExperimentExpressionLevelsValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import org.hibernate.Hibernate;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
 import ubic.gemma.persistence.util.IdentifiableUtils;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,7 +46,7 @@ import java.util.stream.Collectors;
  * @author Paul
  */
 @Service
-@CommonsLog
+@Slf4j
 public class ProcessedExpressionDataVectorServiceImpl
         extends AbstractBulkExpressionDataVectorService<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorService {
@@ -54,13 +64,27 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Autowired
     private ProcessedExpressionDataVectorHelperService helperService;
     @Autowired
-    private AuditTrailService auditTrailService;
-    @Autowired
     private ExpressionAnalysisResultSetService expressionAnalysisResultSetService;
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
     private CachedProcessedExpressionDataVectorService cachedProcessedExpressionDataVectorService;
+    @Autowired
+    private ProcessedExpressionDataVectorCreationHelperService processedExpressionDataVectorCreationHelperService;
+
+    /**
+     * This bean, through its proxy.
+     * <p>
+     * Needed because {@link #createProcessedDataVectors} declares {@link Propagation#NEVER}: a self-invocation
+     * of {@code updateRanks} would bypass the proxy and, with no transaction inherited from the caller any
+     * more, run without one. {@code @Lazy} breaks the self-reference cycle at construction; the field is
+     * interface-typed, so the proxy is what arrives.
+     */
+    @Lazy
+    @Autowired
+    private ProcessedExpressionDataVectorService self;
+    @Autowired
+    private ProcessedExpressionDataVectorAuditService processedVectorAuditService;
 
     @Autowired
     protected ProcessedExpressionDataVectorServiceImpl( ProcessedExpressionDataVectorDao mainDao ) {
@@ -69,48 +93,82 @@ public class ProcessedExpressionDataVectorServiceImpl
     }
 
     @Override
-    @Transactional(rollbackFor = { QuantitationTypeConversionException.class })
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
+    @Transactional(propagation = Propagation.NEVER)
+    public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException {
         try {
-            return createProcessedDataVectors( expressionExperiment, true, true );
+            // through the proxy, or the @AuditedOnError on the overload does not fire
+            return self.createProcessedDataVectors( expressionExperiment, updateRanks, true );
         } catch ( QuantitationTypeDetectionException e ) {
             // never happening
             throw new RuntimeException( e );
         }
     }
 
+    /**
+     * 🛑 {@link Propagation#NEVER}: the quantile normalization in the middle of this takes 44 minutes on a
+     * large experiment (GSE260875, measured 2026-09-17) and the connection handling mode is
+     * {@code DELAYED_ACQUISITION_AND_HOLD}, so a transaction around the whole thing pins a pooled connection
+     * for the duration without issuing a statement — against a pool that recycles at 30 minutes. Read, compute
+     * and write are three steps on the helper bean, each with its own transaction or none.
+     * <p>
+     * {@code updateRanks} goes through {@link #self} rather than {@code this} because a self-invocation does
+     * not pass the proxy, and with no transaction inherited from here it would run without one at all.
+     */
     @Override
-    @Transactional(rollbackFor = { QuantitationTypeDetectionException.class, QuantitationTypeConversionException.class })
-    public int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
-        int created;
-        try {
-            created = this.processedExpressionDataVectorDao.createProcessedDataVectors( expressionExperiment, ignoreQuantitationMismatch );
-            auditTrailService.addUpdateEvent( expressionExperiment, ProcessedVectorComputationEvent.class, String.format( "Created processed expression data for %s.", expressionExperiment ) );
-        } catch ( Exception e ) {
-            // Note: addUpdateEvent with an exception uses REQUIRES_NEW, which will create an audit event that cannot be
-            //       rolled back
-            auditTrailService.addUpdateEvent( expressionExperiment, FailedProcessedVectorComputationEvent.class, "Failed to create processed expression data vectors.", e );
-            throw e;
-        }
+    @Transactional(propagation = Propagation.NEVER)
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to create processed expression data vectors.")
+    public QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        QuantitationType qt;
+        ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
+        ComputedProcessedData computed = this.processedExpressionDataVectorCreationHelperService
+                .readProcessedDataInputs( expressionExperiment, ignoreQuantitationMismatch, summary, true );
+        this.processedExpressionDataVectorCreationHelperService.normalizeProcessedData( computed, summary );
+        qt = this.processedExpressionDataVectorCreationHelperService
+                .replaceProcessedDataVectors( expressionExperiment, computed, summary );
+        // Phase C bucket 2f: typed payload via the AuditedAspect. The audit row
+        // is emitted by the @Audited annotation on
+        // ProcessedExpressionDataVectorAuditService#recordProcessedVectorComputation
+        // — calling through a co-bean is required because Spring AOP cannot
+        // intercept self-invocations on this class.
+        ProcessedVectorComputationPayload payload = new ProcessedVectorComputationPayload(
+                summary.getRawQuantitationType() != null ? summary.getRawQuantitationType().toString() : null,
+                qt != null ? qt.toString() : null,
+                summary.getNumberOfMaskedMissingValues(),
+                summary.getNumberOfMaskedOutliers(),
+                summary.isQuantileNormalized(),
+                StringUtils.isNotBlank( summary.getComment() ) ? summary.getComment() : null );
+        processedVectorAuditService.recordProcessedVectorComputation( expressionExperiment, payload );
         if ( updateRanks ) {
-            updateRanks( expressionExperiment );
+            self.updateRanks( expressionExperiment );
         }
         // cached vectors are no-longer valid
         cachedProcessedExpressionDataVectorService.evict( expressionExperiment );
-        return created;
+        return qt;
+    }
+
+    /**
+     * 🛑 {@link Propagation#NEVER}, for the same reason as {@link #createProcessedDataVectors}: the
+     * normalization between the read and the assembly is where the 44 minutes go, and nothing in it needs a
+     * connection.
+     */
+    @Override
+    @Transactional(propagation = Propagation.NEVER)
+    public ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException {
+        ProcessedExpressionDataVectorCreationSummary summary = new ProcessedExpressionDataVectorCreationSummary();
+        ComputedProcessedData computed = processedExpressionDataVectorCreationHelperService
+                .readProcessedDataInputs( expressionExperiment, ignoreQuantitationMismatch, summary, false );
+        processedExpressionDataVectorCreationHelperService.normalizeProcessedData( computed, summary );
+        return processedExpressionDataVectorCreationHelperService.toMatrix( expressionExperiment, computed );
     }
 
     @Override
     @Transactional
+    @Audited(value = ProcessedVectorComputationEvent.class, message = "Replaced processed expression data.")
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to replace processed expression data vectors.")
     public int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks ) {
-        int replaced;
-        try {
-            replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
-            auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Replaced processed expression data for %s.", ee ) );
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to replace processed expression data vectors.", e );
-            throw e;
-        }
+        // Success audit event written by @Audited on this method via AuditedAspect.
+        // Failure audit event written by @AuditedOnError (REQUIRES_NEW, stack trace in DETAIL).
+        int replaced = expressionExperimentService.replaceProcessedDataVectors( ee, vectors );
         if ( updateRanks ) {
             updateRanks( ee );
         }
@@ -120,37 +178,30 @@ public class ProcessedExpressionDataVectorServiceImpl
 
     @Override
     @Transactional
+    @Audited(value = ProcessedVectorComputationEvent.class, message = "Removed processed expression data.")
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to remove processed expression data vectors.")
     public int removeProcessedDataVectors( ExpressionExperiment ee ) {
-        int removed;
-        try {
-            removed = expressionExperimentService.removeProcessedDataVectors( ee );
-            auditTrailService.addUpdateEvent( ee, ProcessedVectorComputationEvent.class, String.format( "Removed processed expression data for %s.", ee ) );
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to remove processed expression data vectors.", e );
-            throw e;
-        }
+        // Success audit event written by @Audited on this method via AuditedAspect.
+        // Failure audit event written by @AuditedOnError (REQUIRES_NEW, stack trace in DETAIL).
+        int removed = expressionExperimentService.removeProcessedDataVectors( ee );
         cachedProcessedExpressionDataVectorService.evict( ee );
         return removed;
     }
 
     @Override
     @Transactional
+    @Audited(value = VectorsReorderedEvent.class, message = "Reordered the data vectors by experimental design")
     public void reorderByDesign( ExpressionExperiment ee ) {
         this.helperService.reorderByDesign( ee );
-        this.auditTrailService.addUpdateEvent( ee, "Reordered the data vectors by experimental design" );
         cachedProcessedExpressionDataVectorService.evict( ee );
     }
 
     @Override
     @Transactional
+    @AuditedOnError(value = FailedProcessedVectorComputationEvent.class, message = "Failed to update ranks for expression data vectors.")
     public void updateRanks( ExpressionExperiment ee ) {
-        try {
-            helperService.updateRanks( ee );
-            cachedProcessedExpressionDataVectorService.evict( ee );
-        } catch ( Exception e ) {
-            auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.class, "Failed to update ranks for expression data vectors.", e );
-            throw e;
-        }
+        helperService.updateRanks( ee );
+        cachedProcessedExpressionDataVectorService.evict( ee );
     }
 
     @Override
@@ -218,13 +269,97 @@ public class ProcessedExpressionDataVectorServiceImpl
             boolean keepGeneNonSpecific, @Nullable String consolidateMode ) {
         List<ExperimentExpressionLevelsValueObject> vos = new ArrayList<>( ees.size() );
 
-        // Adapted from DEDV controller
+        // Run the per-probe top-hits query exactly once and use it to power BOTH the gene-stat
+        // enrichment and the vector resort. The two-method split that existed previously made it
+        // tempting to call each independently — each one ran resultSetService.load + thaw plus
+        // differentialExpressionResultService.findByResultSet, doubling the wall time on what is
+        // already the slowest part of the endpoint.
+        // Skip the full thaw() (5-7 sequential lazy round-trips for subsetFactorValue / baselineGroup /
+        // experimentalFactors etc. that this endpoint never reads). One join-fetch query loads exactly
+        // what we need — the analysis and its experimentAnalyzed — in a single round-trip.
+        ExpressionAnalysisResultSet ar = expressionAnalysisResultSetService.loadWithAnalysis( diffExResultSetId );
+        if ( ar == null ) {
+            log.warn( "No diff ex result set with ID=" + diffExResultSetId );
+            return vos;
+        }
+
+        List<DifferentialExpressionValueObject> rows = differentialExpressionResultService
+                .findByResultSet( ar, threshold, max, DIFFEX_MIN_NUMBER_OF_RESULTS );
+
+        Map<Long, DifferentialExpressionValueObject> statsByProbeId = new HashMap<>( rows.size() );
+        Map<Long, Double> pvalues = new HashMap<>( rows.size() );
+        Set<Long> probes = new HashSet<>( rows.size() );
+        for ( DifferentialExpressionValueObject r : rows ) {
+            // If the same probe appears twice (shouldn't happen for a single result set), keep the
+            // more-significant row — same tie-break the endpoint uses for ranking.
+            DifferentialExpressionValueObject prev = statsByProbeId.get( r.getProbeId() );
+            if ( prev == null || isMoreSignificant( r, prev ) ) {
+                statsByProbeId.put( r.getProbeId(), r );
+            }
+            probes.add( r.getProbeId() );
+            pvalues.put( r.getProbeId(), r.getP() );
+        }
+
+        BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
+        Collection<DoubleVectorValueObject> processedDataArraysByProbe =
+                cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbeIds( analyzedSet, probes );
+        List<DoubleVectorValueObject> vectors = processedDataArraysByProbe.stream()
+                .map( DoubleVectorValueObject::copy )
+                .collect( Collectors.toList() );
+        for ( DoubleVectorValueObject v : vectors ) {
+            v.setPvalue( pvalues.get( v.getDesignElement().getId() ) );
+        }
+        vectors.sort( Comparator.comparing( DoubleVectorValueObject::getPvalue,
+                Comparator.nullsLast( Comparator.naturalOrder() ) ) );
+
         for ( ExpressionExperiment ee : ees ) {
-            Collection<DoubleVectorValueObject> vectors = this.getDiffExVectors( diffExResultSetId, threshold, max );
-            this.addExperimentGeneVectors( vos, ee, vectors, keepGeneNonSpecific, consolidateMode );
+            // 🛑 The vectors are stamped with the BioAssaySet they were SLICED FOR, not the dataset in the
+            // path. For a subset analysis CachedProcessedExpressionDataVectorServiceImpl.sliceSubSet gives
+            // each vector an ExpressionExperimentSubsetValueObject, so matching them on ee.getId() dropped
+            // every one and the endpoint answered 200 with an empty geneExpressionLevels — indistinguishable
+            // from "no significant genes". GSE239820 (dataset 32294, subset 32662) returned empty for all
+            // three of its result sets while /resultSets/{id} served the same stats fine.
+            Long vectorOwnerId = vectorOwnerIdFor( ee, analyzedSet );
+            if ( vectorOwnerId == null ) {
+                // The result set belongs to some other dataset entirely; nothing of this ee's is in it.
+                continue;
+            }
+            this.addExperimentGeneVectorsWithDiffExStats( vos, ee, vectorOwnerId, vectors, keepGeneNonSpecific, consolidateMode, statsByProbeId );
         }
 
         return vos;
+    }
+
+    /**
+     * Which id the vectors for {@code analyzedSet} are stamped with, when the analysis belongs to
+     * {@code ee} either directly or through one of its subsets; {@code null} when it does not belong to
+     * {@code ee} at all.
+     * <p>
+     * Unproxied before the {@code instanceof}: a subset arriving as a {@code BioAssaySet} proxy is an
+     * instance of neither subclass, which would silently answer "not this dataset" — the same trap
+     * {@code sliceSubSet} documents.
+     */
+    @Nullable
+    private static Long vectorOwnerIdFor( ExpressionExperiment ee, BioAssaySet analyzedSet ) {
+        BioAssaySet s = ( BioAssaySet ) Hibernate.unproxy( analyzedSet );
+        if ( s.getId() != null && s.getId().equals( ee.getId() ) ) {
+            return ee.getId();
+        }
+        if ( s instanceof ExpressionExperimentSubSet ) {
+            ExpressionExperiment source = ( ( ExpressionExperimentSubSet ) s ).getSourceExperiment();
+            if ( source != null && source.getId() != null && source.getId().equals( ee.getId() ) ) {
+                return s.getId();
+            }
+        }
+        return null;
+    }
+
+    private static boolean isMoreSignificant( DifferentialExpressionValueObject a, DifferentialExpressionValueObject b ) {
+        Double ac = a.getCorrP();
+        Double bc = b.getCorrP();
+        if ( ac == null ) return false;
+        if ( bc == null ) return true;
+        return ac < bc;
     }
 
     @Override
@@ -261,6 +396,12 @@ public class ProcessedExpressionDataVectorServiceImpl
     @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences ) {
         return cachedProcessedExpressionDataVectorService.getProcessedDataArraysByProbe( expressionExperiments, compositeSequences );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
+        return this.processedExpressionDataVectorDao.find( designElements, quantitationType );
     }
 
     @Override
@@ -311,7 +452,7 @@ public class ProcessedExpressionDataVectorServiceImpl
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 
         List<DifferentialExpressionValueObject> ee2probeResults = differentialExpressionResultService
-                .findInResultSet( ar, threshold, maxNumberOfResults,
+                .findByResultSet( ar, threshold, maxNumberOfResults,
                         ProcessedExpressionDataVectorServiceImpl.DIFFEX_MIN_NUMBER_OF_RESULTS );
 
         Collection<Long> probes = new HashSet<>();
@@ -358,6 +499,23 @@ public class ProcessedExpressionDataVectorServiceImpl
     private void addExperimentGeneVectors( Collection<ExperimentExpressionLevelsValueObject> vos,
             ExpressionExperiment ee, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
             @Nullable String consolidateMode ) {
+        // Pre-collect all referenced gene ids and resolve in one batch instead of calling
+        // geneService.load(gId) per (vector, gene) — for PCA + gene-level expression endpoints
+        // that is 100-300 redundant single-row loads per EE.
+        Set<Long> geneIds = new HashSet<>();
+        for ( DoubleVectorValueObject v : vectors ) {
+            if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
+                continue;
+            }
+            if ( v.getGenes() != null ) {
+                geneIds.addAll( v.getGenes() );
+            }
+        }
+        Map<Long, Gene> genesById = new HashMap<>( geneIds.size() );
+        for ( Gene g : geneService.load( geneIds ) ) {
+            genesById.put( g.getId(), g );
+        }
+
         Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
         for ( DoubleVectorValueObject v : vectors ) {
             if ( !v.getExpressionExperiment().getId().equals( ee.getId() ) ) {
@@ -372,7 +530,7 @@ public class ProcessedExpressionDataVectorServiceImpl
             }
 
             for ( Long gId : v.getGenes() ) {
-                Gene g = geneService.load( gId );
+                Gene g = genesById.get( gId );
                 if ( g != null ) {
                     if ( !vectorsPerGene.containsKey( g ) ) {
                         vectorsPerGene.put( g, new LinkedList<>() );
@@ -384,5 +542,100 @@ public class ProcessedExpressionDataVectorServiceImpl
         }
         vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
                 consolidateMode ) );
+    }
+
+    /**
+     * Like {@link #addExperimentGeneVectors} but also computes per-gene diff-ex stats (corrected p-value,
+     * uncorrected p-value, log2 fold change) for the result-set whose ranking produced these vectors. For
+     * genes whose probes span more than one result row, picks the most-significant row (smallest corrected
+     * p-value) — the same selection rule the endpoint uses to rank its top-N.
+     */
+    /**
+     * @param vectorOwnerId the id the vectors carry — {@code ee}'s own id for a whole-experiment analysis,
+     *                      the SUBSET's id for a subset analysis. Not the same thing as {@code ee.getId()},
+     *                      and conflating them is what made subset result sets return an empty 200.
+     */
+    private void addExperimentGeneVectorsWithDiffExStats( Collection<ExperimentExpressionLevelsValueObject> vos,
+            ExpressionExperiment ee, Long vectorOwnerId, Collection<DoubleVectorValueObject> vectors, boolean keepGeneNonSpecific,
+            @Nullable String consolidateMode, Map<Long, DifferentialExpressionValueObject> statsByProbeId ) {
+        // Batch-resolve referenced genes once; mirror of the addExperimentGeneVectors hoist.
+        Set<Long> geneIds = new HashSet<>();
+        for ( DoubleVectorValueObject v : vectors ) {
+            if ( !v.getExpressionExperiment().getId().equals( vectorOwnerId ) ) {
+                continue;
+            }
+            if ( v.getGenes() != null ) {
+                geneIds.addAll( v.getGenes() );
+            }
+        }
+        Map<Long, Gene> genesById = new HashMap<>( geneIds.size() );
+        for ( Gene g : geneService.load( geneIds ) ) {
+            genesById.put( g.getId(), g );
+        }
+
+        Map<Gene, List<DoubleVectorValueObject>> vectorsPerGene = new HashMap<>();
+        Map<Gene, DifferentialExpressionValueObject> bestStatsPerGene = new HashMap<>();
+        for ( DoubleVectorValueObject v : vectors ) {
+            if ( !v.getExpressionExperiment().getId().equals( vectorOwnerId ) ) {
+                continue;
+            }
+
+            DifferentialExpressionValueObject probeStats = statsByProbeId.get( v.getDesignElement().getId() );
+
+            if ( v.getGenes() == null || v.getGenes().isEmpty() ) {
+                if ( !vectorsPerGene.containsKey( null ) ) {
+                    vectorsPerGene.put( null, new LinkedList<>() );
+                }
+                vectorsPerGene.get( null ).add( v );
+            }
+
+            for ( Long gId : v.getGenes() ) {
+                Gene g = genesById.get( gId );
+                if ( g != null ) {
+                    if ( !vectorsPerGene.containsKey( g ) ) {
+                        vectorsPerGene.put( g, new LinkedList<>() );
+                    }
+                    vectorsPerGene.get( g ).add( v );
+
+                    if ( probeStats != null ) {
+                        DifferentialExpressionValueObject prev = bestStatsPerGene.get( g );
+                        if ( prev == null || isMoreSignificant( probeStats, prev ) ) {
+                            bestStatsPerGene.put( g, probeStats );
+                        }
+                    }
+                }
+            }
+        }
+
+        Map<Gene, ExperimentExpressionLevelsValueObject.GeneDiffExStats> diffExStatsPerGene = new HashMap<>( bestStatsPerGene.size() );
+        for ( Map.Entry<Gene, DifferentialExpressionValueObject> entry : bestStatsPerGene.entrySet() ) {
+            diffExStatsPerGene.put( entry.getKey(), buildGeneDiffExStats( entry.getValue() ) );
+        }
+
+        vos.add( new ExperimentExpressionLevelsValueObject( ee.getId(), vectorsPerGene, keepGeneNonSpecific,
+                consolidateMode, diffExStatsPerGene ) );
+    }
+
+    /**
+     * Build the gene-level diff-ex statistics. The log2 fold change is the contrast coefficient on the
+     * picked row; for a single-contrast result set there is exactly one contrast, for a multi-contrast
+     * result set we pick the contrast with the smallest uncorrected p-value (most significant on that row).
+     */
+    private static ExperimentExpressionLevelsValueObject.GeneDiffExStats buildGeneDiffExStats( DifferentialExpressionValueObject row ) {
+        Double log2FoldChange = null;
+        if ( row.getContrasts() != null && row.getContrasts().getContrasts() != null
+                && !row.getContrasts().getContrasts().isEmpty() ) {
+            ubic.gemma.model.analysis.expression.diff.ContrastVO best = null;
+            for ( ubic.gemma.model.analysis.expression.diff.ContrastVO c : row.getContrasts().getContrasts() ) {
+                if ( c.getLogFoldChange() == null ) continue;
+                if ( best == null ) { best = c; continue; }
+                Double bp = best.getPvalue();
+                Double cp = c.getPvalue();
+                if ( bp == null && cp != null ) { best = c; continue; }
+                if ( bp != null && cp != null && cp < bp ) best = c;
+            }
+            if ( best != null ) log2FoldChange = best.getLogFoldChange();
+        }
+        return new ExperimentExpressionLevelsValueObject.GeneDiffExStats( row.getCorrP(), row.getP(), log2FoldChange );
     }
 }

@@ -20,21 +20,24 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -45,7 +48,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
@@ -54,12 +56,13 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 
 import java.util.*;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis
  */
-public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoServiceTest {
+@ExtendWith(NetworkAvailableExtension.class)
+public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private ExpressionExperimentService eeService;
@@ -72,9 +75,6 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
 
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
@@ -93,7 +93,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     private ExpressionExperiment ee = null;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             try {
@@ -111,8 +111,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     }
 
     @Test
-    @Category(SlowTest.class)
-    @Ignore("This test randomly fails, see https://github.com/PavlidisLab/Gemma/issues/1158")
+    @Tag("slow")
+    @Disabled("This test randomly fails, see https://github.com/PavlidisLab/Gemma/issues/1158")
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
 
         try {
@@ -170,7 +170,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
      */
     @SuppressWarnings("unchecked")
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
 
         try {
@@ -193,7 +194,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         ee = this.eeService.thawLite( ee );
         preferredVectors = processedExpressionDataVectorService.thaw( preferredVectors );
 
-        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
+        ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, preferredVectors );
         assertEquals( 10, mat.columns() );
 
         boolean found = false;
@@ -272,8 +273,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     }
 
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
+    @Tag("slow")
     public void testReorder() throws Exception {
 
         ExpressionExperiment old = eeService.findByShortName( "GSE404" );
@@ -410,7 +411,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             }
         }
 
-        assertTrue( "test vector not found", foundVector );
+        assertTrue( foundVector, "test vector not found" );
 
     }
 }

@@ -1,7 +1,8 @@
 package ubic.gemma.cli.util;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -26,14 +27,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
-@CommonsLog
+@Slf4j
 @Component
 public class EntityLocatorImpl implements EntityLocator {
 
@@ -191,21 +192,21 @@ public class EntityLocatorImpl implements EntityLocator {
     }
 
     @Override
-    public <T extends DataVector> QuantitationType locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorTypes ) {
+    public <T extends DataVector> Pair<Class<? extends T>, QuantitationType> locateQuantitationType( ExpressionExperiment ee, String qt, Collection<Class<? extends T>> vectorTypes ) {
         Assert.isTrue( StringUtils.isNotBlank( qt ), "Quantitation type identifier must not be blank." );
         qt = StringUtils.strip( qt );
         QuantitationType result;
         for ( Class<? extends T> vectorType : vectorTypes ) {
             try {
                 if ( ( result = quantitationTypeService.loadByIdAndVectorType( Long.parseLong( qt ), ee, vectorType ) ) != null ) {
-                    return result;
+                    return Pair.of( vectorType, result );
                 }
             } catch ( NumberFormatException e ) {
                 // ignore
             }
             try {
                 if ( ( result = quantitationTypeService.findByNameAndVectorType( ee, qt, vectorType ) ) != null ) {
-                    return result;
+                    return Pair.of( vectorType, result );
                 }
             } catch ( NonUniqueQuantitationTypeByNameException e ) {
                 Collection<QuantitationType> possibleValues = quantitationTypeService.findAllByNameAndVectorType( ee, qt, vectorType );
@@ -244,12 +245,25 @@ public class EntityLocatorImpl implements EntityLocator {
     public CellLevelCharacteristics locateCellLevelCharacteristics( ExpressionExperiment expressionExperiment, QuantitationType qt, String clcIdentifier ) {
         Assert.isTrue( StringUtils.isNotBlank( clcIdentifier ), "Cell level characteristics name must not be blank." );
         clcIdentifier = StringUtils.strip( clcIdentifier );
-        CellLevelCharacteristics r = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt, Long.parseLong( clcIdentifier ) );
-        if ( r != null ) {
-            return r;
+        try {
+            CellLevelCharacteristics r = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt, Long.parseLong( clcIdentifier ) );
+            if ( r != null ) {
+                return r;
+            }
+        } catch ( NumberFormatException e ) {
+            // not an ID, try to match by name instead
+        }
+        List<CellLevelCharacteristics> possibleValues = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt );
+        String finalClcIdentifier = clcIdentifier;
+        List<CellLevelCharacteristics> matches = possibleValues.stream()
+                .filter( clc -> finalClcIdentifier.equalsIgnoreCase( clc.getName() ) )
+                .collect( Collectors.toList() );
+        if ( matches.size() == 1 ) {
+            return matches.get( 0 );
+        } else if ( matches.size() > 1 ) {
+            throw new IllegalArgumentException( "More than one cell level characteristics matches the name " + clcIdentifier + " in " + expressionExperiment.getShortName() + " for " + qt + ", use a numerical ID instead." + formatPossibleValues( possibleValues, true ) );
         } else {
-            List<CellLevelCharacteristics> possibleValues = singleCellExpressionExperimentService.getCellLevelCharacteristics( expressionExperiment, qt );
-            throw new NullPointerException( "Could not locate any cell level characteristics with identifier matching " + clcIdentifier + "." + formatPossibleValues( possibleValues, false ) );
+            throw new NullPointerException( "Could not locate any cell level characteristics with identifier or name matching " + clcIdentifier + "." + formatPossibleValues( possibleValues, true ) );
         }
     }
 
@@ -343,11 +357,11 @@ public class EntityLocatorImpl implements EntityLocator {
 
     @Override
     public DifferentialExpressionAnalysis locateDiffExAnalysis( ExpressionExperiment ee, String analysisIdentifier ) {
-        return requireNonNull( differentialExpressionAnalysisService.findByExperimentAnalyzedAndId( ee, Long.parseLong( analysisIdentifier ), true ),
+        return requireNonNull( differentialExpressionAnalysisService.findByExperimentAndAnalysisId( ee, true, Long.parseLong( analysisIdentifier ) ),
                 () -> String.format( "Could not locate an analysis matching '%s' in %s.%s",
                         analysisIdentifier,
                         ee.getShortName(),
-                        formatPossibleValues( differentialExpressionAnalysisService.getAnalyses( ee, true ), false ) ) );
+                        formatPossibleValues( differentialExpressionAnalysisService.findByExperiment( ee, true ), false ) ) );
     }
 
     @Nullable

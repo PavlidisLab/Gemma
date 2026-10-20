@@ -1,32 +1,24 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.SessionFactory;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.FactorValueNeedsAttentionEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-public class FactorValueServiceTest extends BaseDatabaseTest {
+public class FactorValueServiceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -43,23 +35,8 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         }
 
         @Bean
-        public FactorValueService factorValueService( ExpressionExperimentService expressionExperimentService, AuditTrailService auditTrailService, AuditEventService auditEventService, FactorValueDao factorValueDao, StatementDao statementDao ) {
-            return new FactorValueServiceImpl( expressionExperimentService, auditTrailService, auditEventService, factorValueDao, statementDao );
-        }
-
-        @Bean
-        public ExpressionExperimentService expressionExperimentService() {
-            return mock();
-        }
-
-        @Bean
-        public AuditTrailService auditTrailService() {
-            return mock();
-        }
-
-        @Bean
-        public AuditEventService auditEventService() {
-            return mock();
+        public FactorValueService factorValueService( FactorValueDao factorValueDao, StatementDao statementDao ) {
+            return new FactorValueServiceImpl( factorValueDao, statementDao, mock( FactorValueReadService.class ) );
         }
 
         @Bean
@@ -70,14 +47,6 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
 
     @Autowired
     private FactorValueService factorValueService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @After
-    public void tearDown() {
-        reset( auditTrailService, auditEventService );
-    }
 
     @Test
     public void testCreateStatement() {
@@ -103,7 +72,15 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         s1 = factorValueService.createStatement( fv, s1 );
         assertNotNull( s1.getId() );
         assertTrue( fv.getCharacteristics().contains( s1 ) );
-        assertTrue( sessionFactory.getCurrentSession().contains( fv ) );
+        // Pre-Phase-2 the DAO used Session#update(), which reattached the original detached instance,
+        // so contains(fv) was true after createStatement. Hibernate 6's JPA-correct path is merge(),
+        // which returns a new managed instance and leaves the input detached. The behavioural
+        // promise of the operation is "the new Statement is persisted and linked to the FV in the
+        // DB" — verify that via a fresh load instead of an in-memory identity check.
+        FactorValue reloaded = sessionFactory.getCurrentSession().get( FactorValue.class, fv.getId() );
+        assertNotNull( reloaded );
+        Long newStatementId = s1.getId();
+        assertTrue( reloaded.getCharacteristics().stream().anyMatch( c -> c.getId().equals( newStatementId ) ) );
     }
 
     @Test
@@ -150,7 +127,15 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         fv.getCharacteristics().add( s1 );
         sessionFactory.getCurrentSession().persist( fv );
         sessionFactory.getCurrentSession().flush();
+        // The test's name promises BOTH the FV and the statement are detached. Pre-Phase-2 only fv
+        // was evicted; the pre-existing Statement reference remained managed, but Hibernate 5's
+        // Session#update() was lenient about that. Hibernate 6's merge() cascade creates a fresh
+        // managed Statement#id during merge(fv), which then collides with the already-managed s1
+        // reference at statementDao.remove() with "A different object with the same identifier".
+        // Evict s1 too so the scenario matches the test name and the merge cascade has a clean
+        // session to work with.
         sessionFactory.getCurrentSession().evict( fv );
+        sessionFactory.getCurrentSession().evict( s1 );
         factorValueService.removeStatement( fv, s1 );
     }
 
@@ -160,75 +145,6 @@ public class FactorValueServiceTest extends BaseDatabaseTest {
         Statement s = Statement.Factory.newInstance();
         sessionFactory.getCurrentSession().persist( s );
         assertThrows( IllegalArgumentException.class, () -> factorValueService.removeStatement( fv, s ) );
-    }
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
-    private AuditEventService auditEventService;
-
-    @Test
-    public void testClearNeedsAttentionFlag() {
-        FactorValue fv = createFactorValue();
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setExperimentalDesign( fv.getExperimentalFactor().getExperimentalDesign() );
-        sessionFactory.getCurrentSession().persist( ee );
-        when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
-        factorValueService.markAsNeedsAttention( fv, "test" );
-        ee.getCurationDetails().setNeedsAttention( true );
-        assertTrue( fv.getNeedsAttention() );
-        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue Id=" + fv.getId() + " [Needs Attention]: test" );
-        when( auditEventService.getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) ) )
-                .thenReturn( null );
-        when( auditEventService.getLastEvent( ee, DoesNotNeedAttentionEvent.class ) )
-                .thenReturn( null );
-        factorValueService.clearNeedsAttentionFlag( fv, "foo" );
-        verify( auditEventService ).getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) );
-        verify( auditEventService ).getLastEvent( ee, DoesNotNeedAttentionEvent.class );
-        verify( auditTrailService ).addUpdateEvent( ee, DoesNotNeedAttentionEvent.class, "foo" );
-    }
-
-    @Test
-    public void testClearNeedsAttentionFlagThatAlreadyNeedsAttention() {
-        FactorValue fv = createFactorValue();
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setExperimentalDesign( fv.getExperimentalFactor().getExperimentalDesign() );
-        sessionFactory.getCurrentSession().persist( ee );
-        when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
-        factorValueService.markAsNeedsAttention( fv, "test" );
-        ee.getCurationDetails().setNeedsAttention( true );
-        assertTrue( fv.getNeedsAttention() );
-        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue Id=" + fv.getId() + " [Needs Attention]: test" );
-        when( auditEventService.getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) ) )
-                .thenReturn( new AuditEvent() );
-        when( auditEventService.getLastEvent( ee, DoesNotNeedAttentionEvent.class ) )
-                .thenReturn( null );
-        factorValueService.clearNeedsAttentionFlag( fv, "foo" );
-        verify( auditEventService ).getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) );
-        verify( auditEventService ).getLastEvent( ee, DoesNotNeedAttentionEvent.class );
-        verifyNoMoreInteractions( auditEventService );
-    }
-
-    @Test
-    public void testClearNeedsAttentionFlagWhenANeedsAttentionEventWasResolved() {
-        FactorValue fv = createFactorValue();
-        ExpressionExperiment ee = new ExpressionExperiment();
-        ee.setExperimentalDesign( fv.getExperimentalFactor().getExperimentalDesign() );
-        sessionFactory.getCurrentSession().persist( ee );
-        when( expressionExperimentService.findByFactorValue( fv ) ).thenReturn( ee );
-        factorValueService.markAsNeedsAttention( fv, "test" );
-        ee.getCurationDetails().setNeedsAttention( true );
-        assertTrue( fv.getNeedsAttention() );
-        verify( auditTrailService ).addUpdateEvent( ee, FactorValueNeedsAttentionEvent.class, "FactorValue Id=" + fv.getId() + " [Needs Attention]: test" );
-        when( auditEventService.getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) ) )
-                .thenReturn( AuditEvent.Factory.newInstance( new Date( 1000 ), null, null, null, null, new NeedsAttentionEvent() ) );
-        when( auditEventService.getLastEvent( ee, DoesNotNeedAttentionEvent.class ) )
-                .thenReturn( AuditEvent.Factory.newInstance( new Date( 2000 ), null, null, null, null, new NeedsAttentionEvent() ) );
-        factorValueService.clearNeedsAttentionFlag( fv, "foo" );
-        verify( auditEventService ).getLastEvent( ee, NeedsAttentionEvent.class, Collections.singleton( FactorValueNeedsAttentionEvent.class ) );
-        verify( auditEventService ).getLastEvent( ee, DoesNotNeedAttentionEvent.class );
-        verify( auditTrailService ).addUpdateEvent( ee, DoesNotNeedAttentionEvent.class, "foo" );
     }
 
     private FactorValue createFactorValue() {

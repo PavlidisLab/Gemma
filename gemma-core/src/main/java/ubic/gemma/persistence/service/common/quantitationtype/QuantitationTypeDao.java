@@ -26,7 +26,7 @@ import ubic.gemma.model.expression.bioAssayData.DataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.FilteringVoEnabledDao;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -71,11 +71,6 @@ public interface QuantitationTypeDao extends FilteringVoEnabledDao<QuantitationT
 
     /**
      * Retrieve all the QTs associated with the given experiment and dimension.
-     * @param expressionExperiment
-     * @param dimension
-     * @param vectorTypes
-     * @return
-     * @param <T>
      */
     Collection<QuantitationType> findByExpressionExperimentAndDimension( ExpressionExperiment expressionExperiment, BioAssayDimension dimension, Collection<Class<? extends BulkExpressionDataVector>> vectorTypes );
 

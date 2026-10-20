@@ -18,18 +18,44 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.search.annotations.DocumentId;
-import org.hibernate.search.annotations.Field;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.DocumentId;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+/**
+ * Base class for {@link Keyword} and {@link MedicalSubjectHeading}; the {@code @Indexed}
+ * annotation lives on the concrete subclasses. The {@code term} field is the only Lucene-indexed
+ * property in the hierarchy.
+ */
+@Entity
+@Table(name = "BIB_REF_ANNOTATION")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "class", length = 255)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public abstract class BibRefAnnotation extends AbstractIdentifiable {
 
+    @Column(name = "IS_MAJOR_TOPIC", columnDefinition = "TINYINT")
     private Boolean isMajorTopic;
 
+    /**
+     * Publisher-supplied keyword lists are free text and are not bounded by any NLM convention: some journals
+     * file a whole abbreviations glossary as a single keyword (PMID 37094356 uses 1417 characters). This is
+     * {@code text} rather than a fixed width so such a record loads instead of aborting the insert.
+     */
+    @Column(name = "TERM", nullable = false, columnDefinition = "text")
     private String term;
 
+    @Override
     @DocumentId
     public Long getId() {
         return super.getId();
@@ -43,7 +69,7 @@ public abstract class BibRefAnnotation extends AbstractIdentifiable {
         this.isMajorTopic = isMajorTopic;
     }
 
-    @Field
+    @FullTextField
     public String getTerm() {
         return this.term;
     }

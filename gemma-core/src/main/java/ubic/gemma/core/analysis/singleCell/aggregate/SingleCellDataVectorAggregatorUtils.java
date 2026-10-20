@@ -12,7 +12,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,7 +20,7 @@ import java.util.function.Function;
 /**
  * Utilities for aggregating single-cell data vectors.
  * <p>
- * TODO: reuse these in {@link SingleCellExpressionExperimentAggregatorServiceImpl}
+ * TODO: reuse these in {@link SingleCellExpressionExperimentAggregateServiceImpl}
  * @author poirigui
  */
 public class SingleCellDataVectorAggregatorUtils {

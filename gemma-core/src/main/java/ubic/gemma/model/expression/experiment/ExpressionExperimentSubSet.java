@@ -18,46 +18,90 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import ubic.gemma.model.common.auditAndSecurity.Securable;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
-import javax.persistence.Transient;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
+
+import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
 /**
- * A subset of samples from an ExpressionExperiment
+ * A subset of assays (or derived assays) from an {@link ExpressionExperiment}.
+ * <p>
+ * In the case of a "derived" assay, it is possible to walk up to the samples of the assays of the source experiment via
+ * {@link BioMaterial#getSourceBioMaterial()}.
+ * <p>
+ * This is used for single-cell datasets to represent aggregated pseudo-bulks.
+ *
+ * @author Paul
  */
-public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
+@Entity
+@DiscriminatorValue("ExpressionExperimentSubSet")
+public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild<ExpressionExperiment> {
 
     /**
-     * The serial version UID of this class. Needed for serialization.
+     * Maximum length of the name of a subset.
      */
-    private static final long serialVersionUID = -1880425342951467283L;
-
     public static final int MAX_NAME_LENGTH = 255;
 
+    /**
+     * Delimiter used to separate the source experiment name from the subset name.
+     */
+    public static final String NAME_DELIMITER = " - ";
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.SELECT)
+    @JoinColumn(name = "SOURCE_EXPERIMENT_FK", columnDefinition = "BIGINT")
     private ExpressionExperiment sourceExperiment;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "BIO_ASSAYS2EXPRESSION_EXPERIMENT_SUB_SET",
+            joinColumns = @JoinColumn(name = "EXPRESSION_EXPERIMENT_SUB_SET_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "BIO_ASSAYS_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "BIO_ASSAY_EXPRESSION_EXPERIMENT_SUB_SET_FKC"))
+    private Set<BioAssay> bioAssays = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     public ExpressionExperimentSubSet() {
     }
-
-    @Transient
-    @Override
-    public Securable getSecurityOwner() {
-        return sourceExperiment;
-    }
-
     public ExpressionExperiment getSourceExperiment() {
         return this.sourceExperiment;
     }
 
     public void setSourceExperiment( ExpressionExperiment sourceExperiment ) {
         this.sourceExperiment = sourceExperiment;
+    }
+
+    @Override
+    public Set<BioAssay> getBioAssays() {
+        return bioAssays;
+    }
+
+    @Override
+    public void setBioAssays( Set<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
+
+    @Transient
+    @Override
+    public ExpressionExperiment getSecurityOwner() {
+        return sourceExperiment;
     }
 
     @Override
@@ -76,9 +120,12 @@ public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredCh
 
     public static final class Factory {
 
+        /**
+         * Subsets are named by appending the name to the source experiment name, separated by {@link #NAME_DELIMITER}.
+         */
         public static ExpressionExperimentSubSet newInstance( String name, ExpressionExperiment sourceExperiment ) {
             ExpressionExperimentSubSet subset = new ExpressionExperimentSubSet();
-            subset.setName( name );
+            subset.setName( abbreviateWithSuffix( sourceExperiment.getName(), " - " + name, "…", ExpressionExperimentSubSet.MAX_NAME_LENGTH, true, StandardCharsets.UTF_8 ) );
             subset.setSourceExperiment( sourceExperiment );
             return subset;
         }

@@ -18,13 +18,16 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrix;
+import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BulkExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -32,13 +35,19 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.CommonQueries;
+import ubic.gemma.persistence.util.QueryUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParameterList;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -52,18 +61,25 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeIdentifiableParamet
 public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExperimentSubSet>
         implements ExpressionExperimentSubSetDao {
 
+    /**
+     * Concrete bulk vector types, discovered from the metamodel so a newly mapped one is covered automatically.
+     */
+    private final Set<Class<? extends BulkExpressionDataVector>> bulkDataVectorTypes;
+
     @Autowired
     public ExpressionExperimentSubSetDaoImpl( SessionFactory sessionFactory ) {
         super( ExpressionExperimentSubSet.class, sessionFactory );
+        //noinspection unchecked
+        bulkDataVectorTypes = getSessionFactory().getMetamodel().getEntities().stream()
+                .map( jakarta.persistence.metamodel.EntityType::getJavaType )
+                .filter( BulkExpressionDataVector.class::isAssignableFrom )
+                .map( clazz -> ( Class<? extends BulkExpressionDataVector> ) clazz )
+                .collect( Collectors.toSet() );
     }
 
     @Override
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
-        Criteria queryObject = this.getSessionFactory().getCurrentSession()
-                .createCriteria( ExpressionExperimentSubSet.class );
-        BusinessKey.checkKey( entity );
-        BusinessKey.createQueryObject( queryObject, entity );
-        return ( ExpressionExperimentSubSet ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), entity );
     }
 
     @Nullable
@@ -82,22 +98,22 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
 
     @Override
     public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
-        //noinspection unchecked
-        return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct eess from ExpressionExperimentSubSet eess join eess.bioAssays ba where ba in :bas" )
-                .setParameterList( "bas", optimizeIdentifiableParameterList( bioAssays ) )
-                .list();
+        return new HashSet<>( QueryUtils.listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select eess from ExpressionExperimentSubSet eess "
+                                + "join eess.bioAssays ba where ba in :bas group by eess" ),
+                "bas", bioAssays, QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
     }
 
     @Override
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct fv from ExpressionExperimentSubSet es "
+                .createQuery( "select fv from ExpressionExperimentSubSet es "
                         + "join es.bioAssays ba "
                         + "join ba.sampleUsed bm "
                         + "join bm.factorValues fv "
-                        + "where es=:es and fv.experimentalFactor = :ef" )
+                        + "where es=:es and fv.experimentalFactor = :ef "
+                        + "group by fv")
                 .setParameter( "es", entity )
                 .setParameter( "ef", factor )
                 .list();
@@ -107,14 +123,20 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValue> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct fv from ExpressionExperimentSubSet es "
+                        "select fv from ExpressionExperimentSubSet es "
                                 + "join es.bioAssays ba "
                                 + "join ba.sampleUsed bm "
                                 + "join bm.factorValues fv "
-                                + "where es.id=:es and fv.experimentalFactor.id = :ef" )
+                                + "where es.id=:es and fv.experimentalFactor.id = :ef "
+                                + "group by fv")
                 .setParameter( "es", subSetId )
                 .setParameter( "ef", experimentalFactor )
                 .list();
+    }
+
+    @Override
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset ) {
+        return CommonQueries.getArrayDesignsUsed( subset, this.getSessionFactory().getCurrentSession() );
     }
 
     @Override
@@ -122,15 +144,45 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
         Collection<FactorValue> factorValues = getFactorValueUsed( entity );
         Set<BioAssay> bioAssaysToRemove = new HashSet<>();
         Set<BioMaterial> samplesToRemove = new HashSet<>();
-        // remove bioassays that are solely owned by this subset
-        // this is currently the case for single-cell population subsets
+
+        // bioassays that are solely owned by this subset; this is currently the case for single-cell population
+        // subsets. "Solely" is two conditions: the source experiment does not hold the assay, and no other subset
+        // does either. The second is not hypothetical -- an assay can sit in a cell-type subset and in a further
+        // subset of it -- and the join table restricts on delete, so missing it aborts the whole removal.
+        Set<BioAssay> sharedWithOtherSubSets = getBioAssaysUsedByOtherSubSets( entity );
+        List<BioAssay> ownedBioAssays = new ArrayList<>();
         for ( BioAssay ba : entity.getBioAssays() ) {
             if ( entity.getSourceExperiment().getBioAssays().contains( ba ) ) {
                 continue;
             }
+            if ( sharedWithOtherSubSets.contains( ba ) ) {
+                log.warn( ba + " is also used by another ExpressionExperimentSubSet, it will not be deleted." );
+                continue;
+            }
+            ownedBioAssays.add( ba );
+        }
+
+        // Pulling an assay out of a dimension that indexes data would misalign that data, so such assays are left
+        // alone. A dimension that indexes nothing is itself garbage once its assays are gone: those assays are
+        // detached from it below and the dimension is deleted as soon as it empties out. It commonly spans several
+        // subsets (one per cell type), each removed by a separate call, so it only empties on the last of them.
+        Map<BioAssay, Collection<BioAssayDimension>> dimensionsByBioAssay = new HashMap<>();
+        Set<BioAssayDimension> dimensionsIndexingData = new HashSet<>();
+        for ( BioAssay ba : ownedBioAssays ) {
+            dimensionsByBioAssay.put( ba, getBioAssayDimensions( ba ) );
+        }
+        for ( BioAssayDimension dim : dimensionsByBioAssay.values().stream().flatMap( Collection::stream ).collect( Collectors.toSet() ) ) {
+            if ( isIndexingData( dim ) ) {
+                dimensionsIndexingData.add( dim );
+            }
+        }
+
+        Set<BioAssayDimension> dimensionsToDetach = new HashSet<>();
+        for ( BioAssay ba : ownedBioAssays ) {
             log.info( "Removing " + ba + " as it does not belong to the source experiment." );
-            if ( !getBioAssayDimensions( ba ).isEmpty() ) {
-                log.warn( ba + " is still attached to a BioAssayDimension, it will not be deleted." );
+            Collection<BioAssayDimension> dimensions = dimensionsByBioAssay.get( ba );
+            if ( dimensions.stream().anyMatch( dimensionsIndexingData::contains ) ) {
+                log.warn( ba + " is still attached to a BioAssayDimension that indexes data, it will not be deleted." );
                 continue;
             }
             if ( !getSingleCellDimensions( ba ).isEmpty() ) {
@@ -144,9 +196,29 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
             } else {
                 log.warn( ba.getSampleUsed() + " is still attached to a BioAssay or FactorValue, it will not be deleted." );
             }
+            dimensionsToDetach.addAll( dimensions );
             bioAssaysToRemove.add( ba );
         }
+
         super.remove( entity );
+
+        // detach from the dimensions first: a completely detached dimension has no owner left and is removed
+        Set<BioAssayDimension> dimensionsToRemove = new HashSet<>();
+        for ( BioAssayDimension dim : dimensionsToDetach ) {
+            dim.getBioAssays().removeAll( bioAssaysToRemove );
+            if ( dim.getBioAssays().isEmpty() ) {
+                dimensionsToRemove.add( dim );
+            } else {
+                log.debug( dim + " still holds BioAssays owned elsewhere, the dimension will not be deleted." );
+            }
+        }
+        if ( !dimensionsToRemove.isEmpty() ) {
+            log.info( "Removing " + dimensionsToRemove.size() + " BioAssayDimension that are no longer attached to any BioAssay." );
+            for ( BioAssayDimension dim : dimensionsToRemove ) {
+                getSessionFactory().getCurrentSession().delete( dim );
+            }
+        }
+
         if ( !bioAssaysToRemove.isEmpty() ) {
             log.info( "Removing " + bioAssaysToRemove.size() + " BioAssay that are owned by " + entity + " (i.e. they do not belong to the source experiment)." );
             for ( BioAssay ba : bioAssaysToRemove ) {
@@ -161,10 +233,55 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
         }
     }
 
+    /**
+     * Obtain the {@link BioAssay} of a subset that are also used by at least one other subset.
+     */
+    private Set<BioAssay> getBioAssaysUsedByOtherSubSets( ExpressionExperimentSubSet subset ) {
+        if ( subset.getBioAssays().isEmpty() ) {
+            return Collections.emptySet();
+        }
+        return new HashSet<>( QueryUtils.listByIdentifiableBatch( getSessionFactory().getCurrentSession()
+                        .createQuery( "select ba from ExpressionExperimentSubSet eess "
+                                + "join eess.bioAssays ba "
+                                + "where ba in :bas and eess <> :eess "
+                                + "group by ba" )
+                        .setParameter( "eess", subset ),
+                "bas", subset.getBioAssays(), QueryUtils.MAX_PARAMETER_LIST_SIZE ) );
+    }
+
+    /**
+     * Check whether anything indexes its values by the position of a {@link BioAssay} in the given dimension, which
+     * makes the dimension's contents immutable in practice.
+     */
+    private boolean isIndexingData( BioAssayDimension dimension ) {
+        for ( Class<? extends BulkExpressionDataVector> vectorType : bulkDataVectorTypes ) {
+            if ( isReferencedBy( vectorType.getSimpleName(), dimension ) ) {
+                return true;
+            }
+        }
+        return isReferencedBy( PrincipalComponentAnalysis.class.getSimpleName(), dimension )
+                || isReferencedBy( SampleCoexpressionMatrix.class.getSimpleName(), dimension );
+    }
+
+    /**
+     * Whether any {@code entityName} refers to the dimension.
+     * <p>
+     * Deliberately not a {@code count(*)}: the answer is a boolean, and the vector tables this runs over are
+     * the largest in the schema, so counting walks the whole index range of one to learn something the first
+     * row settles. One of these runs per mapped vector subtype per dimension.
+     */
+    private boolean isReferencedBy( String entityName, BioAssayDimension dimension ) {
+        return getSessionFactory().getCurrentSession()
+                .createQuery( "select 1 from " + entityName + " e where e.bioAssayDimension = :dim" )
+                .setParameter( "dim", dimension )
+                .setMaxResults( 1 )
+                .uniqueResult() != null;
+    }
+
     private Collection<BioAssayDimension> getBioAssayDimensions( BioAssay ba ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba" )
+                .createQuery( "select dim from BioAssayDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
                 .setParameter( "ba", ba )
                 .list();
     }
@@ -172,7 +289,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     private Collection<SingleCellDimension> getSingleCellDimensions( BioAssay ba ) {
         //noinspection unchecked
         return getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct dim from SingleCellDimension dim join dim.bioAssays ba where ba = :ba" )
+                .createQuery( "select dim from SingleCellDimension dim join dim.bioAssays ba where ba = :ba group by dim" )
                 .setParameter( "ba", ba )
                 .list();
     }
@@ -182,12 +299,13 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
      */
     private Collection<FactorValue> getFactorValueUsed( ExpressionExperimentSubSet subset ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                        "select distinct fv from ExpressionExperimentSubSet es "
-                                + "join es.bioAssays ba "
-                                + "join ba.sampleUsed bm "
-                                + "join bm.factorValues fv "
-                                + "where es=:es" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select fv from ExpressionExperimentSubSet es "
+                        + "join es.bioAssays ba "
+                        + "join ba.sampleUsed bm "
+                        + "join bm.factorValues fv "
+                        + "where es=:es "
+                        + "group by fv" )
                 .setParameter( "es", subset )
                 .list();
     }

@@ -1,0 +1,12 @@
+# GSE7400 (Gemma REST /datasets/GSE7400/samples): 5 pairs, n=10: residual dof 4
+sample	block	cond
+GSM178558	E	csf3
+GSM178556	C	csf3
+GSM178551	C	ctrl
+GSM178557	D	csf3
+GSM178552	D	ctrl
+GSM178553	E	ctrl
+GSM178554	A	csf3
+GSM178550	B	ctrl
+GSM178549	A	ctrl
+GSM178555	B	csf3

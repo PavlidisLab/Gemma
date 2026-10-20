@@ -30,6 +30,7 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A helper class for the differential expression analyzers. This class contains helper methods commonly needed when
@@ -52,21 +53,30 @@ public class DifferentialExpressionAnalysisUtil {
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
     public static boolean blockComplete( BioAssaySet expressionExperiment, Collection<ExperimentalFactor> factors ) {
+        return blockComplete( DifferentialExpressionAnalysisUtil.getBioMaterials( expressionExperiment ), factors );
+    }
 
-        Collection<BioMaterial> biomaterials = DifferentialExpressionAnalysisUtil
-                .getBioMaterials( expressionExperiment );
+    /**
+     * A variant that judges from a given set of samples rather than every sample in the experiment. Pass the samples
+     * that will actually be modelled, so that DE_Exclude and outlier samples do not make a design look block-complete
+     * when the fitted set is not: the interaction term chosen from the full set is unestimable on the smaller one.
+     * <p>
+     * The sibling {@link #checkValidForLm(Collection, ExperimentalFactor)} exists for the same reason.
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // Better semantics
+    public static boolean blockComplete( Collection<BioMaterial> samples, Collection<ExperimentalFactor> factors ) {
 
         /*
          * Get biomaterials with only those factor values equal to the factor values in the input factors. Only these
          * factor values in each biomaterial will be used to determine completeness.
          */
         Collection<BioMaterial> biomaterialsWithGivenFactorValues = DifferentialExpressionAnalysisUtil
-                .filterFactorValuesFromBiomaterials( factors, biomaterials );
+                .filterFactorValuesFromBiomaterials( factors, samples );
 
         boolean completeBlock = DifferentialExpressionAnalysisUtil
                 .checkBlockDesign( biomaterialsWithGivenFactorValues, factors );
         boolean hasAllReps = DifferentialExpressionAnalysisUtil
-                .checkBiologicalReplicates( expressionExperiment, factors );
+                .checkBiologicalReplicates( samples, factors );
 
         return completeBlock && hasAllReps;
     }
@@ -80,9 +90,14 @@ public class DifferentialExpressionAnalysisUtil {
      */
     static boolean checkBiologicalReplicates( BioAssaySet expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
+        return checkBiologicalReplicates( DifferentialExpressionAnalysisUtil.getBioMaterials( expressionExperiment ), factors );
+    }
 
-        Collection<BioMaterial> biomaterials = DifferentialExpressionAnalysisUtil
-                .getBioMaterials( expressionExperiment );
+    /**
+     * As above, over a given set of samples -- the ones that will actually be modelled.
+     */
+    static boolean checkBiologicalReplicates( Collection<BioMaterial> biomaterials,
+            Collection<ExperimentalFactor> factors ) {
 
         for ( BioMaterial firstBm : biomaterials ) {
 
@@ -126,6 +141,16 @@ public class DifferentialExpressionAnalysisUtil {
      * @return true if it's okay, false otherwise.
      */
     public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
+        return checkValidForLm( expressionExperiment.getBioAssays().stream()
+                .map( BioAssay::getSampleUsed )
+                .collect( Collectors.toList() ), experimentalFactor );
+    }
+
+    /**
+     * A variant that judges from a given set of samples rather than every sample in the experiment. Pass the samples
+     * that will actually be modelled, so that DE_Exclude and outlier samples do not make a factor look analyzable.
+     */
+    public static boolean checkValidForLm( Collection<BioMaterial> samples, ExperimentalFactor experimentalFactor ) {
 
         if ( experimentalFactor.getFactorValues().size() < 2 ) {
             log.warn( "Cannot be analyzed: Only one factor value (level) for " + experimentalFactor );
@@ -141,8 +166,7 @@ public class DifferentialExpressionAnalysisUtil {
          */
         boolean replicatesok = false;
         Map<FactorValue, Integer> counts = new HashMap<>();
-        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
+        for ( BioMaterial bm : samples ) {
             for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
 

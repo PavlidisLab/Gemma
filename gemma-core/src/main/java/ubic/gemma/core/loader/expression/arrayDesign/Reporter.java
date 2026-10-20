@@ -15,16 +15,18 @@
 package ubic.gemma.core.loader.expression.arrayDesign;
 
 import ubic.gemma.model.common.AbstractDescribable;
+import ubic.gemma.model.common.DescribableUtils;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * A "probe" (Affymetrix); for other types of arrays, there is no practical distinction between compositesequences and
  * reporters, and all analysis would take place at the level of CompositeSequences.
  * For a brief time this was part of our core data model; but currently this is used only transiently during parsing
  * etc. of Affymetrix platform sequence files.
+ *
+ * @author Paul
  */
 @SuppressWarnings("unused") // Possible external use
 public class Reporter extends AbstractDescribable implements Serializable {
@@ -37,13 +39,11 @@ public class Reporter extends AbstractDescribable implements Serializable {
     private Integer col;
     private Long startInBioChar;
     private String strand;
-    private CompositeSequence compositeSequence;
-    private ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic;
+    private transient CompositeSequence compositeSequence;
+    private transient ubic.gemma.model.genome.biosequence.BioSequence immobilizedCharacteristic;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
      */
     @SuppressWarnings("WeakerAccess") // Required by Spring
     public Reporter() {
@@ -114,7 +114,7 @@ public class Reporter extends AbstractDescribable implements Serializable {
         if ( this.getId() != null && that.getId() != null ) {
             return this.getId().equals( that.getId() );
         }
-        return Objects.equals( getName(), that.getName() );
+        return DescribableUtils.equalsByName( this, that );
     }
 
     public static final class Factory {

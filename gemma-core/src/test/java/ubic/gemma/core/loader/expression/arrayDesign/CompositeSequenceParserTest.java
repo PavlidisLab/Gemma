@@ -18,18 +18,22 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.io.InputStream;
 import java.util.Collection;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * @author pavlidis
  */
-public class CompositeSequenceParserTest extends TestCase {
+public class CompositeSequenceParserTest {
     private InputStream designElementStream;
 
+    @Test
     public void testParseInputStream() throws Exception {
         CompositeSequenceParser csp = new CompositeSequenceParser();
 
@@ -37,14 +41,13 @@ public class CompositeSequenceParserTest extends TestCase {
 
         Collection<CompositeSequence> results = csp.getResults();
 
-        TestCase.assertTrue( results.size() == 33 );
-        TestCase.assertTrue( results.iterator().next().getName().endsWith( "_at" ) );
-        TestCase.assertTrue( results.iterator().next().getDescription().startsWith( "\"" ) );
+        assertTrue( results.size() == 33 );
+        assertTrue( results.iterator().next().getName().endsWith( "_at" ) );
+        assertTrue( results.iterator().next().getDescription().startsWith( "\"" ) );
     }
 
-    @Override
+    @BeforeEach
     protected void setUp() throws Exception {
-        super.setUp();
         designElementStream = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/MG-U74A.txt" );
     }
 

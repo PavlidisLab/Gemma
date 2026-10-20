@@ -1,6 +1,8 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,19 +10,21 @@ import ubic.gemma.cli.completion.CompletionType;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.cli.util.EnumConverter;
 import ubic.gemma.cli.util.EnumeratedByCommandConverter;
+import ubic.gemma.core.ontology.OntologyUtils;
 import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.common.protocol.ProtocolService;
+import ubic.gemma.persistence.service.common.description.CharacteristicReadService;
+import ubic.gemma.persistence.service.common.protocol.ProtocolReadService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 
 /**
@@ -40,10 +44,13 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    private ProtocolService protocolService;
+    private ProtocolReadService protocolReadService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private CharacteristicReadService characteristicService;
 
     /**
      * The type of completion to produce.
@@ -57,8 +64,41 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
     @Nullable
     private String[] completeArgs;
 
+    /**
+     * Case-insensitive prefix used to filter the emitted completions (PavlidisLab/Gemma#1615).
+     * Empty / null means "no prefix filter".
+     */
+    @Nullable
+    private String prefix;
+
     public CompleteCli() {
         setAllowPositionalArguments();
+    }
+
+    @Override
+    protected void buildOptions( Options options ) {
+        super.buildOptions( options );
+        options.addOption( Option.builder( "p" )
+                .longOpt( "prefix" )
+                .hasArg()
+                .argName( "PREFIX" )
+                .desc( "Only emit completion values whose value starts with this case-insensitive prefix." )
+                .build() );
+    }
+
+    @Override
+    public String getCommandName() {
+        return "complete";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Provide various completions for the CLI";
+    }
+
+    @Override
+    protected String getUsage() {
+        return "gemma-cli [options] complete <type> [completeArgs...]";
     }
 
     @Override
@@ -77,16 +117,7 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
         } else {
             completeArgs = new String[0];
         }
-    }
-
-    @Override
-    public String getCommandName() {
-        return "complete";
-    }
-
-    @Override
-    protected String getUsage() {
-        return "gemma-cli [options] complete <type> [completeArgs...]";
+        prefix = commandLine.getOptionValue( "prefix" );
     }
 
     @Override
@@ -125,12 +156,12 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
                 }
                 break;
             case PROTOCOL:
-                for ( Protocol protocol : protocolService.loadAllUniqueByName() ) {
+                for ( Protocol protocol : protocolReadService.loadAllUniqueByName() ) {
                     printCompletion( String.valueOf( protocol.getId() ), protocol.getName() );
                     printCompletion( protocol.getName(), protocol.getName() );
                 }
                 break;
-            case EESET:
+            case DATASET_GROUP:
                 for ( ExpressionExperimentSet eeSet : expressionExperimentSetService.loadAll() ) {
                     printCompletion( String.valueOf( eeSet.getId() ), eeSet.getName() );
                     printCompletion( eeSet.getName(), eeSet.getName() );
@@ -140,12 +171,33 @@ public class CompleteCli extends AbstractAuthenticatedCLI {
                 expressionExperimentService.loadAllIdentifiersAndName( false )
                         .forEach( this::printCompletion );
                 break;
+            case ONTOLOGY_TERM:
+                ArrayUtils.contains( completeArgs, "" );
+                characteristicService.findValueGroupedByValueUri( null, true, false, true, -1 )
+                        .forEach( ( uri, label ) -> {
+                            printCompletion( uri, label );
+                            if ( OntologyUtils.isTermUri( uri ) ) {
+                                try {
+                                    printCompletion( OntologyUtils.uriToTermId( uri ), label );
+                                } catch ( IllegalArgumentException e ) {
+                                    log.warn( "Invalid ontology URI: " + uri + ". This should be fixed.", e );
+                                }
+                            }
+                        } );
+                break;
             default:
                 throw new UnsupportedOperationException( "Unsupported completion type " + completionType );
         }
     }
 
     private void printCompletion( String value, @Nullable String description ) {
+        if ( value == null ) {
+            return;
+        }
+        if ( prefix != null && !prefix.isEmpty()
+                && !value.toLowerCase( java.util.Locale.ROOT ).startsWith( prefix.toLowerCase( java.util.Locale.ROOT ) ) ) {
+            return;
+        }
         getCliContext().getOutputStream().printf( "%s\t%s%n", value, TsvUtils.format( description ) );
     }
 }

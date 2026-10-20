@@ -1,13 +1,13 @@
 package ubic.gemma.apps;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.cli.authentication.CLIAuthenticationManager;
 import ubic.gemma.cli.util.EntityLocator;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.common.protocol.ProtocolService;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-public class ProtocolDeleterCliTest extends BaseCliTest {
+public class ProtocolDeleterCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent

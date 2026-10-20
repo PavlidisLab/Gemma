@@ -1,6 +1,6 @@
 package ubic.gemma.core.config;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -9,7 +9,7 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.env.PropertySourcesPropertyResolver;
 import org.springframework.util.Assert;
-import ubic.basecode.util.Configuration;
+// Configuration is ubic.gemma.core.config.Configuration (same package), no explicit import needed.
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ import java.util.Properties;
  * @see Configuration
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class BaseCodeConfigurer implements BeanFactoryPostProcessor {
 
     private static final String BASECODE_PROPERTY_PREFIX = "basecode.";

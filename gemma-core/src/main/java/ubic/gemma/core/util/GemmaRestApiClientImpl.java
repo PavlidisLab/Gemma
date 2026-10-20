@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,7 +14,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -27,7 +27,7 @@ import java.util.Base64;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
-@CommonsLog
+@Slf4j
 public class GemmaRestApiClientImpl implements GemmaRestApiClient {
 
     private final String hostUrl;
@@ -68,12 +68,17 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
 
     @Override
     public Response perform( String endpoint ) throws IOException {
-        return performInternal( endpoint, null );
+        return performInternal( "GET", endpoint, null );
     }
 
     @Override
     public Response perform( String endpoint, MultiValueMap<String, Object> params ) throws IOException {
-        return performInternal( endpoint, params );
+        return performInternal( "GET", endpoint, params );
+    }
+
+    @Override
+    public Response delete( String endpoint ) throws IOException {
+        return performInternal( "DELETE", endpoint, null );
     }
 
     public Response perform( String endpoint, String firstParamName, Object firstParamValue, Object... otherParams ) throws IOException {
@@ -86,20 +91,24 @@ public class GemmaRestApiClientImpl implements GemmaRestApiClient {
             Assert.isTrue( StringUtils.isNotBlank( ( String ) otherParams[i] ), "Parameter names must not be blank." );
             params.add( ( String ) otherParams[i], otherParams[i + 1] );
         }
-        return performInternal( endpoint, params );
+        return performInternal( "GET", endpoint, params );
     }
 
-    private Response performInternal( String endpoint, @Nullable MultiValueMap<String, Object> params ) throws IOException {
+    private Response performInternal( String method, String endpoint, @Nullable MultiValueMap<String, Object> params ) throws IOException {
         Assert.isTrue( endpoint.startsWith( "/" ), "Endpoint must start with a '/' character." );
         URLConnection connection = null;
         try {
             int status;
             URL url = new URL( hostUrl + "/rest/v2" + endpoint + ( params != null ? "?" + encodeQueryParams( params ) : "" ) );
             connection = url.openConnection();
+            if ( connection instanceof HttpURLConnection ) {
+                // Must be set before the response code is read, or the connection is already sent.
+                ( ( HttpURLConnection ) connection ).setRequestMethod( method );
+            }
             connection.setRequestProperty( "Accept", "application/json" );
             connection.setRequestProperty( "Accept-Encoding", "gzip" );
             if ( authentication instanceof UsernamePasswordAuthenticationToken ) {
-                connection.setRequestProperty( "Authorization", "Basic " + Base64.getEncoder().encodeToString( ( authentication.getPrincipal() + ":" + authentication.getCredentials() ).getBytes() ) );
+                connection.setRequestProperty( "Authorization", "Basic " + Base64.getEncoder().encodeToString( ( authentication.getPrincipal() + ":" + authentication.getCredentials() ).getBytes( StandardCharsets.UTF_8 ) ) );
             }
             if ( connection instanceof HttpURLConnection ) {
                 HttpURLConnection httpConnection = ( HttpURLConnection ) connection;

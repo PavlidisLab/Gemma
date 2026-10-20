@@ -17,16 +17,18 @@
         </property>
         <property name="enabled" value="${gemma.testdb.initialize}"/>
     </bean>
+    <!-- Runs AFTER sessionFactory so that Hibernate's hbm2ddl=create has materialized the schema
+         before init-acls.sql / init-entities.sql try to INSERT into ACLSID / TAXON / etc. -->
     <bean id="dataSourceInitializer" class="org.springframework.jdbc.datasource.init.DataSourceInitializer"
-          depends-on="createDatabaseInitializer">
+          depends-on="sessionFactory">
         <property name="dataSource" ref="dataSource"/>
         <property name="databasePopulator">
             <bean class="org.springframework.jdbc.datasource.init.CompositeDatabasePopulator">
                 <property name="populators">
                     <list>
                         <bean class="ubic.gemma.persistence.initialization.DatabaseSchemaPopulator">
-                            <!-- the ampersand refers to the LocalSessionFactoryBean -->
-                            <constructor-arg ref="&amp;sessionFactory"/>
+                            <!-- Phase 2: vendor only; the Hibernate-DDL branch is a no-op (schema comes from
+                                 hbm2ddl.auto on the JPA EMF for tests, or sql/migrations/ for production). -->
                             <constructor-arg value="mysql"/>
                         </bean>
                         <bean class="ubic.gemma.persistence.initialization.InitialDataPopulator">

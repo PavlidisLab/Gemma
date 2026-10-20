@@ -15,28 +15,20 @@
 package ubic.gemma.persistence.service.analysis.expression.sampleCoexpression;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author paul
  */
 @Repository
-class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpressionAnalysis>
-        implements SampleCoexpressionAnalysisDao, ubic.gemma.persistence.service.analysis.SingleExperimentAnalysisDao<SampleCoexpressionAnalysis> {
+class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpressionAnalysis> implements SampleCoexpressionAnalysisDao {
 
     @Autowired
     public SampleCoexpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
@@ -44,9 +36,10 @@ class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpressionAn
     }
 
     @Override
+    @Nullable
     public SampleCoexpressionAnalysis load( ExpressionExperiment ee ) {
 
-        Collection<SampleCoexpressionAnalysis> r = this.findByExperiment( ee, true );
+        Collection<SampleCoexpressionAnalysis> r = this.findByExperimentAnalyzed( ee );
 
         if ( r.isEmpty() )
             return null;
@@ -60,30 +53,20 @@ class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpressionAn
     }
 
     @Override
-    public boolean existsByExperiment( BioAssaySet ee, boolean includeSubSets ) {
+    public boolean existsByExperimentAnalyzed( ExpressionExperiment experimentAnalyzed ) {
         return ( Long ) getSessionFactory().getCurrentSession()
-                .createCriteria( SampleCoexpressionAnalysis.class )
-                .setProjection( Projections.rowCount() )
-                .add( Restrictions.eq( "experimentAnalyzed", ee ) )
+                .createQuery( "select count(s) from SampleCoexpressionAnalysis s where s.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experimentAnalyzed )
                 .uniqueResult() > 0L;
     }
 
     @Override
-    public Collection<SampleCoexpressionAnalysis> findByExperiment( BioAssaySet experiment, boolean includeSubSets ) {
+    public Collection<SampleCoexpressionAnalysis> findByExperimentAnalyzed( ExpressionExperiment experimentAnalyzed ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createCriteria( SampleCoexpressionAnalysis.class )
-                .add( Restrictions.eq( "experimentAnalyzed", experiment ) )
+                .createQuery( "select s from SampleCoexpressionAnalysis s where s.experimentAnalyzed = :ee" )
+                .setParameter( "ee", experimentAnalyzed )
                 .list();
     }
 
-    @Override
-    public Map<BioAssaySet, Collection<SampleCoexpressionAnalysis>> findByExperiments( Collection<? extends BioAssaySet> experiments, boolean includeSubSets ) {
-        //noinspection unchecked
-        List<SampleCoexpressionAnalysis> results = ( List<SampleCoexpressionAnalysis> ) this.getSessionFactory().getCurrentSession()
-                .createCriteria( SampleCoexpressionAnalysis.class )
-                .add( Restrictions.in( "experimentAnalyzed", experiments ) )
-                .list();
-        return results.stream().collect( Collectors.groupingBy( SingleExperimentAnalysis::getExperimentAnalyzed, Collectors.toCollection( ArrayList::new ) ) );
-    }
 }

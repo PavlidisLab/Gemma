@@ -52,10 +52,15 @@ public interface BulkExpressionDataVectorService<T extends BulkExpressionDataVec
 
     /**
      * Thaw the given vectors.
+     *
      * @deprecated Use {@link #findAndThaw(QuantitationType)}, {@link #findAndThaw(Collection)} or
-     *             {@link #findAndThaw(BioAssayDimension)} instead, it's much more efficient.
+     * {@link #findAndThaw(BioAssayDimension)} instead, it's much more efficient.
      */
     @CheckReturnValue
     @Deprecated
     Collection<T> thaw( Collection<T> vectors );
+
+    @Deprecated
+    @CheckReturnValue
+    T thaw( T vector );
 }

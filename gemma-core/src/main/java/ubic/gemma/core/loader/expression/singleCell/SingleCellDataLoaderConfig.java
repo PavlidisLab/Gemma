@@ -1,17 +1,24 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import ubic.gemma.core.loader.expression.sequencing.SequencingDataLoaderConfig;
 import ubic.gemma.core.loader.expression.singleCell.metadata.GenericMetadataSingleCellDataLoader;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
+import java.io.Console;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Basic configuration for loading single-cell data.
+ *
  * @author poirigui
  * @see SingleCellDataLoaderService
  */
@@ -65,6 +72,11 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private boolean replaceExistingCellTypeAssignment;
 
     /**
+     * If true, ignore existing cell type assignment with the same name.
+     */
+    private boolean ignoreExistingCellTypeAssignment;
+
+    /**
      * A location where additional cell-level characteristics can be loaded.
      */
     @Nullable
@@ -79,6 +91,22 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private List<String> otherCellLevelCharacteristicsNames;
 
     /**
+     * Default values to use for the cell-level characteristics.
+     * <p>
+     * Must match the number and order of CLCs in {@link #otherCellLevelCharacteristicsFile}.
+     */
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValues;
+
+    /**
+     * Default value URIs to use for the cell-level characteristics.
+     * <p>
+     * Must match the number and order of CLCs in {@link #otherCellLevelCharacteristicsFile}.
+     */
+    @Nullable
+    private List<String> otherCellLevelCharacteristicsDefaultValueUris;
+
+    /**
      * If there are already other CLCs with the same names, replace them with the new ones.
      * <p>
      * Note that other CLCs with a {@code null} name cannot be replaced.
@@ -86,8 +114,13 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private boolean replaceExistingOtherCellLevelCharacteristics;
 
     /**
+     * If true, ignore existing other CLCs with the same names.
+     */
+    private boolean ignoreExistingOtherCellLevelCharacteristics;
+
+    /**
      * When parsing {@link #cellTypeAssignmentFile} and {@link #otherCellLevelCharacteristicsFile}, use the overlap
-     * between the cell IDs from the file and those from the {@link ubic.gemma.model.expression.bioAssayData.SingleCellDimension}
+     * between the cell IDs from the file and those from the {@link SingleCellDimension}
      * to infer sample associations.
      * <p>
      * When this option is set, the sample ID column must be supplied for this strategy to
@@ -122,9 +155,53 @@ public class SingleCellDataLoaderConfig extends SequencingDataLoaderConfig {
     private String preferredCellTypeAssignmentName;
 
     /**
+     * Re-create the cell type factor if necessary.
+     */
+    @Builder.Default
+    private boolean recreateCellTypeFactorIfNecessary = true;
+
+    /**
+     * When re-creating, ignore a compatible cell type factor that may already exist.
+     * <p>
+     * Requires {@link #recreateCellTypeFactorIfNecessary} to be set.
+     */
+    private boolean ignoreCompatibleCellTypeFactor;
+
+    /**
      * Prefer single-precision for storage, even if the data is available with double-precision.
      * <p>
      * This reduces the size of vectors and thus the storage requirement.
      */
     private boolean preferSinglePrecision;
+
+    /**
+     * Skip single-cell data vectors if possible, or at least skip transformation that would normally be applied to them
+     * to make them usable.
+     * <p>
+     * When this option is set, {@link SingleCellDataLoader#loadVectors(Collection, SingleCellDimension, QuantitationType)}
+     * will throw an {@link UnsupportedOperationException}.
+     */
+    private boolean ignoreDataVectors;
+
+    /**
+     * Discard (or keep) empty cells.
+     * <p>
+     * The default is to discard if empty cells are found. Setting this to false will disable the detection entirely.
+     *
+     * @see MexSingleCellDataLoader#setDiscardEmptyCells(boolean)
+     */
+    @Nullable
+    private Boolean discardEmptyCells;
+
+    /**
+     * Executor service to use to transform single-cell data.
+     */
+    @Nullable
+    public ExecutorService transformExecutor;
+
+    /**
+     * Console to use for reporting progress.
+     */
+    @Nullable
+    private Console console;
 }

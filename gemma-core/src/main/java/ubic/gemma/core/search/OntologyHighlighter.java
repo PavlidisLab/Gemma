@@ -1,6 +1,6 @@
 package ubic.gemma.core.search;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Map;
 
 /**

@@ -1,31 +1,37 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.extern.apachecommons.CommonsLog;
-import ubic.gemma.model.common.DescribableValueObject;
-import ubic.gemma.model.common.description.Characteristic;
+import lombok.extern.slf4j.Slf4j;
+import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.CharacteristicValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@CommonsLog
-public class CellLevelCharacteristicsValueObject extends DescribableValueObject<CellLevelCharacteristics> {
+@Slf4j
+public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject<CellLevelCharacteristics> {
 
-    private String category;
-    @Nullable
-    private String categoryUri;
+    /**
+     * The distinct labels cells are grouped under; see {@link CellLevelCharacteristics}.
+     */
+    @Schema(description = "The distinct labels cells are grouped under, one entry per label and not one per cell.")
+    private Set<CharacteristicValueObject> characteristics;
 
-    private List<CharacteristicValueObject> characteristics;
-
+    /**
+     * For each cell, the id of its label in {@link #characteristics}.
+     */
+    @Schema(description = "For each cell of the single-cell dimension, in its cell order, the id of that cell's label "
+            + "in `characteristics`, or null when the cell has none.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<Long> characteristicIds;
 
@@ -38,15 +44,8 @@ public class CellLevelCharacteristicsValueObject extends DescribableValueObject<
     public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics, boolean excludeCharacteristicIds ) {
         super( cellLevelCharacteristics );
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
-                .stream()
-                .sorted( Characteristic.getComparator() )
-                .map( CharacteristicValueObject::new )
-                .collect( Collectors.toList() );
-        if ( !cellLevelCharacteristics.getCharacteristics().isEmpty() ) {
-            Characteristic firstCharacteristic = cellLevelCharacteristics.getCharacteristics().iterator().next();
-            this.category = firstCharacteristic.getCategory();
-            this.categoryUri = firstCharacteristic.getCategoryUri();
-        }
+                .stream().map( CharacteristicValueObject::new )
+                .collect( Collectors.toSet() );
         if ( !excludeCharacteristicIds ) {
             try {
                 this.characteristicIds = Arrays.stream( cellLevelCharacteristics.getIndices() )

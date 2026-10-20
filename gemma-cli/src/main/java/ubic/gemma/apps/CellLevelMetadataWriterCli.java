@@ -4,6 +4,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.cli.options.CellMetadataFileOptionValue;
 import ubic.gemma.core.visualization.cellbrowser.CellBrowserMetadataWriter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -28,14 +29,12 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
     @Autowired
     private SingleCellExpressionExperimentService singleCellExpressionExperimentService;
 
-    private boolean useBioAssayIds;
-    private boolean useRawColumnNames;
-    private ExpressionDataFileResult result;
+    private CellMetadataFileOptionValue destination;
 
     public CellLevelMetadataWriterCli() {
         super( SingleCellExpressionDataVector.class );
         setSingleExperimentMode();
-        setUsePreferredQuantitationType();
+        setDefaultToPreferredQuantitationType();
     }
 
     @Override
@@ -45,16 +44,13 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
 
     @Override
     protected void buildExperimentVectorsOptions( Options options ) {
-        options.addOption( "useBioAssayIds", "use-bioassay-ids", false, "Use BioAssay IDs instead of their names." );
-        options.addOption( "useRawColumnNames", "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used." );
-        addExpressionDataFileOptions( options, "cell-level metadata", false );
+        addCellMetadataFileOptions( options, "cell-level metadata", false );
+        addForceOption( options );
     }
 
     @Override
     protected void processExperimentVectorsOptions( CommandLine commandLine ) throws ParseException {
-        useBioAssayIds = commandLine.hasOption( "useBioAssayIds" );
-        useRawColumnNames = commandLine.hasOption( "useRawColumnNames" );
-        result = getExpressionDataFileResult( commandLine, false );
+        destination = getCellMetadataFileOptionValue( commandLine, false );
     }
 
     @Override
@@ -62,28 +58,34 @@ public class CellLevelMetadataWriterCli extends ExpressionExperimentVectorsManip
         ee = eeService.thawLite( ee );
         SingleCellDimension scd = singleCellExpressionExperimentService.getSingleCellDimensionWithAssaysAndCellLevelCharacteristics( ee, qt );
         if ( scd == null ) {
-            addErrorObject( ee, "There is no single-cell dimension associated to " + qt + "." );
+            addErrorObject( ee, qt, "There is no single-cell dimension associated to the quantitation type." );
             return;
         }
-        if ( result.isStandardLocation() ) {
+        Path dest;
+        if ( destination.isStandardLocation() ) {
             throw new UnsupportedOperationException( "Cell Browser-compatible metadata cannot be written to the standard location." );
-        } else if ( result.isStandardOutput() ) {
-            try ( Writer out = new OutputStreamWriter( getCliContext().getOutputStream(), StandardCharsets.UTF_8 ) ) {
+        } else if ( destination.isStandardOutput() ) {
+            dest = null;
+            try ( Writer out = new OutputStreamWriter( openStandardOutput(), StandardCharsets.UTF_8 ) ) {
                 CellBrowserMetadataWriter writer = new CellBrowserMetadataWriter();
-                writer.setUseBioAssayIds( useBioAssayIds );
-                writer.setUseRawColumnNames( useRawColumnNames );
+                writer.setSeparateSampleFromAssayIdentifiers( destination.isSeparateSampleFromAssaysIdentifiers() );
+                writer.setUseBioAssayIds( destination.isUseBioAssayIds() );
+                writer.setUseRawColumnNames( destination.isUseRawColumnNames() );
                 writer.setAutoFlush( true );
                 writer.write( ee, scd, out );
             }
         } else {
-            try ( Writer out = new OutputStreamWriter( openOutputFile( result.getOutputFile( getMetadataOutputFilename( ee, qt, CELL_BROWSER_SC_METADATA_SUFFIX ) ) ), StandardCharsets.UTF_8 ) ) {
+            dest = destination.getOutputFile( getMetadataOutputFilename( ee, qt, CELL_BROWSER_SC_METADATA_SUFFIX ) );
+            try ( Writer out = new OutputStreamWriter( openOutputFile( dest ), StandardCharsets.UTF_8 ) ) {
                 CellBrowserMetadataWriter writer = new CellBrowserMetadataWriter();
-                writer.setUseBioAssayIds( useBioAssayIds );
-                writer.setUseRawColumnNames( useRawColumnNames );
+                writer.setSeparateSampleFromAssayIdentifiers( destination.isSeparateSampleFromAssaysIdentifiers() );
+                writer.setUseBioAssayIds( destination.isUseBioAssayIds() );
+                writer.setUseRawColumnNames( destination.isUseRawColumnNames() );
                 writer.setAutoFlush( true );
                 writer.write( ee, scd, out );
             }
         }
+        addSuccessObject( ee, qt, "Wrote single-cell metadata to " + ( dest != null ? dest : "the standard output" ) + "." );
     }
 
     private OutputStream openOutputFile( Path fileName ) throws IOException {

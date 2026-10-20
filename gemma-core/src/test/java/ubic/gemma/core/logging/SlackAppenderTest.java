@@ -15,13 +15,14 @@ import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.message.SimpleMessage;
 import org.apache.logging.log4j.spi.DefaultThreadContextStack;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import ubic.gemma.core.logging.log4j.SlackAppender;
 
 import java.io.IOException;
@@ -31,10 +32,9 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SlackAppenderTest {
-
-    @Rule
-    public MockitoRule mockitoRule = MockitoJUnit.rule();
 
     @Mock
     private Slack mockedSlack;
@@ -47,7 +47,7 @@ public class SlackAppenderTest {
 
     private SlackAppender appender;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         when( mockedSlack.methods( any( String.class ) ) ).thenReturn( mockedMethodClient );
         appender = new SlackAppender.Builder()
@@ -169,4 +169,69 @@ public class SlackAppenderTest {
         } );
     }
 
+    /**
+     * 🛑 An unresolved placeholder is not a token, and posting with it is worse than not posting.
+     * <p>
+     * A deployment that never set {@code gemma.slack.token} hands the appender the literal
+     * {@code ${gemma.slack.token}}. Every ERROR then produced three lines: the error itself, the
+     * SDK's missing-text warning, and {@code auth.test API (error: invalid_auth)} from the failed
+     * post — and since the appender is bound to ERROR, a run that logs a thousand errors makes
+     * three thousand lines and a thousand pointless requests to Slack.
+     */
+    @Test
+    public void testAnUnresolvedTokenPostsNothing() {
+        SlackAppender unconfigured = new SlackAppender.Builder()
+                .setName( "slack" )
+                .setToken( "${gemma.slack.token}" )
+                .setChannel( "#gemma" )
+                .setLayout( PatternLayout.newBuilder().withPattern( "%m%throwable{none}" ).build() )
+                .build();
+        unconfigured.setSlackInstance( mockedSlack );
+        unconfigured.setHandler( errorHandler );
+
+        unconfigured.append( logEvent( "something went wrong" ) );
+
+        verifyNoInteractions( mockedSlack );
+        verifyNoInteractions( errorHandler );
+    }
+
+    /** Same for a deployment that set the property to nothing at all. */
+    @Test
+    public void testABlankTokenPostsNothing() {
+        SlackAppender unconfigured = new SlackAppender.Builder()
+                .setName( "slack" )
+                .setToken( "   " )
+                .setChannel( "#gemma" )
+                .setLayout( PatternLayout.newBuilder().withPattern( "%m%throwable{none}" ).build() )
+                .build();
+        unconfigured.setSlackInstance( mockedSlack );
+        unconfigured.setHandler( errorHandler );
+
+        unconfigured.append( logEvent( "something went wrong" ) );
+
+        verifyNoInteractions( mockedSlack );
+    }
+
+    /**
+     * The fallback Slack renders where blocks cannot be — notifications, screen readers. Without it
+     * the SDK warns on every post, which is a warning per error on a configured deployment.
+     */
+    @Test
+    public void testThePostCarriesATextFallback() throws IOException, SlackApiException {
+        appender.append( logEvent( "the message a notification would show" ) );
+
+        ArgumentCaptor<ChatPostMessageRequest> captor = ArgumentCaptor.forClass( ChatPostMessageRequest.class );
+        verify( mockedMethodClient ).chatPostMessage( captor.capture() );
+        assertThat( captor.getValue().getText() ).isEqualTo( "the message a notification would show" );
+    }
+
+    private MutableLogEvent logEvent( String message ) {
+        MutableLogEvent event = new MutableLogEvent();
+        event.setLevel( Level.ERROR );
+        event.setLoggerName( "ubic.gemma.test" );
+        event.setMessage( new SimpleMessage( message ) );
+        event.setContextData( new JdkMapAdapterStringMap( new HashMap<>(), true ) );
+        event.setContextStack( new DefaultThreadContextStack() );
+        return event;
+    }
 }

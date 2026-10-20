@@ -1,24 +1,53 @@
 package ubic.gemma.apps;
 
+import lombok.Getter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
-import ubic.gemma.cli.util.CLI;
 import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
+import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.cli.util.RestCacheEviction;
 import ubic.gemma.persistence.service.maintenance.TableMaintenanceUtil;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
+import java.util.Collection;
 import java.util.Date;
 
 import static ubic.gemma.cli.util.OptionsUtils.addDateOption;
+import static ubic.gemma.cli.util.OptionsUtils.addEnumOption;
 
-public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
+public class UpdateEE2CCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String
+            LEVEL_OPTION = "l",
+            SINCE_OPTION = "s",
             TRUNCATE_OPTION = "truncate",
-            SINCE_OPTION = "s";
+            RELATIONS_OPTION = "relations";
+
+    @Getter
+    private enum Level {
+        EXPRESSION_EXPERIMENT( ExpressionExperiment.class ),
+        BIO_MATERIAL( BioMaterial.class ),
+        CELL_TYPE_ASSIGNMENT( CellTypeAssignment.class ),
+        CELL_LEVEL_CHARACTERISTICS( CellLevelCharacteristics.class ),
+        EXPERIMENTAL_DESIGN( ExperimentalDesign.class );
+
+        private final Class<?> levelClass;
+
+        Level( Class<?> levelClass ) {
+            this.levelClass = levelClass;
+        }
+    }
+
+    public UpdateEE2CCli() {
+        setDefaultToAll();
+        setAllIsLazy();
+    }
 
     @Autowired
     private TableMaintenanceUtil tableMaintenanceUtil;
@@ -26,8 +55,13 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     @Autowired
     private GemmaRestApiClient gemmaRestApiClient;
 
-    private boolean truncate;
+    private Level level;
     private Date sinceLastUpdate;
+    private boolean truncate;
+    private boolean relations;
+
+    private int updated = 0;
+    private int relationsWritten = 0;
 
     @Nullable
     @Override
@@ -38,33 +72,58 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
     @Nullable
     @Override
     public String getShortDesc() {
-        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table";
+        return "Update the EXPRESSION_EXPERIMENT2CHARACTERISTIC table (and, with --relations, ANNOTATION_RELATION)";
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CLI.CommandGroup.EXPERIMENT;
+    protected void buildExperimentOptions( Options options ) {
+        addEnumOption( options, LEVEL_OPTION, "level", "Only update characteristic at the given level.", Level.class );
+        addDateOption( SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date.", options );
+        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it." );
+        // Same CLI because the harvest READS EE2C: run separately and it either repeats the work or
+        // reads a table that is mid-rebuild. Ordering is the reason to keep them in one command.
+        options.addOption( RELATIONS_OPTION, "relations", false,
+                "Also rebuild ANNOTATION_RELATION from the curated statements EE2C carries." );
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        options.addOption( TRUNCATE_OPTION, "truncate", false, "Truncate the table before updating it" );
-        addDateOption( options, SINCE_OPTION, "since", "Only update characteristics from experiments updated since the given date" );
-    }
-
-    @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        truncate = commandLine.hasOption( TRUNCATE_OPTION );
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
+        level = commandLine.getParsedOptionValue( LEVEL_OPTION );
         if ( commandLine.hasOption( SINCE_OPTION ) ) {
             sinceLastUpdate = commandLine.getParsedOptionValue( SINCE_OPTION );
         } else {
             sinceLastUpdate = null;
         }
+        truncate = commandLine.hasOption( TRUNCATE_OPTION );
+        relations = commandLine.hasOption( RELATIONS_OPTION );
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
-        int updated = tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
+    protected void processAllExpressionExperiments() {
+        if ( level != null ) {
+            updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( level.getLevelClass(), sinceLastUpdate, truncate );
+        } else {
+            updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( sinceLastUpdate, truncate );
+        }
+        if ( relations ) {
+            relationsWritten += tableMaintenanceUtil.updateAnnotationRelationEntries( null );
+        }
+    }
+
+    @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        updated += tableMaintenanceUtil.updateExpressionExperiment2CharacteristicEntries( expressionExperiment,
+                level != null ? level.getLevelClass() : null );
+        if ( relations ) {
+            relationsWritten += tableMaintenanceUtil.updateAnnotationRelationEntries( expressionExperiment );
+        }
+    }
+
+    @Override
+    protected void postprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
+        if ( relations ) {
+            log.info( "Wrote " + relationsWritten + " CURATED relation rows." );
+        }
         if ( updated > 0 ) {
             try {
                 gemmaRestApiClient.perform( "/datasets/annotations/refresh" );
@@ -72,6 +131,13 @@ public class UpdateEE2CCli extends AbstractAuthenticatedCLI {
             } catch ( Exception e ) {
                 log.warn( "Failed to refresh EE2C from " + gemmaRestApiClient.getHostUrl(), e );
             }
+        }
+        if ( relations ) {
+            // That refresh evicts the EE2C query space only. The relation rows this run rewrote live
+            // in a different space, and the CURATED path does not even evict it locally -- it relies
+            // on addSynchronizedQuerySpace, which is scoped to this JVM and says nothing to the
+            // process actually serving the rows.
+            RestCacheEviction.evictAfterRebuild( gemmaRestApiClient, log );
         }
     }
 }

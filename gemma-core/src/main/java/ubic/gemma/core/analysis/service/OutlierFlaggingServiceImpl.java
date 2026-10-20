@@ -18,24 +18,21 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.analysis.preprocess.PreprocessingException;
-import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
+import ubic.gemma.core.security.audit.payload.SampleRemovalPayload;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Service for removing sample(s) from an expression experiment. This can be done in the interest of quality control, so
@@ -55,13 +52,11 @@ public class OutlierFlaggingServiceImpl
     private BioAssayService bioAssayService;
 
     @Autowired
-    private AuditTrailService auditTrailService;
+    private OutlierFlaggingAuditService outlierFlaggingAuditService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @Autowired
-    private PreprocessorService preprocessorService;
 
     @Override
     @Transactional(propagation = Propagation.NEVER)
@@ -93,16 +88,26 @@ public class OutlierFlaggingServiceImpl
         if ( expExp == null ) {
             throw new IllegalStateException( "Could not find experiment for bioassay " + bioAssays.iterator().next() );
         }
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.class,
-                bioAssays.size() + " flagged as outliers", StringUtils.join( bioAssays, "," ) );
-
-        try {
-            expExp = expressionExperimentService.thaw( expExp );
-            preprocessorService.process( expExp );
-        } catch ( PreprocessingException e ) {
-            OutlierFlaggingServiceImpl.log
-                    .error( "Error during postprocessing, make sure additional steps are completed", e );
+        // Phase C bucket 2f: typed payload via the AuditedAspect (co-bean
+        // proxy hop in OutlierFlaggingAuditService). The bioassay list moves
+        // from the free-form DETAIL string to AUDIT_EVENT.PAYLOAD as a typed
+        // SampleRemovalPayload.
+        List<String> baLabels = new ArrayList<>( bioAssays.size() );
+        for ( BioAssay ba : bioAssays ) {
+            baLabels.add( ba.toString() );
         }
+        outlierFlaggingAuditService.recordSampleRemoval( expExp,
+                bioAssays.size() + " flagged as outliers",
+                new SampleRemovalPayload( baLabels ) );
+
+        // Deliberately does NOT reprocess here. Flagging an outlier changes the analyzed sample set, so
+        // every computed result except batchInfo is owed a re-run -- but doing it inline meant one flag
+        // rebuilt the processed vectors, re-corrected for batch and redid the DEAs, roughly eight minutes
+        // of work inside the caller's request. Through the proxy that reads as a 502 on a call that in
+        // fact succeeded and then replaced the dataset's analyses.
+        //
+        // The SampleRemovalEvent recorded above is what carries it now: pipelineStatus reports the affected
+        // steps as `stale`, and reprocessing happens when someone chooses to run it.
     }
 
     @Override
@@ -132,17 +137,25 @@ public class OutlierFlaggingServiceImpl
         if ( expExp == null ) {
             throw new IllegalStateException( "Could not find experiment for bioassay " + bioAssays.iterator().next() );
         }
-        auditTrailService.addUpdateEvent( expExp, SampleRemovalReversionEvent.class,
-                "Marked " + bioAssays.size() + " bioassays as non-missing", StringUtils.join( bioAssays, "" ) );
+        // Phase C bucket 2f: typed payload via the AuditedAspect (co-bean
+        // proxy hop in OutlierFlaggingAuditService).
+        List<String> baLabels = new ArrayList<>( bioAssays.size() );
+        for ( BioAssay ba : bioAssays ) {
+            baLabels.add( ba.toString() );
+        }
+        outlierFlaggingAuditService.recordSampleRemovalReversion( expExp,
+                "Marked " + bioAssays.size() + " bioassays as non-missing",
+                new SampleRemovalPayload( baLabels ) );
 
         // several transactions
-        try {
-            expExp = expressionExperimentService.thaw( expExp );
-            preprocessorService.process( expExp );
-        } catch ( PreprocessingException e ) {
-            OutlierFlaggingServiceImpl.log
-                    .error( "Error during postprocessing, make sure additional steps are completed", e );
-        }
+        // Deliberately does NOT reprocess here. Flagging an outlier changes the analyzed sample set, so
+        // every computed result except batchInfo is owed a re-run -- but doing it inline meant one flag
+        // rebuilt the processed vectors, re-corrected for batch and redid the DEAs, roughly eight minutes
+        // of work inside the caller's request. Through the proxy that reads as a 502 on a call that in
+        // fact succeeded and then replaced the dataset's analyses.
+        //
+        // The SampleRemovalEvent recorded above is what carries it now: pipelineStatus reports the affected
+        // steps as `stale`, and reprocessing happens when someone chooses to run it.
     }
 
 }

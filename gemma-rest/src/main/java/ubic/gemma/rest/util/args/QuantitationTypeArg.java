@@ -6,7 +6,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 @Schema(oneOf = { QuantitationTypeByIdArg.class, QuantitationTypeByNameArg.class })
 public abstract class QuantitationTypeArg<T> extends AbstractEntityArg<T, QuantitationType, QuantitationTypeService> {

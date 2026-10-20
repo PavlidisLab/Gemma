@@ -1,1 +1,17 @@
 go.bptest.owl.gz was made using protege - starting with go.owl, cut out stuff to make a smaller subset.
+
+uberon.test.owl.gz — ROBOT STAR module of Uberon covering the substantia-nigra
+subhierarchy that UberonOntologyTest asserts on (UBERON_0000955 brain,
+UBERON_0002038 substantia nigra, UBERON_0001965 substantia nigra pars compacta).
+Regenerate with:
+
+    curl -L -o /tmp/uberon.owl http://purl.obolibrary.org/obo/uberon.owl
+    java -jar robot.jar extract --method STAR \
+        --input /tmp/uberon.owl \
+        --term http://purl.obolibrary.org/obo/UBERON_0000955 \
+        --term http://purl.obolibrary.org/obo/UBERON_0002038 \
+        --term http://purl.obolibrary.org/obo/UBERON_0001965 \
+        --output /tmp/uberon.test.owl
+    gzip -9 -c /tmp/uberon.test.owl > uberon.test.owl.gz
+
+ROBOT releases: https://github.com/ontodev/robot/releases

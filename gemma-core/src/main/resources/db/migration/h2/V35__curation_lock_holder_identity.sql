@@ -1,0 +1,30 @@
+-- CURATION_LOCK gains RUN_ID / AGENT_NAME -- what is holding the lock, not just who.
+--
+-- A blocked curator is shown the holder and has to choose: wait, or steal. `alice` at lunch and a
+-- batch job mid-run over the same dataset want opposite answers and are currently indistinguishable,
+-- because LOCKED_BY is all there is. An agent acting for a curator via ?onBehalfOf= records the
+-- CURATOR there -- correctly, since that is who the work is for -- which leaves nothing naming the
+-- run. "An agent holds this" is not an answer either: `adhoc-decision-ticket` and
+-- `category-policy-rebuild-2026-08-09` are what actually turn up in that slot.
+--
+-- 🛑 STORED ON THE LOCK rather than joined from the holder ANNOTATION_SET row, and the reason is
+-- the case that motivated it: a batch takes its locks BEFORE doing the work, so at the moment a
+-- curator is blocked the holder may have no draft on that dataset yet. A join answers exactly when
+-- the answer is least needed. These columns are written at acquire time, when the caller knows.
+--
+-- Both NULL-able and both optional on acquire. A human curator taking a lock from the UI supplies
+-- neither, and that reads correctly: no run id means it is a person.
+--
+-- VARCHAR(255) matching ANNOTATION_SET.RUN_ID / AGENT_NAME, so the same run is the same string in
+-- both places and the two records join by eye.
+--
+-- IDEMPOTENT, following V33/V34: the column may already exist if it was added by hand ahead of the
+-- deploy, and a migration that fails on "duplicate column" wedges every later one behind it.
+--
+-- ⚠️ CORRECTION TO V31 HEADER, which cannot be edited (Flyway checksums an applied migration).
+-- V31 says "THE LOCK IS ADVISORY ... and must never become one". As of the commit that adds these
+-- columns, a held lock DOES refuse writes by anyone else. What remains true, and is the half worth
+-- keeping, is the rest of that paragraph: baseline.lastModified is still the correctness guarantee,
+-- and removing it because "the lock handles it" would still be the bug.
+ALTER TABLE CURATION_LOCK ADD COLUMN IF NOT EXISTS RUN_ID VARCHAR(255) NULL;
+ALTER TABLE CURATION_LOCK ADD COLUMN IF NOT EXISTS AGENT_NAME VARCHAR(255) NULL;

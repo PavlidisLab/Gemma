@@ -6,11 +6,15 @@
         <artifactId>maven-fluido-skin</artifactId>
         <version>2.1.0</version>
     </skin>
-    <bannerLeft href="https://gemma.msl.ubc.ca">
-        <image src="/images/gemma-headerlogo.png"/>
+    <bannerLeft href="https://gemma.msl.ubc.ca/">
+        <!--
+        The height attribute on the image is translated to a CSS attribute, but it lacks the px suffix, so we add it
+        here as a workaround. This has been reported in https://github.com/apache/maven-site-plugin/issues/1228.
+         -->
+        <image src="/images/gemma-logo-text.png" height="63px"/>
     </bannerLeft>
     <bannerRight href="https://www.ubc.ca/">
-        <image src="/images/ubc-logo-2018-crest-blue-rgb72.jpg"/>
+        <image src="/images/ubc-logo.png" height="63px"/>
     </bannerRight>
     <body>
         <menu name="Overview" inherit="top">

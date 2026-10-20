@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.Collection;
  */
 public interface DiffExMetaAnalyzerService {
 
+    @Nullable
     GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds );
 
     GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis );

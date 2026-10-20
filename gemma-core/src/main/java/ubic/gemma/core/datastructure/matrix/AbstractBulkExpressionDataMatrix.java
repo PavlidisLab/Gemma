@@ -10,7 +10,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,11 +23,11 @@ import java.util.stream.Collectors;
  * If you need to handle multiple {@link BioAssay} per {@link BioMaterial}, use {@link AbstractMultiAssayExpressionDataMatrix}
  * instead.
  *
- * @param <T>
  * @author poirigui
  */
 public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpressionDataMatrix<T> implements BulkExpressionDataMatrix<T> {
 
+    @Nullable
     private final ExpressionExperiment expressionExperiment;
     private final QuantitationType quantitationType;
     private final BioAssayDimension bioAssayDimension;
@@ -41,7 +41,7 @@ public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpres
     @Nullable
     private List<ExpressionDataMatrixRowElement> rowElements;
 
-    protected AbstractBulkExpressionDataMatrix( ExpressionExperiment expressionExperiment, BioAssayDimension dimension,
+    protected AbstractBulkExpressionDataMatrix( @Nullable ExpressionExperiment expressionExperiment, BioAssayDimension dimension,
             QuantitationType quantitationType, List<CompositeSequence> designElements ) {
         this.expressionExperiment = expressionExperiment;
         this.bioAssayDimension = dimension;
@@ -82,6 +82,7 @@ public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpres
         designElementsIndex = ListUtils.indexOfAllElements( designElements );
     }
 
+    @Nullable
     @Override
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
@@ -95,6 +96,11 @@ public abstract class AbstractBulkExpressionDataMatrix<T> extends AbstractExpres
     @Override
     public BioAssayDimension getBioAssayDimension() {
         return bioAssayDimension;
+    }
+
+    @Override
+    public List<BioMaterial> getBioMaterials() {
+        return bioMaterials;
     }
 
     @Override

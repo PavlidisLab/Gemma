@@ -1,8 +1,8 @@
 /*
  * The Gemma project.
- * 
+ *
  * Copyright (c) 2006-2007 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,9 +29,9 @@ import java.util.Collection;
  */
 public interface BlatAssociationDao extends BaseDao<BlatAssociation> {
 
-    java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
-    java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
+    Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
 
     void thaw( Collection<BlatAssociation> blatAssociations );
 

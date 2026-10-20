@@ -19,10 +19,10 @@
 package ubic.gemma.persistence.persister;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -32,16 +32,19 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author pavlidis
  */
-public class GenomePersisterTest extends BaseSpringContextTest {
+public class GenomePersisterTest extends BaseSpringContextTest5 {
 
     @Autowired
     BioSequenceService biosequenceService;
+
+    @Autowired
+    GenomePersister genomePersister;
 
     @Test
     public void testPersistGene() {
@@ -61,7 +64,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
         gene.setProducts( gps );
 
-        gene = ( Gene ) this.persisterHelper.persistOrUpdate( gene );
+        gene = this.genomePersister.persistOrUpdateGene( gene );
 
         assertNotNull( gene.getId() );
         assertNotNull( gene.getName() );
@@ -88,7 +91,7 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         gp.setNcbiGi( RandomStringUtils.insecure().nextAlphabetic( 10 ) );
         gene.getProducts().add( gp );
 
-        gp = ( GeneProduct ) this.persisterHelper.persist( gp );
+        gp = this.genomePersister.persistGeneProduct( gp );
 
         assertNotNull( gp.getId() );
         assertNotNull( gp.getGene().getId() );
@@ -103,13 +106,13 @@ public class GenomePersisterTest extends BaseSpringContextTest {
         b.setSequence( "A" );
         b.setTaxon( h );
 
-        Long id = ( ( BioSequence ) this.persisterHelper.persist( b ) ).getId();
+        Long id = this.genomePersister.persistBioSequence( b ).getId();
 
         BioSequence br = BioSequence.Factory.newInstance();
         br.setName( "foo" );
         br.setSequence( "T" );
         br.setTaxon( h );
-        this.persisterHelper.persistOrUpdate( br ); /// this is what we are testing.
+        this.genomePersister.persistOrUpdateBioSequence( br ); /// this is what we are testing.
 
         BioSequence bc = BioSequence.Factory.newInstance();
         bc.setName( "foo" );

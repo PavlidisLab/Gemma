@@ -2,7 +2,7 @@
  * This package contains specific logic for dealing with single-cell data from GEO.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.loader.expression.geo.singleCell;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

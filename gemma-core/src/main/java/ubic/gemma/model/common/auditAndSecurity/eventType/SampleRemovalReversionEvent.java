@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that samples that were previously removed have been "put back", e.g. un-marked as an outlier.
  */
+@Entity
+@DiscriminatorValue("SampleRemovalReversionEvent")
 public class SampleRemovalReversionEvent extends ExpressionExperimentAnalysisEvent {
 
 }

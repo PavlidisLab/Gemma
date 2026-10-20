@@ -1,7 +1,7 @@
 /**
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.loader.util.anndata;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

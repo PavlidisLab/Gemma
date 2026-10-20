@@ -22,9 +22,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 /**
@@ -70,7 +71,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
             if ( is.available() == 0 ) {
                 throw new IOException( "No bytes available to read from inputStream" );
             }
-            br = new BufferedReader( new InputStreamReader( is ) );
+            br = new BufferedReader( new InputStreamReader( is, StandardCharsets.UTF_8 ) );
         }
 
         String line;

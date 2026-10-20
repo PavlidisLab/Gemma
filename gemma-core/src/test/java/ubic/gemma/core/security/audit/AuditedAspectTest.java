@@ -1,0 +1,1117 @@
+/*
+ * The Gemma project
+ *
+ * Copyright (c) 2026 University of British Columbia
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+package ubic.gemma.core.security.audit;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.stereotype.Service;
+import org.springframework.test.context.ContextConfiguration;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.util.test.BaseTest5;
+import ubic.gemma.model.common.auditAndSecurity.AbstractAuditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedSampleCorrelationAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+/**
+ * Unit-level test for {@link AuditedAspect}: the aspect intercepts the
+ * {@link Audited} annotation, locates the first {@link Auditable} argument
+ * and optional {@link AuditEventPayload} argument, serialises the payload to
+ * JSON, delegates to {@link AuditTrailService#addUpdateEventWithPayload}, and
+ * publishes a Spring {@link AuditedEvent}.
+ *
+ * <p>Phase A round-trip verification for {@code AUDIT_SYSTEM_AUDIT.md}.
+ */
+@ContextConfiguration
+public class AuditedAspectTest extends BaseTest5 {
+
+    /**
+     * A locally-defined payload record. Real Phase B payloads will live next
+     * to their event types under {@code ubic.gemma.core.security.audit} or a
+     * dedicated package. {@code @JsonTypeName} is required on nested records
+     * because Jackson's default discriminator includes the enclosing
+     * class (e.g. {@code AuditedAspectTest$SamplePayload}); top-level Phase B
+     * records won't need the annotation since their simple class name
+     * already discriminates uniquely.
+     */
+    @JsonTypeName( "SamplePayload" )
+    public record SamplePayload( int removed, String reason ) implements AuditEventPayload {}
+
+    @Configuration
+    @TestComponent
+    @EnableAspectJAutoProxy
+    static class TestContextConfiguration {
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock( AuditTrailService.class );
+        }
+
+        @Bean
+        public AuditedAspect auditedAspect( AuditTrailService auditTrailService, ApplicationEventPublisher publisher ) {
+            return new AuditedAspect( auditTrailService, publisher );
+        }
+
+        @Bean
+        public AnnotatedService annotatedService() {
+            return new AnnotatedService();
+        }
+
+        @Bean
+        public AuditedEventCollector auditedEventCollector() {
+            return new AuditedEventCollector();
+        }
+    }
+
+    @Service
+    static class AnnotatedService {
+
+        /** No payload arg — just the typed audit row. */
+        @Audited( value = SampleRemovalEvent.class, message = "removed by curator" )
+        public String simpleRemove( FakeAuditable target ) {
+            return "ok-" + target.getId();
+        }
+
+        /** Payload arg present — must be serialised. */
+        @Audited( value = SampleRemovalEvent.class )
+        public void removeWithPayload( FakeAuditable target, SamplePayload payload ) {
+            // no-op; the aspect does the work
+        }
+
+        /** No Auditable arg at all — aspect should WARN and skip. */
+        @Audited( SampleRemovalEvent.class )
+        public void noAuditableArg( String onlyArg ) {
+            // no-op
+        }
+
+        /**
+         * Dynamic note built from a method parameter via SpEL. The expression
+         * references the parameter by name ({@code #reason}); this only works
+         * because javac is run with {@code -parameters} project-wide (see the
+         * parent pom). Exercises the Phase B-2 SpEL path in AuditedAspect.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                messageSpel = "'Removed sample because: ' + #reason" )
+        public void removeWithSpelMessage( FakeAuditable target, String reason ) {
+            // no-op; the aspect resolves the note from #reason
+        }
+
+        /**
+         * The exact expression shape the curation commit uses to append a caller-supplied reason to
+         * the server's own note: mechanical description first, reason appended only when one was
+         * given. A deletion has no surviving annotation to carry evidence, so the audit note is the
+         * only place its reason can live.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                messageSpel = "'Removed tag a = b' + (#reason != null ? ' \u2014 ' + #reason : '')" )
+        public void removeWithOptionalReason( FakeAuditable target, @Nullable String reason ) {
+            // no-op; the aspect resolves the note from #reason
+        }
+
+        /**
+         * SpEL referencing the return value via {@code #result}. The aspect
+         * is {@code @AfterReturning} so {@code #result} is fully populated.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                messageSpel = "'Removed ' + #result + ' samples.'" )
+        public int removeAndCount( FakeAuditable target, int count ) {
+            return count;
+        }
+
+        /**
+         * Malformed SpEL — aspect must NOT drop the audit row; it falls back
+         * to the literal {@code message()} attribute (which here is set).
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                message = "fallback literal",
+                messageSpel = "#nonexistent.foo.bar()" )
+        public void brokenSpelFallsBack( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * Phase C: {@link AuditedConditional} with a SpEL {@code when} that
+         * compares against {@code #result}. The aspect should emit only when
+         * the predicate is true.
+         */
+        @AuditedConditional( value = SampleRemovalEvent.class,
+                when = "#result > 0",
+                messageSpel = "'Removed ' + #result + ' samples.'" )
+        public int conditionalRemove( FakeAuditable target, int count ) {
+            return count;
+        }
+
+        /**
+         * Phase C: SpEL {@code when} predicate that references a method
+         * parameter by name. Exercises the same name-resolution machinery as
+         * {@code messageSpel}.
+         */
+        @AuditedConditional( value = SampleRemovalEvent.class,
+                when = "!#tags.isEmpty()",
+                messageSpel = "'Applied ' + #tags.size() + ' tags.'" )
+        public void conditionalOnArg( FakeAuditable target, List<String> tags ) {
+            // no-op
+        }
+
+        /**
+         * Phase C: broken {@code when} SpEL — aspect must SKIP emission (the
+         * safe default for an undecidable predicate; contrast with broken
+         * {@code messageSpel} which falls back to the literal message but
+         * still writes the row).
+         */
+        @AuditedConditional( value = SampleRemovalEvent.class,
+                when = "#nonexistent.foo.bar()",
+                message = "would-be-fallback" )
+        public void conditionalBrokenWhenSkips( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * Phase C ({@link AuditedOnError}): default {@code messageSpel}
+         * captures {@code #exception.message}. The aspect must (a) write a
+         * Failed* event via the 4-arg Throwable overload (REQUIRES_NEW), and
+         * (b) re-throw the original exception — Spring AOP's
+         * {@code @AfterThrowing} does that by default.
+         */
+        @AuditedOnError( SampleRemovalEvent.class )
+        public void erroringDefaultMessage( FakeAuditable target ) {
+            throw new IllegalStateException( "boom" );
+        }
+
+        /**
+         * Phase C: custom {@code messageSpel} can interpolate
+         * {@code #exception} and method parameters by name.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class,
+                messageSpel = "'reason=' + #reason + '; cause=' + #exception.message" )
+        public void erroringWithSpel( FakeAuditable target, String reason ) {
+            throw new IllegalArgumentException( "details" );
+        }
+
+        /**
+         * Phase C: a method returning normally must NOT trigger
+         * {@code @AuditedOnError}.
+         */
+        @AuditedOnError( SampleRemovalEvent.class )
+        public String erroringHappyPath( FakeAuditable target ) {
+            return "ok";
+        }
+
+        /**
+         * Phase C: broken {@code messageSpel} on the throwing path must
+         * fall back to the literal {@code message()} and STILL write the
+         * audit row — losing a Failed* row would hide the failure. Contrast
+         * with {@code @AuditedConditional.when} which SKIPs on broken SpEL.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class,
+                message = "fallback literal note",
+                messageSpel = "#nonexistent.foo.bar()" )
+        public void erroringBrokenSpelFallsBack( FakeAuditable target ) {
+            throw new RuntimeException( "boom" );
+        }
+
+        /**
+         * Phase C: a single method may carry BOTH {@link Audited} (success)
+         * AND {@link AuditedOnError} (failure) — the two annotations have
+         * disjoint advice paths (after-returning vs after-throwing).
+         */
+        @Audited( value = SampleRemovalEvent.class, message = "success path" )
+        @AuditedOnError( SampleRemovalEvent.class )
+        public int dualAnnotatedSuccess( FakeAuditable target ) {
+            return 7;
+        }
+
+        @Audited( value = SampleRemovalEvent.class, message = "success path" )
+        @AuditedOnError( SampleRemovalEvent.class )
+        public int dualAnnotatedFailure( FakeAuditable target ) {
+            throw new IllegalStateException( "boom" );
+        }
+
+        /**
+         * Phase C ({@link AuditedOnError} repeatable): exception-class filter
+         * on a SINGLE declaration. {@code IllegalArgumentException} should
+         * match; an unrelated {@code IllegalStateException} should be a
+         * no-op (the advice skips when the throwable isn't an instance of
+         * the filter).
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        public void singleFilterMatches( FakeAuditable target ) {
+            throw new IllegalArgumentException( "bad-arg" );
+        }
+
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        public void singleFilterDoesNotMatch( FakeAuditable target ) {
+            throw new IllegalStateException( "state" );
+        }
+
+        /**
+         * Phase C: two repeatable {@link AuditedOnError} declarations dispatch
+         * to different event types per exception class. Two different
+         * concrete event types so we can verify which one was emitted.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class, exception = IllegalStateException.class )
+        public void multiFilterArgException( FakeAuditable target ) {
+            throw new IllegalArgumentException( "arg" );
+        }
+
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class, exception = IllegalStateException.class )
+        public void multiFilterStateException( FakeAuditable target ) {
+            throw new IllegalStateException( "state" );
+        }
+
+        /**
+         * Phase C: most-specific match dispatch. A default-class
+         * ({@code Throwable.class}) declaration acts as the catch-all
+         * fallback; a more specific declaration wins when its filter
+         * matches. Here {@code IllegalArgumentException} (a RuntimeException
+         * descendant) should pick the IAE-specific declaration, NOT the
+         * Throwable fallback.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class )   // default Throwable.class → fallback
+        public void mostSpecificWinsForMatchingType( FakeAuditable target ) {
+            throw new IllegalArgumentException( "arg" );
+        }
+
+        /**
+         * Phase C: default-class declaration acts as a fallback for
+         * exception types not covered by any more-specific declaration.
+         * {@code NullPointerException} doesn't match the IAE-specific
+         * declaration, so the {@code Throwable.class} fallback fires.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class )   // default Throwable.class → fallback
+        public void fallbackFiresForUnmatchedType( FakeAuditable target ) {
+            throw new NullPointerException( "npe" );
+        }
+
+        /**
+         * Phase C: no declaration matches → no audit row, no Spring event.
+         * Mirrors a Java multi-catch where the thrown type isn't covered.
+         */
+        @AuditedOnError( value = SampleRemovalEvent.class, exception = IllegalArgumentException.class )
+        @AuditedOnError( value = FailedSampleCorrelationAnalysisEvent.class, exception = IllegalStateException.class )
+        public void noMatchEmitsNothing( FakeAuditable target ) {
+            throw new NullPointerException( "npe" );
+        }
+
+        // -----------------------------------------------------------------
+        // valueSpel — runtime-resolved event type (inventory #15 + #16 in
+        // AUDIT_RESIDUAL_INVENTORY.md). The SpEL expression must resolve to
+        // a Class<? extends AuditEventType>; the aspect uses that instead of
+        // the (default) value() attribute.
+        // -----------------------------------------------------------------
+
+        /**
+         * Runtime-resolved event class via {@code valueSpel}: the SpEL
+         * expression returns a concrete Class chosen by the parameter
+         * {@code which}. Note that {@code value()} is left at its default
+         * (the abstract {@link AuditEventType}); the SpEL choice is the
+         * only source of the event type.
+         */
+        @Audited(
+                valueSpel = "T(ubic.gemma.core.security.audit.AuditedAspectTest$ValueSpelHelper).pick(#which)",
+                messageSpel = "'valueSpel chose ' + #which" )
+        public void dynamicEventType( FakeAuditable target, String which ) {
+            // no-op; aspect resolves the event class from #which via SpEL
+        }
+
+        /**
+         * {@code valueSpel} resolves to {@code null} (no concrete class for
+         * this case); the aspect must SKIP emission, not fall back to the
+         * default {@link AuditEventType}.class.
+         */
+        @Audited( valueSpel = "T(ubic.gemma.core.security.audit.AuditedAspectTest$ValueSpelHelper).pick(#which)",
+                message = "would-be note" )
+        public void dynamicEventTypeNullSkips( FakeAuditable target, String which ) {
+            // no-op
+        }
+
+        /**
+         * Broken {@code valueSpel}: a malformed expression triggers the
+         * fallback to {@link Audited#value()}. Since {@code value()} here is
+         * a concrete class, emission proceeds with that fallback.
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                valueSpel = "#nonexistent.foo.bar()",
+                message = "fallback event-class path" )
+        public void brokenValueSpelFallsBackToValue( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * Both {@code value} and {@code valueSpel} non-default: SpEL choice
+         * wins when it resolves successfully. The aspect logs a WARN; the
+         * row is written with the SpEL-chosen type
+         * ({@link SampleRemovalReversionEvent}), not the literal
+         * {@code value} ({@link SampleRemovalEvent}).
+         */
+        @Audited( value = SampleRemovalEvent.class,
+                valueSpel = "T(ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent)",
+                message = "both-set-spel-wins" )
+        public void bothValueAndValueSpel_spelWins( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * Both forms unset: {@code value()} defaults to the abstract
+         * {@link AuditEventType}, {@code valueSpel} is empty. The aspect
+         * SKIPS emission (no concrete class to write).
+         */
+        @Audited( message = "no event class chosen" )
+        public void noEventTypeAtAll( FakeAuditable target ) {
+            // no-op
+        }
+
+        /**
+         * {@code @AuditedConditional} variant of {@code valueSpel}: the
+         * conditional predicate fires AND the event class is chosen at
+         * runtime. Exercises the @AuditedConditional path through
+         * resolveEventType.
+         */
+        @AuditedConditional(
+                valueSpel = "T(ubic.gemma.core.security.audit.AuditedAspectTest$ValueSpelHelper).pick(#which)",
+                when = "#count > 0",
+                messageSpel = "'cond+spel: ' + #which" )
+        public int dynamicConditional( FakeAuditable target, String which, int count ) {
+            return count;
+        }
+    }
+
+    /**
+     * Static helper invoked from {@code valueSpel} expressions via
+     * {@code T(...).pick(#arg)}. Returns null for the sentinel "none" so
+     * tests can assert the null-skip path.
+     */
+    public static class ValueSpelHelper {
+        @Nullable
+        public static Class<? extends AuditEventType> pick( String which ) {
+            if ( "a".equals( which ) ) {
+                return SampleRemovalEvent.class;
+            }
+            if ( "b".equals( which ) ) {
+                return SampleRemovalReversionEvent.class;
+            }
+            return null;
+        }
+    }
+
+    static class AuditedEventCollector {
+        final List<AuditedEvent> received = new ArrayList<>();
+
+        @EventListener
+        public void onAudited( AuditedEvent ev ) {
+            received.add( ev );
+        }
+    }
+
+    /**
+     * Minimal in-memory Auditable that doesn't require Hibernate or any of
+     * the gemma-core entity machinery. Inherits the {@code auditTrail}
+     * initialiser from {@link AbstractAuditable}.
+     */
+    public static class FakeAuditable extends AbstractAuditable {
+        public FakeAuditable( long id ) {
+            setId( id );
+        }
+        @Override
+        public Long getId() {
+            return super.getId();
+        }
+        @Override
+        public boolean equals( Object o ) {
+            return this == o;
+        }
+        @Override
+        public int hashCode() {
+            return System.identityHashCode( this );
+        }
+    }
+
+    @Autowired
+    private AnnotatedService annotatedService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
+
+    @Autowired
+    private AuditedEventCollector collector;
+
+    private final AuditEvent stubEvent = new AuditEvent();
+
+    @BeforeEach
+    public void setUp() {
+        reset( auditTrailService );
+        collector.received.clear();
+        when( auditTrailService.addUpdateEventWithPayload( any(), any(), any(), any() ) )
+                .thenReturn( stubEvent );
+        // The @AuditedOnError advice routes through the 4-arg Throwable overload,
+        // which on the production impl is @Transactional(propagation=REQUIRES_NEW).
+        // In this unit test the AuditTrailService is mocked so the REQUIRES_NEW
+        // semantics are exercised at the integration level (see AuditTrailServiceImpl);
+        // here we just verify the aspect calls the right overload with the right args.
+        when( auditTrailService.addUpdateEvent( any( Auditable.class ),
+                org.mockito.ArgumentMatchers.<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>>any(),
+                any(), any( Throwable.class ) ) )
+                .thenReturn( stubEvent );
+    }
+
+    @Test
+    public void simpleRemove_writesTypedEventWithLiteralMessage_andPublishesSpringEvent() {
+        FakeAuditable target = new FakeAuditable( 42L );
+
+        String result = annotatedService.simpleRemove( target );
+
+        assertThat( result ).isEqualTo( "ok-42" );
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "removed by curator" ),
+                eq( null ) ); // no payload
+        assertThat( collector.received ).hasSize( 1 );
+        AuditedEvent ev = collector.received.get( 0 );
+        assertThat( ev.getTarget() ).isSameAs( target );
+        assertThat( ev.getEventType() ).isInstanceOf( SampleRemovalEvent.class );
+        assertThat( ev.getPayload() ).isNull();
+        assertThat( ev.getAuditEvent() ).isSameAs( stubEvent );
+    }
+
+    @Test
+    public void removeWithPayload_serialisesJsonAndIncludesTypeDiscriminator() throws Exception {
+        FakeAuditable target = new FakeAuditable( 7L );
+        SamplePayload payload = new SamplePayload( 3, "low-quality" );
+
+        annotatedService.removeWithPayload( target, payload );
+
+        ArgumentCaptor<String> payloadCaptor = ArgumentCaptor.forClass( String.class );
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( null ), // no message() set on the annotation
+                payloadCaptor.capture() );
+
+        String json = payloadCaptor.getValue();
+        assertThat( json ).isNotNull();
+
+        // Re-parse to confirm the discriminator is present and round-trips.
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode parsed = ( ObjectNode ) mapper.readTree( json );
+        assertThat( parsed.get( "@type" ).asText() )
+                .as( "Jackson must emit the @type discriminator from @JsonTypeInfo on AuditEventPayload" )
+                .isEqualTo( "SamplePayload" );
+        assertThat( parsed.get( "removed" ).asInt() ).isEqualTo( 3 );
+        assertThat( parsed.get( "reason" ).asText() ).isEqualTo( "low-quality" );
+
+        // Polymorphic round-trip back to the interface. The interface is
+        // intentionally not sealed in Phase A (no concrete production
+        // subtypes yet), so callers must register the subtype with their
+        // own ObjectMapper. Phase B will switch this to a sealed interface
+        // with permits, at which point Jackson can auto-discover subtypes.
+        mapper.registerSubtypes( SamplePayload.class );
+        AuditEventPayload roundtripped = mapper.readValue( json, AuditEventPayload.class );
+        assertThat( roundtripped ).isInstanceOf( SamplePayload.class );
+        assertThat( ( ( SamplePayload ) roundtripped ).removed() ).isEqualTo( 3 );
+
+        // And the Spring event carried the original typed payload.
+        assertThat( collector.received ).hasSize( 1 );
+        assertThat( collector.received.get( 0 ).getPayload() ).isSameAs( payload );
+    }
+
+    @Test
+    public void noAuditableArg_logsWarnAndDoesNotCallService() {
+        annotatedService.noAuditableArg( "just a string" );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase B-2: {@code messageSpel} must be evaluated against the method
+     * arguments (by parameter name) and the resolved string passed through
+     * to {@link AuditTrailService#addUpdateEventWithPayload}.
+     */
+    @Test
+    public void testMessageSpelEvaluation() {
+        FakeAuditable target = new FakeAuditable( 100L );
+
+        annotatedService.removeWithSpelMessage( target, "low-quality" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed sample because: low-quality" ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+    }
+
+    /**
+     * A supplied reason joins the server's mechanical description rather than replacing it — cab's ask
+     * was explicitly "appended to the server's own note", so the description survives.
+     */
+    @Test
+    public void optionalReason_isAppendedToTheServersOwnNote() {
+        FakeAuditable target = new FakeAuditable( 140L );
+
+        annotatedService.removeWithOptionalReason( target, "redundant_with_bm_source: implied by the cell line" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed tag a = b \u2014 redundant_with_bm_source: implied by the cell line" ),
+                eq( null ) );
+    }
+
+    /**
+     * 🛑 And no reason must leave the note exactly as it was. Every existing caller passes null, so a
+     * ternary that emitted a bare separator would rewrite the note on every audited write in Gemma.
+     */
+    @Test
+    public void noReason_leavesTheNoteUntouched() {
+        FakeAuditable target = new FakeAuditable( 141L );
+
+        annotatedService.removeWithOptionalReason( target, null );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed tag a = b" ),
+                eq( null ) );
+    }
+
+    @Test
+    public void messageSpel_canReferenceReturnValueWithHashResult() {
+        FakeAuditable target = new FakeAuditable( 101L );
+
+        int returned = annotatedService.removeAndCount( target, 5 );
+
+        assertThat( returned ).isEqualTo( 5 );
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed 5 samples." ),
+                eq( null ) );
+    }
+
+    @Test
+    public void brokenSpel_fallsBackToLiteralMessageAndStillWritesAuditRow() {
+        FakeAuditable target = new FakeAuditable( 102L );
+
+        annotatedService.brokenSpelFallsBack( target );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "fallback literal" ),
+                eq( null ) );
+    }
+
+    /**
+     * Phase C: {@link AuditedConditional} fires only when its {@code when}
+     * predicate is true. {@code #result > 0} → audit row written.
+     */
+    @Test
+    public void auditedConditional_firesWhenPredicateTrue() {
+        FakeAuditable target = new FakeAuditable( 200L );
+
+        int n = annotatedService.conditionalRemove( target, 4 );
+
+        assertThat( n ).isEqualTo( 4 );
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Removed 4 samples." ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+    }
+
+    /**
+     * Phase C: when the predicate is false the aspect must skip emission
+     * entirely — no service call, no Spring event.
+     */
+    @Test
+    public void auditedConditional_skipsWhenPredicateFalse() {
+        FakeAuditable target = new FakeAuditable( 201L );
+
+        int n = annotatedService.conditionalRemove( target, 0 );
+
+        assertThat( n ).isEqualTo( 0 );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C: predicate can reference a method parameter by name (same
+     * resolution as {@code messageSpel}).
+     */
+    @Test
+    public void auditedConditional_predicateCanReferenceArgs() {
+        FakeAuditable target = new FakeAuditable( 202L );
+
+        annotatedService.conditionalOnArg( target, List.of( "alpha", "beta" ) );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "Applied 2 tags." ),
+                eq( null ) );
+
+        // And on the empty-tags path the aspect should skip.
+        reset( auditTrailService );
+        when( auditTrailService.addUpdateEventWithPayload( any(), any(), any(), any() ) )
+                .thenReturn( stubEvent );
+        collector.received.clear();
+
+        annotatedService.conditionalOnArg( target, List.of() );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C: a broken {@code when} SpEL must SKIP emission (safe default —
+     * an undecidable predicate is closer to the no-op branch than to the
+     * emission branch).
+     */
+    @Test
+    public void auditedConditional_brokenWhenSpelSkipsEmission() {
+        FakeAuditable target = new FakeAuditable( 203L );
+
+        annotatedService.conditionalBrokenWhenSkips( target );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C ({@link AuditedOnError}): the aspect must (a) write a Failed*
+     * event via the 4-arg Throwable overload (REQUIRES_NEW in production),
+     * (b) re-throw the original exception, and (c) publish an
+     * {@link AuditedEvent} for downstream listeners.
+     */
+    @Test
+    public void auditedOnError_writesEventAndRethrowsOriginal() {
+        FakeAuditable target = new FakeAuditable( 300L );
+
+        IllegalStateException caught = catchThrowableOfType(
+                () -> annotatedService.erroringDefaultMessage( target ),
+                IllegalStateException.class );
+        assertThat( caught ).hasMessage( "boom" );
+
+        ArgumentCaptor<Throwable> thrCap = ArgumentCaptor.forClass( Throwable.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "boom" ), // default messageSpel = "#exception.message"
+                thrCap.capture() );
+        assertThat( thrCap.getValue() ).isSameAs( caught );
+
+        // No-payload publication path on the throwing branch.
+        assertThat( collector.received ).hasSize( 1 );
+        AuditedEvent ev = collector.received.get( 0 );
+        assertThat( ev.getTarget() ).isSameAs( target );
+        assertThat( ev.getPayload() ).isNull();
+        assertThat( ev.getAuditEvent() ).isSameAs( stubEvent );
+    }
+
+    /**
+     * Phase C: SpEL on the throwing path can reference both
+     * {@code #exception} and method parameters by name.
+     */
+    @Test
+    public void auditedOnError_messageSpelCanReferenceExceptionAndArgs() {
+        FakeAuditable target = new FakeAuditable( 301L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.erroringWithSpel( target, "manual" ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class ).hasMessage( "details" );
+
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "reason=manual; cause=details" ),
+                any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C: a method returning normally must NOT trigger
+     * {@code @AuditedOnError} (the advice is {@code @AfterThrowing}-only).
+     */
+    @Test
+    public void auditedOnError_happyPathDoesNotEmit() {
+        FakeAuditable target = new FakeAuditable( 302L );
+
+        String result = annotatedService.erroringHappyPath( target );
+
+        assertThat( result ).isEqualTo( "ok" );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C: broken {@code messageSpel} on the throwing path must fall
+     * back to the literal {@code message()} and STILL write the audit row.
+     * Contrast with {@code @AuditedConditional.when} which SKIPS on broken
+     * SpEL — losing a Failed* row would hide the failure.
+     */
+    @Test
+    public void auditedOnError_brokenSpelFallsBackAndStillWritesRow() {
+        FakeAuditable target = new FakeAuditable( 303L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.erroringBrokenSpelFallsBack( target ) );
+        assertThat( caught ).isInstanceOf( RuntimeException.class );
+
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "fallback literal note" ),
+                any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C: a method may carry BOTH {@link Audited} AND
+     * {@link AuditedOnError} — the two advice paths are disjoint. On
+     * success, only the {@code @Audited} path fires.
+     */
+    @Test
+    public void dualAnnotated_successPath_firesOnlyAuditedNotOnError() {
+        FakeAuditable target = new FakeAuditable( 304L );
+
+        int n = annotatedService.dualAnnotatedSuccess( target );
+        assertThat( n ).isEqualTo( 7 );
+
+        // @Audited path → addUpdateEventWithPayload
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "success path" ), eq( null ) );
+        // @AuditedOnError path → addUpdateEvent(...Throwable) must NOT fire
+        verify( auditTrailService, never() ).addUpdateEvent(
+                any( Auditable.class ),
+                org.mockito.ArgumentMatchers.<Class<? extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType>>any(),
+                any(),
+                any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C: dual-annotated method on the failure path — only the
+     * {@code @AuditedOnError} path fires; the {@code @Audited}
+     * {@code @AfterReturning} advice does not.
+     */
+    @Test
+    public void dualAnnotated_failurePath_firesOnlyAuditedOnError() {
+        FakeAuditable target = new FakeAuditable( 305L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.dualAnnotatedFailure( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "boom" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEventWithPayload(
+                any(), any(), any(), any() );
+    }
+
+    /**
+     * Phase C (repeatable): a single {@link AuditedOnError} declaration with
+     * a default {@code Throwable.class} filter (back-compat) still fires for
+     * everything. Covered indirectly above; the explicit check here pins
+     * back-compat down so future refactors don't regress it.
+     */
+    @Test
+    public void singleAnnotation_defaultFilter_firesForAnyThrowable() {
+        FakeAuditable target = new FakeAuditable( 400L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.erroringDefaultMessage( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "boom" ), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): a single {@link AuditedOnError} declaration with
+     * a specific {@code exception} filter fires when the throwable matches.
+     */
+    @Test
+    public void singleAnnotation_specificFilter_firesForMatchingThrowable() {
+        FakeAuditable target = new FakeAuditable( 401L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.singleFilterMatches( target ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "bad-arg" ), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): a single {@link AuditedOnError} declaration with
+     * a specific {@code exception} filter SKIPS when the throwable doesn't
+     * match — the original exception still propagates (Spring AOP re-throws
+     * regardless).
+     */
+    @Test
+    public void singleAnnotation_specificFilter_skipsForNonMatchingThrowable() {
+        FakeAuditable target = new FakeAuditable( 402L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.singleFilterDoesNotMatch( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Phase C (repeatable): two repeated declarations dispatch to different
+     * event types. IAE branch → SampleRemovalEvent.
+     */
+    @Test
+    public void repeatable_dispatchesToCorrectEventType_iae() {
+        FakeAuditable target = new FakeAuditable( 403L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.multiFilterArgException( target ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "arg" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): two repeated declarations dispatch to different
+     * event types. ISE branch → FailedSampleCorrelationAnalysisEvent.
+     */
+    @Test
+    public void repeatable_dispatchesToCorrectEventType_ise() {
+        FakeAuditable target = new FakeAuditable( 404L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.multiFilterStateException( target ) );
+        assertThat( caught ).isInstanceOf( IllegalStateException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), eq( "state" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): most-specific match wins. IAE-specific
+     * declaration beats the Throwable.class fallback.
+     */
+    @Test
+    public void repeatable_mostSpecificMatchWins() {
+        FakeAuditable target = new FakeAuditable( 405L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.mostSpecificWinsForMatchingType( target ) );
+        assertThat( caught ).isInstanceOf( IllegalArgumentException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), eq( "arg" ), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): a default-class declaration acts as a fallback
+     * when no more-specific declaration matches.
+     */
+    @Test
+    public void repeatable_defaultClassFallback_firesForUnmatchedType() {
+        FakeAuditable target = new FakeAuditable( 406L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.fallbackFiresForUnmatchedType( target ) );
+        assertThat( caught ).isInstanceOf( NullPointerException.class );
+        verify( auditTrailService ).addUpdateEvent(
+                eq( target ), eq( FailedSampleCorrelationAnalysisEvent.class ), any(), any( Throwable.class ) );
+        verify( auditTrailService, never() ).addUpdateEvent(
+                eq( target ), eq( SampleRemovalEvent.class ), any(), any( Throwable.class ) );
+    }
+
+    /**
+     * Phase C (repeatable): when no declaration matches the throwable,
+     * nothing is recorded — like a Java multi-catch where the thrown type
+     * isn't in the catch list. The original exception still propagates.
+     */
+    @Test
+    public void repeatable_noMatch_emitsNothing() {
+        FakeAuditable target = new FakeAuditable( 407L );
+
+        Throwable caught = catchThrowable( () -> annotatedService.noMatchEmitsNothing( target ) );
+        assertThat( caught ).isInstanceOf( NullPointerException.class );
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    // -----------------------------------------------------------------
+    // valueSpel — runtime-resolved event type
+    // -----------------------------------------------------------------
+
+    /**
+     * {@code valueSpel} resolves to {@link SampleRemovalEvent} when
+     * {@code which == "a"}. The aspect must write the row with the
+     * SpEL-chosen class.
+     */
+    @Test
+    public void valueSpel_resolvesToBranchA() {
+        FakeAuditable target = new FakeAuditable( 500L );
+
+        annotatedService.dynamicEventType( target, "a" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "valueSpel chose a" ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+        assertThat( collector.received.get( 0 ).getEventType() ).isInstanceOf( SampleRemovalEvent.class );
+    }
+
+    /**
+     * {@code valueSpel} resolves to {@link SampleRemovalReversionEvent} when
+     * {@code which == "b"} — different concrete class from branch A, on the
+     * same annotated method. Demonstrates true runtime dispatch.
+     */
+    @Test
+    public void valueSpel_resolvesToBranchB() {
+        FakeAuditable target = new FakeAuditable( 501L );
+
+        annotatedService.dynamicEventType( target, "b" );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalReversionEvent.class ),
+                eq( "valueSpel chose b" ),
+                eq( null ) );
+        assertThat( collector.received ).hasSize( 1 );
+        assertThat( collector.received.get( 0 ).getEventType() ).isInstanceOf( SampleRemovalReversionEvent.class );
+    }
+
+    /**
+     * {@code valueSpel} returns {@code null} (the helper has no class for
+     * {@code which == "x"}); {@code value()} is at its abstract default. The
+     * aspect must SKIP emission — no fallback to the abstract base class.
+     */
+    @Test
+    public void valueSpel_nullResultSkipsEmission() {
+        FakeAuditable target = new FakeAuditable( 502L );
+
+        annotatedService.dynamicEventTypeNullSkips( target, "x" );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * Broken {@code valueSpel}: the SpEL expression cannot evaluate. The
+     * aspect must log ERROR and FALL BACK to the literal {@code value()}.
+     * Since {@code value()} here is a concrete class, emission proceeds.
+     */
+    @Test
+    public void valueSpel_brokenExpressionFallsBackToLiteralValue() {
+        FakeAuditable target = new FakeAuditable( 503L );
+
+        annotatedService.brokenValueSpelFallsBackToValue( target );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalEvent.class ),
+                eq( "fallback event-class path" ),
+                eq( null ) );
+    }
+
+    /**
+     * Both {@code value} and {@code valueSpel} non-default: the SpEL choice
+     * wins when it resolves successfully (the literal {@code value} is the
+     * fallback for the broken-SpEL path).
+     */
+    @Test
+    public void valueSpel_bothSetSpelChoiceWins() {
+        FakeAuditable target = new FakeAuditable( 504L );
+
+        annotatedService.bothValueAndValueSpel_spelWins( target );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalReversionEvent.class ), // SpEL choice
+                eq( "both-set-spel-wins" ),
+                eq( null ) );
+    }
+
+    /**
+     * Both {@code value} at its abstract default AND empty {@code valueSpel}:
+     * no concrete class to write, the aspect must skip emission entirely.
+     */
+    @Test
+    public void valueSpel_noEventTypeResolvedSkips() {
+        FakeAuditable target = new FakeAuditable( 505L );
+
+        annotatedService.noEventTypeAtAll( target );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+
+    /**
+     * {@code @AuditedConditional} also honours {@code valueSpel}: when the
+     * predicate fires, the event class is resolved at runtime.
+     */
+    @Test
+    public void valueSpel_worksOnAuditedConditional() {
+        FakeAuditable target = new FakeAuditable( 506L );
+
+        annotatedService.dynamicConditional( target, "b", 3 );
+
+        verify( auditTrailService ).addUpdateEventWithPayload(
+                eq( target ),
+                eq( SampleRemovalReversionEvent.class ),
+                eq( "cond+spel: b" ),
+                eq( null ) );
+    }
+
+    /**
+     * {@code @AuditedConditional} predicate false → no emission even if
+     * {@code valueSpel} would have resolved. The when-gate runs first.
+     */
+    @Test
+    public void valueSpel_auditedConditionalSkipsWhenPredicateFalse() {
+        FakeAuditable target = new FakeAuditable( 507L );
+
+        annotatedService.dynamicConditional( target, "a", 0 );
+
+        verifyNoInteractions( auditTrailService );
+        assertThat( collector.received ).isEmpty();
+    }
+}

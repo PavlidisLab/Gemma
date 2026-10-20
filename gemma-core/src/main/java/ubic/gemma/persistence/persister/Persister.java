@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.common.Identifiable;
 
 import javax.annotation.CheckReturnValue;
 import java.util.Collection;
@@ -42,24 +43,24 @@ public interface Persister {
      * or converted into a reference to a persistent object identified by the objects business key. If a matching object
      * already exists, it will not be changed.
      *
-     * @param  obj the object
+     * @param obj the object
      * @return the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
     @CheckReturnValue
-    Object persist( Object obj );
+    <T extends Identifiable> T persist( T obj );
 
     /**
      * Persist all the objects in a collection. Non-nullable dependencies are checked and persisted first, if the
      * reference is detached, or converted into a reference to a persistent object identified by the objects business
      * key. Matching instances are not changed.
      *
-     * @param  col the collection of objects
+     * @param col the collection of objects
      * @return The persistent versions of the objects.
      */
     @Secured({ "GROUP_USER" })
     @CheckReturnValue
-    List<?> persist( Collection<?> col );
+    <T extends Identifiable> List<T> persist( Collection<T> col );
 
     /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
@@ -70,10 +71,10 @@ public interface Persister {
      * already existing. If you want to update associated objects you must update them explicitly (perhaps with a call
      * to persistOrUpdate on them).
      *
-     * @param  obj the object
+     * @param obj the object
      * @return the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
     @CheckReturnValue
-    Object persistOrUpdate( Object obj );
+    <T extends Identifiable> T persistOrUpdate( T obj );
 }

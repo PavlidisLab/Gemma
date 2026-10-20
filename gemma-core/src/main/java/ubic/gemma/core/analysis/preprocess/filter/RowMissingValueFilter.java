@@ -34,7 +34,7 @@ import java.util.List;
  * @author pavlidis
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Possible external use
-public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix> {
+public class RowMissingValueFilter implements ExpressionDataFilter<ExpressionDataDoubleMatrix> {
 
     private static final Log log = LogFactory.getLog( RowMissingValueFilter.class.getName() );
     private static final int ABSOLUTE_MIN_PRESENT = 1;
@@ -140,7 +140,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
                 .info( "Retaining " + kept.size() + " rows that meet criterion of at least " + minPresentCount
                         + " non-missing values" );
 
-        return new ExpressionDataDoubleMatrix( data, kept );
+        return data.sliceRows( kept );
 
     }
 
@@ -189,5 +189,11 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             throw new IllegalArgumentException( "Min present fraction must be between 0 and 1, got " + k );
         minPresentFractionIsSet = true;
         minPresentFraction = k;
+    }
+
+    @Override
+    public String toString() {
+        return String.format( "RowMissingValueFilter Min Present Fraction=%.2f%% Min Present Count=%d",
+                100.0 * minPresentFraction, minPresentCount );
     }
 }

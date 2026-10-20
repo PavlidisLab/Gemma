@@ -7,8 +7,8 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.stereotype.Service;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 
 import java.util.Collections;
 
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
-public class GenericMeterRegistryConfigurerTest extends BaseTest {
+public class GenericMeterRegistryConfigurerTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -107,7 +107,7 @@ public class GenericMeterRegistryConfigurerTest extends BaseTest {
     }
 
     @Test
-    @Ignore("The @Timed annotation does not work at interface-level, see https://github.com/PavlidisLab/Gemma/issues/541.")
+    @Disabled("The @Timed annotation does not work at interface-level, see https://github.com/PavlidisLab/Gemma/issues/541.")
     public void testTimedMethodAtInterfaceLevel() {
         assertThat( getTimer( MyService2.class, "test" ) ).isNull();
         myService2.test();

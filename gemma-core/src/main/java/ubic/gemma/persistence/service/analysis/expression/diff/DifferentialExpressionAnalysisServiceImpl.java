@@ -16,32 +16,25 @@
  * limitations under the License.
  *
  */
+
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.Hibernate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import java.util.*;
-
-import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialUtils.visitBioMaterials;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author paul
@@ -49,155 +42,68 @@ import static ubic.gemma.persistence.service.expression.biomaterial.BioMaterialU
  * @see DifferentialExpressionAnalysisService
  */
 @Service
-@CommonsLog
+@Slf4j
 public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<DifferentialExpressionAnalysis> implements DifferentialExpressionAnalysisService {
 
     private final DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Autowired
-    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
-    @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
-    @Autowired
     private GeneDiffExMetaAnalysisDao geneDiffExMetaAnalysisDao;
 
+    private final DifferentialExpressionAnalysisReadService differentialExpressionAnalysisReadService;
+
     @Autowired
-    public DifferentialExpressionAnalysisServiceImpl( DifferentialExpressionAnalysisDao mainDao ) {
+    public DifferentialExpressionAnalysisServiceImpl( DifferentialExpressionAnalysisDao mainDao,
+            DifferentialExpressionAnalysisReadService differentialExpressionAnalysisReadService ) {
         super( mainDao );
         this.differentialExpressionAnalysisDao = mainDao;
+        this.differentialExpressionAnalysisReadService = differentialExpressionAnalysisReadService;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis loadWithExperimentAnalyzed( Long id ) {
-        DifferentialExpressionAnalysis analysis = load( id );
-        if ( analysis != null ) {
-            Hibernate.initialize( analysis.getExperimentAnalyzed() );
-        }
-        return analysis;
+        return differentialExpressionAnalysisReadService.loadWithExperimentAnalyzed( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
-        return this.differentialExpressionAnalysisDao.findByFactor( ef );
+        return differentialExpressionAnalysisReadService.findByFactor( ef );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByExperimentIds(
-            Collection<Long> experimentIds ) {
-        return this.differentialExpressionAnalysisDao.findByExperimentAnalyzedId( experimentIds );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene ) {
-        return this.differentialExpressionAnalysisDao.findExperimentsWithAnalyses( gene );
+        return differentialExpressionAnalysisReadService.findExperimentsWithAnalyses( gene );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis findByExperimentAnalyzedAndId( BioAssaySet expressionExperiment, Long analysisId, boolean includeSubSets ) {
-        return differentialExpressionAnalysisDao.findByExperimentAnalyzedAndId( expressionExperiment, analysisId, includeSubSets );
+    public DifferentialExpressionAnalysis findByExperimentAndAnalysisId( ExpressionExperiment expressionExperiment, boolean includeSubSets, Long analysisId ) {
+        return differentialExpressionAnalysisReadService.findByExperimentAndAnalysisId( expressionExperiment, includeSubSets, analysisId );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment, boolean includeSubSets ) {
-        return this.differentialExpressionAnalysisDao.findByExperiment( expressionExperiment, includeSubSets );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses ) {
-        HashSet<DifferentialExpressionAnalysis> results = new HashSet<>();
-        for ( DifferentialExpressionAnalysis ea : expressionAnalyses ) {
-            results.add( this.thaw( ea ) );
-        }
-        return results;
+        return differentialExpressionAnalysisReadService.thaw( expressionAnalyses );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        differentialExpressionAnalysis = ensureInSession( differentialExpressionAnalysis );
-
-        Hibernate.initialize( differentialExpressionAnalysis );
-        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
-        Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() );
-        for ( BioAssay bm : differentialExpressionAnalysis.getExperimentAnalyzed().getBioAssays() ) {
-            visitBioMaterials( bm.getSampleUsed(), b -> {
-                for ( FactorValue fv : b.getFactorValues() ) {
-                    Hibernate.initialize( fv.getExperimentalFactor() );
-                }
-            } );
-        }
-
-        Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
-
-        if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
-            Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
-        }
-
-        Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
-        Hibernate.initialize( ears );
-        for ( ExpressionAnalysisResultSet ear : ears ) {
-            Hibernate.initialize( ear );
-            Hibernate.initialize( ear.getExperimentalFactors() );
-        }
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Thaw: " + timer.getTime() + "ms" );
-        }
-
-        return differentialExpressionAnalysis;
+        return differentialExpressionAnalysisReadService.thaw( differentialExpressionAnalysis );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        differentialExpressionAnalysis = thaw( differentialExpressionAnalysis );
-        // just loading the entities in the session is sufficient for thawing them
-        for ( ExpressionAnalysisResultSet dears : differentialExpressionAnalysis.getResultSets() ) {
-            expressionAnalysisResultSetDao.loadWithResultsAndContrasts( dears.getId() );
-        }
-        return differentialExpressionAnalysis;
+        return differentialExpressionAnalysisReadService.thawFully( differentialExpressionAnalysis );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.expressionAnalysisResultSetDao.canDelete( differentialExpressionAnalysis );
+        return differentialExpressionAnalysisReadService.canDelete( differentialExpressionAnalysis );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids ) {
-        return this.getAnalysesByExperiment( ids, 0, -1 );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
-            Collection<Long> ids, int offset, int limit ) {
-        Map<Long, List<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this.differentialExpressionAnalysisDao
-                .getAnalysesByExperimentIds( ids, offset, limit, true );
-
-        Map<Long, ExpressionExperimentDetailsValueObject> idMap = IdentifiableUtils.getIdMap( expressionExperimentDao
-                .loadDetailsValueObjectsByIds( analysesByExperimentIds.keySet() ) );
-
-        Map<ExpressionExperimentDetailsValueObject, List<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
-
-        for ( Long id : analysesByExperimentIds.keySet() ) {
-            if ( !idMap.containsKey( id ) )
-                continue; // defensive....
-            result.put( idMap.get( id ), analysesByExperimentIds.get( id ) );
-        }
-        return result;
+    public Map<ExpressionExperimentDetailsValueObject, Collection<DifferentialExpressionAnalysisValueObject>> findByExperimentIds(
+            Collection<Long> experimentIds, boolean includeSubSets, boolean includeAssays ) {
+        return differentialExpressionAnalysisReadService.findByExperimentIds( experimentIds, includeSubSets, includeAssays );
     }
 
     @Override
@@ -225,15 +131,18 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     }
 
     @Override
-    public void remove( Long id ) {
-        throw new UnsupportedOperationException( "Removing an analysis by ID is not supported, use remove() with an entity instead." );
+    @Transactional
+    public void removeForExperiment( ExpressionExperiment ee, boolean includeSubSets ) {
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
+                .findByExperiment( ee, includeSubSets );
+        this.remove( diffAnalyses );
     }
 
     @Override
     @Transactional
-    public void removeForExperiment( BioAssaySet ee, boolean includeSubSets ) {
+    public void removeForExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
-                .findByExperiment( ee, includeSubSets );
+                .findByExperimentAnalyzed( experimentAnalyzed );
         this.remove( diffAnalyses );
     }
 
@@ -254,34 +163,23 @@ public class DifferentialExpressionAnalysisServiceImpl extends AbstractService<D
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysis> findByExperiment( BioAssaySet experiment, boolean includeSubSets ) {
-        return this.differentialExpressionAnalysisDao.findByExperiment( experiment, includeSubSets );
+    public Collection<DifferentialExpressionAnalysis> findByExperiment( ExpressionExperiment experiment, boolean includeSubSets ) {
+        return differentialExpressionAnalysisReadService.findByExperiment( experiment, includeSubSets );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> findByExperiments(
-            Collection<BioAssaySet> experiments, boolean includeSubSets ) {
-        return this.differentialExpressionAnalysisDao
-                .findByExperiments( experiments, includeSubSets );
+    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> findByExperiments(
+            Collection<ExpressionExperiment> experiments, boolean includeSubSets ) {
+        return differentialExpressionAnalysisReadService.findByExperiments( experiments, includeSubSets );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
-        return this.differentialExpressionAnalysisDao.findByName( name );
+        return differentialExpressionAnalysisReadService.findByName( name );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentAnalyzedIds, boolean includeSubSets ) {
-        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( experimentAnalyzedIds, includeSubSets );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
-        return this.differentialExpressionAnalysisDao.getExperimentsWithAnalysis( taxon );
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> experimentIds, boolean includeSubSets ) {
+        return differentialExpressionAnalysisReadService.getExperimentsWithAnalysis( experimentIds, includeSubSets );
     }
 }

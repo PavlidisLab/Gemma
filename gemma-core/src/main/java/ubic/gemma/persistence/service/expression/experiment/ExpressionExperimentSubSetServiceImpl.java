@@ -17,6 +17,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -26,7 +27,6 @@ import ubic.gemma.persistence.service.AbstractService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 
 import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * @author pavlidis
@@ -36,44 +36,46 @@ import java.util.HashSet;
 public class ExpressionExperimentSubSetServiceImpl extends AbstractService<ExpressionExperimentSubSet>
         implements ExpressionExperimentSubSetService {
 
-    private final ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
+    private final ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService;
     private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     public ExpressionExperimentSubSetServiceImpl( ExpressionExperimentSubSetDao expressionExperimentSubSetDao,
+            ExpressionExperimentSubSetReadService expressionExperimentSubSetReadService,
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         super( expressionExperimentSubSetDao );
-        this.expressionExperimentSubSetDao = expressionExperimentSubSetDao;
+        this.expressionExperimentSubSetReadService = expressionExperimentSubSetReadService;
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> findByBioAssayIn( Collection<BioAssay> bioAssays ) {
-        return expressionExperimentSubSetDao.findByBioAssayIn( bioAssays );
+        return expressionExperimentSubSetReadService.findByBioAssayIn( bioAssays );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
-        return this.expressionExperimentSubSetDao.getFactorValuesUsed( entity, factor );
+        return expressionExperimentSubSetReadService.getFactorValuesUsed( entity, factor );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
-        Collection<FactorValue> list = this.expressionExperimentSubSetDao.getFactorValuesUsed( subSetId, experimentalFactor );
-        Collection<FactorValueValueObject> result = new HashSet<>();
-        for ( FactorValue fv : list ) {
-            result.add( new FactorValueValueObject( fv ) );
-        }
-        return result;
+        return expressionExperimentSubSetReadService.getFactorValuesUsedAsVO( subSetId, experimentalFactor );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperimentSubSet subset ) {
+        return expressionExperimentSubSetReadService.getArrayDesignsUsed( subset );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperimentSubSet loadWithBioAssays( Long id ) {
-        return expressionExperimentSubSetDao.loadWithBioAssays( id );
+        return expressionExperimentSubSetReadService.loadSubSetWithBioAssays( id );
     }
 
     /**
@@ -87,7 +89,7 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
     public void remove( ExpressionExperimentSubSet subset ) {
         subset = ensureInSession( subset );
         // Remove differential expression analyses
-        this.differentialExpressionAnalysisService.removeForExperiment( subset, true );
+        this.differentialExpressionAnalysisService.removeForExperimentAnalyzed( subset );
         super.remove( subset );
     }
 
@@ -96,8 +98,4 @@ public class ExpressionExperimentSubSetServiceImpl extends AbstractService<Expre
         entities.forEach( this::remove );
     }
 
-    @Override
-    public void remove( Long id ) {
-        throw new UnsupportedOperationException( "Removing an experiment subset by ID is not supported." );
-    }
 }

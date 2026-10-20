@@ -18,15 +18,15 @@
  */
 package ubic.gemma.core.analysis.sequence;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.config.Settings;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatExecutableExists;
 
 /**
@@ -38,7 +38,7 @@ public class RepeatScanTest {
     private static final String repeatMaskerExe = Settings.getString( "repeatMasker.exe" );
 
     @Test
-    @Ignore("RepeatMasker appears to be broken, see https://github.com/PavlidisLab/Gemma/issues/53")
+    @Disabled("RepeatMasker appears to be broken, see https://github.com/PavlidisLab/Gemma/issues/53")
     public void testRepeatScan() {
         assumeThatExecutableExists( repeatMaskerExe );
         Taxon taxon = Taxon.Factory.newInstance( "human" );

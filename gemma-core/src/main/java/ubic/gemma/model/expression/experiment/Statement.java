@@ -1,15 +1,18 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.Field;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import ubic.gemma.model.common.description.Category;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.persistence.Transient;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -25,6 +28,8 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
  * {@link #getObject(int)} and {@link #getNumberOfStatements()}.
  * @author poirigui
  */
+@Entity
+@DiscriminatorValue("Statement")
 public class Statement extends Characteristic {
 
     private static final Comparator<Statement> COMPARATOR = Comparator
@@ -63,39 +68,47 @@ public class Statement extends Characteristic {
      * The predicate of the statement.
      */
     @Nullable
+    @Column(name = "PREDICATE", columnDefinition = "VARCHAR(255)")
     private String predicate;
 
     /**
      * The predicate URI of the statement.
      */
     @Nullable
+    @Column(name = "PREDICATE_URI", columnDefinition = "VARCHAR(255)")
     private String predicateUri;
 
     /**
      * The object of the statement.
      */
     @Nullable
+    @Column(name = "OBJECT", columnDefinition = "VARCHAR(255)")
     private String object;
 
     @Nullable
+    @Column(name = "OBJECT_URI", columnDefinition = "VARCHAR(255)")
     private String objectUri;
 
     /**
      * The second predicate.
      */
     @Nullable
+    @Column(name = "SECOND_PREDICATE", columnDefinition = "VARCHAR(255)")
     private String secondPredicate;
 
     @Nullable
+    @Column(name = "SECOND_PREDICATE_URI", columnDefinition = "VARCHAR(255)")
     private String secondPredicateUri;
 
     /**
      * The second object.
      */
     @Nullable
+    @Column(name = "SECOND_OBJECT", columnDefinition = "VARCHAR(255)")
     private String secondObject;
 
     @Nullable
+    @Column(name = "SECOND_OBJECT_URI", columnDefinition = "VARCHAR(255)")
     private String secondObjectUri;
 
     /**
@@ -159,6 +172,7 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @FullTextField
     public String getPredicate() {
         return predicate;
     }
@@ -168,35 +182,46 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @KeywordField
     public String getPredicateUri() {
         return predicateUri;
     }
 
+    /**
+     * Blank is stored as null, for the reason spelled out on
+     * {@link ubic.gemma.model.common.description.Characteristic#setValueUri(String)}: an empty string
+     * is a second dialect for ungrounded and no layer reads it that way. Prod carried 7
+     * {@code PREDICATE_URI = ''} and 3 {@code OBJECT_URI = ''} rows, all factor-value statements, when
+     * this landed — the statement columns were outside the sweep that cleared VALUE_URI.
+     */
     public void setPredicateUri( @Nullable String predicateUri ) {
-        this.predicateUri = predicateUri;
+        this.predicateUri = stripToNull( predicateUri );
     }
 
     @Nullable
-    @Field
+    @FullTextField
     public String getObject() {
         return object;
     }
 
     public void setObject( @Nullable String object ) {
-        this.object = object;
+        // Same free-text normalization as the subject, which reaches it via super.setValue().
+        // Production carries 151 objects with edge whitespace and 6 with internal runs.
+        this.object = normalizeTermText( object );
     }
 
     @Nullable
-    @Field(analyze = Analyze.NO)
+    @KeywordField
     public String getObjectUri() {
         return objectUri;
     }
 
     public void setObjectUri( @Nullable String objectUri ) {
-        this.objectUri = objectUri;
+        this.objectUri = stripToNull( objectUri );
     }
 
     @Nullable
+    @FullTextField
     public String getSecondPredicate() {
         return secondPredicate;
     }
@@ -206,32 +231,33 @@ public class Statement extends Characteristic {
     }
 
     @Nullable
+    @KeywordField
     public String getSecondPredicateUri() {
         return secondPredicateUri;
     }
 
     public void setSecondPredicateUri( @Nullable String secondPredicateUri ) {
-        this.secondPredicateUri = secondPredicateUri;
+        this.secondPredicateUri = stripToNull( secondPredicateUri );
     }
 
     @Nullable
-    @Field
+    @FullTextField
     public String getSecondObject() {
         return secondObject;
     }
 
     public void setSecondObject( @Nullable String secondObject ) {
-        this.secondObject = secondObject;
+        this.secondObject = normalizeTermText( secondObject );
     }
 
     @Nullable
-    @Field(analyze = Analyze.NO)
+    @KeywordField
     public String getSecondObjectUri() {
         return secondObjectUri;
     }
 
     public void setSecondObjectUri( @Nullable String secondObjectUri ) {
-        this.secondObjectUri = secondObjectUri;
+        this.secondObjectUri = stripToNull( secondObjectUri );
     }
 
     @Nullable
@@ -323,18 +349,27 @@ public class Statement extends Characteristic {
                 && CharacteristicUtils.equals( secondObject, secondObjectUri, that.secondObject, that.secondObjectUri );
     }
 
+    /**
+     * Constant, and the SAME constant {@link Characteristic#hashCode()} returns.
+     * Restated here to say why the predicate fields are NOT hashed, and why this
+     * cannot be {@code getClass().hashCode()}: {@link Characteristic#equals} calls
+     * a Statement equal to a Characteristic with the same category and value, so
+     * a per-class constant would break the equals/hashCode contract between them.
+     *
+     * <p>This hashed the predicate and object terms on top of the superclass's
+     * mutable category/value hash. Every one of those fields is edited in place
+     * by curation, and a Statement lives in {@code FactorValue}'s
+     * {@code Set<Statement>}, so an edit moved the element to a stale bucket.
+     * See {@link Characteristic#hashCode()} for the full reasoning and for the
+     * rule about not keying large maps by these types.</p>
+     */
     @Override
     public int hashCode() {
-        // don't both hashing labels unless the URI is null
-        return super.hashCode() + 31 * Objects.hash(
-                StringUtils.lowerCase( predicateUri != null ? predicateUri : predicate ),
-                StringUtils.lowerCase( objectUri != null ? objectUri : object ),
-                StringUtils.lowerCase( secondPredicateUri != null ? secondPredicateUri : secondPredicate ),
-                StringUtils.lowerCase( secondObjectUri != null ? secondObjectUri : secondObject ) );
+        return Characteristic.class.hashCode();
     }
 
     @Override
-    public int compareTo( @Nonnull Characteristic characteristic ) {
+    public int compareTo( @NonNull Characteristic characteristic ) {
         if ( characteristic instanceof Statement ) {
             return COMPARATOR.compare( this, ( Statement ) characteristic );
         }

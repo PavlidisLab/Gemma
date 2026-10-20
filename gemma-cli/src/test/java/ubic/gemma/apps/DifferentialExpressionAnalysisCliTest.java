@@ -1,0 +1,749 @@
+package ubic.gemma.apps;
+
+import org.assertj.core.util.Sets;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.cli.util.EntityLocator;
+import ubic.gemma.core.analysis.expression.diff.AnalysisType;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.util.GemmaRestApiClient;
+import ubic.gemma.core.util.test.BaseTest5;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.expression.experiment.ExperimentalDesign;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueUtils;
+import ubic.gemma.model.expression.experiment.Statement;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.util.EntityUrlBuilder;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.HashSet;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static ubic.gemma.cli.util.test.Assertions.assertThat;
+
+@WithMockUser("bob")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@ContextConfiguration
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class DifferentialExpressionAnalysisCliTest extends BaseTest5 {
+
+    @Autowired
+    private GemmaRestApiClient gemmaRestApiClient;
+
+    @Configuration
+    @TestComponent
+    @ActiveProfiles("cli")
+    static class DifferentialExpressionAnalysisCliTestConfiguration {
+
+        @Bean
+        @Scope("prototype")
+        public DifferentialExpressionAnalysisCli differentialExpressionAnalysisCli() {
+            return new DifferentialExpressionAnalysisCli();
+        }
+
+        @Bean
+        public DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService() {
+            return mock();
+        }
+
+        @Bean
+        public DifferentialExpressionAnalysisService differentialExpressionAnalysisService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionDataFileService expressionDataFileService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentService eeService() {
+            return mock();
+        }
+
+        @Bean
+        public ExpressionExperimentSetService expressionExperimentSetService() {
+            return mock();
+        }
+
+        @Bean
+        public SearchService searchService() {
+            return mock();
+        }
+
+        @Bean
+        public ArrayDesignService arrayDesignService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditTrailService auditTrailService() {
+            return mock();
+        }
+
+        @Bean
+        public AuditEventService auditEventService() {
+            return mock();
+        }
+
+        @Bean
+        public EntityLocator entityLocator() {
+            return mock();
+        }
+
+        @Bean
+        public EntityUrlBuilder entityUrlBuilder() {
+            return new EntityUrlBuilder( "http://localhost:8080" );
+        }
+
+        @Bean
+        public GemmaRestApiClient gemmaRestApiClient() {
+            return mock();
+        }
+    }
+
+    @Autowired
+    private DifferentialExpressionAnalysisCli differentialExpressionAnalysisCli;
+
+    @Autowired
+    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    @Autowired
+    private ExpressionExperimentService eeService;
+
+    @Autowired
+    private EntityLocator entityLocator;
+
+    @Autowired
+    private AuditEventService auditEventService;
+
+    private ExpressionExperiment ee;
+
+    private ExperimentalFactor a, b, c, d, e;
+
+    /**
+     * The DE_Include/DE_Exclude marker factor, as GSE13367 carries it: a "collection of material" factor whose two
+     * values select which samples take part in the analysis.
+     */
+    private ExperimentalFactor deMarker;
+
+    @BeforeEach
+    public void setUp() throws IOException {
+        ee = new ExpressionExperiment();
+        ee.setId( 1L );
+        a = ExperimentalFactor.Factory.newInstance( "genotype", FactorType.CATEGORICAL );
+        a.setId( 1L );
+        b = ExperimentalFactor.Factory.newInstance( "treatment", FactorType.CATEGORICAL );
+        b.setId( 2L );
+        c = ExperimentalFactor.Factory.newInstance( "batch", FactorType.CATEGORICAL );
+        c.setId( 3L );
+        d = ExperimentalFactor.Factory.newInstance( "cell type", FactorType.CATEGORICAL );
+        d.setId( 4L );
+        e = ExperimentalFactor.Factory.newInstance( "age", FactorType.CONTINUOUS );
+        e.setId( 5L );
+        deMarker = ExperimentalFactor.Factory.newInstance( "collection of material", FactorType.CATEGORICAL );
+        deMarker.setId( 6L );
+        deMarker.getFactorValues().add( deMarkerValue( deMarker, 61L, "DE_Include", FactorValueUtils.DE_INCLUDE_URI ) );
+        deMarker.getFactorValues().add( deMarkerValue( deMarker, 62L, "DE_Exclude", FactorValueUtils.DE_EXCLUDE_URI ) );
+        // The CLI refuses to report an experiment that produced no analysis as a success, so the analyzer has to
+        // be stubbed to return something. Mockito's default for a Collection is an EMPTY one, which is what every
+        // assertion below used to run against — each of them asserted success on a run that performed nothing.
+        when( differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( any(), any() ) )
+                .thenReturn( Collections.singleton( new DifferentialExpressionAnalysis() ) );
+        when( differentialExpressionAnalyzerService.redoAnalyses( any(), any(), any(), anyBoolean() ) )
+                .thenReturn( Collections.singleton( new DifferentialExpressionAnalysis() ) );
+        when( entityLocator.locateExpressionExperiment( eq( "1" ), anyBoolean() ) ).thenReturn( ee );
+        when( eeService.thawLite( ee ) ).thenReturn( ee );
+        when( gemmaRestApiClient.perform( eq( "/datasets/1/refresh" ), eq( "refreshVectors" ), anyBoolean(),
+                eq( "refreshReports" ), anyBoolean() ) )
+                .thenReturn( ( GemmaRestApiClient.DataResponse ) () -> null );
+    }
+
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactors() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+        verify( gemmaRestApiClient ).perform( "/datasets/1/refresh",
+                "refreshVectors", false,
+                "refreshReports", true );
+    }
+
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWhenBatchFactorIsPresent() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+        verify( gemmaRestApiClient ).perform( "/datasets/1/refresh",
+                "refreshVectors", false,
+                "refreshReports", true );
+    }
+
+    /**
+     * The DE_Include/DE_Exclude marker is not a biological factor. Counting it took a two-factor design over the
+     * automatic selector's limit of two and refused the run outright.
+     */
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWhenDeExcludeFactorIsPresent() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    /**
+     * GSE13367's shape: two real factors, the DE_Include/DE_Exclude marker and a batch factor.
+     */
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWhenDeExcludeAndBatchFactorsArePresent() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    /**
+     * The marker is still selectable by ID, so a curator can inspect that design deliberately.
+     */
+    @Test
+    public void testDeExcludeFactorCanStillBeRequestedExplicitly() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( deMarker );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "6" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactly( deMarker );
+        } ) );
+    }
+
+    private static FactorValue deMarkerValue( ExperimentalFactor ef, long id, String value, String valueUri ) {
+        Characteristic ch = Characteristic.Factory.newInstance();
+        ch.setCategory( "collection of material" );
+        ch.setCategoryUri( "http://www.ebi.ac.uk/efo/EFO_0005066" );
+        ch.setValue( value );
+        ch.setValueUri( valueUri );
+        FactorValue fv = FactorValue.Factory.newInstance( ef );
+        fv.setId( id );
+        fv.getCharacteristics().add( Statement.Factory.newInstance( ch ) );
+        return fv;
+    }
+
+    @Test
+    public void testAnalysisWithAutomaticallySelectedFactorsWithBatchFactorIsPresentAndIncluded() throws IOException {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( c );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-usebatch" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, c );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, c ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+        verify( gemmaRestApiClient ).perform( "/datasets/1/refresh",
+                "refreshVectors", false,
+                "refreshReports", true );
+    }
+
+    @Test
+    public void testSubSetAnalysisWithAutomaticallySelectedFactorsWhenContinuousFactorIsPresent() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, e );
+            assertThat( config.getInteractionsToInclude() ).isEmpty();
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    @Test
+    public void testSubSetAnalysisWithAutomaticallySelectedFactorsAndContinuousFactor() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-subset", "age" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "ExperimentalFactor Id=5 Name=age Type=CONTINUOUS is not categorical. A subset factor must be categorical." );
+    }
+
+    @Test
+    public void testAnalysisWithManuallySelectedFactors() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype,treatment" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    @Test
+    public void testAnalysisWithManuallySelectedFactorsWhenFactorsAreRepeated() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype,treatment,treatment" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    @Test
+    public void testAnalysisWithManuallySelectedFactorsWithNoInteraction() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-type", AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION.name(), "-factors", "genotype,treatment" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).isEmpty();
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    @Test
+    public void testAnalysisWithManuallySelectedFactorsWithInteractionOfContinuousFactor() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "age:genotype" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "Interactions can only be specified for categorical factors. Factor age in interaction age:genotype is continuous." );
+    }
+
+    @Test
+    public void testAnalysisWithManuallySelectedFactorsWhenFactorDoesNotExist() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype,batch" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "No factor for name batch. Possible values are:\n" +
+                        "\tgenotype:\tExperimentalFactor Id=1 Name=genotype Type=CATEGORICAL\n" +
+                        "\ttreatment:\tExperimentalFactor Id=2 Name=treatment Type=CATEGORICAL" );
+    }
+
+
+    @Test
+    public void testAnalysisWithManuallySelectedInteraction() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype,treatment,genotype:treatment" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+
+    @Test
+    public void testAnalysisWithManuallySelectedInteractionWhenInteractionIsRepeated() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype,treatment,genotype:treatment,treatment:genotype" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isNull();
+        } ) );
+    }
+    @Test
+    public void testAnalysisWithManuallySelectedInteractionOfContinuousFactor() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype:age" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "Interactions can only be specified for categorical factors. Factor age in interaction genotype:age is continuous." );
+    }
+
+    @Test
+    public void testSubSetAnalysisWithManuallySelectedFactors() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( d );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-subset", "cell_type", "-factors", "genotype,treatment" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).containsExactlyInAnyOrder( Sets.set( a, b ) );
+            assertThat( config.getSubsetFactor() ).isEqualTo( d );
+        } ) );
+    }
+
+    @Test
+    public void testSubSetAnalysisWithManuallySelectedFactorsAndContinuousFactor() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-subset", "age", "-factors", "genotype" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "ExperimentalFactor Id=5 Name=age Type=CONTINUOUS is not categorical. A subset factor must be categorical." );
+    }
+
+    @Test
+    public void testSubSetAnalysisWithManuallySelectedFactorsWhenSubSetFactorIsSelected() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( d );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-subset", "cell_type", "-factors", "genotype,treatment,cell_type" )
+                .fails()
+                .exitCause()
+                .isInstanceOf( IllegalArgumentException.class )
+                .hasMessage( "A subset factor cannot be included as a factor to analyze." );
+    }
+
+    @Test
+    public void testSubSetAnalysisWithManuallySelectedFactorsAndNoInteraction() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( d );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-type", AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION.name(), "-subset", "cell_type", "-factors", "genotype,treatment" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.getFactorsToInclude() ).containsExactlyInAnyOrder( a, b );
+            assertThat( config.getInteractionsToInclude() ).isEmpty();
+            assertThat( config.getSubsetFactor() ).isEqualTo( d );
+        } ) );
+    }
+
+    @Test
+    public void testRedoAnalysis() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( d );
+        ee.setExperimentalDesign( ed );
+
+        Collection<DifferentialExpressionAnalysis> deas = new HashSet<>();
+        deas.add( new DifferentialExpressionAnalysis() );
+        when( differentialExpressionAnalysisService.findByExperiment( ee, true ) ).thenReturn( deas );
+
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-redo" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).redoAnalyses( eq( ee ), eq( deas ), assertArg( config -> {
+            assertThat( config.getAnalysisType() ).isNull();
+            assertThat( config.getFactorsToInclude() ).isEmpty();
+            assertThat( config.getInteractionsToInclude() ).isEmpty();
+        } ), eq( false ) );
+    }
+
+    /**
+     * An experiment that produced no analysis is not a success. GSE74400 (eid 12822) had both its subsets skipped
+     * as "design is not valid", printed "Performed 0 differential expression analyses." and exited 0, and a batch
+     * runner testing the exit status counted it as done for hours.
+     */
+    @Test
+    public void testAnExperimentThatProducedNoAnalysisFails() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        when( differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( any(), any() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ) )
+                .fails()
+                .exitCause().hasMessageContaining( "No differential expression analysis was performed" );
+        // nothing was produced, so nothing is written or refreshed either
+        verifyNoInteractions( gemmaRestApiClient );
+    }
+
+    /**
+     * Same for a redo: the CLI reports what came back, and nothing coming back is not something to report as done.
+     */
+    @Test
+    public void testARedoThatProducedNoAnalysisFails() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+
+        Collection<DifferentialExpressionAnalysis> deas = new HashSet<>();
+        deas.add( new DifferentialExpressionAnalysis() );
+        when( differentialExpressionAnalysisService.findByExperiment( ee, true ) ).thenReturn( deas );
+        when( differentialExpressionAnalyzerService.redoAnalyses( any(), any(), any(), anyBoolean() ) )
+                .thenReturn( Collections.emptySet() );
+
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-redo" )
+                .fails()
+                .exitCause().hasMessageContaining( "No differential expression analysis was performed" );
+    }
+
+    /**
+     * Paul, 2026-09-15: the DEA CLI needs a "delete others" option.
+     */
+    @Test
+    public void testDeleteOthers() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype", "-deleteOthers" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), assertArg( config -> {
+            assertThat( config.isDeleteOtherAnalyses() ).isTrue();
+        } ) );
+    }
+
+    /**
+     * With {@code -nodb} nothing is saved, so nothing would take the place of the deleted analyses.
+     */
+    @Test
+    public void testDeleteOthersIsRefusedWhenNothingIsSaved() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-factors", "genotype", "-deleteOthers", "-nodb" )
+                .fails();
+        verify( differentialExpressionAnalyzerService, never() ).runDifferentialExpressionAnalyses( any(), any() );
+    }
+
+    @Test
+    public void testDeleteOthersIsRefusedWithRedo() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-redo", "-deleteOthers" )
+                .fails();
+        verify( differentialExpressionAnalyzerService, never() ).redoAnalyses( any(), any(), any(), anyBoolean() );
+    }
+
+    @Test
+    public void testDeleteAnalysis() {
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-delete" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).deleteAnalyses( ee );
+    }
+
+    @Test
+    public void testCompleteSubSetFactors() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ed.getExperimentalFactors().add( d );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "--complete-subset-factors" )
+                .succeeds().standardOutput().asString( StandardCharsets.UTF_8 )
+                .hasLineCount( 8 )
+                .contains( a.getId() + "\t" + a.toString() + "\n",
+                        b.getId() + "\t" + b.toString() + "\n",
+                        c.getId() + "\t" + c.toString() + "\n",
+                        d.getId() + "\t" + d.toString() + "\n" )
+                .doesNotContain( e.getId() + "\t" + e.toString() + "\n" ); // continuous factor (not suitable for subsetting)
+        verifyNoInteractions( differentialExpressionAnalysisService );
+    }
+
+    @Test
+    public void testCompleteFactors() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ed.getExperimentalFactors().add( c );
+        ed.getExperimentalFactors().add( d );
+        ed.getExperimentalFactors().add( e );
+        ee.setExperimentalDesign( ed );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "--complete-factors" )
+                .succeeds().standardOutput().asString( StandardCharsets.UTF_8 )
+                .hasLineCount( 58 )
+                .contains( a.getId() + "\t" + a.toString() + "\n",
+                        b.getId() + "\t" + b.toString() + "\n",
+                        c.getId() + "\t" + c.toString() + "\n",
+                        d.getId() + "\t" + d.toString() + "\n",
+                        e.getId() + "\t" + e.toString() + "\n",
+                        a.getName() + ":" + b.getName() + "\t" + a.toString() + " x " + b.toString() + "\n" )
+                .doesNotContain(
+                        a.getName() + ":" + a.getName(),  // interaction with itself
+                        a.getName() + ":" + e.getName() ); // interaction with a continuous factor
+        verifyNoInteractions( differentialExpressionAnalysisService );
+    }
+
+    /**
+     * {@code -mdate -30d}: a dataset analysed 5 days ago is skipped.
+     */
+    @Test
+    public void testLimitingDateSkipsADatasetAnalysedSinceThatDate() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Collections.singletonList( deaEventDaysAgo( 5 ) ) );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-mdate", "-30d" )
+                .fails();
+        verify( differentialExpressionAnalyzerService, never() ).runDifferentialExpressionAnalyses( any(), any() );
+    }
+
+    /**
+     * {@code -mdate -30d}: a dataset last analysed 60 days ago is analysed.
+     */
+    @Test
+    public void testLimitingDateRunsADatasetLastAnalysedBeforeThatDate() {
+        ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
+        ed.getExperimentalFactors().add( a );
+        ed.getExperimentalFactors().add( b );
+        ee.setExperimentalDesign( ed );
+        when( auditEventService.getEvents( ee ) ).thenReturn( Collections.singletonList( deaEventDaysAgo( 60 ) ) );
+        assertThat( differentialExpressionAnalysisCli )
+                .withArguments( "-e", String.valueOf( ee.getId() ), "-mdate", "-30d" )
+                .succeeds();
+        verify( differentialExpressionAnalyzerService ).runDifferentialExpressionAnalyses( eq( ee ), any() );
+    }
+
+    private AuditEvent deaEventDaysAgo( int days ) {
+        return AuditEvent.Factory.newInstance( new Date( System.currentTimeMillis() - TimeUnit.DAYS.toMillis( days ) ),
+                AuditAction.UPDATE, "DEA", null, null, new DifferentialExpressionAnalysisEvent() );
+    }
+}

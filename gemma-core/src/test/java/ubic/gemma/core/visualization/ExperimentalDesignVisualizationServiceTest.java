@@ -1,7 +1,7 @@
 package ubic.gemma.core.visualization;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +11,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.analysis.singleCell.aggregate.SingleCellDataVectorAggregatorUtils;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.description.Categories;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.*;
@@ -21,27 +21,26 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubsetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.RandomExperimentalDesignUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static ubic.gemma.core.visualization.RandomExperimentalDesignUtils.randomContinuousFactor;
-import static ubic.gemma.core.visualization.RandomExperimentalDesignUtils.randomExperimentalDesign;
+import static ubic.gemma.persistence.service.expression.experiment.RandomExperimentalDesignUtils.randomContinuousFactor;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class ExperimentalDesignVisualizationServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -64,7 +63,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( expressionExperimentService );
     }
@@ -82,8 +81,10 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
             ee.getBioAssays().add( BioAssay.Factory.newInstance( "ba" + i, ad, BioMaterial.Factory.newInstance( "bm" + i ) ) );
         }
 
-        ee.setExperimentalDesign( randomExperimentalDesign( ee, 4 ) );
-        ee.getExperimentalDesign().getExperimentalFactors().add( randomContinuousFactor( ee ) );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        randomCategoricalFactor( ee, "genotype", 2 );
+        randomCategoricalFactor( ee, "treatment", 2 );
+        randomContinuousFactor( ee, "age" );
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -100,7 +101,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
 
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( ee.getId() ), any(), any() ) )
                 .thenReturn( ee );
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.singleton( bad ) );
+        when( expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee ) ).thenReturn( Collections.singleton( bad ) );
 
         Collection<DoubleVectorValueObject> voVectors = vectors.stream()
                 .map( v -> new DoubleVectorValueObject( v, eeVo, qtVo, badVo, adVo, null ) )
@@ -127,12 +128,15 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         }
         for ( int i = 0; i < 12; i++ ) {
             BioAssay ba = BioAssay.Factory.newInstance( "ba" + i, ad, BioMaterial.Factory.newInstance( "bm" + i ) );
+            ba.setId( ( long ) i + 1 );
             ee.getBioAssays().add( ba );
             subsets.get( i % 4 ).getBioAssays().add( ba );
         }
 
-        ee.setExperimentalDesign( randomExperimentalDesign( ee, 4 ) );
-        ee.getExperimentalDesign().getExperimentalFactors().add( randomContinuousFactor( ee ) );
+        ee.setExperimentalDesign( new ExperimentalDesign() );
+        randomCategoricalFactor( ee, "genotype", 2 );
+        randomCategoricalFactor( ee, "treatment", 2 );
+        randomContinuousFactor( ee, "age" );
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -151,8 +155,7 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( ee.getId() ), any(), any() ) ).thenReturn( ee );
 
         // for regular subsets, it's the same
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.singleton( bad ) );
-        when( expressionExperimentService.getBioAssayDimensionsFromSubSets( ee ) ).thenReturn( Collections.singleton( bad ) );
+        when( expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee ) ).thenReturn( Collections.singleton( bad ) );
 
         ExpressionExperimentSubsetValueObject subsetZero = new ExpressionExperimentSubsetValueObject( subsets.get( 0 ) );
         BioAssayDimensionValueObject badZero = new BioAssayDimensionValueObject( BioAssayDimension.Factory.newInstance( new ArrayList<>( subsets.get( 0 ).getBioAssays() ) ) );
@@ -177,8 +180,8 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         for ( int i = 0; i < 4; i++ ) {
             cts.add( Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null ) );
         }
-        int[] indices = new int[dimension.getNumberOfCells()];
-        for ( int i = 0; i < dimension.getNumberOfCells(); i++ ) {
+        int[] indices = new int[dimension.getNumberOfCellIds()];
+        for ( int i = 0; i < dimension.getNumberOfCellIds(); i++ ) {
             if ( random.nextDouble() < 0.1 ) {
                 indices[i] = -1;
             } else {
@@ -199,12 +202,24 @@ public class ExperimentalDesignVisualizationServiceTest extends BaseTest {
         when( expressionExperimentService.loadAndThawLiteOrFail( eq( ee.getId() ), any(), any() ) )
                 .thenReturn( ee );
         // for single-cell subsets,
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.emptySet() );
-        when( expressionExperimentService.getBioAssayDimensions( ee ) ).thenReturn( Collections.singleton( bad ) );
+        when( expressionExperimentService.getProcessedBioAssayDimensionsWithAssays( ee ) ).thenReturn( Collections.singleton( bad ) );
 
         assertThat( experimentalDesignVisualizationService.sortVectorDataByDesign( voVectors, null ) )
                 .containsKey( 1L );
         // RandomExperimentalDesignUtils.randomExperimentalDesign( ee );
         // RandomCellLevelCharacteristicsUtils.randomCellTypeAssignment( ee );
+    }
+
+    private final AtomicLong idGenerator = new AtomicLong( 0L );
+
+    /**
+     * Unfortunately, the visualization tool relies on FV IDs being assigned.
+     */
+    private ExperimentalFactor randomCategoricalFactor( ExpressionExperiment ee, String name, int numValues ) {
+        ExperimentalFactor factor = RandomExperimentalDesignUtils.randomCategoricalFactor( ee, name, numValues );
+        for ( FactorValue fv : factor.getFactorValues() ) {
+            fv.setId( idGenerator.incrementAndGet() );
+        }
+        return factor;
     }
 }

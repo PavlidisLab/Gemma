@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -31,6 +30,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractVoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -49,19 +49,24 @@ public class ExpressionExperimentSetServiceImpl
     private static final String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
 
     private final ExpressionExperimentSetDao expressionExperimentSetDao;
-    private final ExpressionExperimentService expressionExperimentService;
+    /**
+     * Inject the thin read service rather than the facade {@link ExpressionExperimentService}
+     * to break the dependency cycle (this service is itself injected by EESI via the facade
+     * autowire on the writer side).
+     */
+    private final ExpressionExperimentReadService expressionExperimentReadService;
 
     @Autowired
-    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao, ExpressionExperimentService expressionExperimentService ) {
+    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao, ExpressionExperimentReadService expressionExperimentReadService ) {
         super( expressionExperimentSetDao );
         this.expressionExperimentSetDao = expressionExperimentSetDao;
-        this.expressionExperimentService = expressionExperimentService;
+        this.expressionExperimentReadService = expressionExperimentReadService;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
-        return this.expressionExperimentSetDao.find( bioAssaySet );
+    public Collection<ExpressionExperimentSet> find( ExpressionExperiment ee ) {
+        return this.expressionExperimentSetDao.find( ee );
     }
 
     @Override
@@ -72,9 +77,15 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Long> findIds( BioAssaySet bioAssaySet ) {
+    public Collection<ExpressionExperimentSet> findByAccession( String accession ) {
+        return expressionExperimentSetDao.findByAccession( accession );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> findIds( ExpressionExperiment ee ) {
         Collection<Long> ids = new ArrayList<>();
-        Collection<ExpressionExperimentSet> eesets = this.expressionExperimentSetDao.find( bioAssaySet );
+        Collection<ExpressionExperimentSet> eesets = this.expressionExperimentSetDao.find( ee );
         for ( ExpressionExperimentSet eeset : eesets ) {
             ids.add( eeset.getId() );
         }
@@ -169,9 +180,6 @@ public class ExpressionExperimentSetServiceImpl
         return expressionExperimentSet;
     }
 
-    /**
-     * @see ExpressionExperimentSetService#update(ExpressionExperimentSet)
-     */
     @Override
     @Transactional
     public void update( final ExpressionExperimentSet expressionExperimentSet ) {
@@ -187,11 +195,14 @@ public class ExpressionExperimentSetServiceImpl
             throw new IllegalArgumentException( "You must provide a name" );
         }
 
-        // make sure potentially new experiment members are of the right taxon
+        // A taxon on the set is a CONSTRAINT the set opted into, not a requirement: when it has
+        // one, every member must match it, and when it has none the set may span taxa. Enforcing it
+        // unconditionally is what made a mixed curation cohort impossible to express.
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
         Taxon eeTaxon;
-        for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
-            eeTaxon = expressionExperimentService.getTaxon( ee );
+        for ( ExpressionExperiment ee : groupTaxon == null ? Collections.<ExpressionExperiment>emptySet()
+                : expressionExperimentSet.getExperiments() ) {
+            eeTaxon = expressionExperimentReadService.getTaxon( ee );
 
             if ( eeTaxon == null ) {
                 // this can happen if there are 0 samples
@@ -220,7 +231,7 @@ public class ExpressionExperimentSetServiceImpl
 
     @Override
     @Transactional
-    public int removeFromSets( BioAssaySet bas ) {
+    public int removeFromSets( ExpressionExperiment bas ) {
         Collection<ExpressionExperimentSet> sets = expressionExperimentSetDao.find( bas );
         for ( ExpressionExperimentSet eeSet : sets ) {
             log.info( "Removing " + bas + " from " + eeSet );

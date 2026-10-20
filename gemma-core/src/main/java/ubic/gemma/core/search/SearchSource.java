@@ -3,6 +3,7 @@ package ubic.gemma.core.search;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.blacklist.BlacklistedEntity;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -18,6 +19,7 @@ import java.util.HashSet;
 
 /**
  * Search source that provides {@link SearchResult} from a search engine.
+ *
  * @author poirigui
  */
 public interface SearchSource {
@@ -49,7 +51,7 @@ public interface SearchSource {
      * I wanted to remove this, but there's some logic with indirect gene hit penalty that we might want to keep around.
      *
      * @return a mixture of {@link BioSequence} and {@link Gene} matching the search settings.
-     * @deprecated use {@link #searchBioSequence(SearchSettings, SearchContext)} (SearchSettings)} instead
+     * @deprecated use {@link #searchBioSequence(SearchSettings, SearchContext)} instead
      */
     @Deprecated
     default Collection<SearchResult<?>> searchBioSequenceAndGene( SearchSettings settings,
@@ -67,7 +69,7 @@ public interface SearchSource {
     /**
      * Search for composite sequences and, unfortunately, genes.
      * <p>
-     * FIXME: this should solely return {@link CompositeSequence}
+     * FIXME: this should solely return {@link CompositeSequence}.
      *
      * @return a mixture of {@link Gene} and {@link CompositeSequence} matching the search settings
      * @deprecated use {@link #searchCompositeSequence(SearchSettings, SearchContext)} instead

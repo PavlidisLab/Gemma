@@ -29,9 +29,8 @@ import org.springframework.security.concurrent.DelegatingSecurityContextCallable
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ubic.gemma.core.job.notification.TaskPostProcessing;
-import ubic.gemma.core.metrics.binder.GenericExecutorMetrics;
+import ubic.gemma.core.metrics.binder.VirtualThreadExecutorMetrics;
 import ubic.gemma.core.util.concurrent.Executors;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
@@ -55,25 +54,37 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
     @Autowired
     private TaskPostProcessing taskPostProcessing;
 
-    @Value("${gemma.backgroundTasks.numberOfThreads}")
-    private int numberOfThreads;
+    /**
+     * Polite-wait budget for in-flight tasks at Spring context shutdown. Kept short by default so the
+     * Maven failsafe forker (default forkedProcessExitTimeoutInSeconds=30s, bumped to 120s in this repo)
+     * is not stalled by a stray submitted-but-undrained future when an IT context tears down. Production
+     * deployments that legitimately need a longer graceful drain (e.g. Tomcat shutdown with long-running
+     * curator tasks) can override via gemma.taskRunner.shutdownTimeoutSeconds in Gemma.properties.
+     */
+    @Value("${gemma.taskRunner.shutdownTimeoutSeconds:15}")
+    private int shutdownTimeoutSeconds;
 
     private ExecutorService executorService;
+    private final VirtualThreadExecutorMetrics metrics = new VirtualThreadExecutorMetrics( "taskRunningService" );
     private final Map<String, SubmittedTask> submittedTasks = new ConcurrentHashMap<>();
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        executorService = Executors.newFixedThreadPool( numberOfThreads, new SimpleThreadFactory( "gemma-background-tasks-thread-" ) );
+        // JDK 21 virtual-thread-per-task executor. The previous fixed pool of
+        // gemma.backgroundTasks.numberOfThreads platform threads is gone — VT submissions are not
+        // bounded by a thread count. Background tasks here are largely I/O / DB-bound and benefit
+        // from unbounded VT concurrency.
+        executorService = metrics.wrap( Executors.newVirtualThreadPerTaskExecutorIfAvailable() );
     }
 
     @Override
     public void destroy() throws Exception {
         executorService.shutdown();
         if ( !executorService.isTerminated() ) {
-            log.warn( "There are still running tasks, will wait at most 5 minutes before shutting them down." );
+            log.warn( "There are still running tasks, will wait at most " + shutdownTimeoutSeconds + "s before shutting them down." );
         }
-        if ( !executorService.awaitTermination( 5, TimeUnit.MINUTES ) ) {
-            log.info( "TaskRunningService executor was still running after 5 minutes, interrupting pending tasks..." );
+        if ( !executorService.awaitTermination( shutdownTimeoutSeconds, TimeUnit.SECONDS ) ) {
+            log.info( "TaskRunningService executor was still running after " + shutdownTimeoutSeconds + "s, interrupting pending tasks..." );
             executorService.shutdownNow();
         }
     }
@@ -156,7 +167,9 @@ public class TaskRunningServiceImpl implements TaskRunningService, InitializingB
 
     @Override
     public void bindTo( MeterRegistry meterRegistry ) {
-        new GenericExecutorMetrics( executorService, "gemmaBackgroundTasks" )
-                .bindTo( meterRegistry );
+        // Delegate to the VT-aware binder created in afterPropertiesSet(); it wraps the underlying
+        // VT executor with submission/execution/duration instrumentation. The previous GenericExecutorMetrics
+        // path only supported ThreadPoolExecutor; VirtualThreadExecutorMetrics handles any ExecutorService.
+        metrics.bindTo( meterRegistry );
     }
 }

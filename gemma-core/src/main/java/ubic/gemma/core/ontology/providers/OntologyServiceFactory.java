@@ -1,19 +1,19 @@
 package ubic.gemma.core.ontology.providers;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.task.TaskExecutor;
-import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.providers.OntologyService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Set;
 
 /**
  * Factory bean for baseCode's {@link OntologyService}.
  * @param <T> the type of ontology service this factory produces
  */
-@CommonsLog
+@Slf4j
 @SuppressWarnings("unused")
 public class OntologyServiceFactory<T extends OntologyService> extends AbstractFactoryBean<T> {
 
@@ -34,6 +34,8 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
     private boolean processImports = true;
     @Nullable
     private Set<String> additionalPropertyUris = null;
+    @Nullable
+    private String[] allowedUriPrefixes = null;
 
     /**
      * Create a factory for an ontology service class.
@@ -147,6 +149,15 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         this.additionalPropertyUris = additionalPropertyUris;
     }
 
+    /**
+     * Set the URI prefixes that can be returned from the ontology.
+     *
+     * @see OntologyService#setAllowedUriPrefixes(String...)
+     */
+    public void setAllowedUriPrefixes( @Nullable String[] allowedUriPrefixes ) {
+        this.allowedUriPrefixes = allowedUriPrefixes;
+    }
+
     @Override
     public Class<?> getObjectType() {
         return ontologyServiceClass;
@@ -174,6 +185,9 @@ public class OntologyServiceFactory<T extends OntologyService> extends AbstractF
         service.setProcessImports( processImports );
         if ( additionalPropertyUris != null ) {
             service.setAdditionalPropertyUris( additionalPropertyUris );
+        }
+        if ( allowedUriPrefixes != null ) {
+            service.setAllowedUriPrefixes( allowedUriPrefixes );
         }
         if ( autoLoad ) {
             if ( loadInBackground ) {

@@ -18,21 +18,25 @@
  */
 package ubic.gemma.apps;
 
-import lombok.Value;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.file.PathUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.util.Assert;
-import ubic.gemma.cli.util.*;
+import ubic.gemma.cli.options.*;
+import ubic.gemma.cli.util.AbstractAutoSeekingCLI;
+import ubic.gemma.cli.util.EntityLocator;
+import ubic.gemma.cli.util.FileUtils;
+import ubic.gemma.cli.util.OptionsUtils;
 import ubic.gemma.core.search.SearchException;
-import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
 import ubic.gemma.core.util.GemmaRestApiClient;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -43,19 +47,21 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUrlBuilder;
+import ubic.gemma.persistence.util.IdentifiableUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static ubic.gemma.cli.util.EntityOptionsUtils.*;
-import static ubic.gemma.cli.util.OptionsUtils.addFileOption;
+import static ubic.gemma.cli.util.OptionsUtils.addEnumOption;
+import static ubic.gemma.cli.util.OptionsUtils.formatOption;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -79,6 +85,8 @@ import static ubic.gemma.cli.util.OptionsUtils.addFileOption;
  * @author Paul
  */
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSeekingCLI<ExpressionExperiment> {
+
+    private final String SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX = "\n" + "This option is not available when processing more than one experiment.";
 
     @Autowired
     protected ExpressionExperimentService eeService;
@@ -110,9 +118,21 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     private boolean defaultToAll = false;
 
     /**
+     * When passing {@code -all}, do not load any experiments and just call {@link #processAllExpressionExperiments()}.
+     */
+    private boolean allIsLazy = false;
+
+    /**
      * Try to use references instead of actual entities.
      */
     private boolean useReferencesIfPossible = false;
+
+    /**
+     * Require {@code -e} and refuse every other way of selecting experiments, so this CLI can never be pointed at
+     * "every experiment" by a bulk selector, whether that's {@code -all} or a broad {@code -eeset}/{@code -f}/
+     * {@code -q}.
+     */
+    private boolean explicitEEsOnly = false;
 
     /**
      * Abort processing experiments if an error occurs.
@@ -156,6 +176,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Subset of {@link #singleExperimentOptions} being used.
      */
     private final Set<String> singleExperimentOptionsUsed = new HashSet<>();
+    /**
+     * Whether this CLI defines the {@code -force} option; set when the options are built.
+     */
+    private boolean hasForceOption = false;
 
     protected ExpressionExperimentManipulatingCLI() {
         super( ExpressionExperiment.class );
@@ -171,7 +195,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Add an option that is only available in single-experiment mode.
      */
     protected void addSingleExperimentOption( Options options, Option option ) {
-        option.setDescription( option.getDescription() + "\n" + "This option is not available when processing more than one experiment." );
+        option.setDescription( option.getDescription() + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX );
         options.addOption( option );
         singleExperimentOptions.add( option.getOpt() );
     }
@@ -180,7 +204,28 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Add an option that is only available in single-experiment mode.
      */
     protected void addSingleExperimentOption( Options options, String opt, String longOpt, boolean hasArg, String description ) {
-        options.addOption( opt, longOpt, hasArg, description + "\n" + "This option is not available when processing more than one experiment." );
+        options.addOption( opt, longOpt, hasArg, description + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX );
+        singleExperimentOptions.add( opt );
+    }
+
+    /**
+     * Add an auto option that is only available in single-experiment mode.
+     *
+     * @see OptionsUtils#addAutoOption(Options, String, String, String, String, String, String)
+     */
+    protected void addSingleExperimentAutoOption( Options options, String opt, String longOpt, String description,
+            String noOpt, String longNoOpt, String noDescription ) {
+        OptionsUtils.addAutoOption( options, opt, longOpt, description, noOpt, longNoOpt, noDescription );
+        singleExperimentOptions.add( opt );
+    }
+
+    /**
+     * Add an enumerated option that is only available in single-experiment mode.
+     *
+     * @see OptionsUtils#addEnumOption(Options, String, String, String, Class, EnumMap)
+     */
+    protected <T extends Enum<T>> void addSingleExperimentEnumOption( Options options, String opt, String longOpt, String description, Class<T> enumClass, EnumMap<T, MessageSourceResolvable> descriptions ) {
+        addEnumOption( options, opt, longOpt, description + SINGLE_EXPERIMENT_MODE_DESCRIPTION_SUFFIX, enumClass, descriptions );
         singleExperimentOptions.add( opt );
     }
 
@@ -195,140 +240,115 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         singleExperimentOptions.add( option.getOpt() );
     }
 
-    protected static final String OUTPUT_FILE_OPTION = "o",
-            OUTPUT_DIR_OPTION = "d",
-            STANDARD_LOCATION_OPTION = "standardLocation",
-            STANDARD_OUTPUT_OPTION = "stdout";
+    /**
+     * @see DataFileOptionsUtils#addDataFileOptions(Options, String, boolean, BiConsumer)
+     */
+    protected void addDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
 
     /**
-     * Add options for writing expression data files, such as raw or processed data files.
-     *
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileService
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileUtils
-     * @param allowStandardLocation if true, the standard location option will be added
+     * @see DataFileOptionsUtils#addDataFileOptions(Options, String, boolean, boolean, boolean, boolean, boolean, BiConsumer)
+     */
+    protected void addDataFileOptions( Options options, String what, boolean allowStandardLocation, boolean allowFile, boolean allowDirectory, boolean allowCurrentDirectory, boolean allowStdout ) {
+        DataFileOptionsUtils.addDataFileOptions( options, what, allowStandardLocation, allowFile, allowDirectory, allowCurrentDirectory, allowStdout, this::addSingleExperimentOption );
+    }
+
+    /**
+     * @see DataFileOptionsUtils#addExpressionDataFileOptions(Options, String, boolean, BiConsumer)
      */
     protected void addExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
-        OptionGroup og = new OptionGroup();
-        addSingleExperimentOption( og, Option.builder( OUTPUT_FILE_OPTION )
-                .longOpt( "output-file" ).hasArg().type( Path.class )
-                .argName( StandardArgNames.FILE )
-                .desc( "Write " + what + " to the given output file." ).build() );
-        og.addOption( Option.builder( OUTPUT_DIR_OPTION )
-                .longOpt( "output-dir" ).hasArg().type( Path.class )
-                .argName( StandardArgNames.DIR )
-                .desc( "Write " + what + " inside the given directory." ).build() );
-        if ( allowStandardLocation ) {
-            og.addOption( Option.builder( STANDARD_LOCATION_OPTION )
-                    .longOpt( "standard-location" )
-                    .desc( "Write " + what + " to the standard location under ${gemma.appdata.home}/dataFiles. This is the default if no other destination is selected." )
-                    .build() );
-        }
-        addSingleExperimentOption( og, Option.builder( STANDARD_OUTPUT_OPTION )
-                .longOpt( "stdout" )
-                .desc( "Write " + what + " to standard output." + ( !allowStandardLocation ? " This is the default if no other destination is selected." : "" ) )
-                .build() );
-        options.addOptionGroup( og );
+        DataFileOptionsUtils.addExpressionDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
     }
 
-    @Value
-    protected class ExpressionDataFileResult {
-        /**
-         * Write the file to the standard location in the {@code ${gemma.appdata.home}/dataFiles} directory.
-         */
-        boolean standardLocation;
-        /**
-         * Write the file to standard output.
-         */
-        boolean standardOutput;
-        /**
-         * Write the file to the given output file.
-         */
-        @Nullable
-        Path outputFile;
-        /**
-         * Write the file to the given output directory.
-         */
-        @Nullable
-        Path outputDir;
-
-        /**
-         *
-         * @param filenameToUseIfDirectory if the output directory is set, this filename will be used to create the
-         *                                 output file. Use utilities in {@link ubic.gemma.core.analysis.service.ExpressionDataFileUtils}
-         *                                 to generate the filename.
-         */
-        public Path getOutputFile( String filenameToUseIfDirectory ) {
-            if ( getOutputFile() != null ) {
-                return checkIfExists( outputFile );
-            } else if ( getOutputDir() != null ) {
-                return checkIfExists( getOutputDir().resolve( filenameToUseIfDirectory ) );
-            } else {
-                throw new IllegalStateException( "This result does not have an output file or directory set." );
-            }
-        }
-
-        private Path checkIfExists( Path o ) {
-            if ( !isForce() && Files.exists( o ) ) {
-                throw new RuntimeException( o + " already exists, use -" + FORCE_OPTION + " to overwrite it." );
-            }
-            return o;
-        }
+    protected void addSingleCellExpressionDataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addSingleCellExpressionDataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
     }
 
     /**
-     * Obtain the result of the expression data file options added by {@link #addExpressionDataFileOptions(Options, String, boolean)}.
-     * @param allowStandardLocation if true, the standard location option will be considered and used as a default if no
-     *                              other destination is selected. Otherwise, standard output will be used as a default.
+     * @see DataFileOptionsUtils#addDesignFileOptions(Options, String, boolean, BiConsumer)
      */
-    protected ExpressionDataFileResult getExpressionDataFileResult( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
-        if ( !OptionsUtils.hasAnyOption( commandLine, STANDARD_LOCATION_OPTION, STANDARD_OUTPUT_OPTION, OUTPUT_FILE_OPTION, OUTPUT_DIR_OPTION ) ) {
-            if ( allowStandardLocation ) {
-                log.debug( "No expression data file options provided, defaulting to -standardLocation/--standard-location." );
-                return new ExpressionDataFileResult( true, false, null, null );
-            } else {
-                log.debug( "No expression data file options provided, defaulting to -standardOutput/--standard-output." );
-                return new ExpressionDataFileResult( false, true, null, null );
-            }
-        }
-        return new ExpressionDataFileResult(
-                commandLine.hasOption( STANDARD_LOCATION_OPTION ),
-                commandLine.hasOption( STANDARD_OUTPUT_OPTION ),
-                commandLine.getParsedOptionValue( OUTPUT_FILE_OPTION ),
-                commandLine.getParsedOptionValue( OUTPUT_DIR_OPTION ) );
+    protected void addDesignFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addDesignFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
+
+    /**
+     * @see DataFileOptionsUtils#addCellMetadataFileOptions(Options, String, boolean, BiConsumer)
+     */
+    protected void addCellMetadataFileOptions( Options options, String what, boolean allowStandardLocation ) {
+        DataFileOptionsUtils.addCellMetadataFileOptions( options, what, allowStandardLocation, this::addSingleExperimentOption );
+    }
+
+    protected DataFileOptionValue getDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected DataFileOptionValue getDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation, boolean allowStdout, boolean allowCurrentDirectory ) throws ParseException {
+        return DataFileOptionsUtils.getDataFileOptionValue( commandLine, allowStandardLocation, allowStdout, allowCurrentDirectory, FORCE_OPTION, isForce() );
+    }
+
+    protected ExpressionDataFileOptionValue getExpressionDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getExpressionDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected SingleCellExpressionDataFileOptionValue getSingleCellExpressionDataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getSingleCellExpressionDataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected DesignFileOptionValue getDesignFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getDesignFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
+    }
+
+    protected CellMetadataFileOptionValue getCellMetadataFileOptionValue( CommandLine commandLine, boolean allowStandardLocation ) throws ParseException {
+        return DataFileOptionsUtils.getCellMetadataFileOptionValue( commandLine, allowStandardLocation, FORCE_OPTION, isForce() );
     }
 
     @Override
     protected final void buildOptions( Options options ) {
         addDatasetOption( options, "e", "experiment",
-                "Dataset identifier. Most tools recognize comma-delimited values given on the command line, "
-                        + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." );
+                explicitEEsOnly
+                        ? "Dataset identifier. Comma-delimited values are recognized; this is the only way to select "
+                        + "datasets for this command, which never operates on all experiments."
+                        : "Dataset identifier. Most tools recognize comma-delimited values given on the command line, "
+                                + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." );
 
-        if ( singleExperimentMode ) {
+        if ( singleExperimentMode || explicitEEsOnly ) {
             buildExperimentOptions( options );
+            hasForceOption = options.hasOption( FORCE_OPTION );
             return;
         }
 
         if ( !defaultToAll ) {
-            options.addOption( "all", false, "Process all expression experiments" );
+            options.addOption( "all", false, "Process all datasets." );
         }
 
-        addFileOption( options, "f", "eeListfile",
-                "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" );
+        String warningForLazyAll = allIsLazy && !defaultToAll ? "\nThis option is not compatible with " + formatOption( options, "all" ) + "." : "";
 
-        addExperimentSetOption( options, "eeset", "experiment-set", "Name of expression experiment set to use" );
+        options.addOption( Option.builder( "f" ).longOpt( "file" )
+                .hasArg().type( Path.class ).argName( "file" )
+                .desc( "File containing IDs, short names or names of datasets (one per line)."
+                        + warningForLazyAll )
+                .longOpt( "eeListfile" ).get() );
 
-        Option eeSearchOption = Option.builder( "q" ).hasArg().argName( "expressionQuery" )
-                .desc( "Use a query string for defining which expression experiments to use" )
-                .longOpt( "expressionQuery" ).build();
-        options.addOption( eeSearchOption );
+        addDatasetGroupOption( options, "eeset", "experiment-set", "Name of dataset group to use."
+                + warningForLazyAll );
 
-        addTaxonOption( options, "t", "taxon", "Taxon of the expression experiments and genes" );
+        options.addOption( Option.builder( "q" ).longOpt( "query" )
+                .hasArg().argName( "expressionQuery" )
+                .desc( "Use a query string for defining which expression experiments to use."
+                        + warningForLazyAll )
+                .longOpt( "expressionQuery" ).get() );
 
-        addFileOption( options, "x", "excludeEEFile", "File containing list of expression experiments to exclude" );
+        addTaxonOption( options, "t", "taxon", "Taxon of the datasets and genes matched by the search query. This option requires " + formatOption( options, "q" ) + " to be set." );
+
+        options.addOption( Option.builder( "x" ).hasArg().type( Path.class ).argName( "file" )
+                .desc( "File containing IDs, short names or names of datasets to exclude (one per line)." + warningForLazyAll )
+                .longOpt( "excludeEEFile" ).get() );
 
         addBatchOption( options );
 
         buildExperimentOptions( options );
+        hasForceOption = options.hasOption( FORCE_OPTION );
     }
 
     protected void buildExperimentOptions( Options options ) {
@@ -337,25 +357,53 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     @Override
     protected final void processOptions( CommandLine commandLine ) throws ParseException {
-        boolean hasAnyDatasetOptions = commandLine.hasOption( "all" ) || commandLine.hasOption( "eeset" )
-                || commandLine.hasOption( "e" ) || commandLine.hasOption( 'f' ) || commandLine.hasOption( 'q' );
-        Assert.isTrue( hasAnyDatasetOptions || defaultToAll, "At least one of -all, -e, -eeset, -f, or -q must be provided." );
         super.processOptions( commandLine );
+        // In single-experiment mode (and in explicit-EEs-only mode), buildOptions() defines -e and none of the other
+        // dataset options, so any of their keys on the command line belongs to the subclass: importDesign's -f is
+        // its design file, not a dataset list.
+        boolean datasetSelectionOptionsDefined = !singleExperimentMode && !explicitEEsOnly;
+        boolean hasAnyDatasetOptions = commandLine.hasOption( "e" )
+                || ( datasetSelectionOptionsDefined && (
+                commandLine.hasOption( "all" )
+                        || commandLine.hasOption( "eeset" )
+                        || commandLine.hasOption( 'f' )
+                        || commandLine.hasOption( 'q' ) ) );
+        if ( !hasAnyDatasetOptions && !defaultToAll && !selectsOwnExperiments( commandLine ) ) {
+            throw new MissingOptionException( explicitEEsOnly
+                    ? "-e must be provided; this command never operates on all experiments."
+                    : "At least one of -all, -e, -eeset, -f, or -q must be provided." );
+        }
         if ( defaultToAll && !hasAnyDatasetOptions ) {
             this.all = true;
         } else {
-            this.all = commandLine.hasOption( "all" );
+            this.all = datasetSelectionOptionsDefined && commandLine.hasOption( "all" );
+        }
+        if ( this.all && allIsLazy ) {
+            // when allIsLazy is set, filtering options are not available
+            if ( commandLine.hasOption( 'e' )
+                    || commandLine.hasOption( "eeset" )
+                    || commandLine.hasOption( 'f' )
+                    || commandLine.hasOption( 'q' )
+                    || commandLine.hasOption( 'x' ) ) {
+                throw new UnrecognizedOptionException( "Cannot use filtering options when processing all datasets." );
+            }
+            processExperimentOptions( commandLine );
+            return;
         }
         if ( commandLine.hasOption( 'e' ) ) {
             String optionValue = commandLine.getOptionValue( 'e' );
-            Assert.isTrue( StringUtils.isNotBlank( optionValue ), "List of EE identifiers must not be blank." );
+            if ( StringUtils.isBlank( optionValue ) ) {
+                throw new ParseException( "List of dataset identifiers must not be blank." );
+            }
             this.ees = StringUtils.split( optionValue, "," );
         }
-        this.eeSet = commandLine.getOptionValue( "eeset" );
-        this.file = commandLine.getParsedOptionValue( 'f' );
-        this.query = commandLine.getOptionValue( 'q' );
-        this.taxonName = commandLine.getOptionValue( 't' );
-        this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        if ( datasetSelectionOptionsDefined ) {
+            this.eeSet = commandLine.getOptionValue( "eeset" );
+            this.file = commandLine.getParsedOptionValue( 'f' );
+            this.query = commandLine.getOptionValue( 'q' );
+            this.taxonName = commandLine.getOptionValue( 't' );
+            this.excludeFile = commandLine.getParsedOptionValue( 'x' );
+        }
         for ( Option option : commandLine.getOptions() ) {
             if ( singleExperimentOptions.contains( option.getOpt() ) ) {
                 singleExperimentOptionsUsed.add( option.getOpt() );
@@ -368,13 +416,31 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     }
 
+    /**
+     * Whether the given options select what to process by some means other than {@code -all}, {@code -e},
+     * {@code -eeset}, {@code -f} or {@code -q}.
+     * <p>
+     * If so, giving none of those is not an error. The subclass is then responsible for its own selection, e.g. by
+     * overriding {@link #doAuthenticatedWork()}. This is checked before {@link #processExperimentOptions(CommandLine)}.
+     */
+    protected boolean selectsOwnExperiments( CommandLine commandLine ) {
+        return false;
+    }
+
     @Override
     protected void doAuthenticatedWork() throws Exception {
         // intentionally a TreeSet over IDs, to prevent proxy initialization via hashCode()
-        Collection<ExpressionExperiment> expressionExperiments = new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) );
+        Collection<ExpressionExperiment> expressionExperiments = new TreeSet<>( Comparator.comparing( IdentifiableUtils::getRequiredId ) );
 
         if ( all ) {
-            if ( useReferencesIfPossible ) {
+            if ( allIsLazy ) {
+                log.info( "Loading all expression experiments as a stub..." );
+                Collection<ExpressionExperiment> preprocessed = preprocessExpressionExperiments( Collections.emptySet() );
+                setEstimatedMaxTasks( ( int ) eeService.countAll() );
+                processAllExpressionExperiments();
+                postprocessExpressionExperiments( preprocessed );
+                return;
+            } else if ( useReferencesIfPossible ) {
                 log.info( "Loading all expression experiments by reference..." );
                 expressionExperiments.addAll( eeService.loadAllReferences() );
             } else {
@@ -440,7 +506,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
             ExpressionExperiment ee = expressionExperiments.iterator().next();
             log.info( "Final dataset: " + formatExperiment( ee ) );
             ExpressionExperiment bas = expressionExperiments.iterator().next();
-            Assert.notNull( bas, "Cannot process a null ExpressionExperiment." );
+            setEstimatedMaxTasks( 1 );
             processExpressionExperiment( bas );
         } else {
             if ( !singleExperimentOptionsUsed.isEmpty() ) {
@@ -448,8 +514,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
                         singleExperimentOptionsUsed.stream().map( o -> "-" + o ).collect( Collectors.joining( ", " ) ) ) );
             }
             log.info( String.format( "Final list: %d expression experiments", expressionExperiments.size() ) );
+            setEstimatedMaxTasks( expressionExperiments.size() );
             processExpressionExperiments( expressionExperiments );
         }
+
+        postprocessExpressionExperiments( expressionExperiments );
     }
 
     /**
@@ -463,15 +532,22 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
+     * Process all {@link ExpressionExperiment}.
+     * <p>
+     * This is only called when {@code -all} and the CLI is configured to treat it lazily with {@link #setAllIsLazy()}.
+     */
+    protected void processAllExpressionExperiments() {
+
+    }
+
+    /**
      * Process multiple {@link ExpressionExperiment}.
      * <p>
      * This only called if more than one experiment was found.
      */
     protected void processExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
-        setEstimatedMaxTasks( expressionExperiments.size() );
         for ( ExpressionExperiment ee : expressionExperiments ) {
             try {
-                Assert.notNull( ee, "Cannot process a null ExpressionExperiment." );
                 processExpressionExperiment( ee );
             } catch ( Exception e ) {
                 addErrorObject( toBatchObject( ee ), e );
@@ -486,7 +562,14 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      * Process an {@link ExpressionExperiment}.
      */
     protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
-        throw new UnsupportedOperationException( "This command line does support experiments." );
+
+    }
+
+    /**
+     * Post-process {@link ExpressionExperiment}s that were processed by the CLI.
+     */
+    protected void postprocessExpressionExperiments( Collection<ExpressionExperiment> expressionExperiments ) {
+
     }
 
     protected final Serializable toBatchObject( @Nullable ExpressionExperiment object ) {
@@ -616,32 +699,55 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         Set<Long> troubledIds = new HashSet<>( eeService.loadTroubledIds() );
 
         // only retain non-troubled experiments
-        AtomicInteger removedTroubledExperiments = new AtomicInteger();
+        List<ExpressionExperiment> removedTroubledExperiments = new ArrayList<>();
         expressionExperiments.removeIf( ee -> {
             // for subsets, check source experiment troubled flag
             if ( troubledIds.contains( ee.getId() ) ) {
-                removedTroubledExperiments.incrementAndGet();
+                removedTroubledExperiments.add( ee );
                 return true;
             } else {
                 return false;
             }
         } );
-        if ( removedTroubledExperiments.get() > 0 ) {
-            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed; use -%s to include those.",
-                    removedTroubledExperiments.get(), expressionExperiments.size(), FORCE_OPTION ) );
+        if ( !removedTroubledExperiments.isEmpty() ) {
+            // only point at -force if this CLI accepts it
+            String howToInclude = hasForceOption ? String.format( "; use -%s to include it", FORCE_OPTION ) : "";
+            for ( ExpressionExperiment ee : removedTroubledExperiments ) {
+                addWarningObject( ee, "Skipped because it is troubled" + howToInclude + "." );
+            }
+            log.info( String.format( "Removed %d troubled experiments, leaving %d to be processed%s.",
+                    removedTroubledExperiments.size(), expressionExperiments.size(),
+                    hasForceOption ? String.format( "; use -%s to include those", FORCE_OPTION ) : "" ) );
+        }
+    }
+
+    /**
+     * A silent version of {@link #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)} that
+     * produces a warning via {@link #addWarningObject(Serializable, String, Throwable)} instead of throwing an
+     * exception.
+     *
+     * @see #refreshExpressionExperimentFromGemmaWeb(ExpressionExperiment, boolean, boolean)
+     */
+    protected void refreshExpressionExperimentFromGemmaWebSilently( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) {
+        try {
+            refreshExpressionExperimentFromGemmaWeb( ee, refreshVectors, refreshReports );
+        } catch ( Exception e ) {
+            addWarningObject( ee, "Failed to refresh dataset from Gemma Web.", e );
         }
     }
 
     /**
      * Refresh a dataset for Gemma Web.
-     * @param refreshProcessedVectors if true, refresh processed vectors from the caches
+     *
+     * @param refreshVectors if true, refresh vectors from the caches, that include raw, single-cell, processed and also
+     *                       cached processed vectors in the form of {@link ubic.gemma.model.expression.bioAssayData.DataVectorValueObject}.
      */
-    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshProcessedVectors, boolean refreshReports ) throws Exception {
+    protected void refreshExpressionExperimentFromGemmaWeb( ExpressionExperiment ee, boolean refreshVectors, boolean refreshReports ) throws Exception {
         StopWatch timer = StopWatch.createStarted();
         // using IDs here to prevent proxy initialization
         GemmaRestApiClient.Response response = gemmaRestApiClient
                 .perform( "/datasets/" + ee.getId() + "/refresh",
-                        "refreshVectors", refreshProcessedVectors,
+                        "refreshVectors", refreshVectors,
                         "refreshReports", refreshReports );
         if ( response instanceof GemmaRestApiClient.DataResponse ) {
             log.info( "Successfully refreshed dataset with ID " + ee.getId() + " from Gemma Web in " + timer.getTime() + " ms." );
@@ -675,6 +781,32 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
     }
 
     /**
+     * Require {@code -e} and refuse {@code -all}, {@code -eeset}, {@code -f} and {@code -q}, so this CLI can never
+     * be pointed at every experiment in the system, whether by omission or by a broad filter.
+     * <p>
+     * Intended for destructive CLIs ({@code deleteExperiments}, {@code deleteRawData}, {@code deleteProcessedData},
+     * {@code deleteSingleCellData}) where a bulk selector deleting the whole database is a mistake with no undo.
+     */
+    protected void setExplicitEEsOnly() {
+        Assert.state( !this.explicitEEsOnly, "Explicit EEs only is already enabled." );
+        Assert.state( !this.defaultToAll, "Explicit EEs only is not compatible with defaultToAll." );
+        Assert.state( !this.allIsLazy, "Explicit EEs only is not compatible with allIsLazy." );
+        this.explicitEEsOnly = true;
+    }
+
+    /**
+     * Enable the "all is lazy" mode.
+     * <p>
+     * When {@code -all} is set, no experiments are actually loaded and {@link #processAllExpressionExperiments()} is
+     * called instead.
+     */
+    public void setAllIsLazy() {
+        Assert.state( !this.allIsLazy, "All is lazy is already enabled." );
+        Assert.state( !this.useReferencesIfPossible, "All is lazy mode is not compatible with useReferencesIfPossible." );
+        this.allIsLazy = true;
+    }
+
+    /**
      * Set this to allow reference to be retrieved instead of actual entities.
      * <p>
      * This only works for entities retrieved by ID.
@@ -686,6 +818,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
      */
     protected void setUseReferencesIfPossible() {
         Assert.state( !this.useReferencesIfPossible, "Use references if possible is already enabled." );
+        Assert.state( !this.allIsLazy, "Use references if possible is not compatible with allIsLazy." );
         this.useReferencesIfPossible = true;
     }
 
@@ -713,7 +846,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
         if ( Hibernate.isInitialized( bas ) ) {
             return bas + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
         } else {
-            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( ( ExpressionExperiment ) bas ).web().toUriString();
+            return "ExpressionExperiment Id=" + bas.getId() + " " + entityUrlBuilder.fromHostUrl().entity( bas ).web().toUriString();
         }
     }
 
@@ -736,6 +869,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractAutoSe
 
     /**
      * Read a changelog entry from the console.
+     *
      * @param defaultText a default text to be shown in the editor, or null to keep the file empty
      */
     protected String readChangelogEntryFromConsole( ExpressionExperiment expressionExperiment, @Nullable String defaultText ) throws IOException, InterruptedException {

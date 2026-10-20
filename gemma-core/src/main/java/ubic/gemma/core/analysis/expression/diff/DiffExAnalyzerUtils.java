@@ -1,13 +1,14 @@
 package ubic.gemma.core.analysis.expression.diff;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.apache.commons.lang3.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrixImpl;
 import ubic.gemma.model.common.measurement.MeasurementUtils;
+import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -15,14 +16,25 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.Writer;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CommonsLog
+@Slf4j
 public class DiffExAnalyzerUtils {
+
+    /**
+     * The prefix written before the comma-separated list of blocking factors in the protocol description, and
+     * parsed back by {@code DifferentialExpressionAnalyzerServiceImpl.extendConfig} on redo. Keep the two strings
+     * in sync.
+     */
+    public static final String BLOCKING_FACTORS_PROTOCOL_PREFIX = "# Blocking factors (no results reported for them): ";
+
+    /**
+     * Written when the blocking factors were fitted as a random intercept (estimated inter-block correlation)
+     * rather than as design columns; parsed back on redo so the redo uses the same model.
+     */
+    public static final String ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE = "# Blocking correlation estimated (mixed model)";
 
     public static final String BIO_MATERIAL_RNAME_PREFIX = "biomat_";
     public static final String FACTOR_RNAME_PREFIX = "fact.";
@@ -32,9 +44,48 @@ public class DiffExAnalyzerUtils {
     /**
      * This bioAssayDimension shouldn't get persisted; it is only for dealing with subset diff ex. analyses.
      *
-     * @param  columnsToUse columns to use
+     * @param columnsToUse columns to use
      * @return bio assay dimension
      */
+    /**
+     * Check whether a sample takes part in a differential expression analysis.
+     * <p>
+     * Two kinds of sample do not: those a curator has marked {@code DE_Exclude}, and those whose assays are all
+     * flagged as outliers. Both must be removed before anything is decided from the sample set — baselines, whether a
+     * factor is complete, the analysis type and the degrees of freedom are all computed from it.
+     */
+    public static boolean isAnalyzed( BioMaterial sample ) {
+        for ( FactorValue fv : sample.getAllFactorValues() ) {
+            if ( FactorValueUtils.isDeExcluded( fv ) ) {
+                return false;
+            }
+        }
+        Collection<BioAssay> assays = sample.getAllBioAssaysUsedIn();
+        return assays.isEmpty() || !assays.stream().allMatch( BioAssay::getIsOutlier );
+    }
+
+    /**
+     * Remove the samples that are not analyzed (see {@link #isAnalyzed(BioMaterial)}) from a data matrix.
+     * <p>
+     * The matrix is returned unchanged when there is nothing to drop, which is the common case.
+     *
+     * @throws IllegalStateException if every sample would be dropped
+     */
+    public static ExpressionDataDoubleMatrix dropSamplesNotAnalyzed( ExpressionDataDoubleMatrix dmatrix ) {
+        List<BioMaterial> samplesToKeep = dmatrix.getBioMaterials().stream()
+                .filter( DiffExAnalyzerUtils::isAnalyzed )
+                .collect( Collectors.toList() );
+        int dropped = dmatrix.columns() - samplesToKeep.size();
+        if ( dropped == 0 ) {
+            return dmatrix;
+        }
+        if ( samplesToKeep.isEmpty() ) {
+            throw new IllegalStateException( "Every sample is either marked DE_Exclude or an outlier, nothing left to analyze." );
+        }
+        log.info( "Dropping " + dropped + " sample(s) marked DE_Exclude or flagged as outliers before analysis." );
+        return dmatrix.sliceColumns( samplesToKeep, createBADMap( samplesToKeep ) );
+    }
+
     public static BioAssayDimension createBADMap( List<BioMaterial> columnsToUse ) {
         /*
          * Indices of the biomaterials in the original matrix.
@@ -52,8 +103,17 @@ public class DiffExAnalyzerUtils {
 
     public static void populateFactorValuesFromBASet( BioAssaySet ee, ExperimentalFactor f,
             Collection<FactorValue> fvs ) {
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
+        populateFactorValues( ee.getBioAssays().stream().map( BioAssay::getSampleUsed ).collect( Collectors.toList() ), f, fvs );
+    }
+
+    /**
+     * As above, over a given set of samples rather than every sample of the experiment or subset. Counting levels
+     * over the raw set lets a factor whose second level is carried only by an excluded or outlier sample look
+     * variable, so it survives into the model as a constant column.
+     */
+    public static void populateFactorValues( Collection<BioMaterial> samples, ExperimentalFactor f,
+            Collection<FactorValue> fvs ) {
+        for ( BioMaterial bm : samples ) {
             for ( FactorValue fv : bm.getAllFactorValues() ) {
                 if ( fv.getExperimentalFactor().equals( f ) ) {
                     fvs.add( fv );
@@ -84,19 +144,29 @@ public class DiffExAnalyzerUtils {
     }
 
     /**
-     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
-     * EXCLUDE_CHARACTERISTICS_VALUES
-     *
      * @return selected type of analysis such as t-test, two-way ANOVA, etc.
      */
     public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config ) {
+        return determineAnalysisType( bioAssaySet, config, null );
+    }
+
+    /**
+     * A variant that decides from a given set of samples rather than every sample in the experiment.
+     *
+     * @param samplesToAnalyze the samples that will actually be modelled, or null to use all of them. Pass the
+     *                         samples left after {@link #dropSamplesNotAnalyzed(ExpressionDataDoubleMatrix)}, so that
+     *                         DE_Exclude and outlier samples do not decide the analysis type.
+     * @return selected type of analysis such as t-test, two-way ANOVA, etc.
+     */
+    public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config,
+            @Nullable Collection<BioMaterial> samplesToAnalyze ) {
 
         if ( config.getFactorsToInclude().isEmpty() ) {
             throw new IllegalArgumentException( "Must provide at least one factor" );
         }
 
         if ( config.getAnalysisType() == null ) {
-            AnalysisType type = determineAnalysisType( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true );
+            AnalysisType type = determineAnalysisType( bioAssaySet, config.getFactorsToInclude(), config.getSubsetFactor(), true, samplesToAnalyze );
 
             if ( type == null ) {
                 throw new IllegalArgumentException( "The analysis type could not be determined" );
@@ -175,8 +245,8 @@ public class DiffExAnalyzerUtils {
     /**
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
      * <p>
-     * FIXME: this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
-     *        EXCLUDE_CHARACTERISTICS_VALUES
+     * This overload judges from every sample in the experiment. Prefer the variant taking {@code samplesToAnalyze}
+     * when DE_Exclude or outlier samples may be present — see {@link #dropSamplesNotAnalyzed(ExpressionDataDoubleMatrix)}.
      *
      * @param bioAssaySet                   experiment or subset to determine the analysis type for
      * @param experimentalFactors           which factors to use, or null if to use all from the experiment
@@ -184,8 +254,20 @@ public class DiffExAnalyzerUtils {
      * @param includeInteractionsIfPossible include interactions among the provided experimental factors if possible
      * @return an appropriate analysis type
      */
+    @Nullable
     public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
             @Nullable ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
+        return determineAnalysisType( bioAssaySet, experimentalFactors, subsetFactor, includeInteractionsIfPossible, null );
+    }
+
+    /**
+     * A variant that decides from a given set of samples rather than every sample in the experiment.
+     *
+     * @param samplesToAnalyze the samples that will actually be modelled, or null to use all of them
+     */
+    public static AnalysisType determineAnalysisType( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
+            @Nullable ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible,
+            @Nullable Collection<BioMaterial> samplesToAnalyze ) {
 
         Collection<ExperimentalFactor> efsToUse = getFactorsToUse( bioAssaySet, experimentalFactors );
 
@@ -218,7 +300,9 @@ public class DiffExAnalyzerUtils {
                 /*
                  * Check that there is more than one value in at least one group
                  */
-                boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( bioAssaySet, experimentalFactor );
+                boolean ok = samplesToAnalyze != null
+                        ? DifferentialExpressionAnalysisUtil.checkValidForLm( samplesToAnalyze, experimentalFactor )
+                        : DifferentialExpressionAnalysisUtil.checkValidForLm( bioAssaySet, experimentalFactor );
 
                 if ( !ok ) {
                     return null;
@@ -281,8 +365,13 @@ public class DiffExAnalyzerUtils {
 
                 }
                 /* Check for block design and execute two way ANOVA (with or without interactions). */
-                if ( !includeInteractionsIfPossible || !DifferentialExpressionAnalysisUtil
-                        .blockComplete( bioAssaySet, experimentalFactors ) || !okForInteraction ) {
+                // samplesToAnalyze when we have it, exactly as checkValidForLm above: the interaction term is
+                // chosen here and fitted later on the analyzed set, so deciding block-completeness from the full
+                // experiment can pick an interaction that is unestimable once DE_Exclude and outlier samples go.
+                boolean blockComplete = samplesToAnalyze != null
+                        ? DifferentialExpressionAnalysisUtil.blockComplete( samplesToAnalyze, experimentalFactors )
+                        : DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, experimentalFactors );
+                if ( !includeInteractionsIfPossible || !blockComplete || !okForInteraction ) {
                     return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION; // NO interactions
                 }
                 return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;
@@ -356,37 +445,62 @@ public class DiffExAnalyzerUtils {
         }
     }
 
-    public static void writeConfig( DifferentialExpressionAnalysisConfig config, Writer writer ) throws IOException {
+    public static Protocol createProtocolForConfig( DifferentialExpressionAnalysisConfig config, Map<ExperimentalFactor, FactorValue> baselineFactorValues ) {
+        Protocol protocol = Protocol.Factory.newInstance();
+        protocol.setName( "Differential expression analysis settings" );
+        StringBuilder writer = new StringBuilder();
         writer.append( "# Type of analysis: " )
                 .append( config.getAnalysisType() == null ? "Unknown" : config.getAnalysisType().toString() )
                 .append( "\n" );
 
-        writer.append( "# Factors: " )
-                .append( StringUtils.join( config.getFactorsToInclude(), " " ) )
-                .append( "\n" );
-
         if ( config.getSubsetFactor() != null ) {
-            writer.append( "# Subset factor: " ).append( formatFactor( config.getSubsetFactor() ) ).append( "\n" );
+            writer.append( "# Subset factor: " ).append( formatFactor( config.getSubsetFactor(), true ) ).append( "\n" );
         }
         if ( config.getSubsetFactorValue() != null ) {
-            writer.append( "# Subset analysis for " ).append( formatFactorValue( config.getSubsetFactorValue() ) ).append( "\n" );
+            writer.append( "# Subset analysis for " ).append( formatFactorValue( config.getSubsetFactorValue(), true ) ).append( "\n" );
         }
+
+        writer.append( "# Factors: " )
+                .append( config.getFactorsToInclude().stream()
+                        .sorted( ExperimentalFactor.COMPARATOR )
+                        .map( ( ExperimentalFactor f ) -> formatFactor( f, true ) )
+                        .collect( Collectors.joining( ", " ) ) )
+                .append( "\n" );
 
         if ( !config.getInteractionsToInclude().isEmpty() ) {
             writer.append( "# Interactions: " );
             writer.append( config.getInteractionsToInclude().stream()
-                    .map( i -> i.stream().map( DiffExAnalyzerUtils::formatFactor ).collect( Collectors.joining( ":" ) ) )
+                    .map( DiffExAnalyzerUtils::formatInteraction )
                     .collect( Collectors.joining( ", " ) ) );
             writer.append( "\n" );
+        } else {
+            writer.append( "# No interactions defined.\n" );
         }
 
-        if ( !config.getBaselineFactorValues().isEmpty() ) {
+        if ( !config.getBlockingFactors().isEmpty() ) {
+            writer.append( BLOCKING_FACTORS_PROTOCOL_PREFIX )
+                    .append( config.getBlockingFactors().stream()
+                            .sorted( ExperimentalFactor.COMPARATOR )
+                            .map( f -> formatFactor( f, true ) )
+                            .collect( Collectors.joining( ", " ) ) )
+                    .append( "\n" );
+            if ( config.isEstimateBlockingCorrelation() ) {
+                writer.append( ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE ).append( "\n" );
+            }
+        }
+
+        if ( !baselineFactorValues.isEmpty() ) {
             writer.append( "# Baselines:\n" );
-            for ( ExperimentalFactor ef : config.getBaselineFactorValues().keySet() ) {
-                writer.append( "# " ).append( ef.getName() ).append( ": Baseline = " )
-                        .append( formatFactorValue( config.getBaselineFactorValues().get( ef ) ) )
+            List<ExperimentalFactor> factors = baselineFactorValues.keySet().stream()
+                    .sorted( ExperimentalFactor.COMPARATOR )
+                    .collect( Collectors.toList() );
+            for ( ExperimentalFactor ef : factors ) {
+                writer.append( "# " ).append( formatFactor( ef, false ) ).append( ": Baseline = " )
+                        .append( formatFactorValue( baselineFactorValues.get( ef ), true ) )
                         .append( "\n" );
             }
+        } else {
+            writer.append( "# No baseline conditions defined, those will be detected automatically.\n" );
         }
 
         if ( config.isUseWeights() ) {
@@ -396,18 +510,85 @@ public class DiffExAnalyzerUtils {
         if ( config.isModerateStatistics() ) {
             writer.append( "# Empirical Bayes moderated statistics used\n" );
         }
+
+        writer.append( "\n" );
+
+        int minimumNumberOfCellsPerSample = config.getMinimumNumberOfCellsPerSample() != null ? config.getMinimumNumberOfCellsPerSample() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_SAMPLE;
+        if ( minimumNumberOfCellsPerSample > 0 ) {
+            writer.append( "# Minimum number of cells per sample: " ).append( minimumNumberOfCellsPerSample ).append( "\n" );
+            writer.append( "# Samples with less cells than this value will be masked with missing values.\n" );
+            writer.append( "# This filter is only applied if the number of cells is filled for the samples (i.e. for single-cell data).\n" );
+            writer.append( "\n" );
+        }
+
+        int minimumNumberOfCellsPerGene = config.getMinimumNumberOfCellsPerGene() != null ? config.getMinimumNumberOfCellsPerGene() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_CELLS_PER_GENE;
+        if ( minimumNumberOfCellsPerGene > 0 ) {
+            writer.append( "# Minimum number of cells per gene: " ).append( minimumNumberOfCellsPerGene ).append( "\n" );
+            writer.append( "# Design elements with less cells than this value will be tested.\n" );
+            writer.append( "# This filter is only applied if the number of cells is filled for the data vector (i.e. for single-cell data).\n" );
+            writer.append( "\n" );
+        }
+
+        int minimumNumberOfSamplesToApplyRepetitiveValuesFilter = config.getMinimumNumberOfSamplesToApplyRepetitiveValuesFilter() != null ?
+                config.getMinimumNumberOfSamplesToApplyRepetitiveValuesFilter() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_NUMBER_OF_SAMPLES_TO_APPLY_REPETITIVE_VALUES_FILTER;
+        if ( minimumNumberOfSamplesToApplyRepetitiveValuesFilter > 0 ) {
+            double minimumFractionOfUniqueValues = config.getMinimumFractionOfUniqueValues() != null ?
+                    config.getMinimumFractionOfUniqueValues() :
+                    DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_FRACTION_OF_UNIQUE_VALUES;
+            writer.append( "# Minimum fraction of unique values: " ).append( minimumFractionOfUniqueValues ).append( "\n" );
+            writer.append( "# Design elements with less unique values as a fraction of the number of assays not be tested.\n" );
+            writer.append( "# This is only applied if there are at least " ).append( minimumNumberOfSamplesToApplyRepetitiveValuesFilter ).append( " samples being tested.\n" );
+            DifferentialExpressionAnalysisFilter.RepetitiveValuesFilterMode filterMode = config.getRepetitiveValuesFilterMode() != null ? config.getRepetitiveValuesFilterMode() : DifferentialExpressionAnalysisFilter.DEFAULT_REPETITIVE_VALUES_FILTER_MODE;
+            switch ( filterMode ) {
+                case RANK:
+                    writer.append( "# This filter is applied on ranks.\n" );
+                    break;
+                case NOMINAL:
+                    writer.append( "# This filter is applied on nominal values.\n" );
+                    break;
+                case AUTODETECT:
+                    writer.append( "# This filter is applied either on rank or nominal values depending on the data.\n" );
+                    break;
+            }
+        }
+
+        double minimumVariance = config.getMinimumVariance() != null ?
+                config.getMinimumVariance() :
+                DifferentialExpressionAnalysisFilter.DEFAULT_MINIMUM_VARIANCE;
+        if ( minimumVariance > 0 ) {
+            writer.append( "# Minimum variance: " ).append( minimumVariance ).append( "\n" );
+            writer.append( "# Design elements with variance across assays below this threshold will not be tested.\n" );
+            writer.append( "\n" );
+        }
+
+        protocol.setDescription( writer.toString() );
+        return protocol;
     }
 
-    private static String formatFactor( ExperimentalFactor ef ) {
-        return ef.getName();
+    /**
+     * Format an interaction of factors.
+     */
+    public static String formatInteraction( Set<ExperimentalFactor> i ) {
+        return i.stream()
+                .sorted( ExperimentalFactor.COMPARATOR )
+                .map( f -> formatFactor( f, false ) )
+                .collect( Collectors.joining( ":" ) );
     }
 
-    private static String formatFactorValue( FactorValue fv ) {
-        return FactorValueUtils.getSummaryString( fv );
+    private static String formatFactor( ExperimentalFactor ef, boolean verbose ) {
+        return verbose ? ef.toString() : ef.getName();
+    }
+
+    private static String formatFactorValue( FactorValue fv, boolean verbose ) {
+        return verbose ? fv.toString() : FactorValueUtils.getSummaryString( fv );
     }
 
     /**
      * Build a design matrix for the given factors and samples.
+     *
      * @param factors            factors
      * @param samplesUsed        the samples used
      * @param allowMissingValues whether to allow missing values, if set to true, the returned matrix may contain nulls

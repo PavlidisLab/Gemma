@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.loader.entrez;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author pavlidis

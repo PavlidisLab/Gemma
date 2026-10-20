@@ -9,7 +9,7 @@ import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
@@ -77,14 +77,16 @@ public class LockExpressionDataFileCli extends ExpressionExperimentManipulatingC
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
-        log.info( "Acquiring " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + filename + "..." );
+        String lockDescription = ( exclusive ? "an exclusive" : "a shared" ) + " lock on " + filename;
+        log.info( "Acquiring " + lockDescription + "..." );
         logLockStatus( ee );
         try ( LockedPath path = getLock( ee, filename, exclusive ) ) {
             // wait until Ctrl-C
-            log.info( ( exclusive ? "Exclusive" : "Shared" ) + " lock acquired on " + path.getPath().getFileName() + ". Press Ctrl-C to interrupt." );
+            log.info( "Acquired " + lockDescription + ". Press Ctrl-C to interrupt." );
+            addSuccessObject( ee, "Acquired " + lockDescription + "." );
             Thread.sleep( Long.MAX_VALUE );
         } catch ( IOException e ) {
-            addErrorObject( ee, "Failed to acquire a " + ( exclusive ? "exclusive" : "shared" ) + " lock on " + filename + ".", e );
+            addErrorObject( ee, "Failed to acquire " + lockDescription + ".", e );
         } catch ( InterruptedException e ) {
             Thread.currentThread().interrupt();
             throw new RuntimeException( e );

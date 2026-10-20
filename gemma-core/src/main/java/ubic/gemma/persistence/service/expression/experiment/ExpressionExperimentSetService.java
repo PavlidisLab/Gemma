@@ -19,52 +19,28 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PostFilter;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseService;
-import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.SecurableBaseVoEnabledService;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * @author paul
  */
 public interface ExpressionExperimentSetService
-        extends BaseService<ExpressionExperimentSet>, BaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
+        extends SecurableBaseService<ExpressionExperimentSet>, SecurableBaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
-    @Override
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSet load( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> loadAll();
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void remove( ExpressionExperimentSet expressionExperimentSet );
-
-    @Override
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ExpressionExperimentSet expressionExperimentSet );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
+    Collection<ExpressionExperimentSet> find( ExpressionExperiment ee );
 
     /**
      * security at DAO level
@@ -72,16 +48,21 @@ public interface ExpressionExperimentSetService
      * @param name name
      * @return collection of ee sets
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperimentSet> findByName( String name );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
+    Collection<ExpressionExperimentSet> findByAccession( String accession );
 
     /**
      * security at DAO level
      *
-     * @param bioAssaySet BA set
+     * @param ee BA set
      * @return collection of IDs
      */
-    Collection<Long> findIds( BioAssaySet bioAssaySet );
+    Collection<Long> findIds( ExpressionExperiment ee );
 
     /**
      * Get the (security-filtered) list of experiments in a set.
@@ -89,7 +70,8 @@ public interface ExpressionExperimentSetService
      * @param id id
      * @return collection of ees
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperiment> getExperimentsInSet( Long id );
 
     /**
@@ -111,7 +93,8 @@ public interface ExpressionExperimentSetService
      *
      * @return ExpressionExperimentSets that have more than 1 experiment in them &amp; have a taxon value.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @PostFilter("hasPermission(filterObject, 'READ') or hasPermission(filterObject, 'ADMINISTRATION')")
     Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
     /**
@@ -150,14 +133,6 @@ public interface ExpressionExperimentSetService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds );
 
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentSetValueObject loadValueObjectById( Long id );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    List<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
-
     @CheckReturnValue
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ExpressionExperimentSet thaw( ExpressionExperimentSet set );
@@ -169,8 +144,9 @@ public interface ExpressionExperimentSetService
      * has the right to edit the experiment itself.
      * <p>
      * If a set ends-up empty as a result, it is removed as well.
+     *
      * @return the number of sets this experiment was removed from
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
-    int removeFromSets( BioAssaySet bas );
+    int removeFromSets( ExpressionExperiment bas );
 }

@@ -1,18 +1,18 @@
 package ubic.gemma.core.loader.expression.singleCell;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
 import ubic.gemma.core.loader.expression.geo.singleCell.AnnDataDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
 import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTranspose;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleBioAssayMapper;
-import ubic.gemma.core.util.test.BaseIntegrationTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -31,22 +31,22 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreaterOrEqualTo;
 
-public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationTest {
+public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private FTPClientFactory ftpClientFactory;
 
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+
     @Value("${gemma.download.path}")
     private String downloadPath;
-
-    @Value("${python.exe}")
-    private Path pythonExecutable;
 
     /**
      * This test requires a fairly large input file which must be located in the download directory.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
     public void testGSE225158() throws IOException {
         Path p = downloadAndTransposeGSE225158();
         AnnDataSingleCellDataLoader loader = new AnnDataSingleCellDataLoader( p );
@@ -116,8 +116,7 @@ public class AnnDataSingleCellDataLoaderIntegrationTest extends BaseIntegrationT
         }
         // transpose...
         // this step requires a *lot* of memory
-        SingleCellDataTranspose transpose = new SingleCellDataTranspose();
-        transpose.setPythonExecutable( pythonExecutable );
+        SingleCellDataTranspose transpose = singleCellDataTransformationFactory.getTransformation( SingleCellDataTranspose.class );
         transpose.setInputFile( d, SingleCellDataType.ANNDATA );
         transpose.setOutputFile( p, SingleCellDataType.ANNDATA );
         transpose.perform();

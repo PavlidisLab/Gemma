@@ -18,13 +18,14 @@
  */
 package ubic.gemma.persistence.util;
 
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Query;
+import org.hibernate.Hibernate;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
+import ubic.gemma.model.annotations.MayBeUninitialized;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -52,10 +53,11 @@ public class CommonQueries {
      */
     public static Collection<ArrayDesign> getArrayDesignsUsed( BioAssaySet bas, Session session ) {
         //noinspection unchecked
-        return session.createQuery( "select distinct ad from ExpressionExperiment ee "
+        return session.createQuery( "select ad from ExpressionExperiment ee "
                         + "join ee.bioAssays ba "
                         + "join ba.arrayDesignUsed ad "
-                        + "where ee = :ee" )
+                        + "where ee = :ee "
+                        + "group by ad" )
                 .setParameter( "ee", getExperiment( bas ) )
                 .list();
     }
@@ -63,78 +65,69 @@ public class CommonQueries {
     /**
      * Retrieve a list of array designs used by the given experiments.
      */
-    public static Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends BioAssaySet> ees, Session session ) {
+    public static Collection<ArrayDesign> getArrayDesignsUsed( Collection<? extends @MayBeUninitialized BioAssaySet> ees, Session session ) {
         // Safety 1st....
         if ( ees == null || ees.isEmpty() )
             return Collections.emptySet();
-        return listByIdentifiableBatch( session.createQuery( "select distinct ad from ExpressionExperiment as ee "
+        return listByIdentifiableBatch( session.createQuery( "select ad from ExpressionExperiment as ee "
+                + "join ee.bioAssays b join b.arrayDesignUsed ad "
+                + "where ee in (:ees) "
+                + "group by ad" ), "ees", getExperiments( ees ), 2048 );
+    }
+
+    /**
+     * Retrieve, in one query, a per-experiment map of array designs used.
+     * <p>
+     * Use this when you need to know which platform belongs to which EE (e.g. bulk
+     * pipeline-status assembly): the flat {@link #getArrayDesignsUsed(Collection, Session)}
+     * loses that mapping. EEs with no resolved bio-assays are absent from the map.
+     */
+    public static Map<ExpressionExperiment, Collection<ArrayDesign>> getArrayDesignsUsedByExperiment(
+            Collection<? extends @MayBeUninitialized BioAssaySet> ees, Session session ) {
+        if ( ees == null || ees.isEmpty() )
+            return Collections.emptyMap();
+        //noinspection unchecked
+        List<Object[]> rows = listByIdentifiableBatch( session.createQuery( "select ee, ad from ExpressionExperiment as ee "
                 + "join ee.bioAssays b join b.arrayDesignUsed ad "
                 + "where ee in (:ees) "
                 + "group by ee, ad" ), "ees", getExperiments( ees ), 2048 );
+        Map<ExpressionExperiment, Collection<ArrayDesign>> result = new HashMap<>();
+        for ( Object[] row : rows ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) row[0];
+            ArrayDesign ad = ( ArrayDesign ) row[1];
+            result.computeIfAbsent( ee, k -> new HashSet<>() ).add( ad );
+        }
+        return result;
     }
 
-    private static Collection<ExpressionExperiment> getExperiments( Collection<? extends BioAssaySet> bioAssaySets ) {
+    private static Collection<@MayBeUninitialized ExpressionExperiment> getExperiments( Collection<? extends @MayBeUninitialized BioAssaySet> bioAssaySets ) {
         return bioAssaySets.stream().map( CommonQueries::getExperiment ).collect( IdentifiableUtils.toIdentifiableSet() );
     }
 
-    private static ExpressionExperiment getExperiment( BioAssaySet bas ) {
+    /**
+     * Resolve a {@link BioAssaySet} to the {@link ExpressionExperiment} that owns its data: itself if
+     * it is one, its source experiment if it is a subset.
+     * <p>
+     * The argument is unproxied first. An association mapped against the abstract {@link BioAssaySet}
+     * -- {@code SingleExperimentAnalysis.experimentAnalyzed} is the common one -- hands back a
+     * {@code BioAssaySet$HibernateProxy}, which is an instance of neither concrete subclass and used to
+     * fall through to the throw below. Same remedy as {@code ExpressionDataFileUtils
+     * .formatExperimentAnalyzedFilename} and {@code DifferentialExpressionAnalysisDaoImpl
+     * .getSourceExperiment}.
+     * <p>
+     * Public because {@code CachedProcessedExpressionDataVectorServiceImpl} carried a byte-identical
+     * copy of this method; it now delegates here so the unproxy cannot be forgotten in one of the two.
+     *
+     * @throws UnsupportedOperationException if {@code bas} is neither an experiment nor a subset
+     */
+    public static ExpressionExperiment getExperiment( @MayBeUninitialized BioAssaySet bas ) {
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
         if ( bas instanceof ExpressionExperiment ) {
             return ( ExpressionExperiment ) bas;
         } else if ( bas instanceof ExpressionExperimentSubSet ) {
             return ( ( ExpressionExperimentSubSet ) bas ).getSourceExperiment();
         } else {
             throw new UnsupportedOperationException( "Couldn't handle a " + bas.getClass() );
-        }
-    }
-
-    /**
-     * @param ees     experiments
-     * @param session session
-     * @return map of experiment to collection of array design ids. If any of the ids given are for subsets, then the
-     * key in the return value will be for the subset, not the source experiment (so it is consistent with the
-     * input)
-     */
-    public static Map<Long, Collection<Long>> getArrayDesignsUsedEEMap( Collection<Long> ees, Session session ) {
-        if ( ees == null || ees.isEmpty() )
-            return Collections.emptyMap();
-
-        Map<Long, Collection<Long>> ee2ads = new HashMap<>();
-
-        //noinspection unchecked
-        List<Object[]> qr = session.createQuery( "select ee.id, ad.id from ExpressionExperiment as ee "
-                        + "join ee.bioAssays b join b.arrayDesignUsed ad where ee.id in (:ees) group by ee.id, ad.id" )
-                .setParameterList( "ees", optimizeParameterList( ees ) )
-                .list();
-        CommonQueries.addAllAds( ee2ads, qr );
-
-        if ( ee2ads.size() < ees.size() ) {
-            // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
-            // source.
-            Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() );
-            // note: CollectionUtils.removeAll has a bug.
-
-            //noinspection unchecked
-            qr = session.createQuery( "select ees.id, ad.id from ExpressionExperimentSubSet as ees "
-                            + "join ees.sourceExperiment ee "
-                            + "join ee.bioAssays b "
-                            + "join b.arrayDesignUsed ad where ees.id in (:ees) "
-                            + "group by ees.id, ad.id" )
-                    .setParameterList( "ees", optimizeParameterList( possibleEEsubsets ) )
-                    .list();
-            CommonQueries.addAllAds( ee2ads, qr );
-        }
-
-        return ee2ads;
-    }
-
-    private static void addAllAds( Map<Long, Collection<Long>> ee2ads, List<Object[]> qr ) {
-        for ( Object[] ar : qr ) {
-            Long ee = ( Long ) ar[0];
-            Long ad = ( Long ) ar[1];
-            if ( !ee2ads.containsKey( ee ) ) {
-                ee2ads.put( ee, new HashSet<>() );
-            }
-            ee2ads.get( ee ).add( ad );
         }
     }
 
@@ -147,9 +140,10 @@ public class CommonQueries {
      */
     public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
         //noinspection unchecked
-        return session.createQuery( "select distinct cs from Gene as gene "
+        return session.createQuery( "select cs from Gene as gene "
                         + "join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
-                        + "where ba.bioSequence = cs.biologicalCharacteristic and ba.geneProduct = gp and gene = :gene" )
+                        + "where ba.bioSequence = cs.biologicalCharacteristic and ba.geneProduct = gp and gene = :gene "
+                        + "group by cs" )
                 .setParameter( "gene", gene )
                 .setCacheable( true )
                 .list();
@@ -220,9 +214,9 @@ public class CommonQueries {
             return Collections.emptyMap();
         }
         return populateCsId2GeneIdMap( listByBatch( session
-                .createSQLQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds) AND g.AD IN (:ads)" )
-                .addScalar( "csid", LongType.INSTANCE )
-                .addScalar( "geneId", LongType.INSTANCE )
+                .createNativeQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.GENE IN (:geneIds) AND g.AD IN (:ads)" )
+                .addScalar( "csid", StandardBasicTypes.LONG )
+                .addScalar( "geneId", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
@@ -241,9 +235,9 @@ public class CommonQueries {
             return Collections.emptyMap();
         }
         return populateCsId2GeneIdMap( listByBatch( session
-                .createSQLQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.CS IN (:probes) " )
-                .addScalar( "csid", LongType.INSTANCE )
-                .addScalar( "geneId", LongType.INSTANCE )
+                .createNativeQuery( "SELECT CS AS csid, GENE AS geneId FROM GENE2CS g WHERE g.CS IN (:probes) " )
+                .addScalar( "csid", StandardBasicTypes.LONG )
+                .addScalar( "geneId", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
@@ -265,17 +259,17 @@ public class CommonQueries {
         if ( probes.isEmpty() || arrayDesignIds.isEmpty() ) {
             return Collections.emptyList();
         }
-        Query queryObject = session.createSQLQuery( "SELECT CS AS csid FROM GENE2CS WHERE AD IN (:adids) AND CS IN (:probes)" )
-                .addScalar( "csid", LongType.INSTANCE )
+        Query queryObject = session.createNativeQuery( "SELECT CS AS csid FROM GENE2CS WHERE AD IN (:adids) AND CS IN (:probes)" )
+                .addScalar( "csid", StandardBasicTypes.LONG )
                 .addSynchronizedQuerySpace( GENE2CS_QUERY_SPACE )
                 .addSynchronizedEntityClass( ArrayDesign.class )
                 .addSynchronizedEntityClass( CompositeSequence.class )
                 .addSynchronizedEntityClass( Gene.class )
-                .setParameterList( "adids", optimizeParameterList( arrayDesignIds ), LongType.INSTANCE );
+                .setParameterList( "adids", optimizeParameterList( arrayDesignIds ), StandardBasicTypes.LONG );
         List<Long> results = new ArrayList<>();
         for ( Collection<Long> batch : batchParameterList( probes, GENE2CS_BATCH_SIZE ) ) {
             //noinspection unchecked
-            results.addAll( queryObject.setParameterList( "probes", batch, LongType.INSTANCE ).list() );
+            results.addAll( queryObject.setParameterList( "probes", batch, StandardBasicTypes.LONG ).list() );
         }
         return results;
     }

@@ -1,7 +1,7 @@
 package ubic.gemma.core.analysis.singleCell.aggregate;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.persistence.service.expression.bioAssayData.RandomSingleCellDataUtils;

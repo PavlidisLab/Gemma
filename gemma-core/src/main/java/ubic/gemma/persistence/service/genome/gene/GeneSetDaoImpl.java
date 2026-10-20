@@ -21,7 +21,7 @@ package ubic.gemma.persistence.service.genome.gene;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -34,8 +34,7 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,10 +45,9 @@ import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
  * <code>ubic.gemma.model.genome.gene.GeneSet</code>.
  *
  * @author kelsey
- * @see    GeneSet
+ * @see GeneSet
  */
 @Repository
-@ParametersAreNonnullByDefault
 public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     @Autowired
@@ -78,7 +76,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     public List<Taxon> getTaxa( GeneSet geneSet ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct g.taxon from GeneSet gs join gs.members m join m.gene g where gs = :gs" )
+                .createQuery( "select t from GeneSet gs join gs.members m join m.gene g join g.taxon t where gs = :gs group by t" )
                 .setParameter( "gs", geneSet )
                 .list();
     }
@@ -98,6 +96,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     }
 
     @Override
+    @Nullable
     public DatabaseBackedGeneSetValueObject loadValueObjectByIdLite( Long id ) {
         Object[] row = ( Object[] ) this.getSessionFactory().getCurrentSession().createQuery(
                         "select g, t, count(m) from GeneSet g "
@@ -198,7 +197,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             return this.loadAll();
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct gs from GeneSet gs join gs.members m join m.gene g where g.taxon = :t" )
+                .createQuery( "select gs from GeneSet gs "
+                        + "join gs.members m "
+                        + "join m.gene g "
+                        + "where g.taxon = :t "
+                        + "group by gs" )
                 .setParameter( "t", tax ).list();
     }
 
@@ -235,11 +238,11 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
                 .executeUpdate();
         // FIXME: use HQL delete from Characteristic
         int removedCharacteristics = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from CHARACTERISTIC where GENE_SET_FK is not null" )
+                .createNativeQuery( "delete from CHARACTERISTIC where GENE_SET_FK is not null" )
                 .executeUpdate();
         //noinspection SqlWithoutWhere
         int removedLiteratureSourcesAssociations = getSessionFactory().getCurrentSession()
-                .createSQLQuery( "delete from GENE_SETS2LITERATURE_SOURCES" )
+                .createNativeQuery( "delete from GENE_SETS2LITERATURE_SOURCES" )
                 .executeUpdate();
         int removedGeneSet = getSessionFactory().getCurrentSession().createQuery( "delete from GeneSet" )
                 .executeUpdate();

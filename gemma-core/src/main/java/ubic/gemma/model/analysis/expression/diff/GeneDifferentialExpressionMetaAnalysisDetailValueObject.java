@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.analysis.expression.diff;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -26,6 +28,7 @@ import java.util.Collection;
  * @author frances
  */
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
+@Data
 public class GeneDifferentialExpressionMetaAnalysisDetailValueObject implements Serializable {
 
     /**
@@ -37,28 +40,4 @@ public class GeneDifferentialExpressionMetaAnalysisDetailValueObject implements 
 
     private Collection<IncludedResultSetInfoValueObject> includedResultSetsInfo;
     private Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> results;
-
-    public Collection<IncludedResultSetInfoValueObject> getIncludedResultSetsInfo() {
-        return this.includedResultSetsInfo;
-    }
-
-    public void setIncludedResultSetsInfo( Collection<IncludedResultSetInfoValueObject> includedResultSetsInfo ) {
-        this.includedResultSetsInfo = includedResultSetsInfo;
-    }
-
-    public Integer getNumGenesAnalyzed() {
-        return this.numGenesAnalyzed;
-    }
-
-    public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
-        this.numGenesAnalyzed = numGenesAnalyzed;
-    }
-
-    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> getResults() {
-        return this.results;
-    }
-
-    public void setResults( Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> results ) {
-        this.results = results;
-    }
 }

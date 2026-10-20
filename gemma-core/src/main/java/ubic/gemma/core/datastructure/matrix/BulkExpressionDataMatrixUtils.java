@@ -30,6 +30,7 @@ public class BulkExpressionDataMatrixUtils {
             v.setDesignElement( matrix.getDesignElementForRow( i ) );
             v.setQuantitationType( qt );
             setData( v, matrix, i );
+            setNumberOfCells( v, matrix, i );
             // we don't fill in the ranks because we only have the mean value here.
             result.add( v );
         }
@@ -54,6 +55,12 @@ public class BulkExpressionDataMatrixUtils {
             vector.setDataAsInts( ( ( BulkExpressionDataPrimitiveIntMatrix ) matrix ).getRowAsInts( i ) );
         } else {
             vector.setDataAsObjects( matrix.getRow( i ) );
+        }
+    }
+
+    private static void setNumberOfCells( BulkExpressionDataVector v, BulkExpressionDataMatrix<?> matrix, int i ) {
+        if ( matrix instanceof SingleCellDerivedBulkExpressionDataMatrix ) {
+            v.setNumberOfCells( ( ( SingleCellDerivedBulkExpressionDataMatrix<?> ) matrix ).getNumberOfCellsForRow( i ) );
         }
     }
 }

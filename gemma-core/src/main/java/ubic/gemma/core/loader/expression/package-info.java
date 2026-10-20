@@ -2,7 +2,7 @@
  * This package contains interfaces and classes for loading expression data.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.loader.expression;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

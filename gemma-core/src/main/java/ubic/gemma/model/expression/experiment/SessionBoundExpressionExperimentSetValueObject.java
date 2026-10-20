@@ -37,11 +37,15 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.GemmaSessionBackedValueObject;
 
 /**
  * @author tvrossum
  */
+@Getter
+@Setter
 public class SessionBoundExpressionExperimentSetValueObject extends ExpressionExperimentSetValueObject
         implements GemmaSessionBackedValueObject {
 
@@ -64,16 +68,6 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
     @SuppressWarnings("WeakerAccess")
     public SessionBoundExpressionExperimentSetValueObject( Long id ) {
         super( id );
-    }
-
-    @Override
-    public boolean isModified() {
-        return this.modified;
-    }
-
-    @Override
-    public void setModified( boolean modified ) {
-        this.modified = modified;
     }
 
 }

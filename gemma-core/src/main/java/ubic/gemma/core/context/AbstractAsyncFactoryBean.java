@@ -1,6 +1,6 @@
 package ubic.gemma.core.context;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import ubic.gemma.core.util.concurrent.Executors;
 
@@ -28,7 +28,7 @@ import java.util.concurrent.Future;
  * @param <T> type of bean that this factory provides
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>, DisposableBean {
 
     /**
@@ -93,24 +93,45 @@ public abstract class AbstractAsyncFactoryBean<T> implements AsyncFactoryBean<T>
      */
     protected abstract T createObject() throws Exception;
 
+    /**
+     * Destroy a singleton instance.
+     */
+    protected void destroyObject( T object ) throws Exception {
+
+    }
+
     @Override
     public final boolean isInitialized() {
         return isSingleton() && singletonBean != null;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * All pending bean creation will be cancelled as per {@link Future#cancel(boolean)}. If this is a singleton bean
+     * factory and a singleton has been created (or is in the process of), {@link #destroyObject(Object)} will also be
+     * called prior to cancelling it.
+     */
     @Override
-    public final void destroy() {
-        if ( shutdownExecutorOnDispose ) {
-            executor.shutdown();
-        }
-        pendingBeans.removeIf( Future::isDone );
-        if ( !pendingBeans.isEmpty() ) {
-            log.info( String.format( "There are pending beans creation in %s, they will be cancelled.", getClass().getName() ) );
-            for ( Future<T> f : pendingBeans ) {
-                f.cancel( true );
+    public final void destroy() throws Exception {
+        try {
+            Future<T> singleton = this.singletonBean;
+            if ( singleton != null && singleton.isDone() && !singleton.isCancelled() ) {
+                destroyObject( singleton.get() );
             }
-            // after cancel, the futures are guaranteed to be done, so we can clear then right away
-            pendingBeans.clear();
+        } finally {
+            if ( shutdownExecutorOnDispose ) {
+                executor.shutdown();
+            }
+            pendingBeans.removeIf( Future::isDone );
+            if ( !pendingBeans.isEmpty() ) {
+                log.info( String.format( "There are pending beans creation in %s, they will be cancelled.", getClass().getName() ) );
+                for ( Future<T> f : pendingBeans ) {
+                    f.cancel( true );
+                }
+                // after cancel, the futures are guaranteed to be done, so we can clear then right away
+                pendingBeans.clear();
+            }
         }
     }
 }

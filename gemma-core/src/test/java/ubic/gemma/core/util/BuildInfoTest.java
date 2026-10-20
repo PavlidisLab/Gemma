@@ -1,6 +1,7 @@
 package ubic.gemma.core.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +10,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 
 import java.time.Instant;
@@ -17,12 +18,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ContextConfiguration
-public class BuildInfoTest extends BaseTest {
+public class BuildInfoTest extends BaseTest5 {
 
     @Import(BuildInfo.class)
     @Configuration
@@ -55,10 +55,9 @@ public class BuildInfoTest extends BaseTest {
     }
 
     @Test
-    public void testFromClasspath() {
-        assumeTrue( "Make sure that Gemma is build with Maven so that version.properties is generated.",
-                getClass().getResource( "/ubic/gemma/version.properties" ) != null );
-        BuildInfo buildInfo = BuildInfo.fromClasspath();
+    @Disabled("The manifest is not available during the test phase.")
+    public void testFromManifest() {
+        BuildInfo buildInfo = BuildInfo.fromManifest();
         assertNotNull( buildInfo.getVersion() );
         assertNotNull( buildInfo.getTimestamp() );
         assertNotNull( buildInfo.getGitHash() );

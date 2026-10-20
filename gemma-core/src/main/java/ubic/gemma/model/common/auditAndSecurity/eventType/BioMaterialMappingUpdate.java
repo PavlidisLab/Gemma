@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Indicates that the biomaterial to bioassay mapping of the expression experiment was modified.
  */
+@Entity
+@DiscriminatorValue("BioMaterialMappingUpdate")
 public class BioMaterialMappingUpdate extends ExpressionExperimentAnalysisEvent {
 
 }

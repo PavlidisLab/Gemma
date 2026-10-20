@@ -1,7 +1,7 @@
 package ubic.gemma.apps;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +10,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.cli.util.test.AuthenticatedCliTestConfig;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.singleCell.SingleCellDataLoaderService;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-public class LoadSimpleExpressionDataCliTest extends BaseCliTest {
+public class LoadSimpleExpressionDataCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
@@ -66,7 +66,7 @@ public class LoadSimpleExpressionDataCliTest extends BaseCliTest {
     @Autowired
     private EntityLocator entityLocator;
 
-    @After
+    @AfterEach
     public void resetMocks() {
         reset( simpleExpressionDataLoaderService );
     }
@@ -97,7 +97,12 @@ public class LoadSimpleExpressionDataCliTest extends BaseCliTest {
                 .withArguments( "-f", new ClassPathResource( "ubic/gemma/apps/simple-data-file.tsv" ).getFile().getAbsolutePath(),
                         "-d", new ClassPathResource( "ubic/gemma/apps" ).getFile().getAbsolutePath() )
                 .succeeds();
-        verify( simpleExpressionDataLoaderService ).create( any(), assertArg( matrix -> {
+        verify( simpleExpressionDataLoaderService ).create( assertArg( metaData ->
+                // this loader always creates a brand new experiment with exactly one (raw) quantitation type, so
+                // it must always be preferred - otherwise the load never gets preprocessed and a later
+                // makeProcessedData fails outright with "No preferred data vectors".
+                assertThat( metaData.getQuantitationType().getIsPreferred() ).isTrue()
+        ), assertArg( matrix -> {
             assertThat( matrix.getRowNames() ).containsExactly( "cs1", "cs2", "cs3" );
             assertThat( matrix.getColNames() ).containsExactly( "ba1", "ba2" );
         } ) );

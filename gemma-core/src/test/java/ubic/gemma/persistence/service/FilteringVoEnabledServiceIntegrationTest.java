@@ -1,17 +1,13 @@
 package ubic.gemma.persistence.service;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
-import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.persistence.service.analysis.expression.diff.ExpressionAnalysisResultSetService;
-import ubic.gemma.persistence.util.Filter;
-import ubic.gemma.persistence.util.Filters;
-import ubic.gemma.persistence.util.Slice;
-import ubic.gemma.persistence.util.Sort;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
+import ubic.gemma.persistence.util.*;
 
 import java.net.URL;
 import java.util.Date;
@@ -26,7 +22,9 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
  * Test all possible filterable properties for filtering and sorting results.
  * @author poirigui
  */
-public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextTest {
+@Slf4j
+@Tag("slow")
+public class FilteringVoEnabledServiceIntegrationTest extends BaseIntegrationTest5 {
 
     @Autowired
     private Map<String, FilteringVoEnabledService<?, ?>> filteringServices;
@@ -35,7 +33,6 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
     private MessageSource messageSource;
 
     @Test
-    @Category(SlowTest.class)
     public void testFilteringByAllFilterableProperties() {
         for ( Map.Entry<String, FilteringVoEnabledService<?, ?>> entry : filteringServices.entrySet() ) {
             FilteringVoEnabledService<?, ?> filteringService = entry.getValue();
@@ -56,20 +53,40 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
                 Slice<?> slice = filteringService.loadValueObjects( Filters.by( filter ), null, 0, 1 );
                 long count = filteringService.count( Filters.by( filter ) );
                 assertThat( slice.getTotalElements() ).isEqualTo( count );
+
+                if ( filteringService.isFilterablePropertyUsingSubquery( property ) ) {
+                    filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ), SubqueryMode.ANY );
+                    log.info( String.format( "%s.loadValueObjects(%s, null, 0, 1)", entry.getKey(), filter ) );
+                    slice = filteringService.loadValueObjects( Filters.by( filter ), null, 0, 1 );
+                    count = filteringService.count( Filters.by( filter ) );
+                    assertThat( slice.getTotalElements() ).isEqualTo( count );
+
+                    filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ), SubqueryMode.NONE );
+                    log.info( String.format( "%s.loadValueObjects(%s, null, 0, 1)", entry.getKey(), filter ) );
+                    slice = filteringService.loadValueObjects( Filters.by( filter ), null, 0, 1 );
+                    count = filteringService.count( Filters.by( filter ) );
+                    assertThat( slice.getTotalElements() ).isEqualTo( count );
+
+                    filter = filteringService.getFilter( property, Filter.Operator.eq, getStubForPropType( filteringService, property ), SubqueryMode.ALL );
+                    log.info( String.format( "%s.loadValueObjects(%s, null, 0, 1)", entry.getKey(), filter ) );
+                    slice = filteringService.loadValueObjects( Filters.by( filter ), null, 0, 1 );
+                    count = filteringService.count( Filters.by( filter ) );
+                    assertThat( slice.getTotalElements() ).isEqualTo( count );
+                }
             }
         }
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testSortingByAllFilterableProperties() {
+        // Note: the historical skip for `.size` sort on ExpressionAnalysisResultSetService was needed
+        // when EARS DAO used the legacy Hibernate Criteria API (fix #520). Phase 2 migrated EARS to
+        // JPA Criteria with explicit cb.size(...) sort support (see
+        // ExpressionAnalysisResultSetDaoImpl#buildOrders and AbstractCriteriaFilteringVoEnabledDao
+        // #buildOrders), so the skip is no longer required.
         for ( Map.Entry<String, FilteringVoEnabledService<?, ?>> entry : filteringServices.entrySet() ) {
             FilteringVoEnabledService<?, ?> filteringService = entry.getValue();
             for ( String property : filteringService.getFilterableProperties() ) {
-                if ( filteringService instanceof ExpressionAnalysisResultSetService && property.endsWith( ".size" ) ) {
-                    log.warn( "Skipping collection size test with the Criteria API." );
-                    continue;
-                }
                 Sort sort = filteringService.getSort( property, Sort.Direction.ASC, Sort.NullMode.LAST );
                 log.info( String.format( "%s.loadValueObjects(null, %s, 0, 1)", entry.getKey(), sort ) );
                 filteringService.loadValueObjects( null, sort, 0, 1 );
@@ -99,8 +116,12 @@ public class FilteringVoEnabledServiceIntegrationTest extends BaseSpringContextT
             return "2022-01-01";
         } else if ( URL.class.isAssignableFrom( clazz ) ) {
             return "https://example.com/";
-        } else {
+        } else if ( String.class.isAssignableFrom( clazz ) ) {
             return "";
+        } else if ( Boolean.class.isAssignableFrom( clazz ) ) {
+            return "false";
+        } else {
+            throw new UnsupportedOperationException( "Unsupported property type: " + clazz.getName() + " for stubbing." );
         }
     }
 }

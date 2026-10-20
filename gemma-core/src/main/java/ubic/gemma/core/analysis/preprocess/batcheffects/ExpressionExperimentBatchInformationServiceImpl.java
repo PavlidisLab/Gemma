@@ -1,7 +1,9 @@
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,9 +12,11 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.QueryUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,7 +24,7 @@ import java.util.stream.Collectors;
 import static org.apache.commons.text.StringEscapeUtils.escapeHtml4;
 
 @Service
-@CommonsLog
+@Slf4j
 public class ExpressionExperimentBatchInformationServiceImpl implements ExpressionExperimentBatchInformationService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
@@ -31,6 +35,8 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     private SVDService svdService;
     @Autowired
     private AuditEventService auditEventService;
+    @Autowired
+    private SessionFactory sessionFactory;
 
     @Override
     @Transactional(readOnly = true)
@@ -52,6 +58,57 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         }
 
         return lastBatchInfoEvent.getEventType() instanceof BatchInformationFetchingEvent;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<ExpressionExperiment, Boolean> checkHasBatchInfo( Collection<ExpressionExperiment> ees ) {
+        if ( ees == null || ees.isEmpty() ) {
+            return Collections.emptyMap();
+        }
+        // One HQL to learn which input EEs have a batch ExperimentalFactor — replaces an
+        // expressionExperimentService.thawLiter() round-trip per EE.
+        Set<Long> hasBatchFactorIds = new HashSet<>();
+        //noinspection unchecked
+        List<Object[]> factorRows = QueryUtils.listByIdentifiableBatch( sessionFactory.getCurrentSession()
+                        .createQuery( "select ee.id, ef from ExpressionExperiment ee "
+                                + "join ee.experimentalDesign ed "
+                                + "join ed.experimentalFactors ef "
+                                + "left join fetch ef.category "
+                                + "where ee in (:ees)" ),
+                "ees", ees, 2048 );
+        for ( Object[] row : factorRows ) {
+            Long eeId = ( Long ) row[0];
+            ExperimentalFactor ef = ( ExperimentalFactor ) row[1];
+            if ( ExperimentFactorUtils.isBatchFactor( ef ) ) {
+                hasBatchFactorIds.add( eeId );
+            }
+        }
+        // One batched audit-event lookup for BatchInformationEvent across all input EEs.
+        Map<ExpressionExperiment, AuditEvent> lastBatchEvents =
+                auditEventService.getLastEvents( ees, Collections.singletonList( BatchInformationEvent.class ) )
+                        .getOrDefault( BatchInformationEvent.class, Collections.emptyMap() );
+        Map<ExpressionExperiment, Boolean> result = HashMap.newHashMap( ees.size() );
+        for ( ExpressionExperiment ee : ees ) {
+            if ( ee.getId() != null && hasBatchFactorIds.contains( ee.getId() ) ) {
+                result.put( ee, Boolean.TRUE );
+                continue;
+            }
+            AuditEvent ev = lastBatchEvents.get( ee );
+            if ( ev == null ) {
+                result.put( ee, Boolean.FALSE );
+                continue;
+            }
+            // Mirror the single-EE logic: pre-fix legacy "No header file for" notes were
+            // mis-typed as failures; treat them as no-info.
+            if ( ev.getEventType() instanceof FailedBatchInformationFetchingEvent
+                    && ev.getNote() != null && ev.getNote().contains( "No header file for" ) ) {
+                result.put( ee, Boolean.FALSE );
+                continue;
+            }
+            result.put( ee, ev.getEventType() instanceof BatchInformationFetchingEvent );
+        }
+        return result;
     }
 
     @Override
@@ -89,13 +146,54 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         }
 
         for ( BatchConfound c : confounds ) {
-            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+            if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
                 return true;
             }
         }
 
         // no need to check for subsets since there's no confound in the experiment itself
 
+        return false;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasSignificantBatchConfound( BioAssaySet bas ) {
+        // ExpressionDataFileHelperService.getAnalysis passes analysis.getExperimentAnalyzed() straight in
+        // here, and that association is mapped against the abstract BioAssaySet, so it arrives as a proxy
+        // matching neither branch -- "Unsupported BioAssaySet type: ...$HibernateProxy" while writing the
+        // diffex result files.
+        bas = ( BioAssaySet ) Hibernate.unproxy( bas );
+        if ( bas instanceof ExpressionExperiment ) {
+            return hasSignificantBatchConfound( ( ExpressionExperiment ) bas );
+        }
+        if ( !( bas instanceof ExpressionExperimentSubSet ) ) {
+            throw new IllegalArgumentException( "Unsupported BioAssaySet type: " + bas.getClass().getName() );
+        }
+        // Re-read in this session, as the experiment branch does with thawLite: the subset usually arrives
+        // detached, and the confound test walks its bioAssays -- "failed to lazily initialize a collection of
+        // role: ExpressionExperimentSubSet.bioAssays" for every subset analysis's DEA archive.
+        Long subsetId = ( ( ExpressionExperimentSubSet ) bas ).getId();
+        ExpressionExperimentSubSet subset = sessionFactory.getCurrentSession().get( ExpressionExperimentSubSet.class, subsetId );
+        if ( subset == null ) {
+            throw new IllegalArgumentException( "No ExpressionExperimentSubSet with ID " + subsetId + "." );
+        }
+        ExpressionExperiment parent = subset.getSourceExperiment();
+        if ( parent == null || !this.checkHasUsableBatchInfo( parent ) ) {
+            return false;
+        }
+        Collection<BatchConfound> confounds;
+        try {
+            confounds = BatchConfoundUtils.test( subset );
+        } catch ( NotStrictlyPositiveException e ) {
+            log.error( String.format( "Batch confound test for %s threw a NonStrictlyPositiveException! Returning false.", subset ), e );
+            return false;
+        }
+        for ( BatchConfound c : confounds ) {
+            if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -116,7 +214,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             // confounds have to be sorted in order to always get the same string
             confounds.sort( Comparator.comparing( BatchConfound::toString ) );
             for ( BatchConfound c : confounds ) {
-                if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
                     significantConfounds.add( c );
                 }
             }
@@ -131,6 +229,11 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperimentSubSet, List<BatchConfound>> getSignificantBatchConfoundsForSubsets( ExpressionExperiment ee ) {
+        BioAssayDimension processedDimension = expressionExperimentService.getProcessedBioAssayDimension( ee );
+        if ( processedDimension == null ) {
+            return Collections.emptyMap();
+        }
+
         ee = expressionExperimentService.thawLite( ee );
 
         if ( !this.checkHasUsableBatchInfo( ee ) ) {
@@ -140,14 +243,14 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         Map<ExpressionExperimentSubSet, List<BatchConfound>> significantSubsetConfounds = new HashMap<>();
 
-        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee );
+        Collection<ExpressionExperimentSubSet> subSets = expressionExperimentService.getSubSetsWithBioAssays( ee, processedDimension );
         for ( ExpressionExperimentSubSet subset : subSets ) {
             try {
                 List<BatchConfound> subsetConfounds = new ArrayList<>( BatchConfoundUtils.test( subset ) );
                 // confounds have to be sorted in order to always get the same string
                 subsetConfounds.sort( Comparator.comparing( BatchConfound::toString ) );
                 for ( BatchConfound c : subsetConfounds ) {
-                    if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                    if ( c.getPValue() < BATCH_CONFOUND_THRESHOLD ) {
                         significantSubsetConfounds
                                 .computeIfAbsent( subset, k -> new ArrayList<>() )
                                 .add( c );
@@ -174,7 +277,7 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         result.append( "One or more factors were confounded with batches in the full design; batch correction was not performed. "
                 + "Analyses may not be affected if performed on non-confounded subsets. Factor(s) confounded were: " );
         result.append( confounds.stream()
-                .map( c -> escapeHtml4( c.getEf().getName() ) )
+                .map( c -> escapeHtml4( c.getFactor().getName() ) )
                 .collect( Collectors.joining( ", " ) ) );
 
         Map<ExpressionExperimentSubSet, List<BatchConfound>> subsetConfoundss = getSignificantBatchConfoundsForSubsets( ee );
@@ -182,9 +285,9 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
             ExpressionExperimentSubSet subset = subsetConfounds.getKey();
             for ( BatchConfound c : subsetConfounds.getValue() ) {
                 result.append( "<br/><br/>Confound still exists for " )
-                        .append( escapeHtml4( c.getEf().getName() ) )
-                        .append( " in " )
-                        .append( escapeHtml4( subset.toString() ) );
+                        .append( escapeHtml4( c.getFactor().getName() ) )
+                        .append( " in subset " )
+                        .append( escapeHtml4( ExpressionExperimentSubSetUtils.getUnprefixedName( subset ) ) );
             }
         }
 
@@ -234,8 +337,9 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
         // This won't always be present.
         double minP = 1.0;
         if ( svd.getDatePVals() != null ) {
-            for ( Integer component : svd.getDatePVals().keySet() ) {
-                Double pVal = svd.getDatePVals().get( component );
+            for ( Map.Entry<Integer, Double> dpvEntry : svd.getDatePVals().entrySet() ) {
+                Integer component = dpvEntry.getKey();
+                Double pVal = dpvEntry.getValue();
                 if ( pVal != null && pVal < minP ) {
                     details.setBatchEffectStatistics( pVal, component + 1, svd.getVariances()[component] );
                     minP = pVal;
@@ -245,8 +349,9 @@ public class ExpressionExperimentBatchInformationServiceImpl implements Expressi
 
         // we can override the date-based p-value with the factor-based p-value if it is lower.
         // The reason to do this is it can be underpowered. The date-based one is more sensitive.
-        for ( Integer component : svd.getFactorPVals().keySet() ) {
-            Map<ExperimentalFactor, Double> cmpEffects = svd.getFactorPVals().get( component );
+        for ( Map.Entry<Integer, Map<ExperimentalFactor, Double>> fpvEntry : svd.getFactorPVals().entrySet() ) {
+            Integer component = fpvEntry.getKey();
+            Map<ExperimentalFactor, Double> cmpEffects = fpvEntry.getValue();
 
             // could use the effect size instead of the p-values (or in addition)
             //Map<Long, Double> cmpEffectSizes = svd.getFactorCorrelations().get( component );

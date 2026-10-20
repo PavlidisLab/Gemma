@@ -1,13 +1,13 @@
 package ubic.gemma.persistence.hibernate;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.springframework.util.Assert;
 import ubic.gemma.persistence.util.ByteArrayUtils;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -29,10 +29,11 @@ import java.util.Properties;
  *     <li>{@link String}, either zero-terminated or tab-delimited</li>
  * </ul>
  * Other types supported by {@link ByteArrayUtils} can be added if necessary.
+ *
  * @author poirigui
  * @see ByteArrayUtils
  */
-public class ByteArrayType implements UserType, ParameterizedType {
+public class ByteArrayType implements UserType<Object>, ParameterizedType {
 
     private enum ByteArrayTypes {
         BOOLEAN( boolean[].class ),
@@ -66,13 +67,14 @@ public class ByteArrayType implements UserType, ParameterizedType {
     private Charset charset;
 
     @Override
-    public int[] sqlTypes() {
-        return new int[] { Types.BLOB };
+    public int getSqlType() {
+        return Types.BLOB;
     }
 
     @Override
-    public Class<?> returnedClass() {
-        return arrayType.arrayClass;
+    public Class<Object> returnedClass() {
+        //noinspection unchecked
+        return ( Class<Object> ) arrayType.arrayClass;
     }
 
     @Override
@@ -122,10 +124,10 @@ public class ByteArrayType implements UserType, ParameterizedType {
     }
 
     @Override
-    public Object nullSafeGet( ResultSet rs, String[] names, SessionImplementor session, Object owner ) throws HibernateException, SQLException {
-        Blob blob = rs.getBlob( names[0] );
-        byte[] data = blob.getBytes( 1, ( int ) blob.length() );
-        if ( data != null ) {
+    public Object nullSafeGet( ResultSet rs, int position, SharedSessionContractImplementor session, Object owner ) throws HibernateException, SQLException {
+        Blob blob = rs.getBlob( position );
+        if ( blob != null ) {
+            byte[] data = blob.getBytes( 1, ( int ) blob.length() );
             switch ( arrayType ) {
                 case BOOLEAN:
                     return ByteArrayUtils.byteArrayToBooleans( data );
@@ -152,7 +154,7 @@ public class ByteArrayType implements UserType, ParameterizedType {
     }
 
     @Override
-    public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SessionImplementor session ) throws HibernateException, SQLException {
+    public void nullSafeSet( PreparedStatement st, @Nullable Object value, int index, SharedSessionContractImplementor session ) throws HibernateException, SQLException {
         if ( value != null ) {
             byte[] blob;
             switch ( arrayType ) {

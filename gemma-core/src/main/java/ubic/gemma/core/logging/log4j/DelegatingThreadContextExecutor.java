@@ -2,7 +2,7 @@ package ubic.gemma.core.logging.log4j;
 
 import ubic.gemma.core.util.concurrent.DelegatingExecutor;
 
-import javax.annotation.Nonnull;
+import org.springframework.lang.NonNull;
 import java.util.concurrent.Executor;
 
 /**
@@ -22,7 +22,7 @@ public class DelegatingThreadContextExecutor implements DelegatingExecutor {
     }
 
     @Override
-    public void execute( @Nonnull Runnable command ) {
+    public void execute( @NonNull Runnable command ) {
         delegate.execute( DelegatingThreadContextRunnable.create( command ) );
     }
 }

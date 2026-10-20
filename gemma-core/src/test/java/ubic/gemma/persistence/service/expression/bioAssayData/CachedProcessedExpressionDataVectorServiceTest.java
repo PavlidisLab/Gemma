@@ -1,7 +1,7 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +11,7 @@ import org.springframework.security.test.context.support.WithSecurityContextTest
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDaoImpl;
@@ -33,6 +34,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,8 +42,9 @@ import static org.mockito.Mockito.mock;
 import static ubic.gemma.persistence.service.expression.bioAssayData.RandomBulkDataUtils.randomBulkVectors;
 
 @ContextConfiguration
-@TestExecutionListeners({ WithSecurityContextTestExecutionListener.class })
-public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabaseTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -58,6 +61,18 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
+        }
+
+        // EE DAO now field-injects ArrayDesignDao for batched platform loads (round-2 probe #8).
+        @Bean
+        public ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDao arrayDesignDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl( sessionFactory );
+        }
+
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao.
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDaoImpl( sessionFactory );
         }
 
         @Bean
@@ -88,6 +103,11 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
         @Bean
         public QuantitationTypeDao quantitationTypeDao( SessionFactory sessionFactory ) {
             return new QuantitationTypeDaoImpl( sessionFactory );
+        }
+
+        @Bean
+        public ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao bioMaterialDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl( sessionFactory );
         }
     }
 
@@ -172,6 +192,61 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
                 .hasSize( 10 );
     }
 
+    /**
+     * Regression for a cache-key granularity bug: two probes mapped to the same gene must each answer with
+     * their OWN vector, not whichever one happened to be cached first under that gene's key.
+     * <p>
+     * Before the fix, caching cs0's vector by probe wrote it under the shared (ee, gene) key that
+     * {@link #testGetVectors}'s by-gene lookups also use; a later probe-scoped request for the different
+     * probe cs1 saw that key present and returned cs0's vector for it instead of fetching cs1's own. Found
+     * on real GEO data by RA (2026-09-30): {@code /datasets/{id}/heatmap-data?probes=209072_at} answered
+     * with {@code 207323_s_at} -- both probes of MBP.
+     */
+    @Test
+    @WithMockUser
+    public void testGetVectorsByProbeDoesNotLeakAnotherProbesCachedDataForTheSameGene() {
+        ExpressionExperiment ee = createExperiment();
+        ArrayDesign ad = ee.getBioAssays().iterator().next().getArrayDesignUsed();
+        CompositeSequence cs0 = ad.getCompositeSequences().stream()
+                .filter( cs -> "cs0".equals( cs.getName() ) ).findFirst().orElseThrow( AssertionError::new );
+        CompositeSequence cs1 = ad.getCompositeSequences().stream()
+                .filter( cs -> "cs1".equals( cs.getName() ) ).findFirst().orElseThrow( AssertionError::new );
+
+        Gene gene = new Gene();
+        sessionFactory.getCurrentSession().persist( gene );
+        createProbeLink( gene, cs0 );
+        createProbeLink( gene, cs1 );
+
+        // cs0 alone: this is what populates the shared (ee, gene) cache entry.
+        Collection<DoubleVectorValueObject> first = cachedProcessedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ee, Collections.singletonList( cs0 ) );
+        assertThat( first ).hasSize( 1 );
+        assertThat( first.iterator().next().getDesignElement().getId() ).isEqualTo( cs0.getId() );
+
+        // cs1 alone, a DIFFERENT probe of the same gene: must fetch and return cs1's own vector, not the
+        // cs0 vector the previous call left in the gene-keyed cache.
+        Collection<DoubleVectorValueObject> second = cachedProcessedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ee, Collections.singletonList( cs1 ) );
+        assertThat( second ).hasSize( 1 );
+        assertThat( second.iterator().next().getDesignElement().getId() ).isEqualTo( cs1.getId() );
+
+        // both together: exactly the two requested probes, nothing substituted or dropped.
+        Collection<DoubleVectorValueObject> both = cachedProcessedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ee, Arrays.asList( cs0, cs1 ) );
+        assertThat( both ).extracting( v -> v.getDesignElement().getId() )
+                .containsExactlyInAnyOrder( cs0.getId(), cs1.getId() );
+    }
+
+    private void createProbeLink( Gene gene, CompositeSequence cs ) {
+        // manually insert an entry in the GENE2CS table (denormalized, maintained by TableMaintenanceUtil in
+        // production; not worth the full annotation pipeline just to populate it here).
+        sessionFactory.getCurrentSession().createNativeQuery( "insert into GENE2CS (GENE, CS, AD) values (?, ?, ?)" )
+                .setParameter( 1, gene.getId() )
+                .setParameter( 2, cs.getId() )
+                .setParameter( 3, cs.getArrayDesign().getId() )
+                .executeUpdate();
+    }
+
     private ExpressionExperiment createExperiment() {
         Taxon taxon = new Taxon();
         sessionFactory.getCurrentSession().persist( taxon );
@@ -192,6 +267,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
 
         // create vectors for the subsets
         QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -243,6 +319,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
 
         // create vectors for the subsets
         QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );
@@ -302,6 +379,7 @@ public class CachedProcessedExpressionDataVectorServiceTest extends BaseDatabase
 
         // create vectors for the subsets
         QuantitationType qt = QuantitationType.Factory.newInstance();
+        qt.setName( "log2cpm" );
         qt.setGeneralType( GeneralType.QUANTITATIVE );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setScale( ScaleType.LOG2 );

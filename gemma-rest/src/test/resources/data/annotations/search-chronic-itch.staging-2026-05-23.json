@@ -1,0 +1,3509 @@
+{
+  "_meta": {
+    "source_url": "https://staging-gemma.msl.ubc.ca/rest/v2/annotations/search?query=chronic+itch&limit=10",
+    "captured_at": "2026-05-23T10:11Z",
+    "captured_by": "search-ranking recce, pre-fixture",
+    "endpoint": "GET /rest/v2/annotations/search",
+    "query": "chronic itch",
+    "note": "limit=10 was ignored by the server; 435 hits returned. The order reflects the current LuceneOrderRankingStrategy posture: relevance only, no usage-count-aware sort, no token-coverage bonus. Pruritus / itch synonyms are buried; 'chronic *' terms dominate. This fixture is the regression baseline for ranker work."
+  },
+  "summary": {
+    "total_hits": 435,
+    "usage_count_distribution": {
+      "min": 0,
+      "max": 44,
+      "zero": 386,
+      "non_zero": 49
+    },
+    "ontology_namespaces": [
+      "EFO",
+      "HP",
+      "MONDO",
+      "MP",
+      "OBI",
+      "PATO"
+    ]
+  },
+  "hits": [
+    {
+      "lucene_rank": 0,
+      "value": "liver fibrosis (chronic viral hepatitis) venous blood platelet count assay",
+      "valueUri": "http://purl.obolibrary.org/obo/OBI_2100360",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 1,
+      "value": "chronic allograft damage index score",
+      "valueUri": "http://purl.obolibrary.org/obo/OBI_0003591",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 2,
+      "value": "chronic constipation",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0003268",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 3,
+      "value": "decreased pruritus",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0010073",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 4,
+      "value": "chronic inflammation",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0002499",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 3
+    },
+    {
+      "lucene_rank": 5,
+      "value": "increased pruritus",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0010072",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 6,
+      "value": "abnormal pruritus",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0010071",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 7,
+      "value": "chronic liver inflammation",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0031301",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 8,
+      "value": "chronic pancreas inflammation",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0003341",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 9,
+      "value": "chronic joint inflammation",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0002935",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 10,
+      "value": "increased chronic myelocytic leukemia incidence",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0005481",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 11,
+      "value": "chronic diarrhea",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0001665",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 12,
+      "value": "increased chronic lymphocytic leukemia incidence",
+      "valueUri": "http://purl.obolibrary.org/obo/MP_0010337",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 13,
+      "value": "chronic rhinosinusitis without nasal polyps",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_1002030",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 14,
+      "value": "chronic post-operative pain measurement",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0010640",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 15,
+      "value": "chronic myelogenous leukemia cell line",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0005294",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 2
+    },
+    {
+      "lucene_rank": 16,
+      "value": "chronic mountain sickness",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0010143",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 17,
+      "value": "multisite chronic pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0010100",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 18,
+      "value": "chronic lung disease",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0009910",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 19,
+      "value": "chronic human papillomavirus infection",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0010060",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 20,
+      "value": "chronic eosinophilic leukemia, not otherwise specified",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_1000178",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 21,
+      "value": "chronic disease",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0009714",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 22,
+      "value": "colonic pseudo-obstruction",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_1000871",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 23,
+      "value": "chronic obstructive asthma",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0009759",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 24,
+      "value": "acute-on-chronic liver failure",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0007949",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 25,
+      "value": "chronic neck pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022862",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 26,
+      "value": "chronic back pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022861",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 27,
+      "value": "female chronic pelvic pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022960",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 28,
+      "value": "chronic shoulder pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022864",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 29,
+      "value": "chronic acquired demyelinating polyneuropathy",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0700050",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 30,
+      "value": "congenital chronic kidney disease",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0021433",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 31,
+      "value": "chronic hip pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022863",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 32,
+      "value": "chronic bone pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022865",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 33,
+      "value": "plantar fasciitis",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_1001909",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 34,
+      "value": "chronic central serous retinopathy",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0009363",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 35,
+      "value": "myeloproliferative disorder",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0004251",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 36,
+      "value": "chronic ulcer of skin",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0007066",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 37,
+      "value": "chronic hepatitis",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0008496",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 38,
+      "value": "chronic lung allograft dysfunction",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0008497",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 39,
+      "value": "mosquito bite reaction itch intensity measurement",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0008377",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 40,
+      "value": "chronic widespread pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0010099",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 41,
+      "value": "chronic venous hypertension",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0010675",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 42,
+      "value": "chronic hepatic porphyria",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0700114",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 43,
+      "value": "abnormal vaginal discharge itching",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0009409",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 44,
+      "value": "susceptibility to chronic sinus infection measurement",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0008419",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 45,
+      "value": "chronic rhinosinusitis with nasal polyps",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_1002029",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 46,
+      "value": "stage 5 chronic kidney disease",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0009909",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 47,
+      "value": "chronic interstitial cystitis",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_1000869",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 48,
+      "value": "chronic thromboembolic pulmonary hypertension",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022954",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 49,
+      "value": "chronic mucus hypersecretion",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0005673",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 50,
+      "value": "pulmonary arterial hypertension associated with chronic hemolytic anemia",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0009195",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 51,
+      "value": "chronic musculoskeletal pain",
+      "valueUri": "http://www.ebi.ac.uk/efo/EFO_0022195",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 52,
+      "value": "increased duration",
+      "valueUri": "http://purl.obolibrary.org/obo/PATO_0000498",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 53,
+      "value": "chronic-active",
+      "valueUri": "http://purl.obolibrary.org/obo/PATO_0002414",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 54,
+      "value": "chronic",
+      "valueUri": "http://purl.obolibrary.org/obo/PATO_0001863",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 22
+    },
+    {
+      "lucene_rank": 55,
+      "value": "chronic decreased circulating igg1",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041068",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 56,
+      "value": "chronic (near) absent circulating igg2",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041065",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 57,
+      "value": "chronic partially decreased circulating igg2",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041066",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 58,
+      "value": "chronic decreased circulating igg2",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041063",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 59,
+      "value": "chronic partially decreased circulating igg4",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041060",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 60,
+      "value": "chronic respiratory acidosis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012466",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 61,
+      "value": "chronic kidney disease",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012622",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 62,
+      "value": "chronic acidosis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012468",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 63,
+      "value": "chronic",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0011010",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 64,
+      "value": "ocular pruritus",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0033841",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 65,
+      "value": "chronic furunculosis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0011132",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 66,
+      "value": "chronic colitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0100281",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 67,
+      "value": "chronic hemolytic anemia",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0004870",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 68,
+      "value": "chronic disseminated intravascular coagulation",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005520",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 69,
+      "value": "chronic cutaneous wound",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0032676",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 70,
+      "value": "chronic hepatitis due to cryptosporidium infection",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0200124",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 71,
+      "value": "stage 1 chronic kidney disease",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012623",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 72,
+      "value": "chronic hepatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0200123",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 73,
+      "value": "stage 2 chronic kidney disease",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012624",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 74,
+      "value": "stage 3 chronic kidney disease",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012625",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 75,
+      "value": "stage 4 chronic kidney disease",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012626",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 76,
+      "value": "chronic active hepatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0200120",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 77,
+      "value": "hashimoto thyroiditis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0000872",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 78,
+      "value": "chronic rhinitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0002257",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 79,
+      "value": "chronic noninfectious lymphadenopathy",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0002730",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 80,
+      "value": "atopic dermatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0001047",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 81,
+      "value": "permanent atrial fibrillation",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0004754",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 82,
+      "value": "chronic monilial nail infection",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0008396",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 83,
+      "value": "chronic (near) absent circulating igg1",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041069",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 84,
+      "value": "chronic axonal neuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0007267",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 85,
+      "value": "persistent human papillomavirus infection",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0020114",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 86,
+      "value": "chronic (near) absent circulating igg3",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041074",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 87,
+      "value": "chronic partially decreased circulating igg3",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041075",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 88,
+      "value": "chronic lactic acidosis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0004925",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 89,
+      "value": "chronic decreased circulating igg3",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041072",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 90,
+      "value": "chronic partially decreased circulating igg1",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041070",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 91,
+      "value": "t cell chronic lymphocytic lymphoma/leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005539",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 92,
+      "value": "chronic pain",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012532",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 4
+    },
+    {
+      "lucene_rank": 93,
+      "value": "chronic irritative conjunctivitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0007717",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 94,
+      "value": "chronic constipation",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012450",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 95,
+      "value": "chronic decreased circulating igd",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0033016",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 96,
+      "value": "chronic infection",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0031035",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 97,
+      "value": "chronic absent circulating igd",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0033018",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 98,
+      "value": "chronic active epstein-barr virus infection",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0032204",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 99,
+      "value": "persistently decreased total neutrophil count",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0410252",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 100,
+      "value": "atrophic gastritis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0002582",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 101,
+      "value": "chronic intestinal candidiasis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005411",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 102,
+      "value": "chronic diarrhea",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0002028",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 103,
+      "value": "chronic oral candidiasis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0009098",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 104,
+      "value": "chronic hepatic encephalopathy",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0007111",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 105,
+      "value": "recurrent lower respiratory tract infections",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0002783",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 106,
+      "value": "chronic urticaria",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0410133",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 107,
+      "value": "chronic pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0006280",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 108,
+      "value": "chronic myelogenous leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005506",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 109,
+      "value": "chronic absent circulating ige",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0033023",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 110,
+      "value": "chronic myelomonocytic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012325",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 111,
+      "value": "chronic decreased circulating ige concentration",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0033022",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 112,
+      "value": "chronic absent circulating total igg",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0033025",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 113,
+      "value": "chronic decreased circulating total igg",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0032134",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 114,
+      "value": "chronic pulmonary obstruction",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0006510",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 115,
+      "value": "chronic tinea infection",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0032259",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 116,
+      "value": "chronic cough",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0034315",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 117,
+      "value": "recurrent sinopulmonary infections",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005425",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 118,
+      "value": "chronic csf lymphocytosis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0009704",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 119,
+      "value": "chronic lymphocytic meningitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0007041",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 120,
+      "value": "chronic hepatic failure",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0100626",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 121,
+      "value": "chronic sensorineural polyneuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0001301",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 122,
+      "value": "emg: chronic denervation signs",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0003444",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 123,
+      "value": "chronic rhinitis due to narrow nasal airway",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0004499",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 124,
+      "value": "pruritus",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0000989",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 2
+    },
+    {
+      "lucene_rank": 125,
+      "value": "chronic mucocutaneous candidiasis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0002728",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 126,
+      "value": "congestive heart failure",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0001635",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 127,
+      "value": "chronic fatigue",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0012432",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 128,
+      "value": "chronic villitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0033552",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 129,
+      "value": "chronic sinusitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0011109",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 130,
+      "value": "chronic calcifying pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005236",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 131,
+      "value": "chronic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005558",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 132,
+      "value": "chronic lung disease",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0006528",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 133,
+      "value": "chronic metabolic acidosis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0001996",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 134,
+      "value": "chronic bronchitis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0004469",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 135,
+      "value": "external ophthalmoplegia",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0000544",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 136,
+      "value": "chronic otitis media",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0000389",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 137,
+      "value": "chronic tubulointerstitial nephritis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0004743",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 138,
+      "value": "stage 5 chronic kidney disease",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0003774",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 139,
+      "value": "chronic lymphatic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005550",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 140,
+      "value": "chronic gastritis",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0005231",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 141,
+      "value": "chronic decreased circulating igg4",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041058",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 142,
+      "value": "chronic (near) absent circulating igg4",
+      "valueUri": "http://purl.obolibrary.org/obo/HP_0041059",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 143,
+      "value": "adult-onset chronic progressive external ophthalmoplegia with mitochondrial myopathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018002",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 144,
+      "value": "chronic atticoantral disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001921",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 145,
+      "value": "chronic bronchitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005607",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 146,
+      "value": "chronic neutrophilic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019451",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 147,
+      "value": "chronic urticaria",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0850230",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 148,
+      "value": "myeloproliferative neoplasm, unclassifiable",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019452",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 149,
+      "value": "chronic subinvolution of uterus",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001808",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 150,
+      "value": "autoimmune enteropathy and endocrinopathy - susceptibility to chronic infections syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013599",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 151,
+      "value": "cold agglutinin disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018922",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 152,
+      "value": "leukemia, chronic lymphocytic, susceptibility to, 3",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0012934",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 153,
+      "value": "leukemia, chronic lymphocytic, susceptibility to, 4",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0012935",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 154,
+      "value": "chronic mucocutaneous candidiasis due to inhibition of lymphoblastic transformation",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009534",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 155,
+      "value": "chronic myelogenous leukemia, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1011819",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 156,
+      "value": "autoimmune polyendocrine syndrome type 1",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009411",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 157,
+      "value": "chronic apical periodontitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001251",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 158,
+      "value": "chronic pulmonary heart disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001493",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 159,
+      "value": "leukemia, chronic lymphocytic, susceptibility to, 5",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0012936",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 160,
+      "value": "chronic erosive gastritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0022196",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 161,
+      "value": "chronic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001014",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 162,
+      "value": "scabies",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004525",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 163,
+      "value": "chronic inflammatory demyelinating polyradiculoneuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0006702",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 164,
+      "value": "polyhydramnios, chronic idiopathic",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009899",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 165,
+      "value": "chronic mucocutaneous candidiasis due to intrinsic defect in lymphoblastic transformation",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009536",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 166,
+      "value": "chronic valvular disease, dog",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1012340",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 167,
+      "value": "t-cell prolymphocytic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019468",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 168,
+      "value": "chronic mountain sickness",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0100434",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 169,
+      "value": "syndromic multisystem autoimmune disease due to itch deficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013245",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 170,
+      "value": "chronic myelomonocytic leukemia, dog",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1010960",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 171,
+      "value": "mucocutaneous ulceration, chronic",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0032659",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 172,
+      "value": "progressive external ophthalmoplegia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005181",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 173,
+      "value": "diffuse large b-cell lymphoma with chronic inflammation",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0017601",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 174,
+      "value": "canomad syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019109",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 175,
+      "value": "arachnoiditis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015304",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 176,
+      "value": "chronic rhinosinusitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0006031",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 177,
+      "value": "chronic cystitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0006030",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 178,
+      "value": "chronic mucocutaneous candidiasis due to lymphokine deficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009540",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 179,
+      "value": "cercarial dermatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001260",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 180,
+      "value": "chronic childhood arthritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005185",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 181,
+      "value": "seminal vesicle chronic gonorrhea",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001025",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 182,
+      "value": "granulomatous disease, chronic, autosomal recessive, cytochrome b-positive, type 1",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009309",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 183,
+      "value": "granulomatous disease, chronic, autosomal recessive, cytochrome b-negative",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009308",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 184,
+      "value": "atypical chronic myeloid leukemia, bcr-abl1 negative",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004653",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 185,
+      "value": "hailey-hailey disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0008218",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 186,
+      "value": "pityriasis lichenoides",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0024249",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 187,
+      "value": "oligoarticular juvenile idiopathic arthritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019433",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 188,
+      "value": "chronic diarrheal disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0044751",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 189,
+      "value": "non-recovering obstetric brachial plexus lesion",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018587",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 190,
+      "value": "chronic gingivitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0020782",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 191,
+      "value": "asthma",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004979",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 41
+    },
+    {
+      "lucene_rank": 192,
+      "value": "pitt-hopkins-like syndrome 2",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013690",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 193,
+      "value": "immunodeficiency 32b",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009194",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 194,
+      "value": "chronic wasting disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002680",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 195,
+      "value": "chronic inducible urticaria",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0956969",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 196,
+      "value": "adenoiditis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0000261",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 197,
+      "value": "adhesive otitis media",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001234",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 198,
+      "value": "chronic salpingo-oophoritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001474",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 199,
+      "value": "chronic pyelonephritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001110",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 200,
+      "value": "chronic intestinal vascular insufficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004622",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 201,
+      "value": "hashimoto thyroiditis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0007699",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 2
+    },
+    {
+      "lucene_rank": 202,
+      "value": "cluster headache syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0043537",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 203,
+      "value": "chronic myelomonocytic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0020311",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 204,
+      "value": "chronic perichondritis of pinna",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001917",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 205,
+      "value": "oligoarticular juvenile idiopathic arthritis with anti-nuclear antibodies",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016615",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 206,
+      "value": "chronic transplant rejection",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1010188",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 207,
+      "value": "oligoarticular juvenile idiopathic arthritis without anti-nuclear antibodies",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016616",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 208,
+      "value": "chronic rhinosinusitis, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013450",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 209,
+      "value": "chronic mucocutaneous candidiasis due to monocyte chemotactic disorder",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009645",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 210,
+      "value": "bronchitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0003781",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 211,
+      "value": "silicosis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005960",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 212,
+      "value": "chronic frontal sinusitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001120",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 213,
+      "value": "chronic progressive multiple sclerosis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005284",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 214,
+      "value": "chronic rhinitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004514",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 215,
+      "value": "chronic sphenoidal sinusitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001123",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 216,
+      "value": "chronic maxillary sinusitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001122",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 217,
+      "value": "chronic rhinitis, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013208",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 218,
+      "value": "chronic ethmoidal sinusitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004757",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 219,
+      "value": "chronic graft versus host disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0020547",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 220,
+      "value": "chronic meningitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001007",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 221,
+      "value": "chronic purulent otitis media",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001920",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 222,
+      "value": "chronic laryngitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001369",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 223,
+      "value": "gastric ulcer",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001126",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 224,
+      "value": "chronic congestive splenomegaly",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001367",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 225,
+      "value": "chronic idiopathic urticaria",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0044212",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 226,
+      "value": "chronic closed-angle glaucoma",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001966",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 227,
+      "value": "chronic idiopathic neuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0100640",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 228,
+      "value": "maternally-inherited progressive external ophthalmoplegia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019016",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 229,
+      "value": "chronic cutaneous lupus erythematosus",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015574",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 230,
+      "value": "chronic orbital inflammation",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001849",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 231,
+      "value": "primary myelofibrosis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009692",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 4
+    },
+    {
+      "lucene_rank": 232,
+      "value": "neuronopathy, distal hereditary motor, autosomal recessive 3",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011771",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 233,
+      "value": "chronic eosinophilic leukemia, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013360",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 234,
+      "value": "cinca syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011776",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 235,
+      "value": "chronic fungal otitis externa",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001052",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 236,
+      "value": "chronic gonorrhea of cervix",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002029",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 237,
+      "value": "chronic non-suppurative otitis media",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0021206",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 238,
+      "value": "chronic otitis media",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0021204",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 239,
+      "value": "chronic relapsing inflammatory optic neuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0044687",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 240,
+      "value": "congenital diarrhea 7 with exudative enteropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0014375",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 241,
+      "value": "chronic liver failure",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0100193",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 242,
+      "value": "chronic cervicitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002030",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 243,
+      "value": "chronic kidney disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005300",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 6
+    },
+    {
+      "lucene_rank": 244,
+      "value": "juvenile chronic polyarthritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0024281",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 245,
+      "value": "chronic rapidly progressive glomerulonephritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001184",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 246,
+      "value": "proteinuria, chronic benign",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0030042",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 247,
+      "value": "jessner lymphocytic infiltration of the skin",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018051",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 248,
+      "value": "cholecystitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002155",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 249,
+      "value": "chronic actinic dermatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018025",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 250,
+      "value": "chronic polyradiculoneuritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0022768",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 251,
+      "value": "chronic lymphocytic inflammation with pontine perivascular enhancement responsive to steroids",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0017297",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 252,
+      "value": "chronic neurovisceral acid sphingomyelinase deficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0850058",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 253,
+      "value": "chronic active hepatitis, dog",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1012290",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 254,
+      "value": "chronic interstitial nephropathy, ducks",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1012050",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 255,
+      "value": "chronic kidney disease, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013261",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 256,
+      "value": "copd, severe early onset",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011751",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 257,
+      "value": "chronic myeloid leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011996",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 20
+    },
+    {
+      "lucene_rank": 258,
+      "value": "chronic diarrhea with villous atrophy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0010786",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 259,
+      "value": "tropical pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011986",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 260,
+      "value": "crouzon syndrome-acanthosis nigricans syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0012833",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 261,
+      "value": "granulomatous disease, chronic, autosomal recessive, cytochrome b-positive, type 2",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009310",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 262,
+      "value": "chronic erythremia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001394",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 263,
+      "value": "spinal muscular atrophy, type ii",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009673",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 264,
+      "value": "predisposition to invasive fungal disease due to card9 deficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0008905",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 265,
+      "value": "chronic endometritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0024279",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 266,
+      "value": "gastrojejunal ulcer",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001155",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 267,
+      "value": "tonsillitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001039",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 268,
+      "value": "norwegian scabies",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001951",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 269,
+      "value": "chronic polyneuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0003335",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 270,
+      "value": "chronic cholangitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004786",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 271,
+      "value": "relapsing polychondritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019125",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 272,
+      "value": "anemia due to chronic disorder, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013011",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 273,
+      "value": "chronic asthma",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0850282",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 274,
+      "value": "candidiasis, familial, 8",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0014230",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 275,
+      "value": "candidiasis, familial, 4",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013140",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 276,
+      "value": "intestinal pseudo-obstruction",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002803",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 277,
+      "value": "chronic eosinophilic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015687",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 278,
+      "value": "nephropathy, chronic tubulointerstitial",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0010793",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 279,
+      "value": "chronic thromboembolic pulmonary hypertension",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013024",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 280,
+      "value": "hepatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002251",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 6
+    },
+    {
+      "lucene_rank": 281,
+      "value": "pharyngitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002258",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 282,
+      "value": "myalgic encephalomeyelitis/chronic fatigue syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005404",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 6
+    },
+    {
+      "lucene_rank": 283,
+      "value": "chronic mucocutaneous candidiasis and connective tissue disease due to jnk1 haploinsufficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0800142",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 284,
+      "value": "chronic rheumatic pericarditis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002133",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 285,
+      "value": "chronic tubotympanic suppurative otitis media",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001964",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 286,
+      "value": "chronic demyelinizing neuropathy with igm monoclonal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0022765",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 287,
+      "value": "pulmonary disease, chronic obstructive, susceptibility to",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0100167",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 288,
+      "value": "polyneuropathy, inflammatory demyelinating, chronic",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0100169",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 289,
+      "value": "diamond-blackfan anemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015253",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 290,
+      "value": "chronic monocytic leukemia, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1010213",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 291,
+      "value": "adrenocortical hypofunction, chronic primary congenital",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0007071",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 292,
+      "value": "leukemia, chronic lymphocytic, susceptibility to, 2",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0007190",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 293,
+      "value": "chronic enteropathy associated with slco2a1 gene",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018766",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 294,
+      "value": "chronic cystitis, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013040",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 295,
+      "value": "dementia pugilistica",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019976",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 296,
+      "value": "lactic acidosis, chronic adult form",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0007873",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 297,
+      "value": "granulomatous disease, chronic, autosomal recessive, cytochrome b-positive, type 3",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013507",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 298,
+      "value": "mungan syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0012657",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 299,
+      "value": "chronic dacryoadenitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004800",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 300,
+      "value": "chronic inflammation of lacrimal passage",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004923",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 301,
+      "value": "chronic active hepatitis, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1011778",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 302,
+      "value": "chronic recurrent multifocal osteomyelitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009813",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 303,
+      "value": "chronic atrophic gastritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0006665",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 304,
+      "value": "chronic duodenal ileus",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001775",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 305,
+      "value": "gingivitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002508",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 306,
+      "value": "heavy metal poisoning",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0023305",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 307,
+      "value": "headache disorder",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0021146",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 308,
+      "value": "chronic pneumonitis of infancy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019621",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 309,
+      "value": "chronic dacryocystitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004925",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 310,
+      "value": "negative rheumatoid factor polyarthritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0043152",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 311,
+      "value": "chronic canaliculitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004924",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 312,
+      "value": "chronic eosinophilic pneumonia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004806",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 313,
+      "value": "gm1 gangliosidosis type 3",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009262",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 314,
+      "value": "chronic endophthalmitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0017203",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 315,
+      "value": "dubin-johnson syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009380",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 316,
+      "value": "hepatitis b virus infection",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005344",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 11
+    },
+    {
+      "lucene_rank": 317,
+      "value": "end stage renal failure",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004375",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 318,
+      "value": "gaucher disease type iii",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009267",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 2
+    },
+    {
+      "lucene_rank": 319,
+      "value": "chronic toxic polyneuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004372",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 320,
+      "value": "idiopathic chronic pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0979357",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 321,
+      "value": "autosomal recessive hereditary chronic pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0979356",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 322,
+      "value": "simple chronic conjunctivitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004811",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 323,
+      "value": "anemia due to chronic disorder",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0020725",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 324,
+      "value": "familial chronic myelocytic leukemia-like syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0010809",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 325,
+      "value": "chronic valvular disease, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1011647",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 326,
+      "value": "nutmeg liver",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001788",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 327,
+      "value": "chronic prostatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0022103",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 328,
+      "value": "infection by trypanosoma gambiense",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0021932",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 329,
+      "value": "respiratory failure",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0021113",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 330,
+      "value": "cutaneous larva migrans",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018500",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 331,
+      "value": "neuroendocrine cell hyperplasia of infancy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016322",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 332,
+      "value": "chronic intestinal failure",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0017418",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 333,
+      "value": "chronic gastritis, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013060",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 334,
+      "value": "young syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0010220",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 335,
+      "value": "chronic respiratory distress with surfactant metabolism deficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016323",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 336,
+      "value": "aicardi-goutieres syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018866",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 4
+    },
+    {
+      "lucene_rank": 337,
+      "value": "cellular phase chronic idiopathic myelofibrosis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004463",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 338,
+      "value": "juvenile idiopathic arthritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011429",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 15
+    },
+    {
+      "lucene_rank": 339,
+      "value": "chronic tic disorder",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001074",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 340,
+      "value": "chronic intervillositis of unknown etiology",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0035882",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 341,
+      "value": "chronic myelogenous leukemia, dog",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1012405",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 342,
+      "value": "chronic myelogenous leukemia, pig",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1012406",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 343,
+      "value": "chronic metabolic polyneuropathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004224",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 344,
+      "value": "alcohol abuse",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002046",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 44
+    },
+    {
+      "lucene_rank": 345,
+      "value": "leukemia, myeloid, accelerated-phase",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0021367",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 346,
+      "value": "chronic pancreatitis, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013178",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 347,
+      "value": "primary ciliary dyskinesia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016575",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 348,
+      "value": "chronic recurrent multifocal osteomyelitis 3",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0958177",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 349,
+      "value": "intestinal pseudoobstruction, neuronal, chronic idiopathic, x-linked",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0010232",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 350,
+      "value": "chronic myelomonocytic leukemia, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1010222",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 351,
+      "value": "candidiasis, familial, 6",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013503",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 352,
+      "value": "chronic primary adrenal insufficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015129",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 353,
+      "value": "immunodeficiency 51",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0013500",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 354,
+      "value": "lymphadenitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002052",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 2
+    },
+    {
+      "lucene_rank": 355,
+      "value": "granulomatous disease, chronic, autosomal recessive, 5",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0030066",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 356,
+      "value": "visceral neuropathy, familial, 1, autosomal recessive",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_8000011",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 357,
+      "value": "normal pressure hydrocephalus",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009366",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 358,
+      "value": "chronic eustachian salpingitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002170",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 359,
+      "value": "flynn-aird syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0007624",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 360,
+      "value": "chronic lymphoproliferative disorder of nk-cells",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004234",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 361,
+      "value": "pregerminal center chronic lymphocytic leukemia/small lymphocytic lymphoma",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004478",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 362,
+      "value": "autoimmune hepatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016264",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 363,
+      "value": "cryptosporidiosis-chronic cholangitis-liver disease syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0014082",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 364,
+      "value": "candidiasis, familial, 9",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0014642",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 365,
+      "value": "mitochondrial myopathy-lactic acidosis-deafness syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016825",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 366,
+      "value": "chronic mountain sickness, susceptibility to",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0014519",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 367,
+      "value": "nonimmune chronic idiopathic neutropenia of adults",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011922",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 368,
+      "value": "neutropenia, chronic familial",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0008089",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 369,
+      "value": "periodontitis, chronic, adult",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009850",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 370,
+      "value": "chronic bilirubin encephalopathy",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0035345",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 371,
+      "value": "hand-schuller-christian disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0020519",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 372,
+      "value": "chronic gonococcal salpingitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001575",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 373,
+      "value": "eosinophilic granuloma",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0020517",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 374,
+      "value": "serous glue ear",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001213",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 375,
+      "value": "chronic ulcer of skin, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013077",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 376,
+      "value": "chronic pain syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0024317",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 15
+    },
+    {
+      "lucene_rank": 377,
+      "value": "chronic hiccup",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018334",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 378,
+      "value": "chronic endometritis, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013510",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 379,
+      "value": "chronic ulcer of skin",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004605",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 380,
+      "value": "idiopathic chronic eosinophilic pneumonia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0017363",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 381,
+      "value": "cystic fibrosis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009061",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 9
+    },
+    {
+      "lucene_rank": 382,
+      "value": "prp systemic amyloidosis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018339",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 383,
+      "value": "granulomatous disease, chronic, x-linked",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0010600",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 384,
+      "value": "chronic atrial and intestinal dysrhythmia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0014528",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 385,
+      "value": "primary biliary cholangitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005388",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 386,
+      "value": "chronic venous insufficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0000492",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 387,
+      "value": "chronic conjunctivitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002314",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 388,
+      "value": "chronic monocytic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004614",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 389,
+      "value": "chronic tympanitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001227",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 390,
+      "value": "blast phase chronic myelogenous leukemia, bcr-abl1 positive",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0006115",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 391,
+      "value": "chronic renal failure syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0024327",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 392,
+      "value": "chronic lacrimal gland enlargement",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001588",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 393,
+      "value": "chronic intestinal pseudoobstruction",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0017574",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 394,
+      "value": "severe congenital neutropenia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018542",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 395,
+      "value": "interstitial cystitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018301",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 396,
+      "value": "chronic beryllium disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015274",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 397,
+      "value": "hereditary chronic pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0008185",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 398,
+      "value": "chronic lymphocytic leukemia, mule",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_7770219",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 399,
+      "value": "chronic mucocutaneous candidiasis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015279",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 400,
+      "value": "schnitzler syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018304",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 401,
+      "value": "chronic granulomatous disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018305",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 2
+    },
+    {
+      "lucene_rank": 402,
+      "value": "leukemia, chronic lymphocytic, susceptibility to, 1",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0012318",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 403,
+      "value": "chronic monocytic leukemia, dog",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1010947",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 404,
+      "value": "late-onset idiopathic chronic pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0981008",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 405,
+      "value": "hepatitis c virus infection",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005231",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 27
+    },
+    {
+      "lucene_rank": 406,
+      "value": "early-onset idiopathic chronic pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0981007",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 407,
+      "value": "majeed syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0012316",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 408,
+      "value": "chronic mast cell leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0035445",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 409,
+      "value": "chronic hepatitis c virus infection",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005354",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 410,
+      "value": "chronic periodontitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005593",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 411,
+      "value": "non specific chronic endometritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0003051",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 412,
+      "value": "richter transformation",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0002083",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 413,
+      "value": "juvenile myelomonocytic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0011908",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 2
+    },
+    {
+      "lucene_rank": 414,
+      "value": "igg4-related dacryoadenitis and sialadenitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0019191",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 415,
+      "value": "igg4-related submandibular gland disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018674",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 416,
+      "value": "chronic obstructive pulmonary disease, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1013410",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 417,
+      "value": "marchiafava-bignami disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016370",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 418,
+      "value": "myeloproliferative neoplasm",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0020076",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 4
+    },
+    {
+      "lucene_rank": 419,
+      "value": "chronic salpingitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0003617",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 420,
+      "value": "b-cell chronic lymphocytic leukemia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004948",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 43
+    },
+    {
+      "lucene_rank": 421,
+      "value": "chronic diarrhea due to glucoamylase deficiency",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0015169",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 422,
+      "value": "growth retardation-mild developmental delay-chronic hepatitis syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0018317",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 423,
+      "value": "rasmussen subacute encephalitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0016019",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 424,
+      "value": "chronic gastritis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005001",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 425,
+      "value": "chronic pancreatitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005003",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 426,
+      "value": "chronic hepatitis b virus infection",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005366",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 1
+    },
+    {
+      "lucene_rank": 427,
+      "value": "chronic obstructive pulmonary disease",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0005002",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 27
+    },
+    {
+      "lucene_rank": 428,
+      "value": "chronic lymphocytic leukemia/small lymphocytic lymphoma with immunoglobulin heavy chain variable-region gene somatic hypermutation",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0004152",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 429,
+      "value": "chronic lymphocytic leukemia/small lymphocytic lymphoma",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0003864",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 13
+    },
+    {
+      "lucene_rank": 430,
+      "value": "chronic follicular conjunctivitis",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0001685",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 431,
+      "value": "pericardial effusion, chronic",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009847",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 432,
+      "value": "proteosome-associated autoinflammatory syndrome",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0009726",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 433,
+      "value": "myeloproliferative disorder, chronic, with eosinophilia",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_0007546",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    },
+    {
+      "lucene_rank": 434,
+      "value": "chronic interstitial nephropathy, non-human animal",
+      "valueUri": "http://purl.obolibrary.org/obo/MONDO_1011904",
+      "category": null,
+      "categoryUri": null,
+      "usageCount": 0
+    }
+  ]
+}

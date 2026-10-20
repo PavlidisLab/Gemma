@@ -3,14 +3,15 @@ package ubic.gemma.cli.util;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.core.util.Constants;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.PrintWriter;
 
 public class HelpUtils {
 
     public static final String HEADER = "Options:";
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2024 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, " + Constants.GEMMA_COPYRIGHT_NOTICE + ".";
 
     private static final HelpFormatter formatter = new HelpFormatter();
 

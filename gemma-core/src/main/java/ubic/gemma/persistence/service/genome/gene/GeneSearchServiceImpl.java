@@ -18,8 +18,8 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.util.SecurityUtil;
+import ubic.gemma.core.security.SecurityService;
+import ubic.gemma.core.security.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -28,7 +28,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.*;
+import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchException;
+import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.common.search.SearchResult;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -36,7 +40,7 @@ import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -61,6 +65,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     private TaxonService taxonService;
     private GeneSetSearch geneSetSearch;
     private GeneSetService geneSetService;
+    private GeneSetReadService geneSetReadService;
     private GeneService geneService;
     private GeneOntologyService geneOntologyService;
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
@@ -71,6 +76,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     @Autowired
     public GeneSearchServiceImpl( SearchService searchService, SecurityService securityService,
             TaxonService taxonService, GeneSetSearch geneSetSearch, GeneSetService geneSetService,
+            GeneSetReadService geneSetReadService,
             GeneService geneService, GeneOntologyService geneOntologyService,
             GeneSetValueObjectHelper geneSetValueObjectHelper ) {
         this.searchService = searchService;
@@ -78,6 +84,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         this.taxonService = taxonService;
         this.geneSetSearch = geneSetSearch;
         this.geneSetService = geneSetService;
+        this.geneSetReadService = geneSetReadService;
         this.geneService = geneService;
         this.geneOntologyService = geneOntologyService;
         this.geneSetValueObjectHelper = geneSetValueObjectHelper;
@@ -248,7 +255,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
-                taxon = geneSetService.getTaxon( gs );
+                Taxon geneSetTaxon = geneSetReadService.getTaxon( gs );
                 GeneSetValueObject gsVo;
                 try {
                     gsVo = geneSetValueObjectHelper.convertToValueObject( gs );
@@ -257,13 +264,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                     continue;
                 }
                 srDo = new SearchResultDisplayObject( gsVo );
-                if ( taxon != null ) {
-                    srDo.setTaxonId( taxon.getId() );
-                    srDo.setTaxonName( taxon.getCommonName() );
+                if ( geneSetTaxon != null ) {
+                    srDo.setTaxonId( geneSetTaxon.getId() );
+                    srDo.setTaxonName( geneSetTaxon.getCommonName() );
                 }
                 geneSets.add( srDo );
             }
-            taxon = null;
+            // taxon stays null on this branch — the caller did not supply a taxon constraint
         }
 
         // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in
@@ -395,7 +402,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             for ( SearchResultDisplayObject srDo : geneSets ) {
                 Long id = ( srDo.getResultValueObject() instanceof DatabaseBackedGeneSetValueObject ) ?
                         ( ( GeneSetValueObject ) srDo.getResultValueObject() ).getId() :
-                        new Long( -1 );
+                        Long.valueOf( -1 );
                 srDo.setUserOwned( isSetOwnedByUser.get( id ) );
             }
         }
@@ -407,7 +414,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         for ( SearchResult<GeneSet> sr : geneSetSearchResults ) {
             GeneSet gs = sr.getResultObject();
             if ( gs != null ) {
-                Set<Long> geneSetTaxaIds = geneSetService.getTaxa( gs ).stream()
+                Set<Long> geneSetTaxaIds = geneSetReadService.getTaxa( gs ).stream()
                         .map( Taxon::getId )
                         .collect( Collectors.toSet() );
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
@@ -573,10 +580,10 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * Get a list of SearchResultDisplayObjects that summarise all the results found (one per taxon), so at front end
      * user can "select all"
      *
-     * @param query          query
-     * @param genes          genes
-     * @param geneSets       gene sets
-     * @param srDos          display objects
+     * @param query    query
+     * @param genes    genes
+     * @param geneSets gene sets
+     * @param srDos    display objects
      * @return list of search result display objects
      */
     private List<SearchResultDisplayObject> addEntryForAllResults( String query,
@@ -601,7 +608,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 }
                 Long id = ( srDo.getResultValueObject() instanceof GeneValueObject ) ?
                         ( ( GeneValueObject ) srDo.getResultValueObject() ).getId() :
-                        new Long( -1 );
+                        Long.valueOf( -1 );
                 if ( id != -1 ) {
                     geneIdsByTaxonId.get( srDo.getTaxonId() ).add( id );
                 }

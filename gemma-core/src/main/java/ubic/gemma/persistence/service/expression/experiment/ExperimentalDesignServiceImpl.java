@@ -20,9 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractService;
 
 /**
@@ -37,35 +35,28 @@ import ubic.gemma.persistence.service.AbstractService;
 public class ExperimentalDesignServiceImpl extends AbstractService<ExperimentalDesign>
         implements ExperimentalDesignService {
 
-    private final ExperimentalDesignDao experimentalDesignDao;
+    @Autowired
+    private ExperimentalDesignReadService readService;
 
     @Autowired
     public ExperimentalDesignServiceImpl( ExperimentalDesignDao experimentalDesignDao ) {
         super( experimentalDesignDao );
-        this.experimentalDesignDao = experimentalDesignDao;
     }
 
+    // =====================================================================
+    // Read methods -- delegate to ExperimentalDesignReadService.
+    // ACL @Secured / @PostAuthorize annotations live on the
+    // ExperimentalDesignService interface and apply at the facade proxy
+    // boundary.
+    // =====================================================================
+
     @Override
-    @Transactional(readOnly = true)
     public ExperimentalDesign loadWithExperimentalFactors( Long id ) {
-        return experimentalDesignDao.loadWithExperimentalFactors( id );
+        return readService.loadWithExperimentalFactors( id );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign ) {
-        return this.experimentalDesignDao.getExpressionExperiment( experimentalDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId ) {
-        return this.experimentalDesignDao.getExpressionExperimentById( experimentalDesignId );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public ExperimentalDesign getRandomExperimentalDesignThatNeedsAttention( ExperimentalDesign excludedDesign ) {
-        return experimentalDesignDao.getRandomExperimentalDesignThatNeedsAttention( excludedDesign );
+        return readService.getRandomExperimentalDesignThatNeedsAttention( excludedDesign );
     }
 }

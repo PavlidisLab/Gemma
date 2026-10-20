@@ -18,7 +18,12 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
@@ -28,20 +33,17 @@ import javax.persistence.Transient;
  * @deprecated not needed
  */
 @Deprecated
+@Getter
+@Setter
+@Entity
+@DiscriminatorValue("Person")
 public class Person extends Contact {
 
+    @Column(name = "LAST_NAME", columnDefinition = "VARCHAR(255)")
     private String lastName;
 
     @Transient
     public String getFullName() {
         return this.getName() + " " + this.getLastName();
-    }
-
-    public String getLastName() {
-        return this.lastName;
-    }
-
-    public void setLastName( String lastName ) {
-        this.lastName = lastName;
     }
 }

@@ -19,17 +19,18 @@
 
 package ubic.gemma.core.analysis.preprocess;
 
-import gemma.gsec.SecurityService;
+import ubic.gemma.core.security.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.BulkExpressionDataMatrixUtils;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.MultiAssayBulkExpressionDataMatrix;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.Characteristic;
@@ -43,15 +44,16 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.EeWriteService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
 
@@ -64,6 +66,7 @@ import static ubic.gemma.core.util.StringUtils.abbreviateWithSuffix;
  * @author paul
  */
 @Service
+@Transactional(propagation = Propagation.NEVER)
 public class SplitExperimentServiceImpl implements SplitExperimentService {
 
     private static final Log log = LogFactory.getLog( SplitExperimentServiceImpl.class );
@@ -78,7 +81,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
     private RawExpressionDataVectorService rawExpressionDataVectorService;
 
     @Autowired
-    private Persister persister;
+    private EeWriteService eeWriteService;
 
     @Autowired
     private SecurityService securityService;
@@ -120,9 +123,9 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
 
         // Get the expression data matrices for the experiment. We'll split them and generate new vectors
         boolean foundPreferred = false;
-        Map<QuantitationType, ExpressionDataMatrix<?>> qt2mat = new HashMap<>();
+        Map<QuantitationType, BulkExpressionDataMatrix<?>> qt2mat = new HashMap<>();
 
-        if ( qts.size() > 0 ) {
+        if ( !qts.isEmpty() ) {
             log.info( "Fetching raw expression data vectors ... " );
             for ( QuantitationType qt : qts ) {
                 if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
@@ -273,15 +276,15 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
             }
 
             log.info( "Building vectors for " + qt2mat.size() + " quantitation types ..." );
-            for ( QuantitationType qt : qt2mat.keySet() ) {
+            for ( Map.Entry<QuantitationType, BulkExpressionDataMatrix<?>> qtEntry : qt2mat.entrySet() ) {
+                QuantitationType qt = qtEntry.getKey();
 
                 QuantitationType clonedQt = this.cloneQt( qt, split );
 
                 split.getQuantitationTypes().add( clonedQt );
 
                 // these bms are same as the ones associated with the vectors, not the clones
-                ExpressionDataDoubleMatrix expressionDataMatrix = new ExpressionDataDoubleMatrix( ( ExpressionDataDoubleMatrix ) qt2mat.get( qt ),
-                        bms, newBAD );
+                BulkExpressionDataMatrix<?> expressionDataMatrix = qtEntry.getValue().sliceColumns( bms, newBAD );
 
                 Collection<RawExpressionDataVector> rawDataVectors = BulkExpressionDataMatrixUtils.toVectors( expressionDataMatrix, RawExpressionDataVector.class );
                 for ( RawExpressionDataVector v : rawDataVectors ) {
@@ -297,7 +300,7 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 split.getRawExpressionDataVectors().addAll( rawDataVectors );
             }
 
-            split = ( ExpressionExperiment ) persister.persist( split );
+            split = eeWriteService.create( split );
 
             // securityService.makePublic( split ); // temporary 
             result.add( split );
@@ -306,13 +309,16 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         enforceOtherParts( result );
         eeService.update( result );
 
+        // the splits are committed; post-processing failures are reported once the split is complete
+        Map<String, Exception> postprocessingFailures = new LinkedHashMap<>();
         for ( ExpressionExperiment split : result ) {
             // postprocess
             if ( foundPreferred && postProcess ) {
                 try {
                     preprocessor.process( split );
                 } catch ( Exception e ) {
-                    log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage() );
+                    log.error( "Failure while postprocessing (will continue): " + split + ": " + e.getMessage(), e );
+                    postprocessingFailures.put( split.getShortName(), e );
                 }
             } else {
                 log.info( "Postprocessing skipped for " + split );
@@ -339,6 +345,18 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         securityService.makePrivate( toSplit );
         // Or mark it as troubled?
 
+        if ( !postprocessingFailures.isEmpty() ) {
+            Iterator<Exception> causes = postprocessingFailures.values().iterator();
+            RuntimeException e = new RuntimeException( String.format( "%s was split into %d parts, but post-processing failed for %d of them: %s. "
+                            + "Their processed data must be generated, e.g. with makeProcessedData.",
+                    toSplit.getShortName(), result.size(), postprocessingFailures.size(),
+                    postprocessingFailures.entrySet().stream()
+                            .map( entry -> entry.getKey() + " (" + entry.getValue().getMessage() + ")" )
+                            .collect( Collectors.joining( ", " ) ) ), causes.next() );
+            causes.forEachRemaining( e::addSuppressed );
+            throw e;
+        }
+
         return g;
     }
 
@@ -347,6 +365,31 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
                 splitValue.getExperimentalFactor().getCategory().getValue() :
                 splitValue.getExperimentalFactor().getName() );
         String factorValueString = FactorValueUtils.getSummaryString( splitValue );
+        // The full prefix has the form "Split part N of: <ee-name>"; reserve at least PREFIX_MIN_BUDGET
+        // bytes for it so the suffix never consumes the entire MAX_NAME_LENGTH budget. Issue #1019: when
+        // the FV stringification was longer than 255 chars, the old abbreviateWithSuffix call threw
+        // IllegalArgumentException because the suffix budget went negative. We now truncate the
+        // factorValueString instead — the split-part suffix still differentiates the parts.
+        final int PREFIX_MIN_BUDGET = 32; // enough for "Split part NN of: …" + a few chars of name
+        final String suffixFrame = " [" + categoryString + " = ]"; // bytes contributed by frame around FV
+        int frameBytes = ubic.gemma.core.util.StringUtils.sizeInBytes( suffixFrame, StandardCharsets.UTF_8 );
+        int maxFvBudget = ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET - frameBytes;
+        if ( maxFvBudget < 4 ) {
+            // category alone is too long; abbreviate it so we still produce a usable name
+            String shortCategory = ubic.gemma.core.util.StringUtils.abbreviateInBytes( categoryString, "…",
+                    Math.max( 4, ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET - " [ = ]".length() - 4 ),
+                    true, StandardCharsets.UTF_8 );
+            categoryString = shortCategory != null ? shortCategory : "?";
+            maxFvBudget = ExpressionExperiment.MAX_NAME_LENGTH - PREFIX_MIN_BUDGET
+                    - ubic.gemma.core.util.StringUtils.sizeInBytes( " [" + categoryString + " = ]", StandardCharsets.UTF_8 );
+        }
+        if ( ubic.gemma.core.util.StringUtils.sizeInBytes( factorValueString, StandardCharsets.UTF_8 ) > maxFvBudget ) {
+            String abbreviated = ubic.gemma.core.util.StringUtils.abbreviateInBytes( factorValueString, "…",
+                    maxFvBudget, true, StandardCharsets.UTF_8 );
+            if ( abbreviated != null ) {
+                factorValueString = abbreviated;
+            }
+        }
         String suffix = String.format( " [%s = %s]", categoryString, factorValueString );
         return abbreviateWithSuffix(
                 String.format( "Split part %d of: %s", splitNumber, StringUtils.strip( toSplit.getName() ) ), suffix,
@@ -529,12 +572,12 @@ public class SplitExperimentServiceImpl implements SplitExperimentService {
         return clone;
     }
 
+    @Nullable
     private DatabaseEntry cloneAccession( @Nullable DatabaseEntry de ) {
         if ( de == null ) return null;
         DatabaseEntry clone = DatabaseEntry.Factory.newInstance();
         clone.setAccession( de.getAccession() );
         clone.setAccessionVersion( de.getAccessionVersion() );
-        //noinspection deprecation
         clone.setUri( de.getUri() );
         clone.setExternalDatabase( de.getExternalDatabase() );
         return clone;

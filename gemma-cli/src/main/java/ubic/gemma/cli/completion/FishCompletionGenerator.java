@@ -1,31 +1,33 @@
 package ubic.gemma.cli.completion;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
+import org.springframework.util.Assert;
 import ubic.gemma.cli.main.GemmaCLI;
 import ubic.gemma.cli.util.EnumeratedByCommandConverter;
 import ubic.gemma.cli.util.EnumeratedConverter;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static ubic.gemma.cli.util.OptionsUtils.isFileOption;
 import static ubic.gemma.core.util.ShellUtils.quoteIfNecessary;
 
 /**
  * Generates fish completion script.
  * @author poirigui
  */
-@CommonsLog
-public class FishCompletionGenerator extends AbstractCompletionGenerator {
+@Slf4j
+public class FishCompletionGenerator implements CompletionGenerator {
 
     private final String executableName;
     private final String allSubcommands;
@@ -33,6 +35,7 @@ public class FishCompletionGenerator extends AbstractCompletionGenerator {
     private final Locale locale;
 
     public FishCompletionGenerator( String executableName, Set<String> allSubcommands, MessageSource messageSource, Locale locale ) {
+        Assert.isTrue( StringUtils.isNotBlank( executableName ), "Executable name cannot be blank." );
         this.executableName = executableName;
         this.allSubcommands = allSubcommands.stream().filter( StringUtils::isNotBlank ).sorted().collect( Collectors.joining( " " ) );
         this.messageSource = messageSource;

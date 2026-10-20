@@ -12,7 +12,6 @@
     </JSCodeStyleSettings>
     <JavaCodeStyleSettings>
       <option name="ALIGN_MULTILINE_RECORDS" value="false" />
-      <option name="ENABLE_JAVADOC_FORMATTING" value="false" />
       <option name="JD_P_AT_EMPTY_LINES" value="false" />
     </JavaCodeStyleSettings>
     <XML>

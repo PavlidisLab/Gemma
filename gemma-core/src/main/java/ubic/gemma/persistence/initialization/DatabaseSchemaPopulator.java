@@ -1,45 +1,49 @@
 package ubic.gemma.persistence.initialization;
 
-import lombok.extern.apachecommons.CommonsLog;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.DatabasePopulator;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.util.Assert;
-import ubic.gemma.persistence.hibernate.H2Dialect;
-import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
-import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 /**
  * Populates the database schema.
+ * <p>
+ * Renovations Phase 2: previously took a {@code LocalSessionFactoryBean} to pull a Hibernate
+ * {@code Configuration} for DDL generation. That path is gone — Hibernate 6 builds the schema via
+ * {@code org.hibernate.tool.schema.spi.SchemaCreator} (driven from {@code MetadataSources}) and
+ * Spring's wiring is JPA-based. Production schemas come from
+ * {@code gemma-core/src/main/resources/sql/migrations/*.sql} (applied by the DBA), so the
+ * Hibernate-DDL portion of this populator is a no-op; tests rely on the JPA EMF's
+ * {@code hibernate.hbm2ddl.auto=create} property instead.
+ *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
 
-    public DatabaseSchemaPopulator( LocalSessionFactoryBean sessionFactoryBean, String vendor ) {
-        Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ) );
-        Configuration configuration = sessionFactoryBean.getConfiguration();
-        Dialect dialect;
-        if ( configuration.getProperty( "hibernate.dialect" ) != null ) {
-            try {
-                dialect = ( Dialect ) Class.forName( configuration.getProperty( "hibernate.dialect" ) )
-                        .getConstructor().newInstance();
-            } catch ( Exception e ) {
-                throw new RuntimeException( e );
-            }
-        } else {
-            dialect = vendor.equals( "mysql" ) ? new MySQL57InnoDBDialect() : new H2Dialect();
-        }
+    public DatabaseSchemaPopulator( String vendor ) {
+        Assert.isTrue( vendor.equals( "mysql" ) || vendor.equals( "h2" ), "expected true" );
+        // The multi-context guard only applies to the shared MySQL integration-test DB; the H2
+        // path is used by BaseDatabaseTest, where each new Spring context expects a fresh schema
+        // (the H2 datasource bean does "drop all objects" on every bootstrap) and therefore needs
+        // ACLs / indices / extras re-populated every time too.
+        final boolean shared = vendor.equals( "mysql" );
         ResourceDatabasePopulator rdp = new ResourceDatabasePopulator() {
             @Override
-            public void populate( Connection connection ) throws SQLException {
+            public void populate( Connection connection ) {
+                // Phase 2 multi-context guard: index creation + ACL seed INSERTs must not re-run on
+                // the second ApplicationContext (would explode with duplicate-key / duplicate-index
+                // errors). The InitialDataPopulator that runs immediately after has the same
+                // guard, so the entire schema-extras bootstrap is a once-per-JVM affair on shared
+                // databases.
+                if ( shared && !TestBootstrapState.claimSchemaExtras() ) {
+                    log.info( "Schema extras (ACLs, indices, additional tables) already populated in this JVM; skipping." );
+                    return;
+                }
                 log.info( "Populating ACLs, indices, additional tables, etc..." );
                 super.populate( connection );
             }
@@ -47,32 +51,17 @@ public class DatabaseSchemaPopulator extends CompositeDatabasePopulator {
         rdp.addScript( new ClassPathResource( "/sql/init-acls.sql" ) );
         rdp.addScript( new ClassPathResource( "/sql/init-entities.sql" ) );
         rdp.addScript( new ClassPathResource( "/sql/" + vendor + "/init-entities.sql" ) );
-        addPopulators( new HibernateSchemaPopulator( configuration, dialect ), rdp );
+        addPopulators( new HibernateSchemaPopulator(), rdp );
     }
 
     /**
-     * Populate the database with the Hibernate DDL schema.
-     * @author poirigui
+     * Schema population is delegated to Hibernate's hbm2ddl.auto on the JPA EMF (tests) or
+     * sql/migrations/*.sql (production); this inner class is a no-op kept for callsite shape.
      */
     private static class HibernateSchemaPopulator implements DatabasePopulator {
-
-        private final Configuration configuration;
-        private final Dialect dialect;
-
-        public HibernateSchemaPopulator( Configuration configuration, Dialect dialect ) {
-            this.configuration = configuration;
-            this.dialect = dialect;
-        }
-
         @Override
-        public void populate( Connection connection ) throws SQLException {
-            log.info( "Populating Hibernate schema..." );
-            String[] ddl = configuration.generateSchemaCreationScript( dialect );
-            for ( String sql : ddl ) {
-                try ( PreparedStatement ps = connection.prepareStatement( sql ) ) {
-                    ps.execute();
-                }
-            }
+        public void populate( Connection connection ) {
+            log.info( "HibernateSchemaPopulator is a no-op; schema comes from hbm2ddl.auto (tests) or sql/migrations/ (prod)." );
         }
     }
 }

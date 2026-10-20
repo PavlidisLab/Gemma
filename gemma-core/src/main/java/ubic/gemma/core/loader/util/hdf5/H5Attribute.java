@@ -27,7 +27,7 @@ public class H5Attribute implements AutoCloseable {
     private final long attrId;
 
     private H5Attribute( long attrId ) {
-        Assert.isTrue( attrId >= 0 );
+        Assert.isTrue( attrId >= 0 , "expected true");
         this.attrId = attrId;
     }
 

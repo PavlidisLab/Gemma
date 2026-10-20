@@ -2,7 +2,7 @@ package ubic.gemma.rest.util;
 
 import org.springframework.validation.Errors;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Entrypoint for custom AssertJ assertions.

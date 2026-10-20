@@ -1,12 +1,12 @@
 package ubic.gemma.apps;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.DataDeleterService;
+import ubic.gemma.core.analysis.service.ExpressionDataDeleterService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author poirigui
@@ -14,10 +14,13 @@ import javax.annotation.Nullable;
 public class RawDataDeleterCli extends ExpressionExperimentVectorsManipulatingCli<RawExpressionDataVector> {
 
     @Autowired
-    private DataDeleterService dataDeleterService;
+    private ExpressionDataDeleterService expressionDataDeleterService;
 
     public RawDataDeleterCli() {
         super( RawExpressionDataVector.class );
+        setDefaultToPreferredQuantitationType();
+        // deletion is irreversible; -e must always name the experiments to delete, never -all/-eeset/-f/-q
+        setExplicitEEsOnly();
     }
 
     @Nullable
@@ -33,7 +36,14 @@ public class RawDataDeleterCli extends ExpressionExperimentVectorsManipulatingCl
     }
 
     @Override
+    protected void processExpressionExperiment( ExpressionExperiment expressionExperiment ) throws Exception {
+        super.processExpressionExperiment( expressionExperiment );
+        refreshExpressionExperimentFromGemmaWebSilently( expressionExperiment, true, true );
+    }
+
+    @Override
     protected void processExpressionExperimentVectors( ExpressionExperiment ee, QuantitationType qt ) {
-        dataDeleterService.deleteRawData( ee, qt );
+        expressionDataDeleterService.deleteRawData( ee, qt );
+        addSuccessObject( ee, qt, "Deleted raw data." );
     }
 }

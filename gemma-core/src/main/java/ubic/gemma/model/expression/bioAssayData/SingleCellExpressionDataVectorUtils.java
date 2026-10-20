@@ -4,10 +4,13 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.Assert;
+import ubic.gemma.core.util.LoggingProgressReporter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import org.springframework.lang.Nullable;
+import java.io.Console;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -21,6 +24,7 @@ import static ubic.gemma.core.util.NetUtils.bytePerSecondToDisplaySize;
 
 /**
  * Utilities for working with {@link SingleCellExpressionDataVector}.
+ *
  * @author poirigui
  */
 public class SingleCellExpressionDataVectorUtils {
@@ -45,6 +49,7 @@ public class SingleCellExpressionDataVectorUtils {
 
     /**
      * Get the index of the first cell for a given sample.
+     *
      * @param vector      vector
      * @param sampleIndex index of the sample in the single-cell dimension, see {@link SingleCellDimension#getBioAssays()}
      * @param after       starting position for the search
@@ -73,6 +78,7 @@ public class SingleCellExpressionDataVectorUtils {
 
     /**
      * Get the *exclusive* index of the last cell for a given sample.
+     *
      * @param vector      vector
      * @param sampleIndex index of the sample in the single-cell dimension, see {@link SingleCellDimension#getBioAssays()}
      * @param after       starting position for the search, if you previously called {@link #getSampleStart(SingleCellExpressionDataVector, int, int)},
@@ -87,8 +93,8 @@ public class SingleCellExpressionDataVectorUtils {
      */
     public static int getSampleEnd( SingleCellDimension dimension, int[] dataIndices, int sampleIndex, int after ) {
         int sampleOffset = dimension.getBioAssaysOffset()[sampleIndex];
-        int numberOfCells = dimension.getNumberOfCellsBySample( sampleIndex );
-        int nextSampleOffset = sampleOffset + numberOfCells;
+        int numberOfCellIds = dimension.getNumberOfCellIdsBySample( sampleIndex );
+        int nextSampleOffset = sampleOffset + numberOfCellIds;
         // check where the next sample begins, only search past this sample starting point
         int end = Arrays.binarySearch( dataIndices, after, dataIndices.length, nextSampleOffset );
         if ( end < 0 ) {
@@ -175,7 +181,7 @@ public class SingleCellExpressionDataVectorUtils {
      * Obtain the data of a sample.
      */
     public static float[] getSampleDataAsFloats( SingleCellExpressionDataVector vector, FloatBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int[] dataIndices = vector.getDataIndices();
@@ -203,7 +209,7 @@ public class SingleCellExpressionDataVectorUtils {
      * Obtain the data of a sample.
      */
     public static double[] getSampleDataAsDoubles( SingleCellExpressionDataVector vector, DoubleBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
@@ -228,7 +234,7 @@ public class SingleCellExpressionDataVectorUtils {
     }
 
     public static int[] getSampleDataAsInts( SingleCellExpressionDataVector vector, IntBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
@@ -253,7 +259,7 @@ public class SingleCellExpressionDataVectorUtils {
     }
 
     public static long[] getSampleDataAsLongs( SingleCellExpressionDataVector vector, LongBuffer data, int sampleIndex, CellLevelCharacteristics cellLevelCharacteristics, int row ) {
-        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() );
+        Assert.isTrue( row >= -1 && row < cellLevelCharacteristics.getNumberOfCharacteristics() , "expected true");
         int start = getSampleStart( vector, sampleIndex, 0 );
         int end = getSampleEnd( vector, sampleIndex, start );
         int nnz = 0;
@@ -277,9 +283,10 @@ public class SingleCellExpressionDataVectorUtils {
      * Create a consumer for a {@link java.util.stream.Stream} that will report progress of retrieving single-cell
      * vectors.
      * <p>
-     * The logging is similar to that of {@link ubic.gemma.core.util.ProgressReporter}.
+     * The logging is similar to that of {@link LoggingProgressReporter}.
      */
-    public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( ExpressionExperiment ee, QuantitationType qt, String logCategory, int reportFrequency, long numVecs ) {
+    public static Consumer<SingleCellExpressionDataVector> createStreamMonitor( ExpressionExperiment ee,
+            QuantitationType qt, String logCategory, int reportFrequency, long numVecs, @Nullable Console console ) {
         String what = "single-cell vectors of " + qt.getName() + " in " + ee.getShortName();
         if ( reportFrequency <= 0 ) {
             return x -> { /* no-op */ };
@@ -295,11 +302,19 @@ public class SingleCellExpressionDataVectorUtils {
                 int done = i.incrementAndGet();
                 long br = bytesRetrieved.addAndGet( estimateSizeInBytes( x ) );
                 if ( done % reportFrequency == 0 ) {
-                    log.info( String.format( "Retrieving %s [%d/%s] @ %f.2 vectors/sec and @ ~%s",
-                            what,
-                            done, numVecs >= 0 ? numVecs : "?",
-                            1000.0 * done / timer.getTime(),
-                            bytePerSecondToDisplaySize( 1000.0 * br / timer.getTime() ) ) );
+                    if ( console != null ) {
+                        console.printf( "Retrieving %s [%d/%s] @ %.2f vectors/sec and @ ~%s\r",
+                                what,
+                                done, numVecs >= 0 ? numVecs : "?",
+                                1000.0 * done / timer.getTime(),
+                                bytePerSecondToDisplaySize( 1000.0 * br / timer.getTime() ) );
+                    } else {
+                        log.info( String.format( "Retrieving %s [%d/%s] @ %.2f vectors/sec and @ ~%s",
+                                what,
+                                done, numVecs >= 0 ? numVecs : "?",
+                                1000.0 * done / timer.getTime(),
+                                bytePerSecondToDisplaySize( 1000.0 * br / timer.getTime() ) ) );
+                    }
                 }
             }
         };

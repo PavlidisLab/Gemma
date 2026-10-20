@@ -18,12 +18,23 @@
  */
 package ubic.gemma.model.common.measurement;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Immutable;
 import ubic.gemma.model.common.AbstractIdentifiable;
 
 import java.util.Objects;
 
+@Entity
+@Table(name = "UNIT")
+@Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Unit extends AbstractIdentifiable {
 
+    @Column(name = "UNIT_NAME_C_V", nullable = false, columnDefinition = "VARCHAR(255)")
     private String unitNameCV;
 
     public String getUnitNameCV() {

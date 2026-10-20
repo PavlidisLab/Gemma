@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author paul
@@ -156,7 +156,7 @@ public class ExpressionDataMatrixColumnSortTest {
 //            }
 //        }
 
-        EmptyExpressionMatrix mat = new EmptyExpressionMatrix( bad );
+        EmptyExpressionMatrix mat = new EmptyExpressionMatrix( null, bad );
 
         assertEquals( 100, mat.columns() );
 

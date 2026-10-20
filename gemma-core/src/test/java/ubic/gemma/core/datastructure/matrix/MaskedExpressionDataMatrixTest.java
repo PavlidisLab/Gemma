@@ -1,7 +1,7 @@
 package ubic.gemma.core.datastructure.matrix;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -13,7 +13,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.RandomExpressionDa
 
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MaskedExpressionDataMatrixTest {
 

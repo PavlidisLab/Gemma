@@ -16,18 +16,18 @@ package ubic.gemma.core.analysis.preprocess;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
- * Container for details about a proposed outlier
+ * Container for details about a proposed outlier.
  *
  * @author paul
  */
 @Data
-@EqualsAndHashCode(of = { "bioAssay" })
-public class OutlierDetails {
+@EqualsAndHashCode(of = { "bioAssayId" })
+public class OutlierDetails implements Serializable {
 
     /**
      * Compare outliers by first quartile Note: this comparator imposes orderings that are inconsistent with equals
@@ -39,7 +39,7 @@ public class OutlierDetails {
      */
     public static final Comparator<OutlierDetails> MEDIAN_COMPARATOR = Comparator.comparingDouble( OutlierDetails::getMedianCorrelation );
 
-    private final BioAssay bioAssay;
+    private final Long bioAssayId;
 
     private double firstQuartile = Double.MIN_VALUE;
     private double medianCorrelation = Double.MIN_VALUE;

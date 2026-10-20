@@ -1,6 +1,6 @@
 package ubic.gemma.apps;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 
 import static org.assertj.core.api.Assertions.assertThat;

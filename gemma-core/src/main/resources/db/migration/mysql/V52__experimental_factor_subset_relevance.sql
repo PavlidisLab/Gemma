@@ -1,0 +1,41 @@
+-- EXPERIMENTAL_FACTOR gains a curator/agent hint about whether to SUBSET by this factor.
+--
+-- Gemma records what a differential expression analysis DID subset by --
+-- ANALYSIS.SUBSET_FACTOR_VALUE_FK, from which 3,834 experiments read as subsetted. It has had
+-- nowhere to record what a curator or agent thinks SHOULD be subsetted before an analysis runs.
+-- That advice was being written as an experiment-level tag instead: TGEMO_00022 'SUBSET', on
+-- 1,190 experiments (measured on gemd 2026-09-09).
+--
+-- The tag is the wrong carrier on three counts, all measured:
+--   * It is read by no code -- zero references to TGEMO_00022 anywhere in the repo.
+--   * It is 93% redundant with the analyses: 1,102 of the 1,190 tagged experiments already
+--     have a subset-factor DEA, and 2,732 subsetted experiments carry no tag.
+--   * Its unique contribution is 88 experiments tagged with no subset-factor DEA, and a tag
+--     cannot say whether that means "not analysed yet" or "the tag is stale". Advice that has
+--     not been acted on is exactly what this column is for, so the ambiguity goes away.
+--   * A tag also has a category to get wrong, and does: TGEMO_00022 is filed under seven
+--     different categories on prod (1,177 'study design', then 13 spread over 'collection of
+--     material', 'genotype', 'organism part', 'cell type', 'cell line', 'disease'), so a
+--     category-scoped query silently misses those 13. A column has no category.
+--
+-- The tag itself is NOT dropped here. Retiring it is a separate decision that wants the 88 to
+-- be looked at first, and dropping a characteristic is not reversible by re-running a migration.
+--
+-- Shape mirrors BASELINE_RELEVANCE (V6) deliberately: same nullable VARCHAR(32) + TEXT reason,
+-- same open vocabulary, same null-leaves-it / empty-clears-it convention on the wire. The
+-- values in use are 'recommended', 'not_applicable' and 'uncertain'. They are documented and
+-- not enforced, for the reason the baseline field already gives -- a hint whose vocabulary can
+-- move, where a closed list makes the next word a schema change and a deploy. Here that matters
+-- more: the curation agents are the intended writer, and 'covariate' (do not subset, model it)
+-- is a plausible fourth value that should not need a Gemma release.
+--
+-- 'recommended' rather than 'required': a baseline is required for a contrast to exist at all,
+-- whereas subsetting is a choice the analysis can decline. The word carries the distinction.
+--
+-- NULL for existing rows and for any factor the proposer pipeline has not visited. Nothing is
+-- backfilled: the 1,190 tagged experiments name no factor, only the experiment, so there is no
+-- factor to attach the advice to without guessing which one.
+
+ALTER TABLE EXPERIMENTAL_FACTOR
+    ADD COLUMN SUBSET_RELEVANCE        VARCHAR(32) NULL,
+    ADD COLUMN SUBSET_RELEVANCE_REASON TEXT NULL;

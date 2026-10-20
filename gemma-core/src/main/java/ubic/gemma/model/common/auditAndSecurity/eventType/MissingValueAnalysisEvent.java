@@ -18,9 +18,15 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Computing missing values for an expression experiment
  */
+@Entity
+@DiscriminatorValue("MissingValueAnalysisEvent")
 public class MissingValueAnalysisEvent extends ExpressionExperimentAnalysisEvent {
 
 }

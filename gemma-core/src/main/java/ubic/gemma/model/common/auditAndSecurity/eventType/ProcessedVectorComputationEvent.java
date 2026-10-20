@@ -18,10 +18,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * Computation of the "processed" expression data with the ranking (by 'expression level') information filled in, for an
  * Expression Experiment
  */
+@Entity
+@DiscriminatorValue("ProcessedVectorComputationEvent")
 public class ProcessedVectorComputationEvent extends ExpressionExperimentAnalysisEvent {
 
 }

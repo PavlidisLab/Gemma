@@ -18,29 +18,29 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.core.util.FileTools;
 import ubic.gemma.core.analysis.sequence.ShellDelegatingBlat;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
-import ubic.gemma.core.util.test.category.GoldenPathTest;
-import ubic.gemma.core.util.test.category.SlowTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
@@ -48,6 +48,7 @@ import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.genome.gene.GeneService;
+import ubic.gemma.persistence.service.genome.gene.GeneWriteService;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +57,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * This test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene data to the
@@ -64,8 +66,9 @@ import static org.junit.Assert.*;
  *
  * @author keshav
  */
-@Category({ GoldenPathTest.class, SlowTest.class })
-public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
+@Tag("goldenPath")
+@Tag("slow")
+public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest5 {
 
     private final String arrayAccession = "GPL96";
     private final ShellDelegatingBlat blat = new ShellDelegatingBlat();
@@ -95,10 +98,13 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     @Autowired
     private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
 
+    @Autowired
+    private GeneWriteService geneWriteService;
+
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
-    @After
+    @AfterEach
     public void cleanup() {
 
         ad = arrayDesignService.findByShortName( arrayAccession );
@@ -121,8 +127,9 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
+        assumeTrue( goldenPathHasRefSeqTables(), "GoldenPath has no ncbiRefSeqCurated" );
         this.cleanup();
         geoService.setGeoDomainObjectGenerator(
                 new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath( "platform" ) ) );
@@ -167,7 +174,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         if ( cs == null )
             return;
 
-        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs, false );
 
         assertNotNull( genes );
         assertEquals( 1, genes.size() );
@@ -177,6 +184,18 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         assertTrue( !alignments.isEmpty() );
         for ( CompositeSequence c : alignments.keySet() ) {
             assertTrue( !alignments.get( c ).isEmpty() );
+        }
+    }
+
+    /**
+     * Probe mapping refuses a GoldenPath database without ncbiRefSeqCurated, and a local copy can predate it.
+     */
+    private static boolean goldenPathHasRefSeqTables() {
+        try ( GoldenPathSequenceAnalysis gp = new GoldenPathSequenceAnalysis( Taxon.Factory.newInstance( "human" ) ) ) {
+            gp.findRefGenesByLocation( "1", 1L, 2L, null );
+            return true;
+        } catch ( BadSqlGrammarException e ) {
+            return false;
         }
     }
 
@@ -213,7 +232,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     private void loadGeneData() throws Exception {
         NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
-        loader.setPersisterHelper( this.persisterHelper );
+        loader.setGeneWriteService( this.geneWriteService );
 
         String filePath = FileTools.resourceToPath( "/data/loader/genome/gene" );
 

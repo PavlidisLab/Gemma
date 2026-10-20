@@ -1,9 +1,10 @@
 package ubic.gemma.core.loader.expression.geo;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -11,16 +12,17 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
+import ubic.gemma.core.loader.expression.cellxgene.CellXGeneFetcher;
 import ubic.gemma.core.loader.expression.geo.model.GeoSample;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.geo.service.GeoFormat;
-import ubic.gemma.core.loader.expression.geo.service.GeoSource;
-import ubic.gemma.core.loader.expression.geo.service.GeoUtils;
+import ubic.gemma.core.loader.expression.geo.service.*;
 import ubic.gemma.core.loader.expression.geo.singleCell.ArchiveBasedSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoBioAssayMapper;
 import ubic.gemma.core.loader.expression.geo.singleCell.GeoSingleCellDetector;
 import ubic.gemma.core.loader.expression.geo.singleCell.NoSingleCellDataFoundException;
 import ubic.gemma.core.loader.expression.singleCell.*;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellDataTransformationFactory;
+import ubic.gemma.core.loader.expression.singleCell.transform.SingleCellTransformationConfig;
 import ubic.gemma.core.loader.expression.sra.SraFetcher;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.loader.util.ftp.FTPConfig;
@@ -28,9 +30,9 @@ import ubic.gemma.core.loader.util.mapper.MapBasedDesignElementMapper;
 import ubic.gemma.core.loader.util.mapper.RenamingBioAssayMapper;
 import ubic.gemma.core.loader.util.mapper.SimpleDesignElementMapper;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.test.BaseTest;
-import ubic.gemma.core.util.test.category.GeoTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.BaseTest5;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
@@ -40,6 +42,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,20 +52,22 @@ import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
-import static ubic.gemma.core.util.test.Assumptions.assumeThatResourceIsAvailable;
 
 /**
- * TODO: move SOFT files in test resources and mock FTP downloads
+ * TODO: Phase 2 — trim and cache per-test download data so the integration-tagged methods can move to fully offline @Test. SOFT files are now cached in test resources (Phase 1).
  */
-@Category({ GeoTest.class, SlowTest.class })
+@Tag("slow")
+@Tag("geo")
 @ContextConfiguration
-public class GeoSingleCellDetectorTest extends BaseTest {
+@ExtendWith(NetworkAvailableExtension.class)
+@NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+public class GeoSingleCellDetectorTest extends BaseTest5 {
 
     private static final SingleCellDataLoaderConfig DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG = SingleCellDataLoaderConfig.builder().build();
 
     @Configuration
     @TestComponent
-    @Import({ SettingsConfig.class, FTPConfig.class })
+    @Import({ SettingsConfig.class, FTPConfig.class, SingleCellTransformationConfig.class })
     static class Config {
 
     }
@@ -70,26 +75,37 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     @Autowired
     private FTPClientFactory ftpClientFactory;
 
+    @Autowired
+    private SingleCellDataTransformationFactory singleCellDataTransformationFactory;
+
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
 
+    @Value("${gemma.download.path}/singleCellData/CELLxGENE")
+    private Path cellXGenePath;
+
     private GeoSingleCellDetector detector;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
-        assumeThatResourceIsAvailable( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/" );
         detector = new GeoSingleCellDetector();
         detector.setFTPClientFactory( ftpClientFactory );
         detector.setDownloadDirectory( downloadDir );
         detector.setSraFetcher( new SraFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), null ) );
+        detector.setCellXGeneFetcher( new CellXGeneFetcher( new SimpleRetryPolicy( 3, 1000, 1.5 ), cellXGenePath ) );
+        detector.setCellXGeneAssays( new HashSet<>( Arrays.asList(
+                // 10x 3' v3
+                "EFO:0009922",
+                // Smart-seq
+                "EFO:0008930" ) ) );
+        detector.setSingleCellDataTransformationFactory( singleCellDataTransformationFactory );
     }
 
     /**
      * AnnData (and also Seurat Disk, but the former is preferred)
      */
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
     public void testGSE225158() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE225158" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -115,7 +131,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
         bas.add( BioAssay.Factory.newInstance( "P-13281", null, BioMaterial.Factory.newInstance( "P-13281" ) ) );
 
         SingleCellDimension dim = loader.getSingleCellDimension( bas );
-        assertThat( dim.getNumberOfCells() ).isEqualTo( 3598 );
+        assertThat( dim.getNumberOfCellIds() ).isEqualTo( 3598 );
         QuantitationType qt = loader.getQuantitationTypes().iterator().next();
 
         Map<String, CompositeSequence> elementsMapping = new HashMap<>();
@@ -133,8 +149,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This AnnData file has invalid columns and numerical categorical arrays and uses a dense matrix.
      */
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
     public void testGSE221593() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221593" );
         detector.downloadSingleCellData( series );
@@ -178,11 +193,17 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE221522() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE221522" );
         detector.downloadSingleCellData( series );
-        assertThat( detector.getSingleCellDataLoader( series, DEFAULT_SINGLE_CELL_DATA_LOADER_CONFIG ) )
+        AnnDataSingleCellDataLoaderConfig config = AnnDataSingleCellDataLoaderConfig.builder()
+                // this dataset has to be transposed and also has a raw.X and raw.var, so to read the data, it must be
+                // transposed on-disk. However, if we do that, we will lose the "counts" layer.
+                .ignoreDataVectors( true )
+                .build();
+        assertThat( detector.getSingleCellDataLoader( series, config ) )
                 .asInstanceOf( type( AnnDataSingleCellDataLoader.class ) )
                 .satisfies( loader -> {
                     // the AnnData use abbreviated column name that simply cannot be matched against the GEO record
@@ -194,7 +215,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
                             new String[] { "Pt. F", "Pt. G", "Pt. H", "Pt. I", "Pt. J" } ) );
                     List<BioAssay> bas = Collections.singletonList( BioAssay.Factory.newInstance( "Patient_G", null, BioMaterial.Factory.newInstance( "Patient_G" ) ) );
                     SingleCellDimension dim = loader.getSingleCellDimension( bas );
-                    assertThat( dim.getNumberOfCells() ).isEqualTo( 413 );
+                    assertThat( dim.getNumberOfCellIds() ).isEqualTo( 413 );
                     assertThat( loader.getQuantitationTypes() )
                             .extracting( QuantitationType::getName )
                             .containsExactlyInAnyOrder( "AnnData", "AnnData from layer counts" );
@@ -204,8 +225,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
     public void testGSE254569() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE254569" );
         detector.downloadSingleCellData( series );
@@ -232,8 +252,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This is a case of a MEX dataset where files are bundled in a per-sample TAR archive.
      */
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
     public void testGSE201814() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201814" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -267,8 +286,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
-    @Ignore("This is simply too slow to be practical.")
-    @Category(SlowTest.class)
+    @Disabled("This is simply too slow to be practical.")
     public void testGSE201814DownloadAll() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201814" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -295,7 +313,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * We need to download it to make sure that the file is properly stored.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE174574() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE174574" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -313,7 +332,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This dataset has multiple {@code .h5ad} supplementary files. The solution is to manually pick one of them.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE202051() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE202051" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -366,7 +386,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
-    @Ignore("This is an example of a single MEX dataset at the series-level for all the samples.")
+    @Disabled("This is an example of a single MEX dataset at the series-level for all the samples.")
     public void testGSE193884() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE193884" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -378,6 +398,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * want to make sure we're producing a useful error message.
      */
     @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE147495() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE147495" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -392,7 +414,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * at the series level.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE242423() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE242423" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -480,7 +503,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This series contains large TAR attachment that should be skipped when inspecting for MEX.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE235314() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE235314" );
         assertThat( detector.hasSingleCellData( series ) ).isFalse();
@@ -493,7 +515,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * Similar case here with large TAR attachments, but in this case it has a lot of samples to skip.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE201263() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE201262" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -504,8 +525,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This files produces "java.util.zip.ZipException: invalid block type" apparently...
      */
     @Test
-    @Category(SlowTest.class)
-    @Ignore("This files produces \"java.util.zip.ZipException: invalid block type\" apparently.")
+    @Disabled("This files produces \"java.util.zip.ZipException: invalid block type\" apparently.")
     public void testGSE200202() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE200202" );
         assertThat( detector.getSingleCellDataType( series ) ).isEqualTo( SingleCellDataType.ANNDATA );
@@ -516,7 +536,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This example has some additional supplementary materials that are inside a TAR archive that contains MEX data.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE155499() throws IOException, NoSingleCellDataFoundException {
         // this archive is actually quite deep and the default 10 is not enough
         try {
@@ -560,13 +579,14 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
-    @Category(SlowTest.class)
     public void testGSE201032() throws IOException {
+        // SOFT fixture chopped from 8 samples -> 1 to cut FTP archive probes (47s -> ~6s).
+        // See README in series/ for chop provenance.
         GeoSeries series = readSeriesFromGeo( "GSE201032" );
         assertThat( detector.getAdditionalSupplementaryFiles( series ) )
                 .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201032/suppl/GSE201032_Metadata.csv.gz" );
         assertThat( series.getSamples() )
-                .hasSize( 8 )
+                .hasSize( 1 )
                 .allSatisfy( sample -> assertThat( detector.getAdditionalSupplementaryFiles( series, sample ) )
                         .containsExactly( "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE201nnn/GSE201032/suppl/GSE201032_Metadata.csv.gz" ) );
     }
@@ -575,6 +595,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This is a MEX dataset with a barcode_metadata.tsv.gz file.
      */
     @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE218621() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE218621" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -601,6 +623,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This is a Loom dataset with files in individual samples
      */
     @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE179516() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE179516" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -615,8 +639,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This is a Loom dataset with a single file in the series. We support detection and download, but not loading.
      */
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
     public void testGSE159416() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE159416" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -632,7 +655,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * MEX dataset stored in ZIP archives.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE178226() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE178226" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -643,7 +665,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This one uses non-standard file names.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE199762() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE199762" );
         try {
@@ -666,7 +689,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This dataset has technical replicates, this is not supported.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE155695() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE155695" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -692,8 +716,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This sample has duplicated cell IDs.
      */
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
     public void testGSM4282408() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE144172" );
         GeoSample sample = getSample( series, "GSM4282408" );
@@ -712,7 +735,6 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * skip enough entries within the archive.
      */
     @Test
-    @Category(SlowTest.class)
     public void testGSE109774() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE109774" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -723,6 +745,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * TODO: add support for this, see <a href="https://github.com/PavlidisLab/Gemma/issues/1232">#1232</a>
      */
     @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE208742() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE208742" );
         assertThat( detector.hasSingleCellData( series ) ).isTrue();
@@ -736,8 +760,7 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This dataset as an array of ENUM, a raw.X and needs to be transposed.
      */
     @Test
-    @Ignore
-    @Category(SlowTest.class)
+    @Disabled
     public void testGSE244451() throws IOException, NoSingleCellDataFoundException {
         GeoSeries series = readSeriesFromGeo( "GSE244451" );
         detector.downloadSingleCellData( series );
@@ -769,7 +792,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * This series has complete MEX files at the sample-level, but also provide MEX files in the series.
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE184506() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE184506" );
         assertThat( detector.hasSingleCellData( series ) )
@@ -783,6 +807,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * Example: GSM3580744
      */
     @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE125708() throws NoSingleCellDataFoundException, IOException {
         GeoSeries series = readSeriesFromGeo( "GSE125708" );
         assertThat( detector.hasSingleCellData( series ) )
@@ -807,6 +833,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE274772() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE274772" );
         Collection<String> sraData = new ArrayList<>();
@@ -822,6 +850,8 @@ public class GeoSingleCellDetectorTest extends BaseTest {
      * indicate it is single-cell.
      */
     @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testGSE165635() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE165635" );
         Collection<String> sraData = new ArrayList<>();
@@ -856,10 +886,85 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     @Test
+    public void testGSE251724() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE251724" );
+        detector.setMexFileSuffixes( "raw_*_barcodes.tsv.gz", "raw_*_features.tsv.gz", "raw_*_matrix.mtx.gz" );
+        assertThat( detector.hasSingleCellData( series ) ).isTrue();
+    }
+
+    @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public void testHasSingleCellDataInSra() throws IOException {
         GeoSeries series = readSeriesFromGeo( "GSE278619" );
         assertThat( detector.hasSingleCellDataInSra( series ) ).isTrue();
         assertThat( detector.hasSingleCellDataInSra( series.getSamples().iterator().next() ) ).isTrue();
+    }
+
+    @Test
+    @Tag("slow")
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testHasSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        detector.getDatasetMetadataFromCellXGene( series );
+    }
+
+    @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testDownloadSingleCellDataInCellXGene() throws IOException, NoSingleCellDataFoundException {
+        String collectionId = "31937775-0602-4e52-a799-b6acdd2bac2e";
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series, collectionId ) ).isTrue();
+        // Resolve the current dataset id from the collection rather than hard-coding one that CELLxGENE rotates
+        // whenever the dataset is re-published.
+        String datasetId = detector.getDatasetMetadataFromCellXGene( series, collectionId ).getId();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, collectionId ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
+                } );
+        assertThat( detector.downloadSingleCellDataInCellXGene( series, collectionId, datasetId ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
+                } );
+    }
+
+    @Test
+    @Tag("slow")
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testDownloadSingleCellDataInCellXGeneWithoutACollectionId() throws IOException, NoSingleCellDataFoundException {
+        GeoSeries series = readSeriesFromGeo( "GSE207848" );
+        assertThat( detector.hasSingleCellDataInCellXGene( series ) ).isTrue();
+        // The CELLxGENE dataset id is resolved from the GEO series (CELLxGENE links its collections back to the GEO
+        // accession), so derive the expected symlink target from it rather than hard-coding an id that CELLxGENE
+        // rotates whenever the dataset is re-published.
+        String datasetId = detector.getDatasetMetadataFromCellXGene( series ).getId();
+        assertThat( detector.downloadSingleCellDataInCellXGene( series ) )
+                .isSymbolicLink()
+                .hasFileName( "GSE207848.h5ad" )
+                .satisfies( path -> {
+                    Path finalDest = Files.readSymbolicLink( path );
+                    assertThat( finalDest ).hasFileName( datasetId + ".h5ad" );
+                } );
+    }
+
+    @Test
+    @Tag("integration")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
+    public void testGSE71585() throws IOException {
+        GeoSeries series = readSeriesFromGeo( "GSE71585" );
+        assertThat( detector.hasSingleCellData( series ) ).isFalse();
+        assertThat( detector.hasSingleCellDataInCellXGene( series, "a3c37598-b8e8-47db-92a9-eb91a77c9529" ) )
+                .isTrue();
     }
 
     @Test
@@ -871,8 +976,14 @@ public class GeoSingleCellDetectorTest extends BaseTest {
     }
 
     private GeoSeries readSeriesFromGeo( String accession ) throws IOException {
-        URL url = GeoUtils.getUrlForSeriesFamily( accession, GeoSource.FTP, GeoFormat.SOFT );
-        try ( InputStream is = new GZIPInputStream( ftpClientFactory.openStream( url ) ) ) {
+        // Prefer cached fixture under src/test/resources; fall back to live FTP for accessions
+        // added later that haven't been cached yet (see Phase 1 of line-60 TODO).
+        InputStream raw = getClass().getResourceAsStream( "/data/loader/expression/geo/series/" + accession + "_family.soft.gz" );
+        if ( raw == null ) {
+            URL url = GeoUtils.getUrl( accession, GeoSource.FTP, GeoFormat.SOFT, GeoScope.FAMILY, GeoAmount.FULL );
+            raw = ftpClientFactory.openStream( url );
+        }
+        try ( InputStream is = new GZIPInputStream( raw ) ) {
             GeoFamilyParser parser = new GeoFamilyParser();
             parser.parse( is );
             return requireNonNull( requireNonNull( parser.getUniqueResult() ).getSeriesMap().get( accession ) );

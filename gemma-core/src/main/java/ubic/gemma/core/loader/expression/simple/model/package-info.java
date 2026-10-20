@@ -1,7 +1,7 @@
 /**
  * Model classes for loading simple expression data.
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.loader.expression.simple.model;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

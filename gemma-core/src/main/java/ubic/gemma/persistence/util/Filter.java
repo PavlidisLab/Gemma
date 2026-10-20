@@ -21,6 +21,8 @@ package ubic.gemma.persistence.util;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+
+import static java.util.Objects.requireNonNull;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionException;
@@ -32,7 +34,7 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
@@ -78,11 +80,18 @@ public class Filter implements PropertyMapping {
         addConverter( Integer.class, Integer::parseInt, Object::toString );
         addConverter( Date.class, s -> {
             try {
-                return DATE_FORMAT.parse( s );
+                // StdDateFormat is not thread-safe; synchronize on the shared static instance.
+                synchronized ( DATE_FORMAT ) {
+                    return DATE_FORMAT.parse( s );
+                }
             } catch ( ParseException e ) {
                 throw new ConversionFailedException( TypeDescriptor.valueOf( Date.class ), TypeDescriptor.valueOf( String.class ), s, e );
             }
-        }, DATE_FORMAT::format );
+        }, d -> {
+            synchronized ( DATE_FORMAT ) {
+                return DATE_FORMAT.format( d );
+            }
+        } );
         addConverter( URL.class, s -> {
             try {
                 return new URL( s );
@@ -100,7 +109,8 @@ public class Filter implements PropertyMapping {
                 return source -> ( T ) Enum.valueOf( targetType, source );
             }
         } );
-        conversionService.addConverter( Enum.class, String.class, ( Converter<Enum<?>, String> ) Enum::name );
+        //noinspection rawtypes
+        conversionService.addConverter( Enum.class, String.class, ( Converter<Enum, String> ) Enum::name );
     }
 
     /**
@@ -135,12 +145,16 @@ public class Filter implements PropertyMapping {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 
+    /**
+     * Create a new filter with a subquery right hand side.
+     */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Subquery requiredValues, @Nullable String originalProperty ) {
         return new Filter( objectAlias, propertyName, propertyType, operator, requiredValues, originalProperty );
     }
 
     /**
      * Create a new filter without an original property.
+     *
      * @see #by(String, String, Class, Operator, Object, String)
      */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, @Nullable T requiredValue ) {
@@ -149,6 +163,7 @@ public class Filter implements PropertyMapping {
 
     /**
      * Create a new filter without an original property and a collection right hand side.
+     *
      * @see #by(String, String, Class, Operator, Object, String)
      */
     public static <T> Filter by( @Nullable String objectAlias, String propertyName, Class<T> propertyType, Operator operator, Collection<T> requiredValues ) {
@@ -265,6 +280,27 @@ public class Filter implements PropertyMapping {
         this.checkTypeCorrect();
     }
 
+    /**
+     * Create a copy of this filter with a new property name and original property.
+     * <p>
+     * If the filter's right hand side is a {@link Subquery}, the operation is propagated to the subquery.
+     * <p>
+     * This can be used to apply this filter to a different property. For example, if you have a filter on a
+     * {@link ubic.gemma.model.expression.experiment.Statement} over {@code object}, you could create a filter over a
+     * {@code secondObject}.
+     *
+     * @throws IllegalArgumentException if the type of the resulting property is not compatible with the required value
+     * @see Subquery#withFilterPropertyName(String, String)
+     */
+    public Filter withPropertyName( String newPropertyName, @Nullable String newOriginalProperty ) {
+        if ( requiredValue instanceof Subquery ) {
+            // in the case of a subquery, rewrite the filter of the subquery instead
+            return new Filter( objectAlias, propertyName, propertyType, operator, ( ( Subquery ) requiredValue ).withFilterPropertyName( newPropertyName, newOriginalProperty ), originalProperty );
+        } else {
+            return new Filter( objectAlias, newPropertyName, propertyType, operator, requiredValue, newOriginalProperty );
+        }
+    }
+
     @Override
     public String toString() {
         return toString( false );
@@ -278,14 +314,29 @@ public class Filter implements PropertyMapping {
     private String toString( boolean withOriginalProperties ) {
         String requiredValueString;
         if ( requiredValue instanceof Subquery ) {
-            return ( ( Subquery ) requiredValue ).getFilter().toString( withOriginalProperties );
+            java.util.List<Filter> conjuncts = ( ( Subquery ) requiredValue ).getFilters();
+            String s = conjuncts.stream()
+                    .map( c -> c.toString( withOriginalProperties ) )
+                    .collect( java.util.stream.Collectors.joining( " and " ) );
+            if ( operator == Operator.inSubquery ) {
+                return "any(" + s + ")";
+            } else if ( operator == Operator.notInSubquery && conjuncts.size() == 1 && isNegative( conjuncts.get( 0 ) ) ) {
+                // `all(x)` is sugar for "none match not-x"; it only reads back that way for a single
+                // conjunct, so a conjunction falls through to the explicit none(...) rendering.
+                return "all(" + Filter.not( conjuncts.get( 0 ) ).toString( withOriginalProperties ) + ")";
+            } else if ( operator == Operator.notInSubquery ) {
+                return "none(" + s + ")";
+            } else {
+                throw new IllegalStateException( "Unsupported operator for subquery: " + operator );
+            }
         } else if ( requiredValue instanceof Collection ) {
             requiredValueString = "(" + ( ( Collection<?> ) requiredValue ).stream()
                     .map( e -> conversionService.convert( e, String.class ) )
                     .map( Filter::quoteIfNecessary )
                     .collect( Collectors.joining( ", " ) ) + ")";
         } else {
-            requiredValueString = conversionService.convert( requiredValue, String.class );
+            requiredValueString = requireNonNull( conversionService.convert( requiredValue, String.class ),
+                    "ConversionService produced null while converting requiredValue to String." );
             requiredValueString = quoteIfNecessary( requiredValueString );
         }
         return String.format( "%s %s %s",
@@ -352,7 +403,8 @@ public class Filter implements PropertyMapping {
 
     private static Object parseItem( String rv, Class<?> pt ) throws IllegalArgumentException {
         try {
-            return conversionService.convert( rv, pt );
+            return requireNonNull( conversionService.convert( rv, pt ),
+                    "ConversionService produced null while parsing operand '" + rv + "' to " + pt.getSimpleName() + "." );
         } catch ( ConversionException e ) {
             throw new IllegalArgumentException( e );
         }
@@ -387,5 +439,15 @@ public class Filter implements PropertyMapping {
             default:
                 throw new IllegalArgumentException( "Don't know how to negate " + op + "." );
         }
+    }
+
+    /**
+     * Check if a filter is negative.
+     */
+    public boolean isNegative( Filter f ) {
+        return f.getOperator() == Filter.Operator.notEq
+                || f.getOperator() == Filter.Operator.notIn
+                || f.getOperator() == Filter.Operator.notLike
+                || f.getOperator() == Filter.Operator.notInSubquery;
     }
 }

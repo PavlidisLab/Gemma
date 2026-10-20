@@ -1,8 +1,10 @@
 package ubic.gemma.cli.util;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -14,13 +16,13 @@ public class OptionsUtilsTest {
 
     private static TimeZone tz;
 
-    @BeforeClass
+    @BeforeAll
     public static void setTimeZoneToAmericaVancouver() {
         tz = TimeZone.getDefault();
         TimeZone.setDefault( TimeZone.getTimeZone( "America/Vancouver" ) );
     }
 
-    @AfterClass
+    @AfterAll
     public static void resetTimeZone() {
         TimeZone.setDefault( tz );
     }
@@ -60,6 +62,22 @@ public class OptionsUtilsTest {
                 .hasHourOfDay( 23 ).hasMinute( 12 ).hasSecond( 11 );
     }
 
+    /**
+     * The relative form the {@code -mdate} help text gives as its example. The ISO 8601 {@code yyyy} format parses a
+     * leading prefix, so it must not get the first try at these.
+     */
+    @Test
+    public void testParseRelativeDate() throws ParseException {
+        assertThat( c.apply( "-30d" ) )
+                .isCloseTo( new Date( relativeTo.getTime() - 30L * 24 * 3600 * 1000 ), 2 * 3600 * 1000 );
+        assertThat( c.apply( "-10d" ) )
+                .isCloseTo( new Date( relativeTo.getTime() - 10L * 24 * 3600 * 1000 ), 2 * 3600 * 1000 );
+        assertThat( c.apply( "+1d" ) )
+                .isCloseTo( new Date( relativeTo.getTime() + 24L * 3600 * 1000 ), 2 * 3600 * 1000 );
+        assertThat( c.apply( "-8h" ) )
+                .isCloseTo( new Date( relativeTo.getTime() - 8L * 3600 * 1000 ), 60 * 1000 );
+    }
+
     @Test
     public void testParseWords() throws ParseException {
         assertThat( c.apply( "now" ) ).isCloseTo( relativeTo, 10 );
@@ -82,5 +100,22 @@ public class OptionsUtilsTest {
         c.apply( "two weeks ago" );
         c.apply( "one month ago" );
         c.apply( "two months ago" );
+    }
+
+    @Test
+    public void testAutoOption() throws org.apache.commons.cli.ParseException {
+        Options options = new Options();
+        OptionsUtils.addAutoOption( options, "filter", "filter", "Filter data",
+                "noFilter", "no-filter", "Do not filter data" );
+        DefaultParser parser = new DefaultParser();
+        assertThat( OptionsUtils.getAutoOptionValue( parser.parse( options, new String[] { "--filter" } ),
+                "filter", "noFilter" ) )
+                .isTrue();
+        assertThat( OptionsUtils.getAutoOptionValue( parser.parse( options, new String[] { "--no-filter" } ),
+                "filter", "noFilter" ) )
+                .isFalse();
+        assertThat( OptionsUtils.getAutoOptionValue( parser.parse( options, new String[] {} ),
+                "filter", "noFilter" ) )
+                .isNull();
     }
 }

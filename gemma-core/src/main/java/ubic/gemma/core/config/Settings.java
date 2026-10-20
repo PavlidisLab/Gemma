@@ -18,7 +18,7 @@
  */
 package ubic.gemma.core.config;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ConfigurationUtils;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
@@ -40,7 +40,7 @@ import java.util.NoSuchElementException;
  *             to inject configurations. You can use {@code @Value("${property}")} as replacement.
  */
 @Deprecated
-@CommonsLog
+@Slf4j
 public class Settings {
 
     /**
@@ -61,7 +61,9 @@ public class Settings {
             throw new RuntimeException( e );
         }
         // step through the result and do a final round of variable substitution.
-        PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper( "${", "}", ":", false );
+        // Spring 6.2 deprecated the 4-arg constructor in favor of the 5-arg one
+        // (adds an escape-character param). null = no escape, preserving prior behavior.
+        PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper( "${", "}", ":", null, false );
         for ( Iterator<String> it = Settings.config.getKeys(); it.hasNext(); ) {
             String key = it.next();
             Object val = Settings.config.getProperty( key );

@@ -14,11 +14,15 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 
 /**
  * @author paul
  */
+@Getter
+@Setter
 @SuppressWarnings({ "unused", "WeakerAccess" }) // Used in frontend
 public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct> {
     /**
@@ -63,64 +67,6 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
             }
             this.strand = entity.getPhysicalLocation().getStrand();
         }
-    }
-
-    public String getChromosome() {
-        return this.chromosome;
-    }
-
-    public void setChromosome( String chromosome ) {
-        this.chromosome = chromosome;
-    }
-
-    public Long getGeneId() {
-        return this.geneId;
-    }
-
-    public void setGeneId( Long geneId ) {
-        this.geneId = geneId;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public String getNcbiId() {
-        return this.ncbiId;
-    }
-
-    public void setNcbiId( String ncbiId ) {
-        this.ncbiId = ncbiId;
-    }
-
-    @Deprecated
-    public Long getNucleotideEnd() {
-        return this.nucleotideEnd;
-    }
-
-    @Deprecated
-    public void setNucleotideEnd( Long nucleotideEnd ) {
-        this.nucleotideEnd = nucleotideEnd;
-    }
-
-    public Long getNucleotideStart() {
-        return this.nucleotideStart;
-    }
-
-    public void setNucleotideStart( Long nucleotideStart ) {
-        this.nucleotideStart = nucleotideStart;
-    }
-
-    public String getStrand() {
-        return this.strand;
-    }
-
-    public void setStrand( String strand ) {
-        this.strand = strand;
     }
 
 }

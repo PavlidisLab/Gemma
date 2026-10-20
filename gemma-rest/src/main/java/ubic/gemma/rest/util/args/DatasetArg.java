@@ -1,13 +1,13 @@
 package ubic.gemma.rest.util.args;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.rest.util.MalformedArgException;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Mutable argument type base class for dataset (ExpressionExperiment) API.
@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * @author tesarst
  */
 @Schema(oneOf = { DatasetIdArg.class, DatasetStringArg.class })
-@CommonsLog
+@Slf4j
 public abstract class DatasetArg<T>
         extends AbstractEntityArg<T, ExpressionExperiment, ExpressionExperimentService> {
 

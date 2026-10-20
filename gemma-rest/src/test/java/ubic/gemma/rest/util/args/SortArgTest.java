@@ -1,6 +1,6 @@
 package ubic.gemma.rest.util.args;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.FilteringService;
 import ubic.gemma.persistence.util.Sort;
@@ -8,6 +8,7 @@ import ubic.gemma.rest.util.MalformedArgException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,11 +31,11 @@ public class SortArgTest {
                 .hasFieldOrPropertyWithValue( "direction", Sort.Direction.ASC );
     }
 
-    @Test(expected = MalformedArgException.class)
+    @Test
     public void testGetSortWhenFieldDoesNotExistThenRaiseMalformedArgumentException() {
         FilteringService<Identifiable> filteringService = mock( FilteringService.class );
         when( filteringService.getSort( "wut", Sort.Direction.ASC, Sort.NullMode.LAST ) ).thenThrow( IllegalArgumentException.class );
-        SortArg.valueOf( "+wut" ).getSort( filteringService );
+        assertThrows( MalformedArgException.class, () -> SortArg.valueOf( "+wut" ).getSort( filteringService ) );
     }
 
     @Test

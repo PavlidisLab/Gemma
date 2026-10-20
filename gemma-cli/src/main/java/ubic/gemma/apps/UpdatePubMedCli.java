@@ -28,15 +28,23 @@ import ubic.gemma.core.loader.expression.geo.service.GeoRecordType;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabases;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.description.PublicationAssociation;
+import ubic.gemma.model.common.description.PublicationAssociationRole;
+import ubic.gemma.model.common.description.PublicationAssociationSource;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceReadService;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.description.PublicationAssertion;
+import ubic.gemma.persistence.service.common.description.PublicationAssociationService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,11 +57,13 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     @Autowired
     private ExpressionExperimentService eeserv;
     @Autowired
+    private BibliographicReferenceReadService bibliographicReferenceReadService;
+    @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
     @Autowired
-    private PersisterHelper persisterHelper;
+    private PublicationAssociationService publicationAssociationService;
 
-    @Value("${entrez.efetch.apikey")
+    @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
     @Override
@@ -75,7 +85,9 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
     @Override
     protected void doAuthenticatedWork() throws Exception {
         Map<String, ExpressionExperiment> toFetch = new HashMap<>();
-        Collection<ExpressionExperiment> ees = eeserv.getExperimentsLackingPublications();
+        // admin pass: process the full set (currently ~7k+ rows on prod); explicit MAX_VALUE makes the unbounded
+        // intent visible at the callsite rather than baked into the DAO.
+        Collection<ExpressionExperiment> ees = eeserv.getExperimentsLackingPublications( Integer.MAX_VALUE );
         for ( ExpressionExperiment ee : ees ) {
             String shortName = ee.getShortName();
             if ( shortName.contains( "." ) ) {
@@ -103,27 +115,7 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
             expressionExperiment = eeserv.thawLite( expressionExperiment );
 
             try {
-                Collection<String> pmids = rec.getPubMedIds();
-
-                String pubmedId = pmids.iterator().next();
-
-                BibliographicReference publication = getBibliographicReference( pubmedId );
-
-                if ( publication != null ) {
-                    expressionExperiment.setPrimaryPublication( publication );
-                }
-
-                if ( pmids.size() > 1 ) {
-                    for ( int i = 1; i < pmids.size(); i++ ) {
-                        publication = getBibliographicReference( pubmedId );
-
-                        if ( publication != null ) {
-                            expressionExperiment.getOtherRelevantPublications().add( publication );
-                        }
-                    }
-                }
-
-                eeserv.update( expressionExperiment );
+                addPublications( expressionExperiment, rec.getGeoAccession(), rec.getPubMedIds() );
                 numFound++;
                 addSuccessObject( expressionExperiment.getShortName(), "Publication(s) added" );
             } catch ( Exception e ) {
@@ -134,6 +126,34 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
 
         }
         log.info( "Found publications for " + numFound + " experiments" );
+    }
+
+    /**
+     * Link GEO's papers to the experiment: the first as primary, the rest as other-relevant.
+     */
+    void addPublications( ExpressionExperiment expressionExperiment, String geoAccession, List<String> pmids ) {
+        BibliographicReference publication = getBibliographicReference( pmids.get( 0 ) );
+
+        if ( publication != null && link( expressionExperiment, publication ) ) {
+            expressionExperiment.setPrimaryPublication( publication );
+            publicationAssociationService.assertAccepted( expressionExperiment,
+                    geoLink( publication, geoAccession ), PublicationAssociationRole.PRIMARY );
+        }
+
+        // Each further PMID by its own id. This loop used to look up the first one every time, so the
+        // primary paper was added again as other-relevant, its PRIMARY assertion was rewritten as
+        // OTHER_RELEVANT, and the further papers were never added.
+        for ( String otherPmid : pmids.subList( 1, pmids.size() ) ) {
+            publication = getBibliographicReference( otherPmid );
+
+            if ( publication != null && link( expressionExperiment, publication ) ) {
+                expressionExperiment.getOtherRelevantPublications().add( publication );
+                publicationAssociationService.assertAccepted( expressionExperiment,
+                        geoLink( publication, geoAccession ), PublicationAssociationRole.OTHER_RELEVANT );
+            }
+        }
+
+        eeserv.update( expressionExperiment );
     }
 
     @Override
@@ -152,9 +172,33 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
      * @param pubmedId pubmedID
      * @return persisted reference
      */
+    /**
+     * Whether GEO's link may be taken for this experiment, or a curator has already ruled the paper
+     * out. GEO's {@code !Series_pubmed_id} is occasionally the wrong one of the submitter's own
+     * papers, and a batch job that re-reads GEO is exactly the thing that used to undo the correction.
+     */
+    private boolean link( ExpressionExperiment ee, BibliographicReference publication ) {
+        PublicationAssociation blocked = publicationAssociationService.findBlockingRejection( ee, publication,
+                PublicationAssociationSource.GEO_SUBMITTER_LINK );
+        if ( blocked == null ) {
+            return true;
+        }
+        log.info( "Skipping GEO's publication " + publication.getPubAccession() + " for " + ee.getShortName()
+                + ": rejected by " + blocked.getSource().getDbValue() + " on " + blocked.getAssertedAt()
+                + ( blocked.getEvidence() != null ? " — " + blocked.getEvidence() : "" ) );
+        return false;
+    }
+
+    private PublicationAssertion geoLink( BibliographicReference ref, String geoAccession ) {
+        return new PublicationAssertion( ref, PublicationAssociationSource.GEO_SUBMITTER_LINK,
+                "GEO !Series_pubmed_id on " + geoAccession + ", read from the GEO record by updatePubMeds;"
+                        + " not independently checked against the paper.",
+                null, GOEvidenceCode.TAS, null, null );
+    }
+
     private BibliographicReference getBibliographicReference( String pubmedId ) {
         // check if it already in the system
-        BibliographicReference publication = bibliographicReferenceService.findByExternalId( pubmedId );
+        BibliographicReference publication = bibliographicReferenceReadService.findByExternalId( pubmedId );
         if ( publication == null ) {
             PubMedSearch pms = new PubMedSearch( ncbiApiKey );
             Collection<String> searchTerms = new ArrayList<>();
@@ -170,11 +214,11 @@ public class UpdatePubMedCli extends AbstractAuthenticatedCLI {
             DatabaseEntry pubAccession = DatabaseEntry.Factory.newInstance();
             pubAccession.setAccession( pubmedId );
             ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
-            ed.setName( "PubMed" );
+            ed.setName( ExternalDatabases.PUBMED );
             pubAccession.setExternalDatabase( ed );
 
             publication.setPubAccession( pubAccession );
-            publication = ( BibliographicReference ) persisterHelper.persist( publication );
+            publication = bibliographicReferenceService.findOrCreate( publication );
 
         }
         return publication;

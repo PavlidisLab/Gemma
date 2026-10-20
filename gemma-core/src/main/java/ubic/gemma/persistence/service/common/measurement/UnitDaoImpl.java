@@ -18,7 +18,6 @@
  */
 package ubic.gemma.persistence.service.common.measurement;
 
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -46,7 +45,6 @@ public class UnitDaoImpl extends AbstractDao<Unit> implements UnitDao {
     @Override
     public Unit find( Unit unit ) {
         BusinessKey.checkValidKey( unit );
-        Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), unit );
-        return ( Unit ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), unit );
     }
 }

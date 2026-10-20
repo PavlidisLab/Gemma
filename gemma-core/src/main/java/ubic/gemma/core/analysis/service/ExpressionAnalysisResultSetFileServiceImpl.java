@@ -1,12 +1,11 @@
 package ubic.gemma.core.analysis.service;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import ubic.gemma.core.util.BuildInfo;
-import ubic.gemma.core.util.TsvUtils;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -15,7 +14,7 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
@@ -23,10 +22,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
-import static ubic.gemma.core.util.TsvUtils.*;
+import static ubic.gemma.core.util.TsvUtils.format;
+import static ubic.gemma.core.util.TsvUtils.getTsvFormatBuilder;
 
 @Service
-@CommonsLog
+@Slf4j
 public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAnalysisResultSetFileService {
 
     @Autowired
@@ -74,8 +74,8 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
         // this is the order the factor values are displayed
         // this is only relevant for interactions
         Comparator<Contrast> contrastResultComparator = Comparator
-                .comparing( Contrast::getFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId ) ) )
-                .thenComparing( Contrast::getSecondFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId ) ) );
+                .comparing( Contrast::getFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) )
+                .thenComparing( Contrast::getSecondFactorValue, Comparator.nullsLast( Comparator.comparing( FactorValue::getId, Comparator.nullsLast( Comparator.naturalOrder() ) ) ) );
 
         // we need to peek in the contrast result to understand factor value interactions
         // i.e. interaction between genotype and time point might result in a contrast_male_3h column, although we would
@@ -100,9 +100,9 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
                     contrastResultPrefix + "pvalue" ) );
         }
 
-        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, extraHeaderComments.toArray( new String[1] ) )
+        try ( CSVPrinter printer = getTsvFormatBuilder( what, buildInfo, new Date(), extraHeaderComments.toArray( new String[1] ) )
                 .setHeader( header.toArray( new String[0] ) )
-                .build()
+                .get()
                 .print( writer ) ) {
             for ( DifferentialExpressionAnalysisResult analysisResult : analysisResultSet.getResults() ) {
                 final List<Object> record = new ArrayList<>( Arrays.asList( analysisResult.getId(),
@@ -147,15 +147,15 @@ public class ExpressionAnalysisResultSetFileServiceImpl implements ExpressionAna
     }
 
     private String formatGenesLongAttribute( List<Gene> genes, Function<Gene, Long> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).map( l -> l != null ? String.valueOf( l ) : null ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesIntAttribute( List<Gene> genes, Function<Gene, Integer> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).map( i -> i != null ? String.valueOf( i ) : null ).collect( Collectors.toList() ) );
     }
 
     private String formatGenesAttribute( List<Gene> genes, Function<Gene, String> func ) {
-        return genes.stream().map( func ).map( TsvUtils::format ).collect( Collectors.joining( String.valueOf( SUB_DELIMITER ) ) );
+        return format( genes.stream().map( func ).collect( Collectors.toList() ) );
     }
 
     /**

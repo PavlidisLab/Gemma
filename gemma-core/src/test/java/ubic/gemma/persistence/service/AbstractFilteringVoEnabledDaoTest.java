@@ -1,52 +1,73 @@
 package ubic.gemma.persistence.service;
 
 import lombok.Data;
+import org.h2.Driver;
 import org.hibernate.SessionFactory;
-import org.junit.Test;
-import org.springframework.beans.factory.FactoryBean;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.persistence.hibernate.LocalSessionFactoryBean;
-import ubic.gemma.persistence.hibernate.MySQL57InnoDBDialect;
+import ubic.gemma.persistence.hibernate.H2Dialect;
+import ubic.gemma.persistence.hibernate.HibernateSessionFactoryBean;
+import ubic.gemma.persistence.util.Filter;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 import ubic.gemma.core.context.TestComponent;
 
-import javax.annotation.Nullable;
-import javax.persistence.*;
+import org.springframework.lang.Nullable;
+import javax.sql.DataSource;
+import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ContextConfiguration
-public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
+public class AbstractFilteringVoEnabledDaoTest extends BaseTest5 {
 
     @TestComponent
     @Configuration
     static class AbstractFilteringVoEnabledDaoTestContextConfiguration {
 
         @Bean
-        public FactoryBean<SessionFactory> sessionFactory() {
-            LocalSessionFactoryBean factoryBean = new LocalSessionFactoryBean();
-            factoryBean.getHibernateProperties().setProperty( "hibernate.dialect", MySQL57InnoDBDialect.class.getName() );
-            factoryBean.setAnnotatedClasses(
-                    FakeModel.class, FakeEnum.class, FakeRelatedModel.class
-            );
-            return factoryBean;
+        public DataSource dataSource() {
+            return new SimpleDriverDataSource( new Driver(), "jdbc:h2:mem:fakedaotest;DB_CLOSE_DELAY=-1" );
+        }
+
+        @Bean
+        public HibernateSessionFactoryBean sessionFactory( DataSource dataSource ) {
+            HibernateSessionFactoryBean factory = new HibernateSessionFactoryBean();
+            factory.setDataSource( dataSource );
+            factory.setAnnotatedClasses( FakeModel.class, FakeRelatedModel.class );
+            Properties props = new Properties();
+            props.setProperty( "hibernate.dialect", H2Dialect.class.getName() );
+            props.setProperty( "hibernate.hbm2ddl.auto", "create" );
+            props.setProperty( "hibernate.cache.use_second_level_cache", "false" );
+            props.setProperty( "hibernate.cache.use_query_cache", "false" );
+            // ManagedSessionContext: required so that getCurrentSession() resolves in the lightweight
+            // (no Spring TM) test fixture used below for the JPA-Criteria filtering DAO tests.
+            props.setProperty( "hibernate.current_session_context_class", "managed" );
+            factory.setHibernateProperties( props );
+            return factory;
         }
 
         @Bean
         public FakeDao fakeDao( SessionFactory sessionFactory ) {
             return new FakeDao( sessionFactory );
+        }
+
+        @Bean
+        public FakeCriteriaDao fakeCriteriaDao( SessionFactory sessionFactory ) {
+            return new FakeCriteriaDao( sessionFactory );
         }
     }
 
@@ -131,8 +152,27 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
         }
     }
 
+    /**
+     * Minimal subclass that exercises the JPA-Criteria filtering path (subquery + .size filters).
+     */
+    static class FakeCriteriaDao extends AbstractCriteriaFilteringVoEnabledDao<FakeModel, FakeModelVo> {
+
+        @Autowired
+        public FakeCriteriaDao( SessionFactory sessionFactory ) {
+            super( FakeModel.class, sessionFactory );
+        }
+
+        @Override
+        protected FakeModelVo doLoadValueObject( FakeModel entity ) {
+            return null;
+        }
+    }
+
     @Autowired
     private FakeDao fakeDao;
+
+    @Autowired
+    private FakeCriteriaDao fakeCriteriaDao;
 
     @Test
     public void test() {
@@ -152,8 +192,52 @@ public class AbstractFilteringVoEnabledDaoTest extends BaseTest {
                 .hasFieldOrPropertyWithValue( "propertyType", Integer.class );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUndefinedProperty() {
-        fakeDao.getFilterablePropertyMeta( "missing" );
+        assertThrows( IllegalArgumentException.class, () -> fakeDao.getFilterablePropertyMeta( "missing" ) );
+    }
+
+    /**
+     * Exercises the .size-suffix filter path on the JPA-Criteria filtering DAO. Pre-Phase-2 this
+     * went through the deleted Hibernate Criteria API; Phase 2 round 6 restored it via
+     * {@code cb.size(...)} on a {@code Path<Collection<?>>}.
+     * <p>
+     * Uses a manually-opened session bound to the thread (no Spring TM in this lightweight test
+     * context) so the DAO's {@code getCurrentSession()} call resolves.
+     */
+    @Test
+    public void testSizeFilterOnCriteriaDao() {
+        runInSession( () -> {
+            Filters filters = Filters.by( Filter.by( null, "collectionOfStrings.size", Integer.class, Filter.Operator.greaterThan, 0 ) );
+            assertThat( fakeCriteriaDao.count( filters ) ).isEqualTo( 0L );
+            assertThat( fakeCriteriaDao.load( filters, null ) ).isEmpty();
+        } );
+    }
+
+    /**
+     * Exercises null-precedence (FIRST/LAST) via the Hibernate-6 JpaOrder vendor extension.
+     */
+    @Test
+    public void testNullPrecedenceOnCriteriaDao() {
+        runInSession( () -> {
+            Sort nullsFirst = Sort.by( null, "name", Sort.Direction.ASC, Sort.NullMode.FIRST );
+            assertThat( fakeCriteriaDao.load( null, nullsFirst ) ).isEmpty();
+            Sort nullsLast = Sort.by( null, "name", Sort.Direction.ASC, Sort.NullMode.LAST );
+            assertThat( fakeCriteriaDao.load( null, nullsLast ) ).isEmpty();
+        } );
+    }
+
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    private void runInSession( Runnable r ) {
+        org.hibernate.Session s = sessionFactory.openSession();
+        org.hibernate.context.internal.ManagedSessionContext.bind( s );
+        try {
+            r.run();
+        } finally {
+            org.hibernate.context.internal.ManagedSessionContext.unbind( sessionFactory );
+            s.close();
+        }
     }
 }

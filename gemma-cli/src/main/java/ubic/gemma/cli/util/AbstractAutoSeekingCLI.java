@@ -11,7 +11,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.io.Serializable;
 import java.util.Date;
@@ -19,12 +19,14 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 import static ubic.gemma.cli.util.OptionsUtils.addDateOption;
+import static ubic.gemma.cli.util.OptionsUtils.formatOption;
 
 /**
  * Provide auto-seeking capabilities to a CLI.
  * <p>
  * This allows CLIs to process entities that lack certain {@link AuditEvent} or that haven't been updated since a
  * certain date.
+ *
  * @param <T> the type of entity being seeked
  */
 public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends AbstractAuthenticatedCLI {
@@ -71,7 +73,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
         Assert.state( !options.hasOption( AUTO_OPTION_NAME ), "The -" + AUTO_OPTION_NAME + " option was already added." );
         options.addOption( Option.builder( AUTO_OPTION_NAME )
                 .desc( "Attempt to process entities that need processing based on workflow criteria." )
-                .build() );
+                .get() );
     }
 
     /**
@@ -91,9 +93,9 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
      */
     protected void addLimitingDateOption( Options options ) {
         Assert.state( !options.hasOption( LIMITING_DATE_OPTION ), "The -" + LIMITING_DATE_OPTION + " option was already added." );
-        addDateOption( options, LIMITING_DATE_OPTION, null, "Constrain to run only on entities with analyses older than the given date. "
+        addDateOption( LIMITING_DATE_OPTION, null, "Constrain to run only on entities with analyses older than the given date. "
                 + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                + "If there is no record of when the analysis was last run, it will be run." );
+                + "If there is no record of when the analysis was last run, it will be run.", options );
     }
 
     protected void addForceOption( Options options ) {
@@ -200,6 +202,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
 
     /**
      * Check if the given auditable can be skipped.
+     *
      * @param auditable  auditable
      * @param eventClass can be null
      * @return boolean
@@ -226,7 +229,7 @@ public abstract class AbstractAutoSeekingCLI<T extends Auditable> extends Abstra
                 if ( skipIfLastRunLaterThan != null ) {
                     if ( event.getDate().after( skipIfLastRunLaterThan ) ) {
                         log.info( auditable + ": " + " run more recently than " + skipIfLastRunLaterThan );
-                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan + ", use - " + FORCE_OPTION + "to process anyway." );
+                        addErrorObject( auditable, "Run more recently than " + skipIfLastRunLaterThan + ", use " + formatOption( FORCE_OPTION, "force" ) + " to process anyway." );
                         return true;
                     }
                 } else {

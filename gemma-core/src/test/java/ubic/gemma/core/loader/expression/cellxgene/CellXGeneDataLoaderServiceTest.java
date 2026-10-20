@@ -1,0 +1,59 @@
+package ubic.gemma.core.loader.expression.cellxgene;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.util.test.BaseIntegrationTest5;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.io.IOException;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+@NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
+@ExtendWith(NetworkAvailableExtension.class)
+public class CellXGeneDataLoaderServiceTest extends BaseIntegrationTest5 {
+
+    @Autowired
+    private TaxonService taxonService;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private CellXGeneDataLoaderService cellXGeneDataLoaderService;
+
+    @Test
+    public void test() throws IOException {
+        Taxon taxon = taxonService.findByCommonName( "human" );
+        ArrayDesign platform = new ArrayDesign();
+        platform.setShortName( "test123123123" );
+        platform.setName( "test" );
+        platform.setPrimaryTaxon( taxon );
+        platform = arrayDesignService.create( platform );
+
+        ExpressionExperiment ee = cellXGeneDataLoaderService.fetchAndLoad( "f406a653-c079-4bf9-aab6-85846c27571d",
+                // selected by title; a revision of the dataset changes its version but not its permanent ID
+                "Postnatal human brain development: RNA", null, platform, "Clarence-2024",
+                false, false, false, false );
+
+        assertThat( ee.getAccession() ).isNotNull()
+                .satisfies( accession -> {
+                    assertThat( accession.getAccession() )
+                            .isEqualTo( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd" );
+                    assertThat( accession.getAccessionVersion() )
+                            .isNotNull()
+                            .isNotEqualTo( accession.getAccession() );
+                    assertThat( accession.getUri() )
+                            .isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
+                    assertThat( accession.getExternalDatabase().getName() )
+                            .isEqualTo( "CELLxGENE" );
+                } );
+    }
+}

@@ -19,7 +19,7 @@
 
 package ubic.gemma.core.analysis.sequence;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 
@@ -31,7 +31,7 @@ import java.util.Set;
 /**
  * @author paul
  */
-@CommonsLog
+@Slf4j
 public class ProbeMapUtils {
 
     /**

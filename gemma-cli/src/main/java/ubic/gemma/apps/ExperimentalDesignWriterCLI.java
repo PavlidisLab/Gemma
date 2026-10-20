@@ -21,18 +21,29 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.file.PathUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.basecode.util.FileTools;
+import ubic.gemma.cli.options.DesignFileOptionValue;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileUtils;
 import ubic.gemma.core.datastructure.matrix.io.ExperimentalDesignWriter;
 import ubic.gemma.core.util.BuildInfo;
+import ubic.gemma.core.util.locking.LockedPath;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.PrintWriter;
-
-import static ubic.gemma.cli.util.OptionsUtils.formatOption;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Writes out the experimental design for a given experiment. This can be directly read into R.
@@ -42,9 +53,8 @@ import static ubic.gemma.cli.util.OptionsUtils.formatOption;
 public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatingCLI {
 
     private static final String
-            STANDARD_LOCATION_OPTION = "standardLocation",
-            OUT_FILE_PREFIX_OPTION = "o",
-            USE_RAW_COLUMN_NAMES_OPTION = "useRawColumnNames";
+            USE_PROCESSED_DATA_OPTION = "useProcessedData",
+            QUANTITATION_TYPE_OPTION = "quantitationType";
 
     @Autowired
     private BuildInfo buildInfo;
@@ -52,10 +62,10 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
 
-    private boolean standardLocation;
-    private boolean useRawColumnNames;
+    private boolean useProcessedData;
     @Nullable
-    private String outFileName;
+    private String quantitationTypeIdentifier;
+    private DesignFileOptionValue destination;
 
     @Override
     public String getCommandName() {
@@ -69,36 +79,79 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
 
     @Override
     protected void buildExperimentOptions( Options options ) {
-        options.addOption( STANDARD_LOCATION_OPTION, "standard-location", false, "Write the experimental design to the standard location." );
-        options.addOption( OUT_FILE_PREFIX_OPTION, "outFilePrefix", true, "File prefix for saving the output (short name will be appended). This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
-        options.addOption( USE_RAW_COLUMN_NAMES_OPTION, "use-raw-column-names", false, "Use raw names for the columns, otherwise R-friendly names are used. This option is incompatible with " + formatOption( options, STANDARD_LOCATION_OPTION ) + "." );
+        options.addOption( USE_PROCESSED_DATA_OPTION, "use-processed-data", false, "Write the experimental design for the assays of the processed data. This option is incompatible with -quantitationType,--quantitation-type." );
+        options.addOption( QUANTITATION_TYPE_OPTION, "quantitation-type", true, "Quantitation type identifier to use when writing the experimental design. If not specified, a generic experimental design will be written. This option is incompatible with -useProcessedData/--use-processed-data." );
+        addDesignFileOptions( options, "experimental design", true );
         addForceOption( options );
     }
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
-        standardLocation = commandLine.hasOption( STANDARD_LOCATION_OPTION );
-        outFileName = commandLine.getOptionValue( OUT_FILE_PREFIX_OPTION );
-        useRawColumnNames = commandLine.hasOption( USE_RAW_COLUMN_NAMES_OPTION );
+        destination = getDesignFileOptionValue( commandLine, true );
+        useProcessedData = commandLine.hasOption( USE_PROCESSED_DATA_OPTION );
+        quantitationTypeIdentifier = commandLine.getOptionValue( QUANTITATION_TYPE_OPTION );
+        if ( useProcessedData && quantitationTypeIdentifier != null ) {
+            throw new ParseException( "Options -useProcessedData,--use-processed-data and -quantitationType,--quantitation-type are incompatible." );
+        }
     }
 
     @Override
-    protected void processExpressionExperiment( ExpressionExperiment ee ) {
+    protected void processExpressionExperiment( ExpressionExperiment ee ) throws IOException {
         ee = eeService.thawLite( ee );
-        if ( standardLocation ) {
-            try {
-                expressionDataFileService.writeOrLocateDesignFile( ee, isForce() );
-            } catch ( IOException e ) {
-                addErrorObject( ee, e );
-            }
+        Path dest;
+        if ( destination.isStandardLocation() ) {
+            ExpressionExperiment finalEe = ee;
+            dest = expressionDataFileService.writeOrLocateDesignFile( ee, useProcessedData, isForce() )
+                    .map( LockedPath::closeAndGetPath )
+                    .orElseThrow( () -> new IllegalStateException( finalEe + " does not have an experimental design." ) );
         } else {
-            try ( PrintWriter writer = new PrintWriter( ( outFileName != null ? outFileName + "_" : "" ) + FileTools.cleanForFileName( ee.getShortName() ) + ".txt" ) ) {
+            String filename;
+            if ( quantitationTypeIdentifier != null ) {
+                QuantitationType qt = entityLocator.locateQuantitationType( ee, quantitationTypeIdentifier, RawExpressionDataVector.class );
+                filename = ExpressionDataFileUtils.getDesignFileName( ee, qt );
+            } else {
+                filename = ExpressionDataFileUtils.getDesignFileName( ee, useProcessedData );
+            }
+            dest = destination.getOutputFile( filename );
+            PathUtils.createParentDirectories( dest );
+            try ( PrintWriter writer = new PrintWriter( dest.toFile(), StandardCharsets.UTF_8.name() ) ) {
                 ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter( entityUrlBuilder, buildInfo, true );
-                edWriter.setUseRawColumnNames( useRawColumnNames );
-                edWriter.write( ee, true, writer );
-            } catch ( IOException e ) {
-                addErrorObject( ee, e );
+                edWriter.setUseMultipleRowsForAssays( destination.isUseMultipleRowsForAssays() );
+                edWriter.setSeparateSampleFromAssaysIdentifiers( destination.isSeparateSampleFromAssaysIdentifiers() );
+                edWriter.setUseBioAssayIds( destination.isUseBioAssayIds() );
+                edWriter.setUseRawColumnNames( destination.isUseRawColumnNames() );
+                if ( useProcessedData ) {
+                    ExpressionExperiment finalEe1 = ee;
+                    QuantitationType qt = eeService.getProcessedQuantitationType( ee )
+                            .orElseThrow( () -> new IllegalArgumentException( finalEe1 + " does not have processed data vectors." ) );
+                    Collection<BioAssayDimension> dimensions = eeService.getProcessedBioAssayDimensionsWithAssays( ee );
+                    if ( dimensions.isEmpty() ) {
+                        throw new IllegalStateException( qt + " does not have an associated dimension." );
+                    }
+                    if ( dimensions.size() > 1 ) {
+                        log.warn( "Multiple dimensions found for " + qt + ", this is not supposed to happen for processed data." );
+                    }
+                    Set<BioAssay> assays = dimensions.stream().map( BioAssayDimension::getBioAssays )
+                            .flatMap( Collection::stream )
+                            .collect( Collectors.toSet() );
+                    edWriter.write( ee, qt, ProcessedExpressionDataVector.class, assays, true, writer );
+                } else if ( quantitationTypeIdentifier != null ) {
+                    QuantitationType qt = entityLocator.locateQuantitationType( ee, quantitationTypeIdentifier, RawExpressionDataVector.class );
+                    Collection<BioAssayDimension> dimensions = eeService.getBioAssayDimensionsWithAssays( ee, qt );
+                    if ( dimensions.isEmpty() ) {
+                        throw new IllegalStateException( qt + " does not have an associated dimension." );
+                    }
+                    // more than one dimension is possible for raw data
+                    // order is irrelevant since the design writer sorts biomaterials
+                    Set<BioAssay> assays = dimensions.stream().map( BioAssayDimension::getBioAssays )
+                            .flatMap( Collection::stream )
+                            .collect( Collectors.toSet() );
+                    edWriter.write( ee, qt, RawExpressionDataVector.class, assays, true, writer );
+                } else {
+                    edWriter.write( ee, writer );
+                }
             }
         }
+        addSuccessObject( ee, "Wrote experimental design to " + dest + "." );
     }
 }

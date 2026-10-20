@@ -1,7 +1,7 @@
 /**
  *
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.security.audit;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

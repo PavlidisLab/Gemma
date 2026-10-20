@@ -97,7 +97,7 @@ public class BeanInitializationTimeMonitor implements BeanFactoryPostProcessor {
         }
 
         @Override
-        public PropertyValues postProcessPropertyValues( PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName ) throws BeansException {
+        public PropertyValues postProcessProperties( PropertyValues pvs, Object bean, String beanName ) throws BeansException {
             return pvs;
         }
     }
@@ -141,7 +141,7 @@ public class BeanInitializationTimeMonitor implements BeanFactoryPostProcessor {
         }
 
         @Override
-        public PropertyValues postProcessPropertyValues( PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName ) throws BeansException {
+        public PropertyValues postProcessProperties( PropertyValues pvs, Object bean, String beanName ) throws BeansException {
             return pvs;
         }
     }

@@ -4,7 +4,7 @@ import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeriesType;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -54,17 +54,6 @@ public interface GeoBrowser {
     Collection<GeoRecord> getAllGeoRecords( GeoRecordType recordType, @Nullable Collection<String> allowedTaxa, int maxRecords ) throws IOException;
 
     /**
-     * Retrieve recent GEO records from <a href="https://www.ncbi.nlm.nih.gov/geo/browse/">GEO browser</a>.
-     * <p>
-     * The retrieved information is pretty minimal. Use {@link #searchGeoRecords(GeoRecordType, String, GeoSearchField, Collection, Collection, Collection)}
-     * for detailed records.
-     * @param  start    start page
-     * @param  pageSize page size
-     * @return a slice of GEO records
-     */
-    Slice<GeoRecord> getRecentGeoRecords( GeoRecordType recordType, int start, int pageSize ) throws IOException;
-
-    /**
      * Search and retrieve GEO records.
      * @see #searchGeoRecords(GeoRecordType, String, GeoSearchField, Collection, Collection, Collection)
      * @see #retrieveGeoRecords(GeoQuery, int, int, GeoRetrieveConfig)
@@ -76,7 +65,7 @@ public interface GeoBrowser {
     /**
      * Search GEO records.
      * <p>
-     * Provides more details than {@link #getRecentGeoRecords(GeoRecordType, int, int)}. Performs an E-utilities query
+     * Performs an E-utilities query
      * of the GEO database with the given search terms (search terms can be omitted). Returns at most pageSize records.
      * <p>
      * Note that the search is reversed in time. You get the most recent records first.
@@ -90,7 +79,24 @@ public interface GeoBrowser {
      * @return a GEO query that can be retrieved with {@link #retrieveGeoRecords(GeoQuery, int, int, GeoRetrieveConfig)}
      * @throws IOException if there is a problem obtaining or manipulating the file (some exceptions are not thrown and just logged)
      */
-    GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<GeoSeriesType> seriesTypes ) throws IOException;
+    default GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field, @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms, @Nullable Collection<GeoSeriesType> seriesTypes ) throws IOException {
+        return searchGeoRecords( recordType, searchTerms, field, allowedTaxa, limitPlatforms, seriesTypes, null, null );
+    }
+
+    /**
+     * Search GEO records, restricted to a publication-date window.
+     * <p>
+     * Inline-PDAT filter on the Entrez esearch term: {@code "yyyy/MM/dd"[PDAT] : "yyyy/MM/dd"[PDAT]}.
+     * {@code since == null && until == null} is equivalent to the unbounded overload. When only one
+     * bound is set, the other defaults to a sentinel ({@code 1990/01/01} for the lower bound, today
+     * for the upper bound) so the esearch range stays valid.
+     *
+     * @see #searchGeoRecords(GeoRecordType, String, GeoSearchField, Collection, Collection, Collection)
+     */
+    GeoQuery searchGeoRecords( GeoRecordType recordType, @Nullable String searchTerms, @Nullable GeoSearchField field,
+            @Nullable Collection<String> allowedTaxa, @Nullable Collection<String> limitPlatforms,
+            @Nullable Collection<GeoSeriesType> seriesTypes,
+            @Nullable java.util.Date since, @Nullable java.util.Date until ) throws IOException;
 
     /**
      * Search GEO records.

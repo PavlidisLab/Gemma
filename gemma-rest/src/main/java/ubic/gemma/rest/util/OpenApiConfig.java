@@ -2,11 +2,11 @@ package ubic.gemma.rest.util;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import ubic.gemma.core.context.AsyncFactoryBean;
 import ubic.gemma.core.context.EnvironmentProfiles;
 import ubic.gemma.rest.swagger.resolver.CustomModelResolver;
 
@@ -27,7 +27,7 @@ public class OpenApiConfig {
     private String hostUrl;
 
     @Bean
-    public FactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver, Environment environment ) {
+    public AsyncFactoryBean<OpenAPI> openApi( CustomModelResolver customModelResolver, Environment environment ) {
         OpenApiFactory factory = new OpenApiFactory( "ubic.gemma.rest" );
         ArrayList<Server> servers = new ArrayList<>();
         String mainServerUrl = hostUrl + "/rest/v2";

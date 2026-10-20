@@ -22,11 +22,13 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentIdAndShortName;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -38,6 +40,12 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
     BibliographicReference findByExternalId( String id, String databaseName );
 
     /**
+     * Find ALL references sharing an external id, ordered by id ascending. Normally there is at most one,
+     * but prod has duplicate rows for some accessions; this exposes the whole set for de-duplication.
+     */
+    List<BibliographicReference> findAllByExternalId( String id, String databaseName );
+
+    /**
      * Find by the external database id, such as for PubMed
      *
      * @param externalId external database id
@@ -47,25 +55,34 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
 
     /**
      * Count the number of distinct references that are linked to experiments.
-     * <p>
-     * To be distinct, two references must have different author lists and titles.
-     * @see ubic.gemma.model.common.description.CitationValueObject
      */
-    long countExperimentLinkedReferences();
+    long countDistinctWithRelatedExperiments();
 
     /**
-     * To save some space, the EEs only have their ID and short name filled.
+     * Count the number of references-experiment pairs.
      * <p>
-     * References are sorted by author and title.
+     * This count is suitable for browsing with {@link #getRelatedExperiments(int, int)}.
      */
-    Map<BibliographicReference, Set<ExpressionExperiment>> getAllExperimentLinkedReferences( int offset, int limit );
+    long countWithRelatedExperiments();
+
+    /**
+     * Get a slice of the references that are linked to experiments.
+     * <p>
+     * Results are ordered by bibliographic reference author and title.
+     */
+    LinkedHashMap<BibliographicReference, Set<ExpressionExperimentIdAndShortName>> getRelatedExperiments( int offset, int limit );
+
+    /**
+     * Get the related experiments for the given references.
+     * <p>
+     * Results are ordered by bibliographic reference author and title.
+     */
+    LinkedHashMap<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records );
 
     BibliographicReference thaw( BibliographicReference bibliographicReference );
 
     Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
-
-    Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
-            Collection<BibliographicReference> records );
 
     Collection<Long> listAll();
 }

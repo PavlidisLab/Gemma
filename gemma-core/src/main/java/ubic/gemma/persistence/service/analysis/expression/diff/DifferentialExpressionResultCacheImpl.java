@@ -24,10 +24,12 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ResultSetCountsValueObject;
 import ubic.gemma.persistence.cache.CacheUtils;
 
 import java.io.Serializable;
@@ -45,7 +47,8 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
 
     private static final String
             DIFF_EX_RESULT_CACHE_NAME = "DiffExResultCache",
-            TOP_HITS_CACHE_NAME = "TopDiffExResultCache";
+            TOP_HITS_CACHE_NAME = "TopDiffExResultCache",
+            RESULT_SET_COUNTS_CACHE_NAME = "DiffExResultSetCountsCache";
 
     @Autowired
     private CacheManager cacheManager;
@@ -55,6 +58,8 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     private Cache cache;
 
     private Cache topHitsCache;
+
+    private Cache resultSetCountsCache;
 
     @Override
     public void addToCache( DiffExprGeneSearchResult diffExForCache ) {
@@ -74,6 +79,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     public void clearCache() {
         cache.clear();
         topHitsCache.clear();
+        resultSetCountsCache.clear();
     }
 
     @Override
@@ -103,6 +109,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
+    @Nullable
     public DiffExprGeneSearchResult get( Long resultSet, Long g ) {
         assert cache != null;
         Cache.ValueWrapper element = cache.get( new CacheKey( resultSet, g ) );
@@ -129,6 +136,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
 
     @SuppressWarnings("unchecked")
     @Override
+    @Nullable
     public List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet ) {
         Cache.ValueWrapper element = this.topHitsCache.get( resultSet.getId() );
         if ( element == null )
@@ -137,9 +145,29 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
+    @Nullable
+    public ResultSetCountsValueObject getResultSetCounts( Long resultSetId ) {
+        Cache.ValueWrapper element = this.resultSetCountsCache.get( resultSetId );
+        if ( element == null )
+            return null;
+        return ( ResultSetCountsValueObject ) element.get();
+    }
+
+    @Override
+    public void addToResultSetCountsCache( Long resultSetId, ResultSetCountsValueObject counts ) {
+        this.resultSetCountsCache.put( resultSetId, counts );
+    }
+
+    @Override
+    public void clearResultSetCountsCache( Long resultSetId ) {
+        this.resultSetCountsCache.evict( resultSetId );
+    }
+
+    @Override
     public void afterPropertiesSet() {
         this.cache = CacheUtils.getCache( cacheManager, DifferentialExpressionResultCacheImpl.DIFF_EX_RESULT_CACHE_NAME );
         this.topHitsCache = CacheUtils.getCache( cacheManager, DifferentialExpressionResultCacheImpl.TOP_HITS_CACHE_NAME );
+        this.resultSetCountsCache = CacheUtils.getCache( cacheManager, DifferentialExpressionResultCacheImpl.RESULT_SET_COUNTS_CACHE_NAME );
     }
 
     @Value

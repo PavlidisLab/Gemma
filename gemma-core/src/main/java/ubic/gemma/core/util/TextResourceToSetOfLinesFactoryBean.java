@@ -25,10 +25,11 @@ public class TextResourceToSetOfLinesFactoryBean extends AbstractFactoryBean<Set
 
     @Override
     protected Set<String> createInstance() throws Exception {
-        return new BufferedReader( new InputStreamReader( resource.getInputStream(), StandardCharsets.UTF_8 ) )
-                .lines()
-                .filter( line -> !line.startsWith( "#" ) )
-                .collect( Collectors.toSet() );
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( resource.getInputStream(), StandardCharsets.UTF_8 ) ) ) {
+            return reader.lines()
+                    .filter( line -> !line.startsWith( "#" ) )
+                    .collect( Collectors.toSet() );
+        }
     }
 
     @Override

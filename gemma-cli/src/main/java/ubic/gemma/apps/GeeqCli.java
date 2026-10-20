@@ -66,8 +66,7 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
                         + "\n Possible values are:" //
                         + "\n " + GeeqService.ScoreMode.all.name() + " - runs all scoring" //
                         + "\n " + GeeqService.ScoreMode.batch.name() + "- recalculates batch related scores - info, confound and batch effect" //
-                        + "\n " + GeeqService.ScoreMode.reps.name() + " - recalculates score for replicates" //
-                        + "\n " + GeeqService.ScoreMode.pub.name() + " - recalculates score for publication" )
+                        + "\n " + GeeqService.ScoreMode.reps.name() + " - recalculates score for replicates" )
                 .hasArg().build();
         options.addOption( modeOption );
     }
@@ -75,10 +74,12 @@ public class GeeqCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
         if ( this.noNeedToRun( ee, GeeqEvent.class ) ) {
+            addSuccessObject( ee, "No need to calculate GEEQ scores." );
             return;
         }
 
         geeqService.calculateScore( ee, mode );
+        addSuccessObject( ee, "Calculated GEEQ scores with mode: " + mode + "." );
 
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, false, true );

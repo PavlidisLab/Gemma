@@ -1,9 +1,9 @@
 package ubic.gemma.persistence.util;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -13,9 +13,17 @@ import static ubic.gemma.persistence.util.QueryUtils.escapeLike;
 import static ubic.gemma.persistence.util.QueryUtils.optimizeParameterList;
 
 /**
- * Utilities for integrating {@link Filter} into {@link org.hibernate.Query}.
+ * Utilities for integrating {@link Filter} into {@link org.hibernate.query.Query}.
  */
 public class FilterQueryUtils {
+
+    /**
+     * Escape character used for {@code like} patterns, paired with an explicit {@code escape} clause.
+     * <p>
+     * Deliberately not a backslash: whether a backslash escapes anything depends on the server's
+     * {@code sql_mode}, and getting that wrong fails in the silent direction (matches nothing).
+     */
+    private static final char LIKE_ESCAPE_CHAR = '~';
 
     /**
      * Forms an order by clause for a Hibernate query based on given arguments.
@@ -38,23 +46,26 @@ public class FilterQueryUtils {
                 ret.append( formProperty( sort ) );
             }
 
-            //noinspection StatementWithEmptyBody
-            if ( sort.getDirection() == null ) {
-                // use default direction
-            } else if ( sort.getDirection().equals( Sort.Direction.ASC ) ) {
+            Sort.Direction direction = sort.getDirection();
+            if ( direction == Sort.Direction.ASC ) {
                 ret.append( " asc" );
-            } else if ( sort.getDirection().equals( Sort.Direction.DESC ) ) {
+            } else if ( direction == Sort.Direction.DESC ) {
                 ret.append( " desc" );
             }
+            // direction == null falls through to default direction
 
             switch ( sort.getNullMode() ) {
                 case DEFAULT:
                     break;
                 case FIRST:
-                    ret.append( " nulls first" );
+                    if ( !isOwnIdentifier( sort ) ) {
+                        ret.append( " nulls first" );
+                    }
                     break;
                 case LAST:
-                    ret.append( " nulls last" );
+                    if ( !isOwnIdentifier( sort ) ) {
+                        ret.append( " nulls last" );
+                    }
                     break;
                 default:
                     throw new UnsupportedOperationException( "Unsupported null mode " + sort.getNullMode() + "." );
@@ -66,6 +77,36 @@ public class FilterQueryUtils {
         }
 
         return ret.toString();
+    }
+
+    /**
+     * Whether this sort targets the sorted entity's OWN identifier, which is never null.
+     * <p>
+     * A null-ordering clause compiles to {@code case when (x.ID) is null then 1 else 0 end} on MySQL, which no index
+     * can satisfy. On a column that cannot be null that buys nothing and costs the index: a {@code limit 1} stops
+     * being a walk of the primary key and becomes a full scan plus a filesort of every matching row. Measured on
+     * production, one such {@code limit 1} over the ACL-filtered dataset set took ~5 minutes.
+     * <p>
+     * Only a bare {@code id} qualifies. A dotted path such as {@code bioAssays.arrayDesignUsed.id} reaches the
+     * identifier of a JOINED entity, which IS null when that join is an outer one, so those keep their clause.
+     * <p>
+     * The property name alone cannot tell the two apart: {@code resolveFilterablePropertyMeta} splits every
+     * registered property into an alias plus a leaf, so the joined path above arrives here as
+     * {@code objectAlias=ad, propertyName=id} — identical in shape to a root sort. The alias cannot decide it
+     * either, because the root sort is aliased too ({@code getSort("id")} takes the DAO's own object alias).
+     * What separates them is the property the caller asked for, which the {@link Sort} carries verbatim.
+     * <p>
+     * A {@link Sort} built directly rather than through {@code getSort} has no such record, but it also never
+     * splits: its {@code propertyName} holds the whole path, so a joined one does not reach the test at all.
+     */
+    private static boolean isOwnIdentifier( Sort sort ) {
+        if ( !"id".equals( sort.getPropertyName() ) ) {
+            return false;
+        }
+        // A Sort built by hand keeps the whole path in propertyName, so the check above has already
+        // ruled out a joined one and there is nothing left to disambiguate.
+        String originalProperty = sort.getOriginalProperty();
+        return originalProperty == null || originalProperty.indexOf( '.' ) < 0;
     }
 
     /**
@@ -106,13 +147,17 @@ public class FilterQueryUtils {
     }
 
     static String formSubClause( Filter filter, int i ) {
+        return formSubClause( filter, i, 0 );
+    }
+
+    static String formSubClause( Filter filter, int i, int k ) {
         StringBuilder disjunction = new StringBuilder();
         if ( filter.getPropertyName().endsWith( ".size" ) ) {
             disjunction.append( "size(" ).append( formProperty( filter ).replaceFirst( "\\.size$", "" ) ).append( ')' ).append( ' ' );
         } else {
             disjunction.append( formProperty( filter ) ).append( ' ' );
         }
-        String paramName = formParamName( filter, i );
+        String paramName = formParamName( filter, i, k );
 
         // we need to handle two special cases when comparing to NULL which cannot use == or != operators.
         if ( filter.getOperator().equals( Filter.Operator.eq ) && filter.getRequiredValue() == null ) {
@@ -161,8 +206,7 @@ public class FilterQueryUtils {
         }
 
         disjunction.append( ' ' );
-        if ( filter.getRequiredValue() instanceof Subquery ) {
-            Subquery s = ( Subquery ) filter.getRequiredValue();
+        if ( filter.getRequiredValue() instanceof Subquery s ) {
             // check if the root alias is declared, otherwise use 'e' as default
             String rootAlias = s.getRootAlias();
             disjunction
@@ -186,10 +230,21 @@ public class FilterQueryUtils {
                 disjunction.append( a.getPropertyName() ).append( " " ).append( a.getAlias() );
             }
             disjunction.append( " where " );
-            if ( s.getFilter().getObjectAlias() == null ) {
-                disjunction.append( rootAlias ).append( "." );
+            // A subquery may carry several conjoined filters, all binding to the SAME element of the
+            // relation ("this characteristic has value X and category Y"). Conjunct k > 0 takes a
+            // `_k`-suffixed parameter name so k == 0 keeps the exact name it had when a subquery could
+            // only hold one filter — addRestrictionParameters mirrors this, and the two must not drift.
+            List<Filter> conjuncts = s.getFilters();
+            for ( int ck = 0; ck < conjuncts.size(); ck++ ) {
+                Filter conjunct = conjuncts.get( ck );
+                if ( ck > 0 ) {
+                    disjunction.append( " and " );
+                }
+                if ( conjunct.getObjectAlias() == null ) {
+                    disjunction.append( rootAlias ).append( "." );
+                }
+                disjunction.append( formSubClause( conjunct, i, ck ) );
             }
-            disjunction.append( formSubClause( s.getFilter(), i ) );
             disjunction.append( ")" );
         } else if ( filter.getRequiredValue() instanceof Collection ) {
             disjunction
@@ -197,6 +252,14 @@ public class FilterQueryUtils {
         } else {
             disjunction
                     .append( ":" ).append( paramName );
+            if ( filter.getOperator() == Filter.Operator.like || filter.getOperator() == Filter.Operator.notLike ) {
+                // Explicit escape character, so the pattern does not depend on the backslash default
+                // being honoured. Under MySQL's NO_BACKSLASH_ESCAPES mode it is not, and an escaped
+                // wildcard silently matches nothing — which is what made every filter containing an
+                // underscore (`name like 1007_s_at`, i.e. most Affymetrix probe names) come back
+                // empty. Must stay in step with the escape character used in addRestrictionParameters.
+                disjunction.append( " escape '" ).append( LIKE_ESCAPE_CHAR ).append( "'" );
+            }
         }
         return disjunction.toString();
     }
@@ -227,27 +290,57 @@ public class FilterQueryUtils {
             for ( Filter subClause : clause ) {
                 if ( subClause == null )
                     continue;
-                String paramName = formParamName( subClause, ++i );
+                ++i;
                 if ( subClause.getOperator().equals( Filter.Operator.inSubquery ) || subClause.getOperator().equals( Filter.Operator.notInSubquery ) ) {
                     Subquery s = ( Subquery ) requireNonNull( subClause.getRequiredValue() );
-                    addRestrictionParameters( query, Filters.by( s.getFilter() ), i - 1 );
-                } else if ( subClause.getOperator().equals( Filter.Operator.in ) || subClause.getOperator().equals( Filter.Operator.notIn ) ) {
-                    if ( !( subClause.getRequiredValue() instanceof Collection ) ) {
-                        throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
+                    // Mirrors the `_k` suffixing in formSubClause above; if these two disagree the
+                    // query builds fine and then fails at bind time with a missing-parameter error.
+                    List<Filter> conjuncts = s.getFilters();
+                    for ( int k = 0; k < conjuncts.size(); k++ ) {
+                        bindParameter( query, conjuncts.get( k ), formParamName( conjuncts.get( k ), i, k ), i );
                     }
-                    // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
-                    //noinspection rawtypes,unchecked
-                    query.setParameterList( paramName, optimizeParameterList( ( Collection ) subClause.getRequiredValue() ) );
-                } else if ( subClause.getOperator().equals( Filter.Operator.like ) || subClause.getOperator().equals( Filter.Operator.notLike ) ) {
-                    query.setParameter( paramName, escapeLike( ( String ) requireNonNull( subClause.getRequiredValue(), "Required value cannot be null for the 'like' operator." ) ) + "%" );
                 } else {
-                    query.setParameter( paramName, subClause.getRequiredValue() );
+                    bindParameter( query, subClause, formParamName( subClause, i, 0 ), i );
                 }
             }
         }
     }
 
+    /**
+     * Bind one filter's right-hand side under an already-resolved parameter name.
+     * <p>
+     * A nested subquery recurses rather than binding: its own conjuncts carry the parameters.
+     */
+    private static void bindParameter( Query query, Filter filter, String paramName, int i ) {
+        if ( filter.getOperator().equals( Filter.Operator.inSubquery ) || filter.getOperator().equals( Filter.Operator.notInSubquery ) ) {
+            Subquery s = ( Subquery ) requireNonNull( filter.getRequiredValue() );
+            List<Filter> conjuncts = s.getFilters();
+            for ( int k = 0; k < conjuncts.size(); k++ ) {
+                bindParameter( query, conjuncts.get( k ), formParamName( conjuncts.get( k ), i, k ), i );
+            }
+        } else if ( filter.getOperator().equals( Filter.Operator.in ) || filter.getOperator().equals( Filter.Operator.notIn ) ) {
+            if ( !( filter.getRequiredValue() instanceof Collection<?> coll ) ) {
+                throw new IllegalArgumentException( "Required value must be a non-null collection for the 'in' operator." );
+            }
+            // order is unimportant for this operation, so we can ensure that it is consistent and therefore cacheable
+            //noinspection rawtypes,unchecked
+            query.setParameterList( paramName, optimizeParameterList( (Collection) coll ) );
+        } else if ( filter.getOperator().equals( Filter.Operator.like ) || filter.getOperator().equals( Filter.Operator.notLike ) ) {
+            query.setParameter( paramName, escapeLike( ( String ) requireNonNull( filter.getRequiredValue(), "Required value cannot be null for the 'like' operator." ), LIKE_ESCAPE_CHAR ) + "%" );
+        } else {
+            query.setParameter( paramName, filter.getRequiredValue() );
+        }
+    }
+
     private static String formParamName( PropertyMapping mapping, int i ) {
-        return formProperty( mapping ).replaceAll( "\\W", "_" ) + i;
+        return formParamName( mapping, i, 0 );
+    }
+
+    /**
+     * @param k position of this filter within its subquery's conjunction; 0 (the only possibility
+     *          before conjunctions existed) yields the historical name unchanged.
+     */
+    private static String formParamName( PropertyMapping mapping, int i, int k ) {
+        return formProperty( mapping ).replaceAll( "\\W", "_" ) + i + ( k == 0 ? "" : "_" + k );
     }
 }

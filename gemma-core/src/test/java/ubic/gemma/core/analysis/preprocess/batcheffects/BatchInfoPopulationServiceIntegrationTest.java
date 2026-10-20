@@ -14,22 +14,28 @@
  */
 package ubic.gemma.core.analysis.preprocess.batcheffects;
 
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.core.util.test.category.SlowTest;
-import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
+import ubic.gemma.model.expression.experiment.ExperimentFactorUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test fetching and loading the batch information from raw files. Test takes around 10-15 minutes if the files are not
@@ -37,7 +43,8 @@ import static org.junit.Assert.assertTrue;
  *
  * @author paul
  */
-public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServiceTest {
+@ExtendWith(NetworkAvailableExtension.class)
+public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private GeoService geoService;
@@ -49,7 +56,8 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
     private ExpressionExperimentService eeService;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testLoad() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );
@@ -72,7 +80,8 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
      * Another Affymetrix format - GCOS
      */
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testLoadCommandConsoleFormat() throws Exception {
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( this.getTestFileBasePath() ) );

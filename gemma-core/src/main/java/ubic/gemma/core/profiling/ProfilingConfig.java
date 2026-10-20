@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
+import ubic.gemma.core.context.EnvironmentProfiles;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Configuration
-@Profile("profiling")
+@Profile(EnvironmentProfiles.PROFILING)
 public class ProfilingConfig {
 
     @Autowired
@@ -76,10 +77,10 @@ public class ProfilingConfig {
             } catch ( NoSuchBeanDefinitionException e ) {
                 return formatBeanInitializationTime( beanName, monitor, false );
             }
-            return String.format( "%s:\n\tcreation: %d ms\n\tinitialization: %d ms\n\tdetails: %s", beanName,
+            return String.format( "%s:%n\tcreation: %d ms%n\tinitialization: %d ms%n\tdetails: %s", beanName,
                     instantiationTimeMs, initializationTimeMs, beanDetails.replaceAll( "\n", "\n\t" ) );
         } else {
-            return String.format( "%s:\n\tcreation: %d ms\n\tinitialization: %d ms", beanName, instantiationTimeMs, initializationTimeMs );
+            return String.format( "%s:%n\tcreation: %d ms%n\tinitialization: %d ms", beanName, instantiationTimeMs, initializationTimeMs );
         }
     }
 }

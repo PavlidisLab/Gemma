@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -39,6 +39,7 @@ import java.util.Objects;
 @Data
 public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> {
 
+    @Nullable
     private BioAssaySetValueObject expressionExperiment;
     private CompositeSequenceValueObject designElement;
     private QuantitationTypeValueObject quantitationType;

@@ -1,12 +1,11 @@
 package ubic.gemma.apps;
 
-import gemma.gsec.authentication.ManualAuthenticationService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import ubic.gemma.core.security.authentication.ManualAuthenticationService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -15,15 +14,17 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithSecurityContextTestExecutionListener;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import ubic.gemma.cli.util.EntityLocator;
+import ubic.gemma.cli.util.test.BaseCliTest5;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.ExpressionMetadataChangelogFileService;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.expression.DataUpdater;
 import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.search.SearchService;
-import ubic.gemma.cli.util.EntityLocator;
 import ubic.gemma.core.util.GemmaRestApiClient;
-import ubic.gemma.cli.util.test.BaseCliTest;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -38,6 +39,7 @@ import ubic.gemma.persistence.util.EntityUrlBuilder;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -45,15 +47,16 @@ import static org.mockito.Mockito.*;
 import static ubic.gemma.cli.util.test.Assertions.assertThat;
 
 @ContextConfiguration
-@TestExecutionListeners(WithSecurityContextTestExecutionListener.class)
-public class RNASeqDataAddCliTest extends BaseCliTest {
+@TestExecutionListeners(value = WithSecurityContextTestExecutionListener.class,
+        mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+public class RNASeqDataAddCliTest extends BaseCliTest5 {
 
     @Configuration
     @TestComponent
     static class RNASeqDataAddCliTestContextConfiguration {
 
         @Bean
-        @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+        @Scope("prototype")
         public RNASeqDataAddCli rnaSeqDataAddCli() {
             return new RNASeqDataAddCli();
         }
@@ -153,7 +156,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
     private ExpressionExperiment ee;
     private String rpkmFile;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         ad = new ArrayDesign();
         ee = new ExpressionExperiment();
@@ -167,7 +170,7 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
         when( entityLocator.locateArrayDesign( "test" ) ).thenReturn( ad );
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         reset( expressionExperimentService, arrayDesignService );
     }
@@ -224,5 +227,23 @@ public class RNASeqDataAddCliTest extends BaseCliTest {
                     assertThat( sm.getReadLength() ).isEqualTo( 36 );
                     assertThat( sm.getIsPaired() ).isNull();
                 } );
+    }
+
+    /**
+     * {@code -log2cpm} computes log2cpm from the preferred data on the assumption that it is counts, and makes the
+     * result the preferred data. When the preferred data is not counts, nothing must be transformed.
+     */
+    @Test
+    @WithMockUser
+    public void testBackfillLog2cpmStopsWhenThePreferredDataIsNotCounts() {
+        QuantitationType qt = new QuantitationType();
+        qt.setName( "log2 intensity" );
+        qt.setType( StandardQuantitationType.AMOUNT );
+        qt.setIsPreferred( true );
+        when( expressionExperimentService.getPreferredQuantitationType( ee ) ).thenReturn( Optional.of( qt ) );
+        assertThat( cli )
+                .withArguments( "-e", "GSE000001", "-log2cpm" )
+                .fails();
+        verify( dataUpdater, never() ).log2cpmFromCounts( any(), any() );
     }
 }

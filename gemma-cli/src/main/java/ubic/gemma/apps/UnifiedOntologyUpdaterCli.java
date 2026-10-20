@@ -1,10 +1,11 @@
 package ubic.gemma.apps;
 
-import com.hp.hpl.jena.tdb.TDBLoader;
-import com.hp.hpl.jena.tdb.base.file.Location;
-import com.hp.hpl.jena.tdb.setup.StoreParams;
-import com.hp.hpl.jena.tdb.store.DatasetGraphTDB;
-import com.hp.hpl.jena.tdb.sys.TDBMaker;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.tdb.TDBLoader;
+import org.apache.jena.tdb.base.file.Location;
+import org.apache.jena.tdb.store.DatasetGraphTDB;
+import org.apache.jena.tdb.sys.TDBInternal;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -18,13 +19,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import ubic.basecode.ontology.jena.TdbOntologyService;
-import ubic.basecode.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.jena.TdbOntologyService;
+import ubic.gemma.core.ontology.providers.OntologyService;
 import ubic.gemma.cli.util.AbstractCLI;
+import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.SimpleDownloader;
 import ubic.gemma.core.util.SimpleRetryPolicy;
-import ubic.gemma.core.util.concurrent.SimpleThreadFactory;
 import ubic.gemma.core.util.concurrent.Executors;
 import ubic.gemma.core.util.locking.FileLockManager;
 
@@ -82,6 +83,11 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
+    }
+
+    @Override
     protected void buildOptions( Options options ) {
         options.addOption( Option.builder( "sourcesDir" ).longOpt( "sources-dir" ).hasArg( true ).type( Path.class )
                 .desc( "Destination where ontology source files are downloaded. Default is " + sourcesDir + "." ).build() );
@@ -109,12 +115,16 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     @Override
     protected void doWork() throws Exception {
         Resource res = new ClassPathResource( "/ubic/gemma/core/ontology/unifiedOntology.urls.txt" );
-        Set<String> urls = new BufferedReader( new InputStreamReader( res.getInputStream(), StandardCharsets.UTF_8 ) ).lines()
-                .filter( line -> !line.startsWith( "#" ) )
-                .collect( Collectors.toSet() );
+        Set<String> urls;
+        try ( BufferedReader reader = new BufferedReader( new InputStreamReader( res.getInputStream(), StandardCharsets.UTF_8 ) ) ) {
+            urls = reader.lines()
+                    .filter( line -> !line.startsWith( "#" ) )
+                    .collect( Collectors.toSet() );
+        }
         List<Path> downloadedFiles = new ArrayList<>();
         if ( skipDownload ) {
             log.info( "Skipping download of ontology files, will only create the TDB dataset from existing files." );
+            List<String> missing = new ArrayList<>();
             for ( String urlS : urls ) {
                 URL url = new URL( urlS );
                 String fileName = Paths.get( url.getFile() ).getFileName().toString();
@@ -122,16 +132,26 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
                 if ( Files.exists( dest ) ) {
                     downloadedFiles.add( dest );
                 } else {
-                    log.warn( "There is no downloaded file for " + url + ", it will not be included in the TDB dataset." );
+                    missing.add( dest + " (" + url + ")" );
                 }
             }
+            // Refused before anything is built: a missing source used to be a WARN, and the dataset
+            // built without it then replaced the live one.
+            if ( !missing.isEmpty() ) {
+                throw new IllegalStateException( "Cannot build the unified ontology with -skipDownload: "
+                        + missing.size() + " source file(s) are missing: " + String.join( ", ", missing )
+                        + ". Download them, or run without -skipDownload." );
+            }
         } else {
-            ExecutorService executor = Executors.newFixedThreadPool( getNumThreads(), new SimpleThreadFactory( "gemma-unified-ontology-downloader-thread-" ) );
+            ExecutorService executor = Executors.newVirtualThreadPerTaskExecutorIfAvailable();
             try {
                 SimpleDownloader downloader = new SimpleDownloader( new SimpleRetryPolicy( 3, 1000, 1.5 ) );
                 downloader.setFtpClientFactory( ftpClientFactory );
                 downloader.setTaskExecutor( executor );
                 downloader.setFileLockManager( fileLockManager );
+                if ( getCliContext().getConsole() != null ) {
+                    downloader.setProgressReporterFactory( new ConsoleProgressReporterFactory( getCliContext().getConsole() ) );
+                }
                 List<SimpleDownloader.URLAndDestination> url2dest = new ArrayList<>();
                 for ( String urlS : urls ) {
                     URL url = new URL( urlS );
@@ -179,18 +199,27 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
 
     private void createTdbDataset( Path newDir, List<Path> downloadedFiles ) {
         Location loc = Location.create( newDir.toString() );
+        // Jena 4.10 port (Phase 3 ontology Step 1): the Jena 2.13 API
+        //   TDBMaker.createDatasetGraphTDB(loc, StoreParams.getDftStoreParams())
+        //   TDBLoader.load(dsg, fileList, showProgress)
+        //   TDBMaker.releaseLocation(loc)
+        // no longer exists (TDBMaker.releaseLocation became package-private).
+        // Equivalent 4.x sequence: TDBFactory.createDataset(loc) ->
+        // TDBInternal.getDatasetGraphTDB(ds) -> TDBLoader.load(dsg, list) ->
+        // TDBFactory.release(ds). Progress is logged via Jena's own logger.
+        Dataset ds = TDBFactory.createDataset( loc );
         try {
             log.info( "Creating TDB dataset at " + newDir + "..." );
-            DatasetGraphTDB dataset = TDBMaker.createDatasetGraphTDB( loc, StoreParams.getDftStoreParams() );
-            TDBLoader.load( dataset, downloadedFiles.stream().map( Path::toString ).collect( Collectors.toList() ), true );
+            DatasetGraphTDB dataset = TDBInternal.getDatasetGraphTDB( ds );
+            TDBLoader.load( dataset, downloadedFiles.stream().map( Path::toString ).collect( Collectors.toList() ) );
         } finally {
-            TDBMaker.releaseLocation( loc );
+            TDBFactory.release( ds );
         }
     }
 
     private void verifyTdbDataset( Path newDir ) {
         log.info( "Verifying TDB dataset at " + newDir + "..." );
-        try ( TdbOntologyService os = new TdbOntologyService( "Test", newDir, null, true, null ) ) {
+        try ( TdbOntologyService os = new TdbOntologyService( "Test", newDir, null, true, null, true ) ) {
             os.initialize( false, false );
         } catch ( Exception e ) {
             throw new RuntimeException( e );

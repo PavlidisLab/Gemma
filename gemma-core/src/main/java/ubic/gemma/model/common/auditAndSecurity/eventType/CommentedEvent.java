@@ -18,12 +18,18 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+
 /**
  * <p>
  * An event indicating a comment was added to the auditable. That is, the audit event is simply that a comment was
  * added.
  * </p>
  */
+@Entity
+@DiscriminatorValue("CommentedEvent")
 public class CommentedEvent extends AuditEventType {
 
 }

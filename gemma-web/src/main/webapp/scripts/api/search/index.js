@@ -1,2 +1,0 @@
-import './generalSearchSimple'
-import './search'

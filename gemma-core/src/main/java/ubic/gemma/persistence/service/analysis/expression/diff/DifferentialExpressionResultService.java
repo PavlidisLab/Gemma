@@ -20,8 +20,8 @@ package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.BioAssaySetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseReadOnlyService;
 
@@ -34,93 +34,63 @@ import java.util.Map;
  *
  * @author kelsey
  */
-@SuppressWarnings("unused") // Possible external use
 public interface DifferentialExpressionResultService extends BaseReadOnlyService<DifferentialExpressionAnalysisResult> {
 
     /**
-     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map, Map, Map, double, boolean, boolean)
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzed( Gene gene, Collection<Long> experimentAnalyzedIds, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, double threshold, boolean keepNonSpecific, boolean initializeFactorValues );
-
-    /**
-     * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
-     * experiments
-     *
-     * @param experimentsAnalyzed ees
-     * @param threshold           threshold
-     * @param limit               limit
-     * @return map to diff ex VOs
+     * @see DifferentialExpressionResultDao#findByExperimentAnalyzed(Collection, boolean, double, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find(
-            Collection<Long> experimentsAnalyzed, double threshold, int limit );
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByExperimentAnalyzed(
+            Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit );
 
     /**
-     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
-     * {@link ExpressionExperiment}.
-     *
-     * @param gene gene
-     * @return map to diff ex VOs
+     * @see DifferentialExpressionResultDao#findByGene(Gene, boolean, boolean)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes );
 
     /**
-     * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
-     * {@link ExpressionExperiment}.
-     *
-     * @param experimentsAnalyzed ees
-     * @param gene                gene
-     * @return map to diff ex VOs
+     * @see DifferentialExpressionResultDao#findByGene(Gene, boolean, boolean, double, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            Collection<Long> experimentsAnalyzed );
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGene( Gene gene, boolean useGene2Cs, boolean keepNonSpecificProbes, double threshold, int limit );
 
     /**
-     * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
-     * corrected pvalue field)
-     *
-     * @param experimentsAnalyzed ees
-     * @param threshold           threshold
-     * @param limit               limit
-     * @param gene                gene
-     * @return map to diff ex VOs
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, Collection, boolean, Map, Map, Map, double, boolean, boolean, boolean)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_COLLECTION_READ" })
+    List<DifferentialExpressionAnalysisResult> findByGeneAndExperimentAnalyzedIds( Gene gene, boolean useGene2Cs, boolean keepNonSpecific, Collection<Long> experimentAnalyzedIds, boolean includeSubSets, Map<DifferentialExpressionAnalysisResult, Long> sourceExperimentIdMap, Map<DifferentialExpressionAnalysisResult, Long> experimentAnalyzedIdMap, Map<DifferentialExpressionAnalysisResult, Baseline> baselineMap, double threshold, boolean initializeFactorValues );
+
+    /**
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, boolean, boolean, Collection, boolean)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
-            Collection<Long> experimentsAnalyzed, double threshold, int limit );
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets );
 
     /**
-     * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
-     *
-     * @param gene      gene
-     * @param threshold threshold
-     * @param limit     limit
-     * @return map to diff ex VOs
+     * @see DifferentialExpressionResultDao#findByGeneAndExperimentAnalyzed(Gene, boolean, boolean, Collection, boolean, double, int)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_MAP_READ" })
-    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> find( Gene gene, double threshold,
-            int limit );
+    Map<BioAssaySetValueObject, List<DifferentialExpressionValueObject>> findByGeneAndExperimentAnalyzed( Gene gene,
+            boolean useGene2Cs, boolean keepNonSpecificProbes, Collection<? extends BioAssaySet> experimentsAnalyzed, boolean includeSubSets, double threshold, int limit );
 
     /**
-     * Retrieve differential expression results in bulk. This is an important method for the differential expression
-     * interfaces.
-     *
-     * @param geneIds    gene ids
-     * @param resultSets result sets
-     * @return map of resultset IDs to map of gene id to differential expression results.
+     * @see DifferentialExpressionResultDao#findGeneResultsByResultSetIdsAndGeneIds(Collection, Collection)
      */
-    Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    Map<Long, Map<Long, DiffExprGeneSearchResult>> findGeneResultsByResultSetIdsAndGeneIds(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
-    List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet ar, Double threshold,
+    /**
+     * @see DifferentialExpressionResultDao#findByResultSet(ExpressionAnalysisResultSet, double, int, int)
+     */
+    // results will belong to the result set, so it's faster to check ACL on it than to on each result
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    List<DifferentialExpressionValueObject> findByResultSet( ExpressionAnalysisResultSet ar, double threshold,
             int maxResultsToReturn, int minNumberOfResults );
 
     /**
-     * @param ids ids
-     * @return map of result to contrasts value object.
+     * @see DifferentialExpressionResultDao#findContrastsByAnalysisResultIds(Collection)
      */
-    Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
+    Map<Long, ContrastsValueObject> findContrastsByAnalysisResultIds( Collection<Long> ids );
 }

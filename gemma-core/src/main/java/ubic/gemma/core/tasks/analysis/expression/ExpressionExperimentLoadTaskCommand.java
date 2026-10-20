@@ -55,6 +55,13 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
      */
     private boolean suppressMatching = false;
 
+    /**
+     * Set to true to skip post-processing (processed-vector creation and downstream diagnostics)
+     * after loading. Mirrors the CLI {@code -nopost} flag; the usual case for RNA-seq loads whose
+     * data is reanalyzed from raw sequence later.
+     */
+    private boolean suppressPostProcessing = false;
+
     public ExpressionExperimentLoadTaskCommand() {
         super();
     }
@@ -154,6 +161,14 @@ public class ExpressionExperimentLoadTaskCommand extends TaskCommand {
 
     public void setSuppressMatching( boolean suppressMatching ) {
         this.suppressMatching = suppressMatching;
+    }
+
+    public boolean isSuppressPostProcessing() {
+        return suppressPostProcessing;
+    }
+
+    public void setSuppressPostProcessing( boolean suppressPostProcessing ) {
+        this.suppressPostProcessing = suppressPostProcessing;
     }
 
     protected boolean isAllowSubSeriesLoad() {

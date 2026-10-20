@@ -18,23 +18,21 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.acl.domain.AclObjectIdentity;
-import gemma.gsec.acl.domain.AclSid;
+import ubic.gemma.core.security.acl.domain.AclObjectIdentity;
+import ubic.gemma.core.security.acl.domain.AclSid;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.text.StringEscapeUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.description.CitationValueObject;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.bioAssayData.SingleCellDimensionValueObject;
+import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 
 /**
  * @author paul
@@ -44,6 +42,7 @@ import java.util.Map;
 @Setter
 public class ExpressionExperimentDetailsValueObject extends ExpressionExperimentValueObject {
 
+    private static final long serialVersionUID = -1219449523930648392L;
     private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
     private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
 
@@ -95,6 +94,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private String lastArrayDesignUpdateDate;
     private String linkAnalysisEventType;
     private String missingValueAnalysisEventType;
+    private String differentialAnalysisEventType;
     /**
      * Details of samples that were removed (or marked as outliers). This can happen multiple times in the life
      * of data set, so this is a collection of AuditEvents.
@@ -110,66 +110,47 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      */
     private Long numPopulatedFactors;
 
-    // if it was switched
-    private Collection<ArrayDesignValueObject> originalPlatforms;
+    // if it was switched: inherited from ExpressionExperimentValueObject as a list of platform
+    // references. It used to be redeclared here as full ArrayDesignValueObjects, which nothing read
+    // -- the field had no reader anywhere in the codebase -- and which now collides with the base
+    // field every filtered read populates.
 
-    // if it was split.
-    /**
-     * Experiments that are related to this one via the splitting of a source experiment.
-     */
-    private Collection<ExpressionExperimentValueObject> otherParts = new HashSet<>();
+    // otherParts moved to ExpressionExperimentValueObject, as compact references rather than whole VOs, so
+    // that GET /datasets/{id} carries the split linkage too.
 
     private CitationValueObject primaryCitation;
-    @Nullable
-    private Integer pubmedId;
     /**
      * Identifier in a second database, if available. For example, if the data are in GEO and in ArrayExpress,
      * this might be a link to the ArrayExpress version.
      */
+    @Nullable
     private String secondaryAccession;
+    @Nullable
     private String secondaryExternalDatabase;
+    @Nullable
     private String secondaryExternalUri;
 
     private String QChtml;
 
-    /**
-     * Indicate if this experiment is a single-cell experiment.
-     */
-    private boolean isSingleCell;
-    /**
-     * Featured single-cell quantitation type, if this is a single-cell experiment.
-     * <p>
-     * This is preferably set to the preferred single-cell quantitation type.
-     */
-    private QuantitationTypeValueObject singleCellQuantitationType;
-    /**
-     * The single-cell dimension associated with this experiment, if it is a single-cell experiment.
-     * <p>
-     * This is preferably set to the preferred single-cell dimension (i.e. the one associated to the preferred set of
-     * single-cell vectors).
-     */
-    @Nullable
-    private SingleCellDimensionValueObject singleCellDimension;
+    // isSingleCell / numberOfCells / numberOfCellIds moved to ExpressionExperimentValueObject, where they are
+    // actually populated. Declared here since 2024 and never written by anything: every response carrying this
+    // VO said isSingleCell=false and numberOfCells=null regardless of the data.
     /**
      * Indicate if this experiment has a Cell Browser associated with it.
      */
     private boolean hasCellBrowser;
+    /**
+     * URL for the Cell Browser, if available.
+     */
+    @Nullable
+    private String cellBrowserUrl;
     private String cellBrowserDatasetName;
+
     /**
-     * Mapping of experimental factor IDs to names for the Cell Browser.
+     * Font to use when rendering diagnostic plots, etc.
      */
     @Nullable
-    private Map<Long, String> cellBrowserFactorMetaNamesMap;
-    /**
-     * Mapping of cell type assignment IDs to names for the Cell Browser.
-     */
-    @Nullable
-    private Map<Long, String> cellBrowserCellTypeAssignmentMetaNamesMap;
-    /**
-     * Mapping of cell-level characteristics IDs to names for the Cell Browser.
-     */
-    @Nullable
-    private Map<Long, String> cellBrowserCellLevelCharacteristicsMetaNamesMap;
+    private String font;
 
     /**
      * Required when using the class as a spring bean.
@@ -180,6 +161,15 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee ) {
         super( ee );
+    }
+
+    /**
+     * Variant that skips reading the three {@code last*Event} associations off
+     * {@code CurationDetails} when {@code skipEvents=true}. See
+     * {@link ExpressionExperimentValueObject#ExpressionExperimentValueObject(ExpressionExperiment, boolean, boolean, boolean)}.
+     */
+    public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, boolean skipEvents ) {
+        super( ee, false, false, skipEvents );
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperiment ee, AclObjectIdentity aoi,
@@ -194,7 +184,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     /**
      * @return true if this EE is troubled, disregards any platform trouble that might be present.
      */
-    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
     public boolean getActuallyTroubled() {
         return super.getTroubled();
     }
@@ -227,13 +216,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return hasMultipleTechnologyTypes;
     }
 
-    public boolean getIsSingleCell() {
-        return isSingleCell;
-    }
-
-    public void setIsSingleCell( boolean isSingleCell ) {
-        this.isSingleCell = isSingleCell;
-    }
 
     public boolean getIsRNASeq() {
         return isRNASeq;
@@ -247,7 +229,6 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is
      * troubled. May return null if the arrayDesigns are not set.
      */
-    @SuppressWarnings("unused") // Used in Curation tab, see CurationTools.js
     @Nullable
     public Boolean getPlatformTroubled() {
         if ( this.arrayDesigns == null ) {

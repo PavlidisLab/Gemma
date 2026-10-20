@@ -19,15 +19,13 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.AbstractDao;
 
-import javax.annotation.Nullable;
-import java.util.Random;
+import org.springframework.lang.Nullable;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
@@ -42,35 +40,10 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
 
     @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
-        return ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class )
-                .add( Restrictions.eq( "name", experimentalDesign.getName() ) )
+        return ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ed from ExperimentalDesign ed where ed.name = :name" )
+                .setParameter( "name", experimentalDesign.getName() )
                 .uniqueResult();
-    }
-
-    @Override
-    public ExperimentalDesign loadWithExperimentalFactors( Long id ) {
-        return ( ExperimentalDesign ) getSessionFactory().getCurrentSession().createQuery( "select ed from ExperimentalDesign ed "
-                        + "left join fetch ed.experimentalFactors "
-                        + "where ed.id = :id" )
-                .setParameter( "id", id )
-                .uniqueResult();
-    }
-
-    /**
-     * @see ExperimentalDesignDao#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    public ExpressionExperiment getExpressionExperiment( final ExperimentalDesign experimentalDesign ) {
-        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign = :ed" )
-                .setParameter( "ed", experimentalDesign ).uniqueResult();
-    }
-
-    @Override
-    public ExpressionExperiment getExpressionExperimentById( Long experimentalDesignId ) {
-        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign.id = :edId" )
-                .setParameter( "edId", experimentalDesignId ).uniqueResult();
     }
 
     @Nullable
@@ -84,10 +57,12 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
         if ( numThatNeedsAttention == 0 )
             return null;
         return ( ExperimentalDesign ) getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct ed from ExperimentalDesign ed join ed.experimentalFactors ef "
-                        + "join ef.factorValues fv where ed.id != :edId and fv.needsAttention = true" )
+                .createQuery( "select ed from ExperimentalDesign ed join ed.experimentalFactors ef "
+                        + "join ef.factorValues fv "
+                        + "where ed.id != :edId and fv.needsAttention = true "
+                        + "group by ed" )
                 .setParameter( "edId", excludedDesign.getId() )
-                .setFirstResult( new Random().nextInt( numThatNeedsAttention.intValue() ) )
+                .setFirstResult( ThreadLocalRandom.current().nextInt( numThatNeedsAttention.intValue() ) )
                 .setMaxResults( 1 )
                 .uniqueResult();
     }

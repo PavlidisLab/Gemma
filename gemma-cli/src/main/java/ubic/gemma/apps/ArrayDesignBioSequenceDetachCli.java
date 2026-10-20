@@ -23,7 +23,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent;
+import ubic.gemma.cli.audit.CliArrayDesignAuditService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
  * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
- * oligonucleotide is not given. Instead the submitter provides Genbank accessions, which are misleading. This method
+ * oligonucleotide is not given. Instead the submitter provides GenBank accessions, which are misleading. This method
  * can be used to clear those until the "right" sequences can be identified and filled in. Note that this does not
  * remove the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
  *
@@ -46,8 +46,15 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
 
     @Autowired
     private BioSequenceService bioSequenceService;
+    @Autowired
+    private CliArrayDesignAuditService cliArrayDesignAuditService;
 
     private boolean delete;
+
+    public ArrayDesignBioSequenceDetachCli() {
+        // detaching/deleting sequences is irreversible; -a or -f must always name the platform(s), never -all
+        setExplicitADsOnly();
+    }
 
     @Override
     public String getCommandName() {
@@ -61,33 +68,29 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     @Override
-    protected void buildOptions( Options options ) {
-        super.buildOptions( options );
-
-        Option fileOption = Option.builder( "delete" )
-                .desc( "Delete sequences instead of detaching them - use with care" ).build();
-
-        options.addOption( fileOption );
+    protected void buildArrayDesignOptions( Options options ) {
+        options.addOption( Option.builder( "delete" )
+                .desc( "Delete sequences instead of detaching them - use with care" )
+                .get() );
     }
 
     @Override
-    protected void processOptions( CommandLine commandLine ) throws ParseException {
-        super.processOptions( commandLine );
+    protected void processArrayDesignOptions( CommandLine commandLine ) throws ParseException {
         this.delete = commandLine.hasOption( "delete" );
     }
 
     @Override
-    protected void doAuthenticatedWork() throws Exception {
-        if ( this.getArrayDesignsToProcess().isEmpty() ) {
+    protected void processArrayDesigns( Collection<ArrayDesign> arrayDesigns ) {
+        if ( arrayDesigns.isEmpty() ) {
             throw new IllegalArgumentException( "You must provide at least one platform to process" );
         }
 
-        for ( ArrayDesign arrayDesign : this.getArrayDesignsToProcess() ) {
+        for ( ArrayDesign arrayDesign : arrayDesigns ) {
             try {
                 if ( this.delete ) {
                     log.info( "Detaching and deleting sequences for " + arrayDesign );
-                    Map<CompositeSequence, BioSequence> bioSequences = this.getArrayDesignService().getBioSequences( arrayDesign );
-                    this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
+                    Map<CompositeSequence, BioSequence> bioSequences = arrayDesignService.getBioSequences( arrayDesign );
+                    arrayDesignService.removeBiologicalCharacteristics( arrayDesign );
                     Collection<BioSequence> seqs = new HashSet<>( bioSequences.values() );
                     while ( seqs.remove( null ) ) {
                         //no-op
@@ -99,11 +102,11 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
                 } else {
                     log.info( "Detaching sequences for " + arrayDesign );
 
-                    this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );
+                    arrayDesignService.removeBiologicalCharacteristics( arrayDesign );
                     this.audit( arrayDesign, "Removed sequence associations with CLI" );
                     this.addSuccessObject( arrayDesign, "Sequences detached" );
                 }
-                this.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
+                arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
             } catch ( Exception e ) {
                 log.info( "Failure for " + arrayDesign + " " + e.getMessage() );
                 this.addErrorObject( arrayDesign, e.getMessage() );
@@ -114,8 +117,8 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     private void audit( ArrayDesign arrayDesign, String message ) {
-        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, ArrayDesignSequenceRemoveEvent.class, message );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        cliArrayDesignAuditService.recordSequenceRemove( arrayDesign, message );
     }
 
 }

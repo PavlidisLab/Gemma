@@ -18,7 +18,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObje
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
@@ -43,23 +42,25 @@ public interface GeneDifferentialExpressionService {
     /**
      * Get the differential expression results for the given gene that is in a specified set of experiments.
      *
-     * @param gene : gene of interest
-     * @param ees  : set of experiments to search
+     * @param gene                gene of interest
+     * @param experimentsAnalyzed set of experiments or subsets to search
+     * @param includeSubSets      include subsets of the experiments analyzed
      * @return DEA VOs
      */
-    Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<BioAssaySet> ees );
+    Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, Collection<BioAssaySet> experimentsAnalyzed, boolean includeSubSets );
 
     /**
      * Get the differential expression results for the given gene that is in a specified set of experiments.
      *
-     * @param gene      : gene of interest
-     * @param ees       : set of experiments to search
-     * @param threshold : the cutoff to determine if diff expressed
-     * @param limit     : the maximum number of results to return (null for all)
+     * @param gene               gene of interest
+     * @param experimentAnalyzed set of experiments to search
+     * @param includeSubSets     include subsets of the experiment analyzed
+     * @param threshold          the cutoff to determine if diff expressed
+     * @param limit              the maximum number of results to return (null for all)
      * @return DEA VOs
      */
-    Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, BioAssaySet ees,
-            double threshold, int limit );
+    Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, BioAssaySet experimentAnalyzed,
+            boolean includeSubSets, double threshold, int limit );
 
     /**
      * Get differential expression for a gene, constrained to a specific set of factors. Note that interactions are
@@ -87,13 +88,14 @@ public interface GeneDifferentialExpressionService {
     /**
      * Get the differential expression analysis results for the gene in the activeExperiments.
      *
-     * @param activeExperiments active ees
-     * @param eeFactorsMap      factor map
-     * @param g                 gene
      * @param threshold         threshold
+     * @param g                 gene
+     * @param eeFactorsMap      factor map
+     * @param activeExperiments active ees
+     * @param includeSubSets
      * @return diff exp. analysis meta VO
      */
     DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( double threshold, Gene g,
-            Map<Long, Long> eeFactorsMap, Collection<BioAssaySet> activeExperiments );
+            Map<Long, Long> eeFactorsMap, Collection<BioAssaySet> activeExperiments, boolean includeSubSets );
 
 }

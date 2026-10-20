@@ -15,8 +15,9 @@ import java.util.Collection;
  * Space task for computing two channel missing values.
  * 
  * @author paul
- *
+ * @deprecated Two-colour arrays are no longer supported for new data; kept so existing two-colour datasets still load and reprocess.
  */
+@Deprecated
 @Component
 @Scope("prototype")
 public class TwoChannelMissingValueTaskImpl extends AbstractTask<TwoChannelMissingValueTaskCommand>

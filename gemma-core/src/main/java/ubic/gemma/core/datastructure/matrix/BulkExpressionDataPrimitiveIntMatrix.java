@@ -2,7 +2,7 @@ package ubic.gemma.core.datastructure.matrix;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface for bulk expression data matrices that can be efficiently accessed as a primitive int matrix.

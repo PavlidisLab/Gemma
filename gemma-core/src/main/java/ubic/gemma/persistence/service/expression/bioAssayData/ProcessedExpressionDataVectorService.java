@@ -21,6 +21,7 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.core.analysis.preprocess.convert.QuantitationTypeConversionException;
 import ubic.gemma.core.analysis.preprocess.detect.QuantitationTypeDetectionException;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -33,7 +34,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Slice;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -50,26 +51,44 @@ public interface ProcessedExpressionDataVectorService
      * Mismatch between quantitation type and data is ignored.
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
+     *
      * @param updateRanks whether to update the rnaks of the vectors or not
-     * @see #updateRanks(ExpressionExperiment)
-     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
+     * @return the created processed QT
      * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
+     * @see #updateRanks(ExpressionExperiment)
+     * @see ExpressionExperimentService#createProcessedDataVectors(ExpressionExperiment, Collection)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException;
+    QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks ) throws QuantitationTypeConversionException;
 
     /**
      * Create processed vectors and optionally update ranks.
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
+     *
+     * @return the created processed QT
+     * @throws QuantitationTypeDetectionException  if the QT caanot be detected from data, never raised if
+     *                                             ignoreQuantitationMismatch is set to true
+     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      * @see #createProcessedDataVectors(ExpressionExperiment, boolean)
      * @see #updateRanks(ExpressionExperiment)
-     * @throws QuantitationTypeDetectionException if the QT caanot be detected from data, never raised if
-     * ignoreQuantitationMismatch is set to true
-     * @throws QuantitationTypeConversionException if the data cannot be converted, generally to log2 scale
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    int createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
+    QuantitationType createProcessedDataVectors( ExpressionExperiment expressionExperiment, boolean updateRanks, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
+
+    /**
+     * Rebuild the processed data matrix from raw WITHOUT masking assays flagged as outliers, persisting nothing.
+     * <p>
+     * 🛑 This is not the dataset's processed data. Everything in Gemma -- differential expression, SVD,
+     * visualization, export -- reads the stored vectors, in which outliers ARE masked, and that stays true. The one
+     * consumer of this is the sample-correlation matrix, which is the evidence a curator reviews an outlier call
+     * against; masking wrote the flagged sample's correlations out of it, so the call could not be reviewed after
+     * the fact.
+     * <p>
+     * The mask is applied before quantile normalization, so the values are not recoverable from what is stored --
+     * rebuilding from raw is the only route to them.
+     */
+    ExpressionDataDoubleMatrix computeUnmaskedProcessedDataMatrix( ExpressionExperiment expressionExperiment, boolean ignoreQuantitationMismatch ) throws QuantitationTypeDetectionException, QuantitationTypeConversionException;
 
     /**
      * Replace the processed vectors of a EE with the given vectors.
@@ -78,10 +97,10 @@ public interface ProcessedExpressionDataVectorService
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
      *
-     * @param ee      ee
-     * @param vectors non-persistent, all of the same {@link QuantitationType}
+     * @param ee          ee
+     * @param vectors     non-persistent, all of the same {@link QuantitationType}
      * @param updateRanks whether to update ranks or not
-     * @see ProcessedExpressionDataVectorDao#createProcessedDataVectors(ExpressionExperiment, boolean)
+     * @see ExpressionExperimentService#createProcessedDataVectors(ExpressionExperiment, Collection)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     int replaceProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vectors, boolean updateRanks );
@@ -90,6 +109,7 @@ public interface ProcessedExpressionDataVectorService
      * Remove the processed vectors of an EE.
      * <p>
      * This also adds an audit event and evict the vectors from the cache.
+     *
      * @see ExpressionExperimentService#removeProcessedDataVectors(ExpressionExperiment)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -124,6 +144,7 @@ public interface ProcessedExpressionDataVectorService
 
     /**
      * Retrieve expression levels by dataset IDs.
+     *
      * @see #getExpressionLevels(Collection, Collection, boolean, String)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
@@ -191,6 +212,16 @@ public interface ProcessedExpressionDataVectorService
             Collection<ExpressionExperiment> expressionExperiments, Collection<CompositeSequence> compositeSequences );
 
     /**
+     * Retrieve the processed vectors for a set of design elements within a given (processed) quantitation type.
+     * Unlike {@code getProcessedDataArraysByProbe(...)} these are raw entities whose data has NOT had read-time
+     * outlier masking applied, so the caller can recover un-masked values for those probes.
+     *
+     * @see ProcessedExpressionDataVectorDao#find(Collection, QuantitationType)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATA_VECTOR_COLLECTION_READ" })
+    Collection<ProcessedExpressionDataVector> find( Collection<CompositeSequence> designElements, QuantitationType quantitationType );
+
+    /**
      * @see ProcessedExpressionDataVectorDao#getProcessedVectors(ExpressionExperiment)
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -204,6 +235,7 @@ public interface ProcessedExpressionDataVectorService
 
     /**
      * Retrieve and thaw a collection of vectors for a given experiment.
+     *
      * @see ProcessedExpressionDataVectorDao#getProcessedVectors(ExpressionExperiment)
      * @see ProcessedExpressionDataVectorDao#thaw(Collection)
      */

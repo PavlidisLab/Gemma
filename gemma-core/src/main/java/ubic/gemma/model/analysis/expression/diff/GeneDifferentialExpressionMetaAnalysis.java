@@ -18,6 +18,16 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 
@@ -27,11 +37,26 @@ import java.util.Set;
 /**
  * Represents an analysis that combines the results of other analyses of differential expression.
  */
+@Entity
+@DiscriminatorValue("GeneDifferentialExpressionMetaAnalysis")
 public class GeneDifferentialExpressionMetaAnalysis extends ExpressionAnalysis implements Securable {
 
+    @Column(name = "NUM_GENES_ANALYZED", columnDefinition = "INTEGER")
     private Integer numGenesAnalyzed;
+
+    @Column(name = "QVALUE_THRESHOLD_FOR_STORAGE", columnDefinition = "DOUBLE")
     private Double qvalueThresholdForStorage;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "META_ANALYSES2RESULT_SETS_INCLUDED",
+            joinColumns = @JoinColumn(name = "META_ANALYSES_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "RESULT_SETS_INCLUDED_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "EXPRESSION_ANALYSIS_RESULT_SET_META_ANALYSES_FKC"))
     private Set<ExpressionAnalysisResultSet> resultSetsIncluded = new HashSet<>();
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_FK", columnDefinition = "BIGINT",
+            foreignKey = @ForeignKey(name = "GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT_GENE_DIFFC"))
     private Set<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
 
     /**

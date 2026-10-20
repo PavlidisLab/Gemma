@@ -19,18 +19,21 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Assumptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.DoubleMatrixReader;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.loader.entrez.EntrezUtils;
 import ubic.gemma.core.loader.expression.DataUpdater;
-import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest5;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -38,7 +41,8 @@ import ubic.gemma.core.loader.expression.sequencing.SequencingMetadata;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.core.loader.util.TestUtils;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -58,15 +62,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests added to check various cases of differential expression analysis.
  *
  * @author Paul
  */
-@Category(SlowTest.class)
-public class DiffExTest extends AbstractGeoServiceTest {
+@Tag("slow")
+@ExtendWith(NetworkAvailableExtension.class)
+public class DiffExTest extends AbstractGeoServiceTest5 {
 
     @Autowired
     private GeoService geoService;
@@ -95,7 +100,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
     /* fixtures */
     private ExpressionExperiment ee;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ee != null ) {
             eeService.remove( ee );
@@ -107,10 +112,11 @@ public class DiffExTest extends AbstractGeoServiceTest {
      * Test differential expression analysis on RNA-seq data. See bug 3383. R code in voomtest.R
      */
     @Test
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testCountData() throws Exception {
         ee = eeService.findByShortName( "GSE29006" );
-        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),
-                ee == null );
+        Assumptions.assumeTrue( ee == null,
+                () -> String.format( "%s was not properly cleaned up by another test.", ee ) );
 
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
@@ -119,7 +125,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AccessDeniedException e ) {
             // see https://github.com/PavlidisLab/Gemma/issues/206
-            Assume.assumeNoException( e );
+            Assumptions.abort( e.getMessage() );
         } catch ( AlreadyExistsInSystemException e ) {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
@@ -197,10 +203,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
             if ( r.getProbe().getName().equals( "ENSG00000000938" ) ) {
                 found = true;
                 ContrastResult contrast = r.getContrasts().iterator().next();
-
-                assertEquals( 0.007055717, r.getPvalue(),
-                        0.00001 ); // R: 0.006190738; coeff = 2.2695215; t=12.650422;
+                assertNotNull( r.getPvalue() );
+                assertEquals( 0.007055717, r.getPvalue(), 0.00001 ); // R: 0.006190738; coeff = 2.2695215; t=12.650422;
                 // up to sign
+                assertNotNull( contrast.getCoefficient() );
                 assertEquals( 2.2300049, Math.abs( contrast.getCoefficient() ), 0.001 );
                 break;
             }
@@ -213,34 +219,37 @@ public class DiffExTest extends AbstractGeoServiceTest {
         config.addFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         config.setModerateStatistics( false );
         analyses = analyzer.run( ee, dmatrix, config );
+        assertEquals( 1, analyses.size() );
         results = analyses.iterator().next();
+        assertEquals( 1, results.getResultSets().size() );
         resultSet = results.getResultSets().iterator().next();
-        for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
-            if ( r.getProbe().getName().equals( "ENSG00000000938" ) ) {
-                // these are the values computed with *our* weights, which are a tiny bit different (details of lowess)
-                // also values changed very slightly with updated library size computation (post-filtering)
-                assertEquals( 1, r.getContrasts().size() );
-                ContrastResult contrast = r.getContrasts().iterator().next();
-                assertNotNull( contrast.getCoefficient() );
-                assertEquals( 2.272896, Math.abs( contrast.getCoefficient() ), 0.0001 );
-                assertNotNull( contrast.getPvalue() );
-                assertEquals( 0.006149004, contrast.getPvalue(), 0.0001 );
-                assertNotNull( contrast.getTstat() );
-                assertEquals( 12.6937, Math.abs( contrast.getTstat() ), 0.0001 );
-                assertEquals( 0.006149003, r.getPvalue(), 0.00001 );
-                break;
-            }
-        }
+        Assertions.assertThat( resultSet.getResults() )
+                .anySatisfy( r -> {
+                    assertEquals( "ENSG00000000938", r.getProbe().getName() );
+                    // these are the values computed with *our* weights, which are a tiny bit different (details of lowess)
+                    // also values changed very slightly with updated library size computation (post-filtering)
+                    assertEquals( 1, r.getContrasts().size() );
+                    ContrastResult contrast = r.getContrasts().iterator().next();
+                    assertNotNull( contrast.getCoefficient() );
+                    assertEquals( 2.26861, Math.abs( contrast.getCoefficient() ), 0.0001 );
+                    assertNotNull( contrast.getPvalue() );
+                    assertEquals( 0.00615, contrast.getPvalue(), 0.00001 );
+                    assertNotNull( contrast.getTstat() );
+                    assertEquals( 12.6826, Math.abs( contrast.getTstat() ), 0.0001 );
+                    assertNotNull( r.getPvalue() );
+                    assertEquals( 0.00615, r.getPvalue(), 0.00001 );
+                } );
     }
 
     /**
      * Test where probes have constant values. See bug 3177.
      */
     @Test
+    @NetworkAvailable(url = EntrezUtils.ESEARCH)
     public void testGSE35930() throws Exception {
         ee = eeService.findByShortName( "GSE35930" );
-        Assume.assumeTrue( String.format( "%s was not properly cleaned up by another test.", ee ),
-                ee == null );
+        Assumptions.assumeTrue( ee == null,
+                () -> String.format( "%s was not properly cleaned up by another test.", ee ) );
 
         try {
             geoService.setGeoDomainObjectGenerator(

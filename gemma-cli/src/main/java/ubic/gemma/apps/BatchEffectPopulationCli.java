@@ -47,13 +47,16 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
     @Override
     protected void processExpressionExperiment( ExpressionExperiment ee ) {
+        getPipelineJobReporter().stage( "batch-effect:" + ee.getShortName() );
         if ( this.noNeedToRun( ee, BatchInformationFetchingEvent.class ) ) {
+            addSuccessObject( ee, "Batch information is already up-to-date." );
             return;
         }
 
         log.info( "Processing: " + ee );
 
         ser.fillBatchInformation( ee, isForce() );
+        addSuccessObject( ee, "Filled batch information." );
         try {
             refreshExpressionExperimentFromGemmaWeb( ee, true, true );
         } catch ( Exception e ) {

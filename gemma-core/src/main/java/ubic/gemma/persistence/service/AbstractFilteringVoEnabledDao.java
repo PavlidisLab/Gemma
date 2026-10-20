@@ -1,24 +1,22 @@
 package ubic.gemma.persistence.service;
 
-import lombok.EqualsAndHashCode;
-import lombok.Value;
-import lombok.With;
+import lombok.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.SessionFactory;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.*;
 import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.persistence.util.*;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -36,17 +34,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     private static final int FILTERABLE_PROPERTIES_MAX_DEPTH = 3;
 
-    /**
-     * Cached partial filterable properties meta, computed as we go.
-     */
-    private static final Map<Key, PartialFilterablePropertyMeta> partialFilterablePropertiesMeta = new ConcurrentHashMap<>();
-
-    @Value
-    private static class Key {
-        Class<?> clazz;
-        String propertyName;
-    }
-
     private final String objectAlias;
 
     /**
@@ -55,18 +42,71 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     private final Set<String> filterableProperties = new HashSet<>();
 
     /**
+     * Cached filterable properties descriptions.
+     */
+    private final Map<String, String> filterablePropertiesDescriptions = new HashMap<>();
+
+    /**
      * Subset of {@link #filterableProperties} that should use a subquery for filtering.
      */
     private final Set<String> filterablePropertiesViaSubquery = new HashSet<>();
 
     /**
-     * Aliases for filterable properties.
+     * Mapping of deprecated properties; the values contain the reasons for deprecation.
      */
-    private final Set<FilterablePropertyAlias> filterablePropertyAliases = new HashSet<>();
+    private final Set<String> filterablePropertiesDeprecationStatus = new HashSet<>();
+
+    /**
+     * Represents object aliases for filterable properties.
+     * <p>
+     * Some of the filterable properties are resolved in the query via an alias (i.e. {@code ed} in {@code select ee
+     * from ExpressionExperiment ee join ee.experimentalDesign ed}). In order to know which prefixes correspond to which
+     * alias, we need to keep track of them. When resolving the alias for a property, we pick the one that has the
+     * longest common prefix with the requested property name.
+     */
+    @Value
+    @EqualsAndHashCode(of = "prefix")
+    private static class FilterablePropertyAlias {
+        String prefix;
+        @Nullable
+        String objectAlias;
+        Class<? extends Identifiable> entityClass;
+        @Nullable
+        String aliasFor;
+    }
+
+    private final Set<FilterablePropertyAlias> filterablePropertyObjectAliases = new HashSet<>();
+
+    /**
+     * Expose registered object-alias mappings to subclasses (e.g. the JPA Criteria DAO) so
+     * they can wire alias-prefixed filter/sort paths back to explicit joins on the root.
+     * <p>
+     * Returns a map of {@code objectAlias} → dotted prefix (without the trailing {@code "."}).
+     * Aliases registered with a {@code null} objectAlias are skipped.
+     */
+    protected final Map<String, String> getFilterablePropertyObjectAliases() {
+        Map<String, String> result = new HashMap<>();
+        for ( FilterablePropertyAlias fpa : filterablePropertyObjectAliases ) {
+            if ( fpa.objectAlias == null ) continue;
+            String prefix = fpa.prefix.endsWith( "." ) ? fpa.prefix.substring( 0, fpa.prefix.length() - 1 ) : fpa.prefix;
+            result.put( fpa.objectAlias, prefix );
+        }
+        return result;
+    }
 
     protected AbstractFilteringVoEnabledDao( @Nullable String objectAlias, Class<? extends O> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
         this.objectAlias = objectAlias;
+    }
+
+    /**
+     * @return the HQL object alias used to refer to the root entity in this DAO's queries
+     *         (e.g. {@code ee} for {@code ExpressionExperiment}), or {@code null} when the
+     *         DAO operates on the implicit root.
+     */
+    @Nullable
+    protected final String getObjectAlias() {
+        return objectAlias;
     }
 
     @Override
@@ -104,9 +144,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if the property is already registered
          */
         public void registerProperty( String propertyName, boolean useSubquery ) {
-            if ( getFilterablePropertyMeta( propertyName ) == null ) {
-                throw new IllegalArgumentException( "Property %s does not have any associated meta information." );
-            }
             if ( filterableProperties.add( propertyName ) ) {
                 if ( useSubquery ) {
                     filterablePropertiesViaSubquery.add( propertyName );
@@ -123,13 +160,6 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if any of the given properties is already registered
          */
         public void registerProperties( String... propertyNames ) throws IllegalArgumentException {
-            List<String> propsMissingMeta = Arrays.stream( propertyNames )
-                    .filter( p -> getFilterablePropertyMeta( p ) == null )
-                    .collect( Collectors.toList() );
-            if ( !propsMissingMeta.isEmpty() ) {
-                throw new IllegalArgumentException( String.format( "The following properties are missing meta information: %s.",
-                        String.join( ", ", propsMissingMeta ) ) );
-            }
             List<String> props = Arrays.asList( propertyNames );
             if ( CollectionUtils.containsAny( filterableProperties, props ) ) {
                 throw new IllegalArgumentException( String.format( "The following filterable properties are already registered: %s.",
@@ -163,7 +193,33 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
         }
 
-        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth ) throws IllegalArgumentException {
+        /**
+         * Deprecate the given property.
+         * <p>
+         * You should indicate a reason and a possible replacement with {@link #describeProperty(String, String)}.
+         */
+        public void deprecateProperty( String propertyName ) {
+            if ( !filterableProperties.contains( propertyName ) ) {
+                throw new IllegalArgumentException( "Cannot deprecate an unknown property: " + propertyName + "." );
+            }
+            if ( !filterablePropertiesDeprecationStatus.add( propertyName ) ) {
+                throw new IllegalArgumentException( propertyName + " was already marked as deprecated." );
+            }
+        }
+
+        /**
+         * Provide a description for a given property.
+         */
+        public void describeProperty( String propertyName, String description ) {
+            if ( !filterableProperties.contains( propertyName ) ) {
+                throw new IllegalArgumentException( "Cannot describe an unknown property: " + propertyName + "." );
+            }
+            if ( filterablePropertiesDescriptions.put( propertyName, description ) != null ) {
+                throw new IllegalArgumentException( "Property " + propertyName + " already has a description." );
+            }
+        }
+
+        public void registerEntity( String prefix, Class<? extends Identifiable> entityClass, int maxDepth ) throws IllegalArgumentException {
             registerEntity( prefix, entityClass, maxDepth, false );
         }
 
@@ -180,7 +236,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @throws IllegalArgumentException if no entity of the given type is registered under the given prefix or if
          * the prefix is invalid
          */
-        public void registerEntity( String prefix, Class<?> entityClass, int maxDepth, boolean useSubquery ) throws IllegalArgumentException {
+        public void registerEntity( String prefix, Class<? extends Identifiable> entityClass, int maxDepth, boolean useSubquery ) throws IllegalArgumentException {
             if ( !prefix.isEmpty() && !prefix.endsWith( "." ) ) {
                 throw new IllegalArgumentException( "A non-empty prefix must end with a '.' character." );
             }
@@ -188,8 +244,11 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( String.format( "Maximum depth for adding filterable properties of %s %s must be strictly positive.",
                         entityClass.getName(), summarizePrefix( prefix ) ) );
             }
-            ClassMetadata classMetadata = getSessionFactory().getClassMetadata( entityClass );
-            if ( classMetadata == null ) {
+            // Hibernate 6: SessionFactory.getClassMetadata is gone — walk the JPA Metamodel instead.
+            jakarta.persistence.metamodel.EntityType<?> entityType;
+            try {
+                entityType = getSessionFactory().getMetamodel().entity( entityClass );
+            } catch ( IllegalArgumentException e ) {
                 throw new IllegalArgumentException( String.format( "Cannot add filterable properties for unmapped class %s %s.",
                         entityClass.getName(), summarizePrefix( prefix ) ) );
             }
@@ -198,36 +257,29 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
                 throw new IllegalArgumentException( String.format( "An entity of type %s is already registered %s.",
                         prevValue.getName(), summarizePrefix( prefix ) ) );
             }
-            String[] propertyNames = classMetadata.getPropertyNames();
-            Type[] propertyTypes = classMetadata.getPropertyTypes();
-            if ( classMetadata.getIdentifierPropertyName() != null ) {
-                registerProperty( prefix + classMetadata.getIdentifierPropertyName(), useSubquery );
-            }
-            for ( int i = 0; i < propertyNames.length; i++ ) {
-                String propertyName = propertyNames[i];
-                Type propertyType = propertyTypes[i];
-                if ( propertyType.isEntityType() ) {
+            // Note: JPA Metamodel's entityType.getAttributes() already includes the @Id attribute,
+            // unlike the legacy Hibernate ClassMetadata.getPropertyNames() it replaced (which excluded
+            // the id and required getIdentifierPropertyName() to be called separately). So the loop
+            // below handles id registration too — no separate registerProperty call needed.
+            for ( jakarta.persistence.metamodel.Attribute<?, ?> attr : entityType.getAttributes() ) {
+                String propertyName = attr.getName();
+                Class<?> javaType = normalizeAttributeJavaType( attr.getJavaType() );
+                if ( attr.isAssociation() && attr instanceof jakarta.persistence.metamodel.SingularAttribute ) {
                     if ( maxDepth > 1 ) {
-                        registerEntity( prefix + propertyName + ".", propertyType.getReturnedClass(), maxDepth - 1, useSubquery );
+                        //noinspection unchecked
+                        registerEntity( prefix + propertyName + ".", ( Class<? extends Identifiable> ) javaType, maxDepth - 1, useSubquery );
                     } else {
                         log.trace( String.format( "Max depth reached, will not recurse into %s", propertyName ) );
                     }
-                } else if ( propertyType.isCollectionType() ) {
+                } else if ( attr.isCollection() ) {
                     // special case for collection size, regardless of its type
                     registerProperty( prefix + propertyName + ".size", useSubquery );
-                } else if ( propertyType instanceof MaterializedBlobType || propertyType instanceof MaterializedClobType || propertyType instanceof MaterializedNClobType ) {
-                    log.trace( String.format( "Property %s%s of type %s was excluded in %s: BLOBs and CLOBs are not exposed by default.",
-                            prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
-                } else if ( Filter.getConversionService().canConvert( String.class, propertyType.getReturnedClass() ) ) {
-                    // enum types
+                } else if ( Filter.getConversionService().canConvert( String.class, javaType ) ) {
+                    // basic / enum types
                     registerProperty( prefix + propertyName, useSubquery );
-                } else if ( propertyType instanceof CustomType ) {
-                    // TODO: handle custom types
-                    log.trace( String.format( "Property %s%s of type %s was excluded in %s: custom types are not exposed by default.",
-                            prefix, propertyName, propertyType.getName(), entityClass.getName() ) );
                 } else {
-                    log.warn( String.format( "Property %s%s of type %s in %s is not supported and will be skipped.",
-                            prefix, propertyName, propertyType.getReturnedClass().getName(), entityClass.getName() ) );
+                    log.trace( String.format( "Property %s%s of type %s in %s is not directly filterable and will be skipped.",
+                            prefix, propertyName, javaType.getName(), entityClass.getName() ) );
                 }
             }
             log.trace( String.format( "Registered entity %s %s.", entityClass.getName(), summarizePrefix( prefix ) ) );
@@ -263,10 +315,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         }
 
         /**
-         * @see #registerAlias(String, String, Class, String, int, boolean)
+         * @see #registerObjectAlias(String, String, Class, String, int, boolean)
          */
-        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth ) {
-            registerAlias( prefix, objectAlias, propertyType, aliasFor, maxDepth, false );
+        public void registerObjectAlias( String prefix, @Nullable String objectAlias, Class<? extends Identifiable> entityClass, @Nullable String aliasFor, int maxDepth ) {
+            registerObjectAlias( prefix, objectAlias, entityClass, aliasFor, maxDepth, false );
         }
 
         /**
@@ -276,10 +328,12 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
          * @param objectAlias internal alias used to refer to the entity as per {@link Filter#getObjectAlias()}.
          * @see #registerEntity(String, Class, int)
          */
-        public void registerAlias( String prefix, @Nullable String objectAlias, Class<?> propertyType, @Nullable String aliasFor, int maxDepth, boolean useSubquery ) {
-            filterablePropertyAliases.add( new FilterablePropertyAlias( prefix, objectAlias, propertyType, aliasFor ) );
-            registerEntity( prefix, propertyType, maxDepth, useSubquery );
-            log.trace( String.format( "Registered alias for %s (%s) %s.", objectAlias, propertyType.getName(), summarizePrefix( prefix ) ) );
+        public void registerObjectAlias( String prefix, @Nullable String objectAlias, Class<? extends Identifiable> entityClass, @Nullable String aliasFor, int maxDepth, boolean useSubquery ) {
+            if ( !filterablePropertyObjectAliases.add( new FilterablePropertyAlias( prefix, objectAlias, entityClass, aliasFor ) ) ) {
+                throw new IllegalArgumentException( "An alias was already registered for '" + prefix + "'." );
+            }
+            registerEntity( prefix, entityClass, maxDepth, useSubquery );
+            log.trace( String.format( "Registered alias for %s (%s) %s.", objectAlias, entityClass.getName(), summarizePrefix( prefix ) ) );
         }
 
         private String summarizePrefix( String prefix ) {
@@ -303,7 +357,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     @Nullable
     @Override
     public String getFilterablePropertyDescription( String propertyName ) throws IllegalArgumentException {
-        return getFilterablePropertyMeta( propertyName ).description;
+        return StringUtils.stripToNull( getFilterablePropertyMeta( propertyName ).descriptions.stream()
+                .filter( Objects::nonNull )
+                .collect( Collectors.joining( "; " ) ) );
     }
 
     @Nullable
@@ -313,11 +369,13 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public boolean getFilterablePropertyIsUsingSubquery( String property ) throws IllegalArgumentException {
-        if ( !filterableProperties.contains( property ) ) {
-            throw new IllegalArgumentException( String.format( "Unknown filterable property %s.", property ) );
-        }
-        return filterablePropertiesViaSubquery.contains( property );
+    public boolean isFilterablePropertyUsingSubquery( String property ) throws IllegalArgumentException {
+        return getFilterablePropertyMeta( property ).usesSubquery;
+    }
+
+    @Override
+    public boolean isFilterablePropertyDeprecated( String property ) throws IllegalArgumentException {
+        return getFilterablePropertyMeta( property ).deprecated;
     }
 
     @Override
@@ -345,7 +403,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     @Override
-    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, T value ) {
+    public final <T> Filter getFilter( String property, Class<T> propertyType, Filter.Operator operator, @Nullable T value ) {
         FilterablePropertyMeta propertyMeta = getFilterablePropertyMeta( property );
         return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, value, property ), property, null );
     }
@@ -356,6 +414,75 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         return nestIfSubquery( Filter.by( propertyMeta.objectAlias, propertyMeta.propertyName, propertyType, operator, values, property ), property, null );
     }
 
+    @Override
+    public final Filter getFilter( List<ConjunctSpec> conjuncts, @Nullable SubqueryMode subqueryMode ) {
+        if ( conjuncts.isEmpty() ) {
+            throw new IllegalArgumentException( "At least one predicate is required." );
+        }
+        if ( conjuncts.size() == 1 ) {
+            // identical to the ordinary single-predicate path, including its subquery-mode handling
+            ConjunctSpec c = conjuncts.get( 0 );
+            if ( c.getValues() != null ) {
+                return subqueryMode != null
+                        ? getFilter( c.getProperty(), c.getOperator(), c.getValues(), subqueryMode )
+                        : getFilter( c.getProperty(), c.getOperator(), c.getValues() );
+            }
+            return subqueryMode != null
+                    ? getFilter( c.getProperty(), c.getOperator(), requireNonNullValue( c ), subqueryMode )
+                    : getFilter( c.getProperty(), c.getOperator(), requireNonNullValue( c ) );
+        }
+        if ( subqueryMode == SubqueryMode.ALL ) {
+            throw new IllegalArgumentException( "A conjunction cannot be quantified with all(): "
+                    + "\"every element satisfies A and B\" negates to a disjunction, which a subquery "
+                    + "carrying a conjunction cannot express. Use any() or none()." );
+        }
+        String sharedAlias = null;
+        List<Filter> inner = new ArrayList<>( conjuncts.size() );
+        for ( ConjunctSpec c : conjuncts ) {
+            if ( !filterablePropertiesViaSubquery.contains( c.getProperty() ) ) {
+                throw new IllegalArgumentException( c.getProperty() + " cannot be filtered via a subquery, "
+                        + "so it cannot take part in a conjunction that binds to one element." );
+            }
+            FilterablePropertyMeta meta = getFilterablePropertyMeta( c.getProperty() );
+            if ( inner.isEmpty() ) {
+                sharedAlias = meta.objectAlias;
+            } else if ( !Objects.equals( sharedAlias, meta.objectAlias ) ) {
+                throw new IllegalArgumentException( "Conjoined predicates must all target the same relation; "
+                        + c.getProperty() + " does not belong to the same one as "
+                        + conjuncts.get( 0 ).getProperty() + "." );
+            }
+            inner.add( c.getValues() != null
+                    ? Filter.parse( meta.objectAlias, meta.propertyName, meta.propertyType, c.getOperator(), c.getValues(), c.getProperty() )
+                    : Filter.parse( meta.objectAlias, meta.propertyName, meta.propertyType, c.getOperator(), requireNonNullValue( c ), c.getProperty() ) );
+        }
+        List<Subquery.Alias> aliases = resolveSubqueryAliases( sharedAlias );
+        Filter.Operator op = subqueryMode == SubqueryMode.NONE ? Filter.Operator.notInSubquery : Filter.Operator.inSubquery;
+        return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, op,
+                new Subquery( getElementClass().getName(), getIdentifierPropertyName(), aliases, inner ),
+                conjuncts.get( 0 ).getProperty() );
+    }
+
+    private static String requireNonNullValue( ConjunctSpec c ) {
+        if ( c.getValue() == null ) {
+            throw new IllegalArgumentException( "A value is required for " + c.getProperty() + "." );
+        }
+        return c.getValue();
+    }
+
+    /** Resolve the join aliases a subquery needs to reach {@code objectAlias} from the root entity. */
+    private List<Subquery.Alias> resolveSubqueryAliases( @Nullable String objectAlias ) {
+        if ( objectAlias == null ) {
+            // the property refers to the root entity, no need for aliases
+            return Collections.emptyList();
+        }
+        for ( FilterablePropertyAlias fpa : filterablePropertyObjectAliases ) {
+            if ( objectAlias.equals( fpa.getObjectAlias() ) ) {
+                return SubqueryUtils.guessAliases( fpa.prefix, fpa.getObjectAlias() );
+            }
+        }
+        throw new IllegalArgumentException( String.format( "Could not find a filterable property alias for %s.", objectAlias ) );
+    }
+
     private Filter nestIfSubquery( Filter f, String propertyName, @Nullable SubqueryMode subqueryMode ) {
         if ( !filterablePropertiesViaSubquery.contains( propertyName ) ) {
             if ( subqueryMode != null ) {
@@ -363,11 +490,10 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             }
             return f;
         }
-        String entityName = getSessionFactory().getClassMetadata( getElementClass() ).getEntityName();
         List<Subquery.Alias> aliases;
         if ( f.getObjectAlias() != null ) {
             aliases = null;
-            for ( FilterablePropertyAlias fpa : filterablePropertyAliases ) {
+            for ( FilterablePropertyAlias fpa : filterablePropertyObjectAliases ) {
                 if ( f.getObjectAlias().equals( fpa.getObjectAlias() ) ) {
                     aliases = SubqueryUtils.guessAliases( fpa.prefix, fpa.getObjectAlias() );
                     break;
@@ -400,7 +526,9 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
             subqueryOp = Filter.Operator.inSubquery;
         }
         return Filter.by( objectAlias, getIdentifierPropertyName(), Long.class, subqueryOp,
-                new Subquery( entityName, getIdentifierPropertyName(), aliases, f ),
+                // Use the FQN here (HQL accepts both; FQN is unambiguous and matches the legacy
+                // Subquery toString format that downstream tests and any HQL-aware tooling depend on).
+                new Subquery( getElementClass().getName(), getIdentifierPropertyName(), aliases, f ),
                 propertyName );
     }
 
@@ -415,6 +543,7 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      */
     @With
     @Value
+    @Builder
     protected static class FilterablePropertyMeta {
         @Nullable
         String objectAlias;
@@ -423,26 +552,35 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         /**
          * A short description for this parameter if clarifications are needed.
          * <p>
-         * This will appear in the generated OpenAPI specification.
+         * This will appear in the generated OpenAPI specification joined with a "; " delimiter.
          */
-        @Nullable
-        String description;
+        @Singular("description")
+        List<String> descriptions;
         /**
          * A short list of allowed values if that can be determined, or null.
          */
         @Nullable
         List<Object> allowedValues;
+        /**
+         * Indicate if the property is deprecated.
+         */
+        boolean deprecated;
+        /**
+         * Indicate if the property uses a subquery for filtering.
+         */
+        boolean usesSubquery;
     }
 
-    @Value
-    @EqualsAndHashCode(of = "prefix")
-    private static class FilterablePropertyAlias {
-        String prefix;
-        @Nullable
-        String objectAlias;
-        Class<?> propertyType;
-        @Nullable
-        String aliasFor;
+    /**
+     * Cached filterable properties meta, computed as we go.
+     */
+    private final Map<String, FilterablePropertyMeta> filterablePropertyMetaCache = new ConcurrentHashMap<>();
+
+    protected final FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) {
+        if ( !filterableProperties.contains( propertyName ) ) {
+            throw new IllegalArgumentException( String.format( "Unknown filterable property %s in %s.", propertyName, getElementClass().getName() ) );
+        }
+        return filterablePropertyMetaCache.computeIfAbsent( propertyName, k -> this.resolveFilterablePropertyMeta( k ).build() );
     }
 
     /**
@@ -455,38 +593,56 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
      * @see #getFilter(String, Filter.Operator, Collection)
      * @see FilteringDao#getSort(String, Sort.Direction, Sort.NullMode)
      */
-    protected FilterablePropertyMeta getFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
+    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( String propertyName ) throws IllegalArgumentException {
         // replace longer prefix first
-        List<FilterablePropertyAlias> aliases = filterablePropertyAliases.stream()
+        List<FilterablePropertyAlias> aliases = filterablePropertyObjectAliases.stream()
                 .sorted( Comparator.comparing( f -> f.prefix.length(), Comparator.reverseOrder() ) )
                 .collect( Collectors.toList() );
         for ( FilterablePropertyAlias alias : aliases ) {
             if ( propertyName.startsWith( alias.prefix ) && !propertyName.equals( alias.prefix + "size" ) ) {
                 String fieldName = propertyName.replaceFirst( "^" + Pattern.quote( alias.prefix ), "" );
-                return getFilterablePropertyMeta( alias.objectAlias, fieldName, alias.propertyType )
-                        .withDescription( alias.aliasFor != null ? String.format( "alias for %s.%s", alias.aliasFor, fieldName ) : null );
+                return resolveFilterablePropertyMeta( alias.objectAlias, alias.entityClass, fieldName )
+                        .description( filterablePropertiesDescriptions.get( propertyName ) )
+                        .description( alias.aliasFor != null ? String.format( "alias for %s.%s", alias.aliasFor, fieldName ) : null )
+                        .usesSubquery( filterablePropertiesViaSubquery.contains( propertyName ) )
+                        .deprecated( filterablePropertiesDeprecationStatus.contains( propertyName ) );
             }
         }
-        return getFilterablePropertyMeta( objectAlias, propertyName, getElementClass() );
+        return resolveFilterablePropertyMeta( objectAlias, getElementClass(), propertyName )
+                .description( filterablePropertiesDescriptions.get( propertyName ) );
     }
 
-    protected FilterablePropertyMeta getFilterablePropertyMeta( @Nullable String objectAlias, String propertyName, Class<?> clazz ) throws IllegalArgumentException {
-        Key key = new Key( clazz, propertyName );
-        PartialFilterablePropertyMeta partialMeta = partialFilterablePropertiesMeta.computeIfAbsent( key, ignored -> {
-            try {
-                return resolveFilterablePropertyMetaInternal( propertyName, clazz );
-            } catch ( NoSuchFieldException e ) {
-                throw new IllegalArgumentException( String.format( "Could not resolve property %s on %s.", propertyName, clazz.getName() ), e );
-            }
-        } );
-        return new FilterablePropertyMeta( objectAlias, propertyName, partialMeta.propertyType, null, partialMeta.allowedValues );
+    protected FilterablePropertyMeta.FilterablePropertyMetaBuilder resolveFilterablePropertyMeta( @Nullable String objectAlias, Class<? extends Identifiable> clazz, String propertyName ) throws IllegalArgumentException {
+        PartialFilterablePropertyMeta partialMeta = getPartialFilterablePropertyMeta( clazz, propertyName, getSessionFactory() );
+        return FilterablePropertyMeta.builder()
+                .objectAlias( objectAlias )
+                .propertyName( propertyName )
+                .propertyType( partialMeta.propertyType )
+                .allowedValues( partialMeta.allowedValues );
+    }
+
+    @Value
+    private static class Key {
+        Class<? extends Identifiable> clazz;
+        String propertyName;
+    }
+
+    /**
+     * Cached partial filterable properties meta, computed as we go.
+     */
+    private static final Map<Key, PartialFilterablePropertyMeta> partialFilterablePropertiesMetaCache = new ConcurrentHashMap<>();
+
+    private static PartialFilterablePropertyMeta getPartialFilterablePropertyMeta( Class<? extends Identifiable> cls, String property, SessionFactory sessionFactory ) {
+        Key key = new Key( cls, property );
+        return partialFilterablePropertiesMetaCache.computeIfAbsent( key, ignored -> resolvePartialFilterablePropertyMeta( ignored.clazz, ignored.propertyName, sessionFactory ) );
     }
 
     /**
      * Partial property meta.
      * <p>
-     * This is used by {@link #resolveFilterablePropertyMetaInternal(String, Class)} which uses a recursion that
-     * does not need to track information about object alias, full property path, etc.
+     * This is used by {@link AbstractFilteringVoEnabledDao#resolvePartialFilterablePropertyMeta(Class, String, SessionFactory)} which uses a recursion that
+     * does not need to track information about object alias, full property path, etc. that can be shared across
+     * filtering DAOs.
      */
     @Value
     private static class PartialFilterablePropertyMeta {
@@ -496,54 +652,65 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
     }
 
     /**
-     * Checks if property of given name exists in the given class. If the given string specifies
-     * nested properties (E.g. curationDetails.troubled), only the substring before the first dot is evaluated and the
-     * rest of the string is processed in a new recursive iteration.
+     * Resolve a partial filterable property meta for a given class and property name.
+     * <p>
+     * If the given string specifies nested properties (e.g. curationDetails.troubled), only the substring before the
+     * first dot is evaluated and the rest of the string is processed in a new recursive iteration.
      *
+     * @param cls      the class to check the property on.
      * @param property the property to check for. If the string contains dot characters ('.'), only the part
      *                 before the first dot will be evaluated. Substring after the dot will be checked against the
      *                 type of the field retrieved from the substring before the dot.
-     * @param cls      the class to check the property on.
      * @return the class of the property last in the line of nesting.
      */
-    private PartialFilterablePropertyMeta resolveFilterablePropertyMetaInternal( String property, Class<?> cls ) throws NoSuchFieldException {
-        ClassMetadata classMetadata = getSessionFactory().getClassMetadata( cls );
+    private static PartialFilterablePropertyMeta resolvePartialFilterablePropertyMeta( Class<? extends Identifiable> cls, String property, SessionFactory sessionFactory ) {
+        // Hibernate 6: ClassMetadata is gone — walk the JPA Metamodel instead.
+        jakarta.persistence.metamodel.EntityType<?> entityType;
+        try {
+            entityType = sessionFactory.getMetamodel().entity( cls );
+        } catch ( IllegalArgumentException e ) {
+            throw new IllegalArgumentException( "Unknown mapped class " + cls.getName() + "." );
+        }
 
         String[] parts = property.split( "\\.", 2 );
 
         // ID is kept separately from properties
-        if ( parts[0].equals( classMetadata.getIdentifierPropertyName() ) ) {
-            return new PartialFilterablePropertyMeta( classMetadata.getIdentifierType().getReturnedClass(), null );
-        }
-
-        String[] propertyNames = classMetadata.getPropertyNames();
-        Type[] propertyTypes = classMetadata.getPropertyTypes();
-        int i = ArrayUtils.indexOf( propertyNames, parts[0] );
-        if ( i == -1 ) {
-            throw new NoSuchFieldException( String.format( "No such field %s in %s.", parts[0], cls.getName() ) );
-        }
-
-        Type propertyType = propertyTypes[i];
-
-        // recurse only on entity type
-        if ( parts.length > 1 ) {
-            if ( propertyType.isEntityType() ) {
-                return resolveFilterablePropertyMetaInternal( parts[1], propertyType.getReturnedClass() );
-            } else if ( propertyType.isCollectionType() && "size".equals( parts[1] ) ) {
-                return new PartialFilterablePropertyMeta( Integer.class, null ); /* special case for collection size */
-            } else {
-                throw new NoSuchFieldException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
+        if ( entityType.hasSingleIdAttribute() ) {
+            jakarta.persistence.metamodel.SingularAttribute<?, ?> idAttr = entityType.getId( entityType.getIdType().getJavaType() );
+            if ( parts[0].equals( idAttr.getName() ) ) {
+                return new PartialFilterablePropertyMeta( idAttr.getJavaType(), null );
             }
         }
 
-        Class<?> actualType = ( Class<?> ) propertyType.getReturnedClass();
+        jakarta.persistence.metamodel.Attribute<?, ?> attr;
+        try {
+            attr = entityType.getAttribute( parts[0] );
+        } catch ( IllegalArgumentException e ) {
+            String available = entityType.getAttributes().stream()
+                    .map( jakarta.persistence.metamodel.Attribute::getName )
+                    .collect( Collectors.joining( ", " ) );
+            throw new IllegalArgumentException( String.format( "No such field %s in %s. Possible values are: %s.", parts[0], cls.getName(), available ) );
+        }
 
-        // available values, only for enumerated types
+        // recurse only on entity type
+        if ( parts.length > 1 ) {
+            if ( attr.isAssociation() && attr instanceof jakarta.persistence.metamodel.SingularAttribute ) {
+                //noinspection unchecked
+                return resolvePartialFilterablePropertyMeta( ( Class<? extends Identifiable> ) attr.getJavaType(), parts[1], sessionFactory );
+            } else if ( attr.isCollection() && "size".equals( parts[1] ) ) {
+                return new PartialFilterablePropertyMeta( Integer.class, null ); /* special case for collection size */
+            } else {
+                throw new IllegalArgumentException( String.format( "%s is not an entity type in %s.", property, cls.getName() ) );
+            }
+        }
+
+        Class<?> actualType = normalizeAttributeJavaType( attr.getJavaType() );
+
+        // available values, only for enumerated types (Java enums)
         List<Object> allowedValues;
-        if ( isEnumType( propertyType ) ) {
-            EnumType et = ( EnumType ) ( ( CustomType ) propertyType ).getUserType();
+        if ( actualType.isEnum() ) {
             //noinspection unchecked,rawtypes
-            allowedValues = new ArrayList<>( EnumSet.allOf( et.returnedClass() ) );
+            allowedValues = new ArrayList<>( EnumSet.allOf( ( Class ) actualType ) );
         } else {
             allowedValues = null;
         }
@@ -551,11 +718,39 @@ public abstract class AbstractFilteringVoEnabledDao<O extends Identifiable, VO e
         if ( Filter.getConversionService().canConvert( String.class, actualType ) ) {
             return new PartialFilterablePropertyMeta( actualType, allowedValues );
         } else {
-            throw new NoSuchFieldException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
+            throw new IllegalArgumentException( String.format( "%s is not of a supported type or a collection of supported types %s.", property, cls.getName() ) );
         }
     }
 
-    private static boolean isEnumType( Type type ) {
-        return type instanceof CustomType && ( ( CustomType ) type ).getUserType() instanceof EnumType;
+    /**
+     * Normalize the Java type reported by the JPA Metamodel to the type that
+     * {@link Filter#getConversionService()} knows about.
+     * <p>
+     * The legacy Hibernate {@code ClassMetadata.getPropertyTypes()[i].getReturnedClass()} returned the
+     * field's declared Java type — e.g. {@link java.util.Date} for a {@code <property type="java.util.Date">}
+     * mapping. The Hibernate 6 JPA Metamodel, however, may report a more specific JDBC-flavored subclass
+     * (e.g. {@link java.sql.Timestamp}, {@link java.sql.Date}, {@link java.sql.Time}) depending on the
+     * SQL column type. The Filter conversion service only registers {@link java.util.Date}, so we collapse
+     * those subtypes back to {@code Date.class} to preserve the pre-Hibernate-6 contract.
+     */
+    private static Class<?> normalizeAttributeJavaType( Class<?> javaType ) {
+        if ( java.util.Date.class.isAssignableFrom( javaType ) && !javaType.equals( java.util.Date.class ) ) {
+            return java.util.Date.class;
+        }
+        // Box primitive types so downstream type-aware code (Filter conversion service, test
+        // stubs, etc.) sees the wrapper class consistently. Hibernate 6's JPA Metamodel
+        // reports primitive Java types verbatim (e.g. boolean.class for a `boolean` field);
+        // the pre-HB6 ClassMetadata path returned the boxed form.
+        if ( javaType.isPrimitive() ) {
+            if ( javaType == boolean.class ) return Boolean.class;
+            if ( javaType == byte.class ) return Byte.class;
+            if ( javaType == short.class ) return Short.class;
+            if ( javaType == int.class ) return Integer.class;
+            if ( javaType == long.class ) return Long.class;
+            if ( javaType == float.class ) return Float.class;
+            if ( javaType == double.class ) return Double.class;
+            if ( javaType == char.class ) return Character.class;
+        }
+        return javaType;
     }
 }

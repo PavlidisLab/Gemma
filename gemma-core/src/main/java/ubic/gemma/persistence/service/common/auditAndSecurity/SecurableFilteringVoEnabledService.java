@@ -8,12 +8,12 @@ import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Slice;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**
  * A base service for securable entities with filtering and VO capabilities.
- * <p>
+ *
  * @author poirigui
  * @see FilteringVoEnabledService
  */

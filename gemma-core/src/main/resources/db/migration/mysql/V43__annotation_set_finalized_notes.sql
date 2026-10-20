@@ -1,0 +1,29 @@
+-- ANNOTATION_SET.FINALIZED_NOTES -- the curator's closing note on a finalized set.
+--
+-- POST /annotation-sets/{id}/finalize takes no body, so the sentence a curator writes when
+-- they close a review has nowhere to go. The curation store's finalize accepts it and echoes
+-- it back as finalized_notes; the UI shows it in the header strip afterwards and pre-fills it
+-- when the curator reopens to re-close. Rather than post the click and silently drop the
+-- prose, the UI currently REFUSES a remote finalize whenever a note was typed (uib,
+-- 2026-09-03). Closing without one already works, so this column is the whole of the gap.
+--
+-- Beside FINALIZED_AT / FINALIZED_BY rather than in a table of its own: there is exactly one
+-- finalization per set at a time -- reopen clears it -- so this is an attribute of that event
+-- and not a collection. Contrast ANNOTATION_SET_TRIAGE and ANNOTATION_SET_DISPOSITION, which
+-- are rows precisely because several judges and several findings coexist.
+--
+-- VARCHAR(2048) rather than the VARCHAR(1024) used for a triage or disposition NOTE. Those
+-- explain one verdict; this one closes out a whole review and is the field a later reader
+-- reaches for first. Service-side the value is trimmed and truncated to fit rather than
+-- rejected -- losing the tail of an explanation is a smaller harm than refusing a
+-- finalization the curator has already decided on, the same rule
+-- AnnotationSetTriageServiceImpl applies to its note.
+--
+-- NULLABLE, and NULL means no note was written. Not the same as the empty string, which no
+-- write path produces: a blank note is normalized to NULL so "did they say anything" has one
+-- answer and not two.
+--
+-- CLEARED ON REOPEN, in the service rather than by the schema. A note explains a closure, so
+-- carrying it across a reopen would attach one closure's words to the next one.
+ALTER TABLE ANNOTATION_SET
+    ADD COLUMN FINALIZED_NOTES VARCHAR(2048) NULL;

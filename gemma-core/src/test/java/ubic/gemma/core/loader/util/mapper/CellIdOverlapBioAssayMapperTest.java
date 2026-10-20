@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.util.mapper;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.*;

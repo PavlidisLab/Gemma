@@ -7,29 +7,84 @@ import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.jet.math.Functions;
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import no.uib.cipr.matrix.sparse.CompRowMatrix;
 import org.hibernate.LazyInitializationException;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
+import ubic.gemma.core.datastructure.matrix.SingleCellExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@CommonsLog
+@Slf4j
 public class QuantitationTypeDetectionUtils {
 
+    public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix ) {
+        try {
+            lintQuantitationType( quantitationType, dmatrix, true );
+        } catch ( InferredQuantitationMismatchException e ) {
+            // never happens
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * Check if a given quantitation type adequately describes a given expression data matrix.
+     * <p>
+     * For non-microarray data (RNA-seq, single-cell, etc.), the QT is curator-controlled and the
+     * heuristic inference is noisy enough to produce frequent false-positive warnings (issue #968).
+     * Skip the checks in that case — the platform technology type is the gate.
+     */
+    public static void lintQuantitationType( QuantitationType quantitationType, ExpressionDataMatrix<?> dmatrix, boolean ignoreQuantitationMismatch ) throws InferredQuantitationMismatchException {
+        if ( !isMicroarray( dmatrix ) ) {
+            // RNA-seq and other sequencing-based data: curator controls scale/type; skip inference checks.
+            return;
+        }
+        QuantitationTypeDetectionUtils.InferredQuantitationType inferredQuantitationType = infer( dmatrix, quantitationType );
+
+        if ( quantitationType.getType() != inferredQuantitationType.getType() ) {
+            String message = String.format( "The type %s differs from the one inferred from data: %s.",
+                    quantitationType.getType(), inferredQuantitationType.getType() );
+            // if data is meant to be detected, then
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
+            }
+        }
+
+        if ( quantitationType.getScale() != inferredQuantitationType.getScale() ) {
+            String message = String.format( "The scale %s differs from the one inferred from data: %s.",
+                    quantitationType.getScale(), inferredQuantitationType.getScale() );
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
+            }
+        }
+
+        if ( quantitationType.getIsRatio() != inferredQuantitationType.isRatio() ) {
+            String message = String.format( "The expression data %s to ratiometric, but the quantitation says otherwise.",
+                    inferredQuantitationType.isRatio() ? "appears" : "does not appear" );
+            if ( ignoreQuantitationMismatch ) {
+                log.warn( message );
+            } else {
+                throw new InferredQuantitationMismatchException( quantitationType, inferredQuantitationType.asQuantitationType( quantitationType ), message );
+            }
+        }
+    }
+
     @Value
-    public static class InferredQuantitationType {
+    private static class InferredQuantitationType {
         StandardQuantitationType type;
         ScaleType scale;
         boolean isRatio;
@@ -57,7 +112,25 @@ public class QuantitationTypeDetectionUtils {
         return qt;
     }
 
-    public static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
+    /**
+     * Detect whether the data matrix uses a microarray platform. Sequencing-based platforms
+     * (RNA-seq, single-cell, etc.) return false. Used by {@link #lintQuantitationType} to skip
+     * inference-based scale/type checks for curator-controlled data (issue #968).
+     */
+    private static boolean isMicroarray( ExpressionDataMatrix<?> expressionData ) {
+        try {
+            return expressionData.getDesignElements().stream()
+                    .map( CompositeSequence::getArrayDesign )
+                    .distinct()
+                    .map( ArrayDesign::getTechnologyType )
+                    .anyMatch( TechnologyType.MICROARRAY::contains );
+        } catch ( LazyInitializationException e ) {
+            log.warn( String.format( "Failed to determine if the data matrix contains microarray platforms: %s.", e.getMessage() ) );
+            return false;
+        }
+    }
+
+    private static InferredQuantitationType infer( ExpressionDataMatrix<?> expressionData, @Nullable QuantitationType qt ) {
         Object matrix;
         if ( expressionData instanceof ExpressionDataDoubleMatrix ) {
             matrix = new DenseDoubleMatrix2D( ( ( ExpressionDataDoubleMatrix ) expressionData ).getMatrix().asArray() );
@@ -67,17 +140,7 @@ public class QuantitationTypeDetectionUtils {
             throw new UnsupportedOperationException( "Unsupported expression data matrix type " + expressionData.getClass().getName() + "." );
         }
 
-        boolean isMicroarray;
-        try {
-            isMicroarray = expressionData.getDesignElements().stream()
-                    .map( CompositeSequence::getArrayDesign )
-                    .distinct()
-                    .map( ArrayDesign::getTechnologyType )
-                    .anyMatch( TechnologyType.MICROARRAY::contains );
-        } catch ( LazyInitializationException e ) {
-            log.warn( String.format( "Failed to determine if the data matrix contains microarray platforms: %s.", e.getMessage() ) );
-            isMicroarray = false;
-        }
+        boolean isMicroarray = isMicroarray( expressionData );
 
         // no data, there's nothing we can do
         if ( isEmpty( matrix ) ) {
@@ -150,8 +213,19 @@ public class QuantitationTypeDetectionUtils {
 
         double minimum = getMinimum( matrix );
 
-        // negative values indicate log-transformation
+        // Negative values indicate log-transformation -- unless the record already accounts for them.
+        // Background-subtracted and normalized data cross zero on a linear scale by construction, so this
+        // branch reports them as log-transformed when they are not; GSE9594 and GSE28623 are both normalized
+        // LINEAR records that trip it. detectSuspiciousValues skips those same two flags for the same reason.
+        // Where the record accounts for the negatives it is the better answer than the inference, so report it
+        // rather than guessing a scale. Only the linting path passes a QT -- inferQuantitationType passes null,
+        // so building a quantitation type from scratch is unaffected.
         if ( minimum < 0 ) {
+            if ( qt != null && ( qt.getIsBackgroundSubtracted() || qt.getIsNormalized() ) ) {
+                log.info( String.format( "Data has values below zero and the quantitation type is %s, which accounts for them; will report the recorded %s scale rather than inferring a log transformation.",
+                        qt.getIsBackgroundSubtracted() ? "background-subtracted" : "normalized", qt.getScale() ) );
+                return new InferredQuantitationType( qt.getType(), qt.getScale(), qt.getIsRatio() );
+            }
             return new InferredQuantitationType( StandardQuantitationType.AMOUNT, ScaleType.LOGBASEUNKNOWN, ir );
         }
 
@@ -171,13 +245,11 @@ public class QuantitationTypeDetectionUtils {
     }
 
     private static double getMaximum( Object matrix ) {
-        if ( matrix instanceof DoubleMatrix2D ) {
-            return getMaximum( ( DoubleMatrix2D ) matrix );
-        } else if ( matrix instanceof CompRowMatrix ) {
-            return getMaximum( ( CompRowMatrix ) matrix );
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        return switch ( matrix ) {
+            case DoubleMatrix2D m -> getMaximum( m );
+            case CompRowMatrix m -> getMaximum( m );
+            default -> throw new UnsupportedOperationException();
+        };
     }
 
     private static double getMaximum( DoubleMatrix2D matrix ) {
@@ -196,13 +268,11 @@ public class QuantitationTypeDetectionUtils {
     }
 
     private static double getMinimum( Object matrix ) {
-        if ( matrix instanceof DoubleMatrix2D ) {
-            return getMinimum( ( DoubleMatrix2D ) matrix );
-        } else if ( matrix instanceof CompRowMatrix ) {
-            return getMinimum( ( CompRowMatrix ) matrix );
-        } else {
-            throw new UnsupportedOperationException();
-        }
+        return switch ( matrix ) {
+            case DoubleMatrix2D m -> getMinimum( m );
+            case CompRowMatrix m -> getMinimum( m );
+            default -> throw new UnsupportedOperationException();
+        };
     }
 
     private static double getMinimum( DoubleMatrix2D matrix ) {
@@ -243,13 +313,11 @@ public class QuantitationTypeDetectionUtils {
      * Check if the given matrix is empty.
      */
     private static boolean isEmpty( Object matrix ) {
-        if ( matrix instanceof DoubleMatrix2D ) {
-            return isEmpty( ( DoubleMatrix2D ) matrix );
-        } else if ( matrix instanceof CompRowMatrix ) {
-            return isEmpty( ( CompRowMatrix ) matrix );
-        } else {
-            throw new UnsupportedOperationException( "Cannot check if matrix of type " + matrix.getClass().getName() + " is empty." );
-        }
+        return switch ( matrix ) {
+            case DoubleMatrix2D m -> isEmpty( m );
+            case CompRowMatrix m -> isEmpty( m );
+            default -> throw new UnsupportedOperationException( "Cannot check if matrix of type " + matrix.getClass().getName() + " is empty." );
+        };
     }
 
     private static boolean isEmpty( DoubleMatrix2D matrix ) {

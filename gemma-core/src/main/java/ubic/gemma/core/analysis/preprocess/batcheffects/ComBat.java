@@ -24,27 +24,24 @@ import cern.jet.math.Functions;
 import cern.jet.random.Gamma;
 import cern.jet.random.Normal;
 import cern.jet.random.engine.MersenneTwister;
+import lombok.Setter;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtils;
-import org.jfree.chart.JFreeChart;
+import org.jfree.chart.*;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.dataStructure.matrix.MatrixUtil;
-import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
-import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.distribution.Histogram;
-import ubic.basecode.math.linearmodels.DesignMatrix;
-import ubic.basecode.math.linearmodels.LeastSquaresFit;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.core.util.matrix.MatrixUtil;
+import ubic.gemma.core.util.matrix.ObjectMatrix;
+import ubic.gemma.core.util.matrix.ObjectMatrixImpl;
+import ubic.gemma.core.util.math.DescriptiveWithMissing;
+import ubic.gemma.core.util.math.distribution.Histogram;
+import ubic.gemma.core.util.math.linearmodels.DesignMatrix;
+import ubic.gemma.core.util.math.linearmodels.LeastSquaresFit;
 import ubic.gemma.core.util.concurrent.Executors;
 
-import java.awt.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -102,6 +99,11 @@ class ComBat<R, C> {
      */
     private DoubleMatrix2D x;
 
+    /**
+     * Theme to use for rendering the ComBat diagnostic plots.
+     */
+    @Setter
+    private ChartTheme chartTheme = StandardChartTheme.createLegacyTheme();
 
     /**
      * Constructor that can be used just for testing correctability (data is not provided) - FIXME refactor so it's not a constructor.
@@ -144,7 +146,7 @@ class ComBat<R, C> {
         DoubleMatrix1D ghr = gammaHat.viewRow( 0 );
         int NUM_HIST_BINS = 100;
         Histogram gammaHatHist = new Histogram( "GammaHat", NUM_HIST_BINS, ghr );
-        XYSeries ghplot = plot( gammaHatHist );
+        XYSeries ghplot = gammaHatHist.plot();
 
         Normal rn = new Normal( this.gammaBar.get( 0 ), Math.sqrt( this.t2.get( 0 ) ), new MersenneTwister() );
 
@@ -153,7 +155,7 @@ class ComBat<R, C> {
             double n = rn.nextDouble();
             ghtheoryT.fill( n );
         }
-        XYSeries ghtheory = plot( ghtheoryT );
+        XYSeries ghtheory = ghtheoryT.plot();
         Path tmpfile;
         try {
             tmpfile = Files.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
@@ -164,33 +166,38 @@ class ComBat<R, C> {
 
         try ( OutputStream os = Files.newOutputStream( tmpfile ) ) {
             this.writePlot( os, ghplot, ghtheory );
-
-            /*
-             * View the distribution of deltaHat, which we assume has an inverse gamma distribution
-             */
-            DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
-            Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
-            XYSeries dhplot = plot( deltaHatHist );
-            Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
-
-            Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
-
-            for ( int i = 0; i < 10000; i++ ) {
-                double invg = 1.0 / g.nextDouble();
-                deltaHatT.fill( invg );
-            }
-            XYSeries dhtheory = plot( deltaHatT );
-
-            tmpfile = Files.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
-            ComBat.log.info( tmpfile );
-
-            try ( OutputStream os2 = Files.newOutputStream( tmpfile ) ) {
-                this.writePlot( os2, dhplot, dhtheory );
-            }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
 
+        /*
+         * View the distribution of deltaHat, which we assume has an inverse gamma distribution
+         */
+        DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
+        Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
+        XYSeries dhplot = deltaHatHist.plot();
+        Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
+
+        Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
+
+        for ( int i = 0; i < 10000; i++ ) {
+            double invg = 1.0 / g.nextDouble();
+            deltaHatT.fill( invg );
+        }
+        XYSeries dhtheory = deltaHatT.plot();
+
+        try {
+            tmpfile = Files.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        ComBat.log.info( tmpfile );
+
+        try ( OutputStream os2 = Files.newOutputStream( tmpfile ) ) {
+            this.writePlot( os2, dhplot, dhtheory );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -293,8 +300,8 @@ class ComBat<R, C> {
 
         int batchIndex = 0;
         DoubleMatrix2D bba = new DenseDoubleMatrix2D( 1, numBatches );
-        for ( String batchId : batches.keySet() ) {
-            bba.set( 0, batchIndex++, ( double ) batches.get( batchId ).size() / numSamples );
+        for ( Collection<C> batchMembers : batches.values() ) {
+            bba.set( 0, batchIndex++, ( double ) batchMembers.size() / numSamples );
         }
 
         /*
@@ -353,24 +360,16 @@ class ComBat<R, C> {
         return meansubtracted.assign( varsq, Functions.div );
     }
 
-    private void writePlot( OutputStream os, XYSeries empirical, XYSeries theory ) {
-        // ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+    private void writePlot( OutputStream os, XYSeries empirical, XYSeries theory ) throws IOException {
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( empirical );
         xySeriesCollection.addSeries( theory );
+        ChartFactory.setChartTheme( chartTheme );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "Magnitude", "Density", xySeriesCollection, PlotOrientation.VERTICAL, false, false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
-        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setDefaultPaint( Color.white );
-
-        try {
-            int size = 500;
-            ChartUtils.writeChartAsPNG( os, chart, 500, size );
-            os.close();
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
+        int size = 500;
+        ChartUtils.writeChartAsPNG( os, chart, size, size );
     }
 
     /**
@@ -663,8 +662,8 @@ class ComBat<R, C> {
         /*
          * Make sure all batches have at least 2 samples, or else this won't work.
          */
-        for ( String batchId : batches.keySet() ) {
-            if ( batches.get( batchId ).size() < 2 ) {
+        for ( Collection<C> batchMembers : batches.values() ) {
+            if ( batchMembers.size() < 2 ) {
                 throw new IllegalArgumentException( "Batch correction not possible with less than 2 samples in any batch. Consider combining batches." );
             }
         }
@@ -902,19 +901,4 @@ class ComBat<R, C> {
         }
     }
 
-
-    /**
-     * Provide graph for JFreePlot; counts expressed as a fraction.
-     */
-    private XYSeries plot( Histogram hist ) {
-        XYSeries series = new XYSeries( hist.getName(), true, true );
-        double step = hist.min();
-        double binWidth = hist.stepSize();
-        double[] binHeights = hist.getArray();
-        for ( double binHeight : binHeights ) {
-            series.add( step, binHeight / hist.entries() );
-            step += binWidth;
-        }
-        return series;
-    }
 }

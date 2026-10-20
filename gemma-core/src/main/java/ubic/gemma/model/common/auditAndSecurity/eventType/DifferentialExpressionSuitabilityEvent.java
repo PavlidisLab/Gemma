@@ -19,6 +19,9 @@
 
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+
+import jakarta.persistence.Entity;
+
 /**
  * Used to indicate the suitability status of an ExpressionExperiment for differential expression analysis. In practice,
  * the default is to assume the experiment is suitable, so implementations of this event are used to indicate
@@ -26,6 +29,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * @author paul
  */
+@Entity
 public abstract class DifferentialExpressionSuitabilityEvent extends AnalysisSuitabilityEvent {
 
 

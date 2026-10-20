@@ -59,7 +59,7 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
 
     @Override
     public Collection<DoubleVectorValueObject> get( ExpressionExperiment ee, Long geneId ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         if ( !enabled ) {
             return null;
         }
@@ -73,7 +73,7 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
 
     @Override
     public void put( ExpressionExperiment ee, Long geneId, Collection<DoubleVectorValueObject> collection ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         putById( ee.getId(), geneId, collection );
     }
 
@@ -87,7 +87,7 @@ class ProcessedDataVectorByGeneCacheImpl implements ProcessedDataVectorByGeneCac
 
     @Override
     public void evict( ExpressionExperiment ee ) {
-        Assert.notNull( ee.getId() );
+        Assert.notNull( ee.getId() , "must not be null");
         if ( !enabled ) {
             return;
         }

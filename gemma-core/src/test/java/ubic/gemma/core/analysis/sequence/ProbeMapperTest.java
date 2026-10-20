@@ -20,12 +20,16 @@ package ubic.gemma.core.analysis.sequence;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.*;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import ubic.gemma.core.goldenpath.GoldenPathSequenceAnalysis;
 import ubic.gemma.core.loader.genome.BlatResultParser;
-import ubic.gemma.core.util.test.category.GoldenPathTest;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
@@ -38,15 +42,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeNoException;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Unaware of the Gemma database but uses the hg19 and mm10 databases (tests will not work with hg38)
  *
  * @author pavlidis
  */
-@Category(GoldenPathTest.class)
+@Tag("goldenpath")
 public class ProbeMapperTest {
 
     private static final Log log = LogFactory.getLog( ProbeMapperTest.class.getName() );
@@ -55,8 +60,9 @@ public class ProbeMapperTest {
     private static GoldenPathSequenceAnalysis humangp = null;
     private static Collection<BlatResult> blatres;
     private static List<Double> tester;
+    private static boolean refSeqTablesPresent = false;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
         Taxon mouseTaxon = Taxon.Factory.newInstance( "mouse" );
         Taxon humanTaxon = Taxon.Factory.newInstance( "human" );
@@ -66,6 +72,15 @@ public class ProbeMapperTest {
             humangp = new GoldenPathSequenceAnalysis( humanTaxon );
         } catch ( CannotGetJdbcConnectionException e ) {
             assumeNoException( e );
+        }
+
+        try {
+            humangp.findRefGenesByLocation( "1", 1L, 2L, null );
+            mousegp.findRefGenesByLocation( "1", 1L, 2L, null );
+            refSeqTablesPresent = true;
+        } catch ( BadSqlGrammarException e ) {
+            // a GoldenPath copy loaded before the switch to ncbiRefSeqCurated
+            log.warn( "GoldenPath lacks the RefSeq tables, the tests that query it will be skipped: " + e.getMessage() );
         }
 
         tester = new ArrayList<>();
@@ -83,7 +98,7 @@ public class ProbeMapperTest {
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDown() {
         if ( mousegp != null ) {
             mousegp.close();
@@ -97,28 +112,28 @@ public class ProbeMapperTest {
     public void testComputeSpecificityA() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 400 );
         Double expected = 400 / 750.0;
-        Assert.assertEquals( expected, actual, 0.0001 );
+        Assertions.assertEquals( expected, actual, 0.0001 );
     }
 
     @Test
     public void testComputeSpecificityB() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 200 );
         Double expected = 200 / 750.0;
-        Assert.assertEquals( expected, actual, 0.0001 );
+        Assertions.assertEquals( expected, actual, 0.0001 );
     }
 
     @Test
     public void testComputeSpecificityC() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 50 );
         Double expected = 50 / 750.0;
-        Assert.assertEquals( expected, actual, 0.0001 );
+        Assertions.assertEquals( expected, actual, 0.0001 );
     }
 
     @Test
     public void testComputeSpecificityD() {
         Double actual = BlatAssociationScorer.computeSpecificity( tester, 395 );
         Double expected = 395 / 750.0;
-        Assert.assertEquals( expected, actual, 0.0001 );
+        Assertions.assertEquals( expected, actual, 0.0001 );
     }
 
     /*
@@ -129,10 +144,11 @@ public class ProbeMapperTest {
      */
     @Test
     public void testLocateGene() {
+        assumeTrue( refSeqTablesPresent, "GoldenPath has no ncbiRefSeqCurated" );
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "2", 73461505L, 73462405L, "+" );
-        Assert.assertEquals( 6, products.size() );
+        Assertions.assertEquals( 6, products.size() );
         GeneProduct gprod = products.iterator().next();
-        Assert.assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
+        Assertions.assertEquals( "CCT7", gprod.getGene().getOfficialSymbol() ); // okay as of 1/2008.
     }
 
     /*
@@ -141,14 +157,15 @@ public class ProbeMapperTest {
      */
     @Test
     public void testLocateGeneOnWrongStrand() {
+        assumeTrue( refSeqTablesPresent, "GoldenPath has no ncbiRefSeqCurated" );
         Collection<GeneProduct> products = humangp.findRefGenesByLocation( "6", 32916471L, 32918445L, null );
-        Assert.assertEquals( 1, products.size() );
+        Assertions.assertEquals( 1, products.size() );
         GeneProduct gprod = products.iterator().next();
-        Assert.assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
+        Assertions.assertEquals( "HLA-DMA", gprod.getGene().getOfficialSymbol() ); // oka 2/2011
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testProcessBlatResults() {
         ProbeMapperConfig config = new ProbeMapperConfig();
         config.setMinimumExonOverlapFraction( 0 ); // test is sensitive to this.
@@ -156,8 +173,8 @@ public class ProbeMapperTest {
         ProbeMapper pm = new ProbeMapperImpl();
         Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres, config );
 
-        assertTrue( "No results", res.values().size() > 0 );
-        assertTrue( "No results", res.values().iterator().next().size() > 0 );
+        assertTrue( res.values().size() > 0, "No results" );
+        assertTrue( res.values().iterator().next().size() > 0, "No results" );
 
         boolean found = false;
         for ( Collection<BlatAssociation> r : res.values() ) {
@@ -173,6 +190,7 @@ public class ProbeMapperTest {
 
     @Test
     public void testIntronIssues() {
+        assumeTrue( refSeqTablesPresent, "GoldenPath has no ncbiRefSeqCurated" );
         ProbeMapperConfig config = new ProbeMapperConfig();
         Collection<BlatAssociation> results = humangp
                 .findAssociations( "chr1", 145517370L, 145518088L, "145517370,145518070", "18,18", null,
@@ -182,7 +200,7 @@ public class ProbeMapperTest {
         for ( BlatAssociation blatAssociation : results ) {
             ProbeMapperTest.log.debug( blatAssociation );
             if ( blatAssociation.getGeneProduct().getGene().getOfficialSymbol().equals( "NBPF10" ) ) {
-                Assert.fail( "Should not have gotten NBPF10" );
+                Assertions.fail( "Should not have gotten NBPF10" );
             }
         }
     }

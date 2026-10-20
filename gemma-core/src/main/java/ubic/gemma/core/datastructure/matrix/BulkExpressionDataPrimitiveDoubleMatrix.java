@@ -1,5 +1,6 @@
 package ubic.gemma.core.datastructure.matrix;
 
+import org.springframework.lang.Nullable;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
@@ -9,9 +10,10 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 public interface BulkExpressionDataPrimitiveDoubleMatrix extends BulkExpressionDataMatrix<Double>, ExpressionDataPrimitiveDoubleMatrix {
 
     /**
-     * Retrieve the given column without boxing.
+     * Retrieve the given column without boxing, or {@code null} if the assay is not part of this matrix.
      * @see #getColumn(BioAssay)
      */
+    @Nullable
     double[] getColumnAsDoubles( BioAssay bioAssay );
 
     /**

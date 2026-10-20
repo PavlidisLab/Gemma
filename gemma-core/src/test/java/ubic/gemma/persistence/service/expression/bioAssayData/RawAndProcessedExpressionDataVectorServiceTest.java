@@ -1,12 +1,12 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.core.context.TestComponent;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ContextConfiguration
-public class RawAndProcessedExpressionDataVectorServiceTest extends BaseTest {
+public class RawAndProcessedExpressionDataVectorServiceTest extends BaseTest5 {
 
     @Configuration
     @TestComponent

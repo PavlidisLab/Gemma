@@ -1,10 +1,10 @@
 package ubic.gemma.persistence.service.common.description;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.security.authentication.UserManager;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -18,7 +18,7 @@ import java.util.Date;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
+public class ExternalDatabaseServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
@@ -29,7 +29,7 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
     /* fixtures */
     private ExternalDatabase ed, ed2;
 
-    @After
+    @AfterEach
     public void tearDown() {
         if ( ed != null ) {
             externalDatabaseService.remove( ed );
@@ -54,13 +54,20 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
                 .hasFieldOrPropertyWithValue( "name", "test" )
                 .hasFieldOrPropertyWithValue( "releaseVersion", "123" )
                 .hasFieldOrPropertyWithValue( "releaseUrl", new URL( "http://example.com/test" ) );
+        // Audit Phase C retired the blanket DAO advices. Trail now carries:
+        //   [0] CREATE — from AuditTrailEventListener on POST_INSERT;
+        //   [1] UPDATE — from the @Audited aspect via
+        //                ExternalDatabaseReleaseAuditServiceImpl.recordReleaseDetailsUpdate,
+        //                which replaced the legacy 5-arg
+        //                addUpdateEvent(ed, ReleaseDetailsUpdateEvent.class, note,
+        //                               detail, lastUpdated) inside updateReleaseDetails.
+        // The third row ("from AuditAdvice on update()") no longer exists.
         assertThat( externalDatabase.getAuditTrail().getEvents() )
-                .hasSize( 3 )
+                .hasSize( 2 )
                 .extracting( "action", "performer" )
                 .containsExactly(
-                        tuple( AuditAction.CREATE, currentUser ), // from AuditAdvice on create()
-                        tuple( AuditAction.UPDATE, currentUser ), // manually inserted
-                        tuple( AuditAction.UPDATE, currentUser ) ); // from AuditAdvice on update()
+                        tuple( AuditAction.CREATE, currentUser ),
+                        tuple( AuditAction.UPDATE, currentUser ) );
         assertThat( externalDatabase.getAuditTrail().getEvents().get( 1 ).getNote() )
                 .isEqualTo( "Yep" );
         // make sure that the last updated date is properly stored
@@ -92,12 +99,17 @@ public class ExternalDatabaseServiceTest extends BaseSpringContextTest {
     public void testUpdateExternalDatabaseDontCascadeToRelatedDatabases() {
         ed = externalDatabaseService.create( ExternalDatabase.Factory.newInstance( "ed", DatabaseType.OTHER ) );
         ed2 = ExternalDatabase.Factory.newInstance( "ed2", DatabaseType.OTHER );
-        ed2.setExternalDatabases( Collections.singleton( ed ) );
+        // Hibernate 6's merge replaces collections in-place via PersistentSet.clear() — pass a
+        // mutable Set, not Collections.singleton (immutable wrapper -> UnsupportedOperationException
+        // at PersistentSet.clear -> Collections$1.remove during merge).
+        ed2.setExternalDatabases( new java.util.HashSet<>( Collections.singleton( ed ) ) );
         ed2 = externalDatabaseService.create( ed2 );
         ed2.setDescription( "1234" );
         externalDatabaseService.update( ed2 );
         assertThat( ed2.getExternalDatabases() ).contains( ed );
-        assertThat( ed2.getAuditTrail().getEvents() ).hasSize( 2 );
+        // Audit Phase C retired the blanket DAO update advice. Only the CREATE row from
+        // the initial create() remains; the bare update() emits nothing.
+        assertThat( ed2.getAuditTrail().getEvents() ).hasSize( 1 );
         ed = externalDatabaseService.findByNameWithAuditTrail( ed.getName() );
         assertThat( ed.getAuditTrail().getEvents() ).hasSize( 1 );
     }

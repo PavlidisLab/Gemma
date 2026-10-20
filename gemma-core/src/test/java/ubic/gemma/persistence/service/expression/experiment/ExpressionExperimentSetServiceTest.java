@@ -19,11 +19,11 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.util.test.BaseSpringContextTest;
+import ubic.gemma.core.util.test.BaseSpringContextTest5;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -34,14 +34,15 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for methods that perform operations on or with expressionExperiment sets
  *
  * @author tvrossum
  */
-public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
+public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest5 {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -58,7 +59,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     private ExpressionExperimentSet eeSet = null;
     private ExpressionExperimentSet eeSetAutoGen = null;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         // need persistent entities so that experiment's taxon can be
@@ -89,7 +90,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         expressionExperimentService.remove( ee1 );
         expressionExperimentService.remove( ee2 );
@@ -128,22 +129,56 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     }
 
-    @Test(expected = Exception.class)
+    /**
+     * A set that declares a taxon keeps the constraint: no mice in a rat set. The two tests below
+     * pin that and must keep passing.
+     * <p>
+     * A set that declares NO taxon may span them. The constraint is a scope a set opts into, not a
+     * property every set must have — a curation cohort is the counter-example that forced it: the
+     * gold reference set is 179 human, 254 mouse and 16 rat, and there is nothing wrong with it.
+     * Before this, creating one was impossible and the failure was an UnsupportedOperationException
+     * reading "EESets with mixed taxa are not supported".
+     */
+    @Test
+    public void testASetWithNoTaxonMaySpanThem() {
+        ExpressionExperimentSet mixed = ExpressionExperimentSet.Factory.newInstance();
+        mixed.setName( "Reference cohort, mixed taxa" );
+        mixed.setDescription( "human and mouse together" );
+        mixed.getExperiments().add( ee1 );
+        mixed.getExperiments().add( eeMouse );
+        mixed.setTaxon( null );
+
+        ExpressionExperimentSet created = expressionExperimentSetService.create( mixed );
+        assertNotNull( created.getId() );
+
+        created.setDescription( "still mixed after an update" );
+        expressionExperimentSetService.update( created );
+
+        assertThat( expressionExperimentSetService.getExperimentsInSet( created.getId() ) )
+                .as( "both taxa are in the set" )
+                .hasSize( 2 );
+        assertThat( created.getTaxon() ).isNull();
+
+        expressionExperimentSetService.remove( created );
+    }
+
+    @Test
     public void testAddingExperimentOfWrongTaxonUpdate() {
         Set<ExpressionExperiment> newMembers = new HashSet<>();
         newMembers.add( ee1 );
         newMembers.add( eeMouse );
         eeSet.setExperiments( newMembers );
 
-        expressionExperimentSetService.update( eeSet );
+        assertThrows( Exception.class, () -> expressionExperimentSetService.update( eeSet ) );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddingExperimentOfWrongTaxonUpdateDatabaseEntityMembers() {
         Collection<Long> newMemberIds = new LinkedList<>();
         newMemberIds.add( ee1.getId() );
         newMemberIds.add( eeMouse.getId() );
-        expressionExperimentSetValueObjectHelper.updateMembers( eeSet.getId(), newMemberIds );
+        assertThrows( IllegalArgumentException.class,
+                () -> expressionExperimentSetValueObjectHelper.updateMembers( eeSet.getId(), newMemberIds ) );
     }
 
     //

@@ -1,0 +1,856 @@
+{
+  "fileVersions": {
+    "inMatrix": {
+      "fname": "/hive/data/inside/cells/datasets/aging-brain/exprMatrix.tsv.gz",
+      "md5": "689cbf836f",
+      "size": 500448447,
+      "mtime": "2020-04-02 22:25:32"
+    },
+    "outMatrix": {
+      "fname": "/usr/local/apache/htdocs-cells/aging-brain/exprMatrix.tsv.gz",
+      "md5": "689cbf836f",
+      "size": 500448447,
+      "mtime": "2020-04-02 23:27:13"
+    },
+    "inMeta": {
+      "fname": "/hive/data/inside/cells/datasets/aging-brain/meta.tsv",
+      "md5": "8ed3f8749e",
+      "size": 6798539,
+      "mtime": "2020-04-02 22:26:18"
+    },
+    "outMeta": {
+      "fname": "/usr/local/apache/htdocs-cells/aging-brain/meta.tsv",
+      "md5": "8ed3f8749e",
+      "size": 6798539,
+      "mtime": "2023-09-05 21:47:24"
+    },
+    "desc": {
+      "fname": "desc.conf",
+      "md5": "263573e230",
+      "size": 3485,
+      "mtime": "2021-11-10 19:09:12"
+    },
+    "conf": {
+      "fname": "/hive/data/inside/cells/datasets/aging-brain/cellbrowser.conf",
+      "md5": "5c1a6cfd75",
+      "size": 1229,
+      "mtime": "2023-08-03 21:14:38"
+    }
+  },
+  "parents": [
+    [
+      "",
+      "All Datasets"
+    ]
+  ],
+  "name": "aging-brain",
+  "matrixArrType": "Float32",
+  "sampleCount": 72543,
+  "matrixWasFiltered": false,
+  "metaFields": [
+    {
+      "name": "Cell",
+      "label": "Cell",
+      "type": "uniqueString",
+      "maxSize": 19,
+      "diffValCount": 72543,
+      "md5": "d548350af3"
+    },
+    {
+      "name": "origident",
+      "label": "orig.ident",
+      "type": "enum",
+      "valCounts": [
+        [
+          "young4",
+          15019
+        ],
+        [
+          "oldex4",
+          11664
+        ],
+        [
+          "oldex1",
+          9546
+        ],
+        [
+          "young2",
+          9143
+        ],
+        [
+          "oldex2",
+          7411
+        ],
+        [
+          "young1",
+          7393
+        ],
+        [
+          "old2",
+          5932
+        ],
+        [
+          "old4",
+          5497
+        ],
+        [
+          "old1",
+          938
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 9,
+      "md5": "8f948c92b3"
+    },
+    {
+      "name": "nCount_RNA",
+      "label": "nCount_RNA",
+      "arrType": "float32",
+      "type": "int",
+      "diffValCount": 4409,
+      "md5": "364ec9fbcf"
+    },
+    {
+      "name": "nFeature_RNA",
+      "label": "nFeature_RNA",
+      "arrType": "float32",
+      "type": "int",
+      "diffValCount": 1860,
+      "md5": "4c3132167f"
+    },
+    {
+      "name": "percentmito",
+      "label": "percent.mito",
+      "arrType": "float32",
+      "type": "float",
+      "diffValCount": 53594,
+      "md5": "3611411583"
+    },
+    {
+      "name": "percentribo",
+      "label": "percent.ribo",
+      "arrType": "float32",
+      "type": "float",
+      "diffValCount": 57047,
+      "md5": "f059081211"
+    },
+    {
+      "name": "Batch",
+      "label": "Batch",
+      "type": "enum",
+      "valCounts": [
+        [
+          "C",
+          32180
+        ],
+        [
+          "B",
+          22486
+        ],
+        [
+          "A",
+          17877
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 3,
+      "md5": "d1b201b508"
+    },
+    {
+      "name": "Age",
+      "label": "Age",
+      "type": "enum",
+      "valCounts": [
+        [
+          "young",
+          31555
+        ],
+        [
+          "oldex",
+          28621
+        ],
+        [
+          "old",
+          12367
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 3,
+      "md5": "5ba73d0c49"
+    },
+    {
+      "name": "Celltype",
+      "label": "Celltype",
+      "type": "enum",
+      "valCounts": [
+        [
+          "EC",
+          20403
+        ],
+        [
+          "MG",
+          19494
+        ],
+        [
+          "AC",
+          16635
+        ],
+        [
+          "CPC",
+          4251
+        ],
+        [
+          "OPC",
+          3056
+        ],
+        [
+          "SMC",
+          2424
+        ],
+        [
+          "MAC",
+          1239
+        ],
+        [
+          "PC",
+          1010
+        ],
+        [
+          "EPC",
+          905
+        ],
+        [
+          "imNeur",
+          889
+        ],
+        [
+          "NRP",
+          495
+        ],
+        [
+          "mNeur",
+          398
+        ],
+        [
+          "MNC",
+          385
+        ],
+        [
+          "TNC",
+          359
+        ],
+        [
+          "OLG",
+          346
+        ],
+        [
+          "Hb_EC",
+          254
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 16,
+      "longLabels": [
+        "Endothelial cell",
+        "Microglia",
+        "Astrocyte",
+        "Choroid plexus epithelial cell",
+        "OPC",
+        "Smooth muscle cell",
+        "MAC",
+        "Pericyte",
+        "Ependymocyte",
+        "Immature neuron",
+        "Neuronal restricted precursor",
+        "Mature neuron",
+        "Macrophage",
+        "Tanycyte",
+        "OLG",
+        "Hemoglobin-expressing vascular cell"
+      ],
+      "md5": "63eafb3599"
+    },
+    {
+      "name": "Subtype",
+      "label": "Subtype",
+      "type": "enum",
+      "valCounts": [
+        [
+          "NA",
+          49716
+        ],
+        [
+          "VCap",
+          5774
+        ],
+        [
+          "Cap",
+          4012
+        ],
+        [
+          "A2",
+          2832
+        ],
+        [
+          "A1",
+          2645
+        ],
+        [
+          "V",
+          2253
+        ],
+        [
+          "EC_unclassified",
+          1881
+        ],
+        [
+          "aSMC",
+          1166
+        ],
+        [
+          "AV",
+          1006
+        ],
+        [
+          "aaSMC",
+          921
+        ],
+        [
+          "vSMC",
+          223
+        ],
+        [
+          "SMC_unclassified",
+          114
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 12,
+      "md5": "eeeae527b6"
+    },
+    {
+      "name": "RNA_snn_res16",
+      "label": "RNA_snn_res.1.6",
+      "type": "enum",
+      "valCounts": [
+        [
+          "0",
+          5230
+        ],
+        [
+          "1",
+          5069
+        ],
+        [
+          "2",
+          4866
+        ],
+        [
+          "3",
+          4850
+        ],
+        [
+          "4",
+          4632
+        ],
+        [
+          "5",
+          4268
+        ],
+        [
+          "6",
+          4000
+        ],
+        [
+          "7",
+          3080
+        ],
+        [
+          "8",
+          3027
+        ],
+        [
+          "9",
+          2874
+        ],
+        [
+          "10",
+          2457
+        ],
+        [
+          "11",
+          2439
+        ],
+        [
+          "12",
+          2401
+        ],
+        [
+          "13",
+          2385
+        ],
+        [
+          "14",
+          2298
+        ],
+        [
+          "15",
+          1856
+        ],
+        [
+          "16",
+          1590
+        ],
+        [
+          "17",
+          1505
+        ],
+        [
+          "18",
+          1415
+        ],
+        [
+          "19",
+          1260
+        ],
+        [
+          "20",
+          1225
+        ],
+        [
+          "21",
+          1180
+        ],
+        [
+          "22",
+          1166
+        ],
+        [
+          "23",
+          1140
+        ],
+        [
+          "24",
+          913
+        ],
+        [
+          "25",
+          905
+        ],
+        [
+          "26",
+          636
+        ],
+        [
+          "27",
+          608
+        ],
+        [
+          "28",
+          536
+        ],
+        [
+          "29",
+          526
+        ],
+        [
+          "30",
+          433
+        ],
+        [
+          "31",
+          411
+        ],
+        [
+          "32",
+          394
+        ],
+        [
+          "33",
+          326
+        ],
+        [
+          "34",
+          308
+        ],
+        [
+          "35",
+          303
+        ],
+        [
+          "36",
+          31
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 37,
+      "md5": "4a8706d585"
+    },
+    {
+      "name": "seurat_clusters",
+      "label": "seurat_clusters",
+      "type": "enum",
+      "valCounts": [
+        [
+          "0",
+          5230
+        ],
+        [
+          "1",
+          5069
+        ],
+        [
+          "2",
+          4866
+        ],
+        [
+          "3",
+          4850
+        ],
+        [
+          "4",
+          4632
+        ],
+        [
+          "5",
+          4268
+        ],
+        [
+          "6",
+          4000
+        ],
+        [
+          "7",
+          3080
+        ],
+        [
+          "8",
+          3027
+        ],
+        [
+          "9",
+          2874
+        ],
+        [
+          "10",
+          2457
+        ],
+        [
+          "11",
+          2439
+        ],
+        [
+          "12",
+          2401
+        ],
+        [
+          "13",
+          2385
+        ],
+        [
+          "14",
+          2298
+        ],
+        [
+          "15",
+          1856
+        ],
+        [
+          "16",
+          1590
+        ],
+        [
+          "17",
+          1505
+        ],
+        [
+          "18",
+          1415
+        ],
+        [
+          "19",
+          1260
+        ],
+        [
+          "20",
+          1225
+        ],
+        [
+          "21",
+          1180
+        ],
+        [
+          "22",
+          1166
+        ],
+        [
+          "23",
+          1140
+        ],
+        [
+          "24",
+          913
+        ],
+        [
+          "25",
+          905
+        ],
+        [
+          "26",
+          636
+        ],
+        [
+          "27",
+          608
+        ],
+        [
+          "28",
+          536
+        ],
+        [
+          "29",
+          526
+        ],
+        [
+          "30",
+          433
+        ],
+        [
+          "31",
+          411
+        ],
+        [
+          "32",
+          394
+        ],
+        [
+          "33",
+          326
+        ],
+        [
+          "34",
+          308
+        ],
+        [
+          "35",
+          303
+        ],
+        [
+          "36",
+          31
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 37,
+      "md5": "117efd02d8"
+    },
+    {
+      "name": "Cluster",
+      "label": "Cluster",
+      "type": "enum",
+      "valCounts": [
+        [
+          "4",
+          32180
+        ],
+        [
+          "2",
+          22486
+        ],
+        [
+          "1",
+          17877
+        ]
+      ],
+      "arrType": "Uint8",
+      "diffValCount": 3,
+      "md5": "53a5db94e2"
+    }
+  ],
+  "labelField": "Celltype",
+  "coords": [
+    {
+      "name": "coords_0",
+      "shortLabel": "tSNE on Raw Expr Matrix",
+      "md5": "97e670479a",
+      "minX": -34.5536999072147,
+      "maxX": 35.1068537709089,
+      "minY": -33.6060149408349,
+      "maxY": 32.2506097520604,
+      "type": "Float32",
+      "textFname": "tSNE_on_Raw_Expr_Matrix.coords.tsv.gz",
+      "labelMd5": "d41d8cd98f"
+    },
+    {
+      "name": "coords_1",
+      "shortLabel": "tSNE on Processed Expr Matrix",
+      "md5": "4bbaa0ece3",
+      "minX": -28.8416550320353,
+      "maxX": 31.3305213732379,
+      "minY": -28.8272326161981,
+      "maxY": 29.7668221098478,
+      "type": "Float32",
+      "textFname": "tSNE_on_Processed_Expr_Matrix.coords.tsv.gz",
+      "labelMd5": "d41d8cd98f"
+    }
+  ],
+  "hasFiles": [
+    "datasetDesc"
+  ],
+  "topMarkers": {
+    "AC": [
+      "Aldoc",
+      "Slc1a3",
+      "Slc1a2",
+      "Plpp3",
+      "Ntm"
+    ],
+    "CPC": [
+      "2900040C04Rik",
+      "Enpp2",
+      "Ptgds",
+      "1500015O10Rik",
+      "Chchd10"
+    ],
+    "EC": [
+      "Cldn5",
+      "Flt1",
+      "Ly6c1",
+      "Ly6a",
+      "Itm2a"
+    ],
+    "EPC": [
+      "Ccdc153",
+      "Tmem212",
+      "Rarres2",
+      "Tppp3",
+      "Riiad1"
+    ],
+    "Hb_EC": [
+      "Hba-a2",
+      "Hba-a1",
+      "Hbb-bt",
+      "Hbb-bs",
+      "Alas2"
+    ],
+    "MAC": [
+      "Pf4",
+      "Lyz2",
+      "Ms4a7",
+      "Dab2",
+      "Mrc1"
+    ],
+    "MG": [
+      "Ctss",
+      "C1qc",
+      "Hexb",
+      "C1qa",
+      "C1qb"
+    ],
+    "MNC": [
+      "Cd52",
+      "Lyz2",
+      "Plac8",
+      "Fcer1g",
+      "Msrb1"
+    ],
+    "NRP": [
+      "Sox11",
+      "Hmgn2",
+      "Stmn1",
+      "Ccnd2",
+      "Pclaf"
+    ],
+    "OLG": [
+      "Mgp",
+      "Igfbp6",
+      "Cldn11",
+      "Nov",
+      "Igfbp5"
+    ],
+    "OPC": [
+      "Olig1",
+      "Pdgfra",
+      "Ptprz1",
+      "Cspg5",
+      "Lhfpl3"
+    ],
+    "PC": [
+      "Vtn",
+      "Higd1b",
+      "Ndufa4l2",
+      "Rgs5",
+      "Cald1"
+    ],
+    "SMC": [
+      "Acta2",
+      "Tagln",
+      "Myl9",
+      "Tpm2",
+      "Mylk"
+    ],
+    "TNC": [
+      "6330403K07Rik",
+      "S100a6",
+      "Prdx6",
+      "Ntrk2",
+      "Fbxo2"
+    ],
+    "imNeur": [
+      "Sox11",
+      "Stmn1",
+      "Sox4",
+      "Ccnd2",
+      "Tubb3"
+    ],
+    "mNeur": [
+      "Meg3",
+      "Snhg11",
+      "Rtn1",
+      "Bex2",
+      "Ly6h"
+    ]
+  },
+  "markers": [
+    {
+      "name": "markers_0",
+      "shortLabel": "Seurat Cluster Markers"
+    }
+  ],
+  "quickGenes": [
+    [
+      "Bmx"
+    ],
+    [
+      "Vegfc"
+    ],
+    [
+      "Mfsd2a"
+    ],
+    [
+      "Slc38a5"
+    ],
+    [
+      "Nr2f2"
+    ],
+    [
+      "Vwf"
+    ]
+  ],
+  "shortLabel": "Aging Brain",
+  "radius": 1.5,
+  "clusterField": "Celltype",
+  "body_parts": [
+    "brain",
+    "whole brain"
+  ],
+  "organisms": [
+    "Mouse (M. musculus)"
+  ],
+  "diseases": [
+    "Healthy"
+  ],
+  "firstBuildTime": "2022-05-18T15:29:19.085996",
+  "lastBuildTime": "2023-09-05T14:47:30.196409",
+  "md5": "04784800ee"
+}

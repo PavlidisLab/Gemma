@@ -30,7 +30,7 @@ import ubic.gemma.persistence.service.genome.gene.GeneService;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * @author keshav
@@ -52,13 +52,11 @@ public class CompositeSequenceGeneMapperService {
 
         LinkedHashMap<String, Collection<Gene>> genesMap = this.findGenesByOfficialSymbols( officialSymbols );
 
-        Set<String> geneOfficialSymbolKeySet = genesMap.keySet();
-
         LinkedHashMap<Gene, Collection<CompositeSequence>> compositeSequencesForGeneMap = new LinkedHashMap<>();
 
-        for ( String officialSymbol : geneOfficialSymbolKeySet ) {
-            log.debug( "official symbol: " + officialSymbol );
-            Collection<Gene> genes = genesMap.get( officialSymbol );
+        for ( Map.Entry<String, Collection<Gene>> entry : genesMap.entrySet() ) {
+            log.debug( "official symbol: " + entry.getKey() );
+            Collection<Gene> genes = entry.getValue();
             for ( Gene g : genes ) {
                 Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequences( g, true );
                 for ( CompositeSequence sequence : compositeSequences ) {

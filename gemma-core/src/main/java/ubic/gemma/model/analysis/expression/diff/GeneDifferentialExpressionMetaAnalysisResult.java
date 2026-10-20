@@ -18,6 +18,15 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import ubic.gemma.model.common.AbstractIdentifiable;
 import ubic.gemma.model.genome.Gene;
 
@@ -25,15 +34,29 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Entity
+@Table(name = "GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSIS_RESULT")
 @SuppressWarnings("unused") // Possible external usage
 public class GeneDifferentialExpressionMetaAnalysisResult extends AbstractIdentifiable {
 
+    @Column(name = "META_PVALUE", columnDefinition = "DOUBLE")
     private Double metaPvalue;
+    @Column(name = "META_QVALUE", columnDefinition = "DOUBLE")
     private Double metaQvalue;
+    @Column(name = "MEAN_LOG_FOLD_CHANGE", columnDefinition = "DOUBLE")
     private Double meanLogFoldChange;
+    @Column(name = "META_PVALUE_RANK", columnDefinition = "DOUBLE")
     private Double metaPvalueRank;
+    @Column(name = "UPPER_TAIL", nullable = false, columnDefinition = "TINYINT")
     private Boolean upperTail;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "GENE_FK", nullable = false, columnDefinition = "BIGINT")
     private Gene gene;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "METAANALYSES2RESULTS_USED",
+            joinColumns = @JoinColumn(name = "METAANALYSES_FK", columnDefinition = "BIGINT"),
+            inverseJoinColumns = @JoinColumn(name = "RESULTS_USED_FK", columnDefinition = "BIGINT"),
+            foreignKey = @ForeignKey(name = "DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_METAANALYSES_FKC"))
     private Set<DifferentialExpressionAnalysisResult> resultsUsed = new HashSet<>();
 
     public Gene getGene() {

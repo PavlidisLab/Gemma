@@ -1,7 +1,7 @@
 package ubic.gemma.core.util;
 
 import lombok.Value;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.io.IOUtils;
@@ -15,7 +15,7 @@ import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
 import ubic.gemma.core.util.locking.FileLockManager;
 import ubic.gemma.core.util.locking.LockedPath;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,9 +37,10 @@ import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
 /**
  * A simple downloader for FTP and HTTP(s) URLs.
+ *
  * @author poirigui
  */
-@CommonsLog
+@Slf4j
 public class SimpleDownloader {
 
     @Nullable
@@ -60,6 +61,11 @@ public class SimpleDownloader {
      */
     @Nullable
     private FileLockManager fileLockManager;
+
+    /**
+     * The factory to use to create progress reporter for downloads.
+     */
+    private ProgressReporterFactory progressReporterFactory = new DefaultProgressReporterFactory();
 
     /**
      * If enabled, the integrity of archive (i.e. ZIP, TAR and Gzipped files) will be checked after downloading.
@@ -89,6 +95,10 @@ public class SimpleDownloader {
 
     public void setFileLockManager( @Nullable FileLockManager fileLockManager ) {
         this.fileLockManager = fileLockManager;
+    }
+
+    public void setProgressReporterFactory( ProgressReporterFactory progressReporterFactory ) {
+        this.progressReporterFactory = progressReporterFactory;
     }
 
     /**
@@ -157,6 +167,7 @@ public class SimpleDownloader {
 
     /**
      * Download a file from a URL to a local destination.
+     *
      * @param url   URL to download
      * @param dest  destination for the download
      * @param force download even if the file exists, has the same size and is up to date
@@ -190,8 +201,11 @@ public class SimpleDownloader {
     }
 
     private long downloadFtp( URL url, Path dest, boolean force ) throws IOException {
-        Assert.notNull( ftpClientFactory, "A FTPClientFactory must be set to download files from FTP servers." );
-        FTPClient client = ftpClientFactory.getFtpClient( url );
+        FTPClientFactory factory = this.ftpClientFactory;
+        if ( factory == null ) {
+            throw new IllegalStateException( "FTP client factory not configured; call setFtpClientFactory() before downloading from FTP." );
+        }
+        FTPClient client = factory.getFtpClient( url );
         try {
             String remoteFile = url.getFile();
             boolean download;
@@ -223,8 +237,8 @@ public class SimpleDownloader {
                 PathUtils.createParentDirectories( dest );
                 try {
                     CopyStreamListener previousCSL = client.getCopyStreamListener();
-                    try ( OutputStream out = Files.newOutputStream( dest ) ) {
-                        ProgressReporter pr = new ProgressReporter( url.toString(), SimpleDownloader.class.getName() );
+                    try ( OutputStream out = Files.newOutputStream( dest );
+                            ProgressReporter pr = progressReporterFactory.createProgressReporter( url.toString(), SimpleDownloader.class.getName() ) ) {
                         client.setCopyStreamListener( new CopyStreamListener() {
                             @Override
                             public void bytesTransferred( CopyStreamEvent event ) {
@@ -253,10 +267,10 @@ public class SimpleDownloader {
             } else {
                 downloadedBytes = 0;
             }
-            ftpClientFactory.recycleClient( url, client );
+            factory.recycleClient( url, client );
             return downloadedBytes;
         } catch ( Exception e ) {
-            ftpClientFactory.destroyClient( url, client );
+            factory.destroyClient( url, client );
             throw e;
         }
     }
@@ -290,7 +304,7 @@ public class SimpleDownloader {
                 PathUtils.createParentDirectories( dest );
                 try {
                     long downloadedBytes;
-                    try ( InputStream in = new ProgressInputStream( connection.getInputStream(), url.toString(), SimpleDownloader.class.getName(), size );
+                    try ( InputStream in = new ProgressInputStream( connection.getInputStream(), progressReporterFactory.createProgressReporter( url.toString(), SimpleDownloader.class.getName() ), size );
                             OutputStream out = Files.newOutputStream( dest ) ) {
                         downloadedBytes = IOUtils.copyLarge( in, out );
                     }

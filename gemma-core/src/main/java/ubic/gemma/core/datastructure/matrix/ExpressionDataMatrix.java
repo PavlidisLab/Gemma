@@ -22,7 +22,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.List;
 
 /**
@@ -109,6 +109,13 @@ public interface ExpressionDataMatrix<T> {
      */
     @Nullable
     int[] getRowIndices( CompositeSequence designElement );
+
+    /**
+     * Slice the given design elements (rows) from the matrix.
+     *
+     * @throws IllegalArgumentException if any of the requested design element is not present in the matrix
+     */
+    ExpressionDataMatrix<T> sliceRows( List<CompositeSequence> designElements );
 
     /**
      * @return list of elements representing the row 'labels'.

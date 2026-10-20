@@ -19,26 +19,42 @@
 
 package ubic.gemma.model.analysis;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
-import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-
-import javax.persistence.Transient;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * An analysis of a single experiment or subset.
+ * @param <T> the type of experiment analyzed, usually {@link ubic.gemma.model.expression.experiment.ExpressionExperiment},
+ *            but you can use {@link BioAssaySet} to also allow {@link ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet}.
  */
-public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implements SecuredChild {
+@Entity
+public abstract class SingleExperimentAnalysis<T extends BioAssaySet> extends ExpressionAnalysis implements SecuredChild<ExpressionExperiment> {
 
-    private BioAssaySet experimentAnalyzed;
+    @ManyToOne(fetch = FetchType.EAGER, targetEntity = BioAssaySet.class)
+    @Fetch(FetchMode.SELECT)
+    @JoinColumn(name = "EXPERIMENT_ANALYZED_FK", columnDefinition = "BIGINT")
+    private T experimentAnalyzed;
+
+    @Column(name = "NUMBER_OF_ELEMENTS_ANALYZED", columnDefinition = "INTEGER")
     private Integer numberOfElementsAnalyzed;
 
-    public BioAssaySet getExperimentAnalyzed() {
+    public T getExperimentAnalyzed() {
         return this.experimentAnalyzed;
     }
 
-    public void setExperimentAnalyzed( BioAssaySet experimentAnalyzed ) {
+    public void setExperimentAnalyzed( T experimentAnalyzed ) {
         this.experimentAnalyzed = experimentAnalyzed;
     }
 
@@ -54,12 +70,24 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
         this.numberOfElementsAnalyzed = numberOfElementsAnalyzed;
     }
 
+    /**
+     * Experiment analysis are always owned by the experiment (or source experiment, if a subset).
+     */
     @Transient
     @Override
-    public Securable getSecurityOwner() {
-        /*
-         * Note: this could be a subset. But that's a secured child as well. AclAdvice fixes that.
-         */
-        return this.getExperimentAnalyzed();
+    public ExpressionExperiment getSecurityOwner() {
+        // experimentAnalyzed is mapped with targetEntity = BioAssaySet.class, so what Hibernate hands
+        // back is a BioAssaySet proxy -- an instance of neither branch below. Returning null then makes
+        // AclEventListener.resolveParentAcl see no owner and give the analysis its own ROOT ACL instead
+        // of one inheriting from the experiment, and makes ParentIdentityRetrievalStrategyImpl fall
+        // through its instanceof chain to "Resolving parent identity ... is not supported".
+        BioAssaySet ea = ( BioAssaySet ) Hibernate.unproxy( experimentAnalyzed );
+        if ( ea instanceof ExpressionExperiment ) {
+            return ( ExpressionExperiment ) ea;
+        } else if ( ea instanceof ExpressionExperimentSubSet ) {
+            return ( ( ExpressionExperimentSubSet ) ea ).getSourceExperiment();
+        } else {
+            return null;
+        }
     }
 }

@@ -15,16 +15,19 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import ubic.gemma.model.common.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignReferenceValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.util.Date;
 import java.util.Map;
 
@@ -42,12 +45,81 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     private String name;
     private String description;
     private String metadata;
-    private DatabaseEntryValueObject accession;
-    private ArrayDesignValueObject arrayDesign;
     @Nullable
+    private DatabaseEntryValueObject accession;
+    /**
+     * The platform this assay was run on, serialized as {@link ArrayDesignReferenceValueObject} —
+     * {@code id}, {@code shortName}, {@code name}, {@code technologyType}.
+     * <p>
+     * The full platform VO is byte-identical across every assay of a dataset and was serialized once
+     * per assay: on {@code GET /datasets/3937/samples} (278 assays) the two platform fields were
+     * 706,120 of 5,265,852 bytes, 13.4% of the response, most of it 278 copies of one platform's
+     * 1.4 kB {@code description}. {@code GET /datasets/{id}/platforms?original=true} serves the full
+     * object once for callers that want the rest of it.
+     * <p>
+     * The Java type stays {@link ArrayDesignValueObject} because three in-JVM readers consume it —
+     * {@code BioAssayDimensionValueObject}, {@code DoubleVectorValueObject} and
+     * {@code DoubleVectorValueObjectUtils#toArrayDesign}, the last of which reads
+     * {@code getTaxonObject()}, absent from the reference shape. So this is a serialization
+     * projection, not a type change.
+     */
+    @JsonSerialize(converter = ArrayDesignReferenceValueObject.FromArrayDesignValueObject.class)
+    @Schema(implementation = ArrayDesignReferenceValueObject.class)
+    private ArrayDesignValueObject arrayDesign;
+
+    /**
+     * The platform this assay was originally run on before a platform switch, or null if it was never
+     * switched. Projected to {@link ArrayDesignReferenceValueObject} for the same reason as
+     * {@link #arrayDesign}.
+     */
+    @Nullable
+    @JsonSerialize(converter = ArrayDesignReferenceValueObject.FromArrayDesignValueObject.class)
+    @Schema(implementation = ArrayDesignReferenceValueObject.class)
     private ArrayDesignValueObject originalPlatform;
     private Date processingDate;
     private BioMaterialValueObject sample;
+
+    /**
+     * What was extracted from the sample and assayed — GEO's {@code molecule}. Null when the source did not
+     * say, and on everything imported before this field existed.
+     * <p>
+     * 🛑 The only thing that separates single-NUCLEUS from single-CELL RNA-seq: {@code isSingleCell} is true
+     * for both, and before this the distinction lived solely as one {@code molecular entity} characteristic
+     * among a sample's several, with no typed way to ask.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "What was extracted and assayed (GEO's molecule): totalRNA, polyARNA, "
+            + "cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other. Null when unstated or non-GEO. This is "
+            + "what distinguishes single-nucleus from single-cell RNA-seq — isSingleCell is true for both.")
+    private ExtractedMolecule extractedMolecule;
+
+    /**
+     * How the library was selected — GEO's {@code library_selection} ({@code polyA}, {@code cDNA},
+     * {@code RANDOM}, …), verbatim.
+     * <p>
+     * ⚠️ Read beside {@link #extractedMolecule}, not instead of it: {@code totalRNA} with a {@code polyA}
+     * selection is common and the two together are the real answer.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "GEO's library_selection, verbatim (polyA, cDNA, RANDOM, …). Read beside "
+            + "extractedMolecule: total RNA with a polyA selection step is common, and the molecule alone is "
+            + "misleading there.")
+    private String librarySelection;
+
+    /**
+     * What kind of library — GEO's {@code library_strategy}, as the {@code GeoLibraryStrategy} constant name
+     * ({@code RNA_SEQ}, {@code SCRNA_SEQ}, {@code RIBO_SEQ}, {@code ATAC_SEQ}, …) rather than GEO's spelling, or
+     * {@code MICROARRAY_ONE_COLOR} / {@code MICROARRAY_TWO_COLOR} for a microarray sample. A string rather than an
+     * enum so a strategy nobody anticipated arrives intact instead of needing a schema change.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "GEO's library_strategy as a constant name (RNA_SEQ, SCRNA_SEQ, RIBO_SEQ, ATAC_SEQ, …), "
+            + "not GEO's spelling (RNA-Seq); MICROARRAY_ONE_COLOR or MICROARRAY_TWO_COLOR for a microarray sample, "
+            + "by channel count. Free text, so a new strategy needs no schema change.")
+    private String libraryStrategy;
 
     // only for RNA-Seq data
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -57,11 +129,35 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer sequenceReadLength;
 
+    // only for single-cell data
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCells;
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfDesignElements;
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer numberOfCellsByDesignElements;
+
     // if it was removed as an outlier
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean outlier = false;
-    // if our algorithm says it might be an outlier.
-    private boolean predictedOutlier = false;
+    /**
+     * Whether the median-correlation algorithm flags this assay as a possible outlier.
+     * <p>
+     * Null when it was not computed, which is the default: the calculation loads the dataset's whole
+     * sample-correlation matrix, so the sample-listing routes only do it when asked
+     * ({@code ?includePredictedOutliers=true}). Absent therefore means "not computed" and is
+     * deliberately distinguishable from {@code false}, which means the algorithm ran and did not flag
+     * this assay. The curated {@link #outlier} flag is always populated either way.
+     */
+    @Nullable
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @Schema(description = "The median-correlation algorithm's guess at whether the sample is an outlier, which is not the same as a curator having flagged it. Null unless the request asked for it with `includePredictedOutliers=true`. Null therefore means \"not requested\" as well as \"not known\" — the two are not distinguishable here.")
+    private Boolean predictedOutlier;
     // to hold state change, initialized as this.outlier
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private boolean userFlaggedOutlier = false;
 
     /**
@@ -119,10 +215,15 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
             this.arrayDesign = new ArrayDesignValueObject( ad );
         }
 
+        // 🛑 Key the cache on `op`, NOT on `ad`. Keying on the USED platform handed every sample the platform it
+        // was switched TO in the field naming what it was switched FROM — and only when a caller supplied the
+        // ad2vo map, which the samples route does and most other callers do not, so it looked route-specific.
+        // The else branch was always right, which is why the DB and the ?filter= path disagreed with the VO.
+        // uib measured it on GSE217927, 2026-08-26.
         ArrayDesign op = bioAssay.getOriginalPlatform();
         if ( op != null ) {
-            if ( ad2vo != null && ad2vo.containsKey( ad ) ) {
-                this.originalPlatform = ad2vo.get( ad );
+            if ( ad2vo != null && ad2vo.containsKey( op ) ) {
+                this.originalPlatform = ad2vo.get( op );
             } else {
                 this.originalPlatform = new ArrayDesignValueObject( op );
             }
@@ -132,7 +233,14 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> {
         this.sequencePairedReads = bioAssay.getSequencePairedReads();
         this.sequenceReadLength = bioAssay.getSequenceReadLength();
         this.sequenceReadCount = bioAssay.getSequenceReadCount();
+        this.extractedMolecule = bioAssay.getExtractedMolecule();
+        this.librarySelection = bioAssay.getLibrarySelection();
+        this.libraryStrategy = bioAssay.getLibraryStrategy();
         this.metadata = bioAssay.getMetadata();
+
+        this.numberOfCells = bioAssay.getNumberOfCells();
+        this.numberOfDesignElements = bioAssay.getNumberOfDesignElements();
+        this.numberOfCellsByDesignElements = bioAssay.getNumberOfCellsByDesignElements();
 
         if ( bioAssay.getAccession() != null ) {
             this.accession = new DatabaseEntryValueObject( bioAssay.getAccession() );

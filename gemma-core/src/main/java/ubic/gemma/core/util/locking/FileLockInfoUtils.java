@@ -10,7 +10,7 @@ public class FileLockInfoUtils {
                 .append( "Write locked:\t" ).append( lockInfo.isWriteLocked() ? "yes" : "no" );
         if ( !lockInfo.getProcInfo().isEmpty() ) {
             message.append( "\nProcess info:" );
-            for ( FileLockInfo.ProcessInfo processInfo : lockInfo.getProcInfo() ) {
+            for ( ubic.gemma.core.util.runtime.FileLockInfo processInfo : lockInfo.getProcInfo() ) {
                 message.append( "\n\t" )
                         .append( "PID: " ).append( processInfo.getPid() ).append( processInfo.isSelf() ? " (self)" : "" ).append( ", " )
                         .append( "Mandatory: " ).append( processInfo.isMandatory() ? "yes" : "no" ).append( ", " )

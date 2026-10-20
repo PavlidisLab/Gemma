@@ -2,7 +2,7 @@
  * Utilities for working with FTP.
  * @author poirigui
  */
-@ParametersAreNonnullByDefault
+@NonNullApi
 package ubic.gemma.core.loader.util.ftp;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.lang.NonNullApi;

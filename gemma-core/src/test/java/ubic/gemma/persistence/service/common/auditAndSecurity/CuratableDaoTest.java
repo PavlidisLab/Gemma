@@ -1,12 +1,12 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.hibernate.SessionFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import ubic.gemma.core.util.test.BaseDatabaseTest;
+import ubic.gemma.core.util.test.BaseDatabaseTest5;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -22,10 +22,10 @@ import ubic.gemma.core.context.TestComponent;
 
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ContextConfiguration
-public class CuratableDaoTest extends BaseDatabaseTest {
+public class CuratableDaoTest extends BaseDatabaseTest5 {
 
     @Configuration
     @TestComponent
@@ -39,6 +39,12 @@ public class CuratableDaoTest extends BaseDatabaseTest {
         @Bean
         public ExpressionExperimentDao expressionExperimentDao( SessionFactory sessionFactory ) {
             return new ExpressionExperimentDaoImpl( sessionFactory );
+        }
+
+        // PERF_PROBE_REPORT_ROUND4 B1: EE DAO field-injects SingleCellDimensionExperimentDao.
+        @Bean
+        public ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDao singleCellDimensionExperimentDao( SessionFactory sessionFactory ) {
+            return new ubic.gemma.persistence.service.expression.experiment.SingleCellDimensionExperimentDaoImpl( sessionFactory );
         }
     }
 

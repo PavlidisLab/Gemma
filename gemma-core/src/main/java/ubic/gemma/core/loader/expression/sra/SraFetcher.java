@@ -1,6 +1,6 @@
 package ubic.gemma.core.loader.expression.sra;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
@@ -13,7 +13,7 @@ import ubic.gemma.core.loader.expression.sra.model.SraExperimentPackageSet;
 import ubic.gemma.core.util.SimpleRetry;
 import ubic.gemma.core.util.SimpleRetryPolicy;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-@CommonsLog
+@Slf4j
 public class SraFetcher {
 
     private static final int BATCH_SIZE = 30;
@@ -47,7 +47,7 @@ public class SraFetcher {
         if ( accession.startsWith( "SRX" ) ) {
             return fetch( Collections.singletonList( accession ) );
         } else {
-            URL searchUrl = EntrezUtils.search( "sra", accession + "[accn]", EntrezRetmode.XML, ncbiApiKey );
+            URL searchUrl = EntrezUtils.search( "sra", EntrezUtils.quoteTerm( accession ) + "[accn]", EntrezRetmode.XML, ncbiApiKey );
             log.debug( "There are non-SRX accessions, performing a search with " + searchUrl + " to resolve their IDs..." );
             EntrezQuery query = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
                 try ( InputStream in = searchUrl.openStream() ) {
@@ -87,7 +87,7 @@ public class SraFetcher {
         } else {
             throw new IllegalArgumentException( "Unrecognized GEO accession: " + geoAccession );
         }
-        URL uidUrl = EntrezUtils.search( "gds", geoAccession + "[accn]" + " " + filter + "[filter]", EntrezRetmode.XML, ncbiApiKey );
+        URL uidUrl = EntrezUtils.search( "gds", EntrezUtils.quoteTerm( geoAccession ) + "[accn]" + " " + filter + "[filter]", EntrezRetmode.XML, ncbiApiKey );
         log.debug( "Fetching UID for " + geoAccession + " from " + uidUrl + "..." );
         String uid = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
             try ( InputStream is = uidUrl.openStream() ) {
@@ -152,7 +152,7 @@ public class SraFetcher {
                 return IOUtils.toString( fetchUrl, StandardCharsets.UTF_8 );
             }, ncbiApiKey ), "fetching " + fetchUrl );
         } else {
-            URL searchUrl = EntrezUtils.search( "sra", accession + "[accn]", EntrezRetmode.XML, ncbiApiKey );
+            URL searchUrl = EntrezUtils.search( "sra", EntrezUtils.quoteTerm( accession ) + "[accn]", EntrezRetmode.XML, ncbiApiKey );
             log.debug( "Requesting a non-SRX accession, performing a search with " + searchUrl + " to resolve its ID..." );
             EntrezQuery query = retryTemplate.execute( EntrezUtils.retryNicely( ( ctx ) -> {
                 try ( InputStream in = searchUrl.openStream() ) {

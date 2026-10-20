@@ -1,7 +1,7 @@
 package ubic.gemma.core.loader.expression.singleCell.metadata;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.Assert;
 import ubic.gemma.core.loader.expression.singleCell.AbstractDelegatingSingleCellDataLoader;
@@ -12,14 +12,14 @@ import ubic.gemma.model.expression.bioAssayData.CellLevelCharacteristics;
 import ubic.gemma.model.expression.bioAssayData.CellTypeAssignment;
 import ubic.gemma.model.expression.bioAssayData.SingleCellDimension;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
 /**
- * A generic loader that can be used to load single cell with a tabular metadata file.
+ * A generic loader that can be used to load single-cell data with a tabular metadata file.
  * <p>
  * This loader supports cell type assignments and generic cell-level characteristics and fallback to a delegate if the
  * corresponding path is unset.
@@ -28,7 +28,7 @@ import java.util.Set;
  * @see GenericCellLevelCharacteristicsMetadataParser
  */
 @Setter
-@CommonsLog
+@Slf4j
 public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingleCellDataLoader implements SingleCellDataLoader {
 
     private static final String DEFAULT_CELL_TYPE_ASSIGNMENT_NAME = "cell type";
@@ -44,6 +44,10 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     @Nullable
     private final List<String> otherCellLevelCharacteristicsNames;
     @Nullable
+    private final List<String> otherCellLevelCharacteristicsDefaultValues;
+    @Nullable
+    private final List<String> otherCellLevelCharacteristicsDefaultValueUris;
+    @Nullable
     private final Path otherCellCharacteristicsMetadataFile;
 
     private BioAssayMapper bioAssayToSampleNameMapper;
@@ -56,10 +60,16 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
     private boolean ignoreUnmatchedSamples = true;
     private boolean ignoreUnmatchedCellIds;
 
-    public GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile, @Nullable List<String> otherCellLevelCharacteristicsNames, @Nullable Path otherCellCharacteristicsMetadataFile ) {
+    public GenericMetadataSingleCellDataLoader( SingleCellDataLoader delegate, @Nullable Path cellTypeMetadataFile,
+            @Nullable Path otherCellCharacteristicsMetadataFile,
+            @Nullable List<String> otherCellLevelCharacteristicsNames,
+            @Nullable List<String> otherCellLevelCharacteristicsDefaultValues,
+            @Nullable List<String> otherCellLevelCharacteristicsDefaultValueUris ) {
         super( delegate );
         this.cellTypeMetadataFile = cellTypeMetadataFile;
         this.otherCellLevelCharacteristicsNames = otherCellLevelCharacteristicsNames;
+        this.otherCellLevelCharacteristicsDefaultValues = otherCellLevelCharacteristicsDefaultValues;
+        this.otherCellLevelCharacteristicsDefaultValueUris = otherCellLevelCharacteristicsDefaultValueUris;
         this.otherCellCharacteristicsMetadataFile = otherCellCharacteristicsMetadataFile;
     }
 
@@ -76,7 +86,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
 
     public void setCellTypeAssignmentName( String cellTypeAssignmentName ) {
         Assert.notNull( cellTypeMetadataFile, "A cell type metadata file must be set to configure a name." );
-        Assert.isTrue( StringUtils.isNotBlank( cellTypeAssignmentName ) );
+        Assert.isTrue( StringUtils.isNotBlank( cellTypeAssignmentName ) , "expected true");
         this.cellTypeAssignmentName = cellTypeAssignmentName;
     }
 
@@ -116,7 +126,7 @@ public class GenericMetadataSingleCellDataLoader extends AbstractDelegatingSingl
             return super.getOtherCellLevelCharacteristics( dimension );
         }
         Assert.notNull( bioAssayToSampleNameMapper, "A bioAssayToSampleNameMatcher must be set" );
-        GenericCellLevelCharacteristicsMetadataParser parser = new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMapper, otherCellLevelCharacteristicsNames );
+        GenericCellLevelCharacteristicsMetadataParser parser = new GenericCellLevelCharacteristicsMetadataParser( dimension, bioAssayToSampleNameMapper, otherCellLevelCharacteristicsNames, otherCellLevelCharacteristicsDefaultValues, otherCellLevelCharacteristicsDefaultValueUris );
         configureParser( parser );
         return parser.parse( otherCellCharacteristicsMetadataFile );
     }

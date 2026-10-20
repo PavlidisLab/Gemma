@@ -18,24 +18,28 @@
  */
 package ubic.gemma.core.loader.expression.arrayDesign;
 
-import org.junit.After;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.sequence.Blat;
-import ubic.gemma.core.util.test.category.GoldenPathTest;
-import ubic.gemma.core.util.test.category.SlowTest;
+import ubic.gemma.core.util.test.NetworkAvailable;
+import ubic.gemma.core.util.test.NetworkAvailableExtension;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
 import java.util.Collection;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author pavlidis
  */
-@Category(GoldenPathTest.class)
+@Tag("goldenPath")
+@ExtendWith(NetworkAvailableExtension.class)
 public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDesignProcessingTest {
 
     @Autowired
@@ -45,7 +49,8 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     private ArrayDesignSequenceAlignmentService aligner;
 
     @Test
-    @Category(SlowTest.class)
+    @Tag("slow")
+    @NetworkAvailable(url = "ftp://ftp.ncbi.nlm.nih.gov/geo/series/")
     public final void testProcessArrayDesign() throws Exception {
 
         ad = arrayDesignService.thaw( ad );
@@ -67,7 +72,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     }
 
     @Override
-    @After
+    @AfterEach
     public final void tearDown() {
         super.tearDown();
     }

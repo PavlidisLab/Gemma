@@ -37,6 +37,8 @@
 
 package ubic.gemma.model.genome.gene;
 
+import lombok.Getter;
+import lombok.Setter;
 import ubic.gemma.model.genome.TaxonValueObject;
 
 import java.util.Collection;
@@ -44,6 +46,8 @@ import java.util.Collection;
 /**
  * @author tvrossum
  */
+@Getter
+@Setter
 public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = -185326197992950287L;
@@ -73,7 +77,7 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setSize( memberIds.size() );
         this.setTaxon( new TaxonValueObject( taxonId, taxonName ) );
         this.setGeneIds( memberIds );
-        this.setId( new Long( -1 ) );
+        this.setId( Long.valueOf( -1 ) );
         this.setModified( false );
         this.setGoId( goId );
         this.setSearchTerm( searchTerm );
@@ -103,34 +107,6 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
             return other.goId == null;
         }
         return goId.equals( other.goId );
-    }
-
-    /**
-     * @return the goId
-     */
-    public String getGoId() {
-        return goId;
-    }
-
-    /**
-     * @param goId the goId to set
-     */
-    public void setGoId( String goId ) {
-        this.goId = goId;
-    }
-
-    /**
-     * @return the searchTerm
-     */
-    public String getSearchTerm() {
-        return searchTerm;
-    }
-
-    /**
-     * @param searchTerm the searchTerm to set
-     */
-    public void setSearchTerm( String searchTerm ) {
-        this.searchTerm = searchTerm;
     }
 
 }

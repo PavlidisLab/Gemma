@@ -24,33 +24,20 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.AbstractFilteringVoEnabledService;
-import ubic.gemma.persistence.service.AbstractService;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.*;
+import java.util.Collection;
 
 /**
  * @author keshav
+ * @see    TaxonService
  */
 @Service
 public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, TaxonValueObject> implements TaxonService {
 
-    private static final Comparator<TaxonValueObject> TAXON_VO_COMPARATOR = new Comparator<TaxonValueObject>() {
-        @Override
-        public int compare( TaxonValueObject o1, TaxonValueObject o2 ) {
-            return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
-        }
-    };
-    private static final Comparator<Taxon> TAXON_COMPARATOR = new Comparator<Taxon>() {
-        @Override
-        public int compare( Taxon o1, Taxon o2 ) {
-            return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
-        }
-    };
     private final TaxonDao taxonDao;
-    private ExpressionExperimentService expressionExperimentService;
-    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private TaxonReadService readService;
 
     @Autowired
     public TaxonServiceImpl( TaxonDao taxonDao ) {
@@ -58,102 +45,51 @@ public class TaxonServiceImpl extends AbstractFilteringVoEnabledService<Taxon, T
         this.taxonDao = taxonDao;
     }
 
-    @Autowired
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
+    // =====================================================================
+    // Read methods -- delegate to TaxonReadService.
+    // ACL @Secured annotations live on the TaxonService interface and apply
+    // at the facade proxy boundary. (No @Secured is declared on read methods
+    // today.)
+    // =====================================================================
 
-    @Autowired
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
-    }
-
-    /**
-     * @see TaxonService#findByCommonName(String)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Taxon findByCommonName( final String commonName ) {
-        return this.taxonDao.findByCommonName( commonName );
+        return readService.findByCommonName( commonName );
     }
 
-    /**
-     * @see TaxonService#findByScientificName(String)
-     */
     @Override
-    @Transactional(readOnly = true)
     public Taxon findByScientificName( final String scientificName ) {
-        return this.taxonDao.findByScientificName( scientificName );
+        return readService.findByScientificName( scientificName );
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Taxon findByNcbiId( final Integer ncbiId ) {
-        return this.taxonDao.findByNcbiId( ncbiId );
+        return readService.findByNcbiId( ncbiId );
     }
 
-    /**
-     * @return Taxon that have genes loaded into Gemma and that should be used
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<Taxon> loadAllTaxaWithGenes() {
-        SortedSet<Taxon> taxaWithGenes = new TreeSet<>( TaxonServiceImpl.TAXON_COMPARATOR );
-        for ( Taxon taxon : this.loadAll() ) {
-            if ( taxon.getIsGenesUsable() ) {
-                taxaWithGenes.add( taxon );
-            }
-        }
-        return taxaWithGenes;
+        return readService.loadAllTaxaWithGenes();
     }
 
-    /**
-     * @return Taxon that have genes loaded into Gemma and that should be used
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithGenes() {
-        SortedSet<TaxonValueObject> taxaWithGenes = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
-        for ( Taxon taxon : this.loadAll() ) {
-            if ( taxon.getIsGenesUsable() ) {
-                taxaWithGenes.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaWithGenes;
+        return readService.getTaxaWithGenes();
     }
 
-    /**
-     * @return collection of taxa that have expression experiments available.
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithDatasets() {
-        Set<TaxonValueObject> taxaWithDatasets = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
-
-        Map<Taxon, Long> perTaxonCount = expressionExperimentService.getPerTaxonCount();
-
-        for ( Taxon taxon : this.loadAll() ) {
-            if ( perTaxonCount.containsKey( taxon ) && perTaxonCount.get( taxon ) > 0 ) {
-                taxaWithDatasets.add( TaxonValueObject.fromEntity( taxon ) );
-            }
-        }
-        return taxaWithDatasets;
+        return readService.getTaxaWithDatasets();
     }
 
-    /**
-     * @return List of taxa with array designs in gemma
-     */
     @Override
-    @Transactional(readOnly = true)
     public Collection<TaxonValueObject> getTaxaWithArrays() {
-        Set<TaxonValueObject> taxaWithArrays = new TreeSet<>( TaxonServiceImpl.TAXON_VO_COMPARATOR );
-
-        for ( Taxon taxon : arrayDesignService.getPerTaxonCount().keySet() ) {
-            taxaWithArrays.add( TaxonValueObject.fromEntity( taxon ) );
-        }
-        AbstractService.log.debug( "GenePicker::getTaxaWithArrays returned " + taxaWithArrays.size() + " results" );
-        return taxaWithArrays;
+        return readService.getTaxaWithArrays();
     }
+
+    // =====================================================================
+    // Write methods -- stay on the facade.
+    // =====================================================================
 
     @Override
     @Transactional

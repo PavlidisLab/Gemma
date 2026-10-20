@@ -15,10 +15,8 @@
 package ubic.gemma.persistence.service.genome.taxon;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
-import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Taxon;
@@ -30,9 +28,8 @@ import ubic.gemma.persistence.util.FilterQueryUtils;
 import ubic.gemma.persistence.util.Filters;
 import ubic.gemma.persistence.util.Sort;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 import java.text.MessageFormat;
-import java.util.Collection;
 
 /**
  * @author pavlidis
@@ -56,16 +53,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
 
     @Override
     public Taxon find( Taxon taxon ) {
-
-        BusinessKey.checkValidKey( taxon );
-
-        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Taxon.class )
-                .setReadOnly( true );
-        queryObject.setReadOnly( true );
-        queryObject.setFlushMode( FlushMode.MANUAL );
-        BusinessKey.addRestrictions( queryObject, taxon );
-
-        return ( Taxon ) queryObject.uniqueResult();
+        return BusinessKey.find( this.getSessionFactory().getCurrentSession(), taxon );
     }
 
     @Override
@@ -99,18 +87,18 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    protected Query getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
+    protected Query<?> getFilteringQuery( @Nullable Filters filters, @Nullable Sort sort ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
-        String queryString = MessageFormat.format( "select {0} "
-                + "from Taxon as {0} " // taxon
-                + "left join {0}.externalDatabase as ED " // external db
-                + "where {0}.id is not null ", OBJECT_ALIAS ); // needed to use formRestrictionCause()
+        String queryString = "select taxon "
+                + "from Taxon as taxon " // taxon
+                + "left join taxon.externalDatabase as ED " // external db
+                + "where taxon.id is not null ";// needed to use formRestrictionCause()
 
         queryString += FilterQueryUtils.formRestrictionClause( filters );
         queryString += FilterQueryUtils.formOrderByClause( sort );
 
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query<?> query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         FilterQueryUtils.addRestrictionParameters( query, filters );
 
@@ -123,7 +111,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
     }
 
     @Override
-    protected Query getFilteringCountQuery( @Nullable Filters filters ) {
+    protected Query<?> getFilteringCountQuery( @Nullable Filters filters ) {
         //noinspection JpaQlInspection // the constants for aliases is messing with the inspector
         //language=HQL
         String queryString = MessageFormat.format( "select count({0}) "
@@ -133,7 +121,7 @@ public class TaxonDaoImpl extends AbstractQueryFilteringVoEnabledDao<Taxon, Taxo
 
         queryString += FilterQueryUtils.formRestrictionClause( filters );
 
-        Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query<?> query = this.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         FilterQueryUtils.addRestrictionParameters( query, filters );
 

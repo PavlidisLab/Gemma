@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import ubic.gemma.cli.util.AbstractAuthenticatedCLI;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceService;
 
 import java.util.Collection;
 
@@ -38,7 +38,7 @@ import java.util.Collection;
 public class PubMedSearcher extends AbstractAuthenticatedCLI {
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private BibliographicReferenceService bibliographicReferenceService;
     @Value("${entrez.efetch.apikey}")
     private String ncbiApiKey;
 
@@ -79,7 +79,9 @@ public class PubMedSearcher extends AbstractAuthenticatedCLI {
         getCliContext().getOutputStream().println( refs.size() + " references found" );
 
         if ( this.persist ) {
-            persisterHelper.persist( refs );
+            for ( BibliographicReference ref : refs ) {
+                bibliographicReferenceService.findOrCreate( ref );
+            }
         }
     }
 

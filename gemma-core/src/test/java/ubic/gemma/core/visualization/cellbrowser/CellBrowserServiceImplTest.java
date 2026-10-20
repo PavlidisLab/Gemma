@@ -1,6 +1,6 @@
 package ubic.gemma.core.visualization.cellbrowser;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +9,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import ubic.gemma.core.context.TestComponent;
-import ubic.gemma.core.util.test.BaseTest;
+import ubic.gemma.core.util.test.BaseTest5;
 import ubic.gemma.core.util.test.TestPropertyPlaceholderConfigurer;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.expression.experiment.SingleCellExpressionExperimentService;
@@ -17,11 +17,11 @@ import ubic.gemma.persistence.service.expression.experiment.SingleCellExpression
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 @ContextConfiguration
-public class CellBrowserServiceImplTest extends BaseTest {
+public class CellBrowserServiceImplTest extends BaseTest5 {
 
     @Configuration
     @TestComponent
@@ -57,8 +57,8 @@ public class CellBrowserServiceImplTest extends BaseTest {
     public void testGetDatasetUrl() {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( "GSE109281" );
-        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281", cellBrowserService.getBrowserUrl( ee, null ) );
+        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281", cellBrowserService.getBrowserUrl( ee ) );
         ee.setShortName( "GSE109281.1" );
-        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281_1", cellBrowserService.getBrowserUrl( ee, null ) );
+        assertEquals( "http://localhost:8080/cellbrowser?ds=GSE109281_1", cellBrowserService.getBrowserUrl( ee ) );
     }
 }
