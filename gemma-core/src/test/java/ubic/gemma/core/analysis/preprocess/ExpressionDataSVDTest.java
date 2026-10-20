@@ -77,15 +77,9 @@ public class ExpressionDataSVDTest extends BaseTest5 {
     private static final Log log = LogFactory.getLog( ExpressionDataSVDTest.class );
 
     /**
-     * Components the truncated tests compute; asking for more than {@link #COMPONENTS_USED} keeps the used ones
-     * away from the edge of the requested set, where Lanczos converges last.
+     * Components the truncated tests compute, as {@code pca -k 10} would.
      */
     private static final int TOP_K = 10;
-
-    /**
-     * Components PCA consumers read (SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST).
-     */
-    private static final int COMPONENTS_USED = 5;
 
     @Configuration
     @TestComponent
@@ -325,9 +319,7 @@ public class ExpressionDataSVDTest extends BaseTest5 {
         for ( int i = 0; i < TOP_K; i++ ) {
             // R prints 7 significant digits
             assertEquals( R_SINGULAR_VALUES[i], top.getSingularValues()[i], 1e-5, "singular value " + ( i + 1 ) + " vs R" );
-            // s² doubles the relative error of s (1e-8, see assertLeadingComponentsMatch), so components past the used
-            // ones, which converge last, are held to that; the used ones agree to rounding
-            double tolerance = i < COMPONENTS_USED ? 1e-12 : 2e-8 * topFractions[i];
+            double tolerance = 1e-12;
             assertEquals( fullFractions[i], topFractions[i], tolerance, "variance fraction " + ( i + 1 ) + " vs full SVD" );
             assertEquals( fullEigenvalues[i], topEigenvalues[i], tolerance * full.getEigenvalueSum(),
                     "eigenvalue " + ( i + 1 ) + " vs full SVD" );
@@ -390,8 +382,8 @@ public class ExpressionDataSVDTest extends BaseTest5 {
     }
 
     /**
-     * Compare a truncated decomposition with the full one. Singular values must agree for all k; the singular
-     * vectors (up to sign) for the {@link #COMPONENTS_USED} components that PCA consumers read.
+     * Compare a truncated decomposition with the full one: every one of the k singular values to 1e-12 relative, and
+     * every singular vector (up to sign) to 1e-10.
      *
      * @param vTop  samples × k
      * @param vFull samples × components, as Colt returns it
@@ -411,11 +403,9 @@ public class ExpressionDataSVDTest extends BaseTest5 {
             double sErr = Math.abs( sTop[i] - sFull[i] ) / sFull[i];
             log.info( String.format( "PC %2d: s = %.6f, relative gap to next %.2e, |Δs|/s = %.2e, 1 - |v·v'| = %.2e, 1 - |u·u'| = %.2e",
                     i + 1, sFull[i], ( sFull[i] - sFull[i + 1] ) / sFull[i], sErr, 1 - Math.abs( vDot ), 1 - Math.abs( uDot ) ) );
-            assertEquals( 0, sErr, 1e-8, "singular value " + ( i + 1 ) );
-            if ( i < COMPONENTS_USED ) {
-                assertEquals( 1, Math.abs( vDot ), 1e-10, "V column " + ( i + 1 ) );
-                assertEquals( 1, Math.abs( uDot ), 1e-10, "U column " + ( i + 1 ) );
-            }
+            assertEquals( 0, sErr, 1e-12, "singular value " + ( i + 1 ) );
+            assertEquals( 1, Math.abs( vDot ), 1e-10, "V column " + ( i + 1 ) );
+            assertEquals( 1, Math.abs( uDot ), 1e-10, "U column " + ( i + 1 ) );
         }
     }
 

@@ -166,6 +166,9 @@ public class ExpressionDataSVD {
             }
         } catch ( TimeoutException | NotConvergedException e ) {
             throw new SVDException( e.getMessage(), e );
+        } catch ( InterruptedException e ) {
+            Thread.currentThread().interrupt();
+            throw new SVDException( "SVD interrupted", e );
         }
     }
 
