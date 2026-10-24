@@ -61,6 +61,11 @@ public interface SampleCoexpressionAnalysisService {
     DoubleMatrix<BioAssay, BioAssay> loadBestMatrix( ExpressionExperiment ee );
 
 
+    /**
+     * The experiment's stored matrix, or null if it has none, or needs a regressed matrix it lacks.
+     *
+     * @throws UnreadableSampleCoexpressionMatrixException if the stored matrix cannot be decoded
+     */
     @Transactional(readOnly = true)
     @Nullable
     DoubleMatrix<BioAssay, BioAssay> retrieveExisting( ExpressionExperiment ee );

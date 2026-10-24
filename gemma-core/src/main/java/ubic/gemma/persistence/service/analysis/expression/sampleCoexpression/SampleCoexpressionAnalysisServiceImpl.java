@@ -278,8 +278,9 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
     /**
      * Decode a stored matrix, in either of its two formats (see {@link #toSampleCoexpressionMatrix}).
      *
-     * @throws IllegalArgumentException if the blob's length fits neither format for the dimension's bioassay count;
-     *                                  that is a corrupt row, not an absent one, so it is not reported as null
+     * @throws UnreadableSampleCoexpressionMatrixException if the blob's length fits neither format for the dimension's
+     *                                                     bioassay count; that is a corrupt row, not an absent one, so
+     *                                                     it is not reported as null
      */
     @Nullable
     static DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
@@ -296,7 +297,14 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
 
         // outside the try below: a blob whose length matches neither format used to be logged and served as no
         // matrix at all, which reads the same as an experiment that was never analysed.
-        double[][] rawMatrix = bytesToSymmetricMatrix( matrixBytes, numBa );
+        double[][] rawMatrix;
+        try {
+            rawMatrix = bytesToSymmetricMatrix( matrixBytes, numBa );
+        } catch ( IllegalArgumentException e ) {
+            throw new UnreadableSampleCoexpressionMatrixException( String.format(
+                    "The stored sample correlation matrix for BioAssayDimension Id=%d cannot be read: %s",
+                    matrix.getBioAssayDimension().getId(), e.getMessage() ), e );
+        }
         try {
             DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
             result.setRowNames( bioAssays );

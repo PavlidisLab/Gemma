@@ -22,8 +22,11 @@ import org.apache.commons.cli.Options;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.cli.audit.CliExpressionExperimentAuditService;
 import ubic.gemma.core.analysis.preprocess.filter.FilteringException;
+import ubic.gemma.core.util.matrix.DoubleMatrix;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.SampleCoexpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.sampleCoexpression.UnreadableSampleCoexpressionMatrixException;
 
 /**
  * Create correlation visualizations for expression experiments
@@ -65,7 +68,17 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
                 cliExpressionExperimentAuditService.computeSampleCorrelation( ee );
                 addSuccessObject( ee, "Recomputed coexpression matrix." );
             } else {
-                if ( sampleCoexpressionAnalysisService.retrieveExisting( ee ) == null ) {
+                DoubleMatrix<BioAssay, BioAssay> existing;
+                try {
+                    existing = sampleCoexpressionAnalysisService.retrieveExisting( ee );
+                } catch ( UnreadableSampleCoexpressionMatrixException e ) {
+                    // a corrupt row: recomputing replaces it, as it did when such rows were read as absent
+                    log.warn( e.getMessage() + " Recomputing it.", e );
+                    cliExpressionExperimentAuditService.computeSampleCorrelation( ee );
+                    addSuccessObject( ee, "Recomputed coexpression matrix; the stored one could not be read." );
+                    return;
+                }
+                if ( existing == null ) {
                     cliExpressionExperimentAuditService.computeSampleCorrelation( ee );
                     addSuccessObject( ee, "Recomputed coexpression matrix." );
                 } else {

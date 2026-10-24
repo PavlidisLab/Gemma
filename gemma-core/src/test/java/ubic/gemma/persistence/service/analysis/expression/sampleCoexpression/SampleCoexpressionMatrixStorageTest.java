@@ -71,7 +71,7 @@ public class SampleCoexpressionMatrixStorageTest {
         SampleCoexpressionMatrix corrupt = SampleCoexpressionMatrix.Factory.newInstance(
                 BioAssayDimension.Factory.newInstance( bioAssays ), new byte[12 * 8] );
         assertThatThrownBy( () -> SampleCoexpressionAnalysisServiceImpl.toDoubleMatrix( corrupt ) )
-                .isInstanceOf( IllegalArgumentException.class );
+                .isInstanceOf( UnreadableSampleCoexpressionMatrixException.class );
     }
 
     /**
