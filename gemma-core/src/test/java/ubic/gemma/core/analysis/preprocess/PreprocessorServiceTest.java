@@ -95,4 +95,19 @@ class PreprocessorServiceTest {
                 .isInstanceOf( QuantitationTypeDetectionRelatedPreprocessingException.class );
         verify( processedExpressionDataVectorService ).createProcessedDataVectors( eq( ee ), eq( true ), eq( false ) );
     }
+
+    /**
+     * {@code makeProcessedData -k} reaches the PCA step; without it the PCA is the full decomposition (0).
+     */
+    @Test
+    void processDiagnosticsPassesThePcaComponentCountToThePcaStep() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "GSE100011" );
+
+        preprocessorService.processDiagnostics( ee, 10 );
+        verify( preprocessorHelperService ).processForPca( ee, 10 );
+
+        preprocessorService.processDiagnostics( ee );
+        verify( preprocessorHelperService ).processForPca( ee, 0 );
+    }
 }

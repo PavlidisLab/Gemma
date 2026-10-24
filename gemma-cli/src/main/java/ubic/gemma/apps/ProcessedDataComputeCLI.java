@@ -19,6 +19,7 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private static final String
             UPDATE_DIAGNOSTICS_OPTION = "diagupdate",
             UPDATE_RANKS_OPTION = "rankupdate",
-            IGNORE_QUANTITATION_MISMATCH_OPTION = "ignoreqm";
+            IGNORE_QUANTITATION_MISMATCH_OPTION = "ignoreqm",
+            PCA_COMPONENTS_OPTION = "k";
 
     @Autowired
     private PreprocessorService preprocessorService;
@@ -58,6 +60,10 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     private boolean updateRanks = false;
     private boolean updateDiagnostics = false;
     private boolean ignoreQuantitationMismatch = false;
+    /**
+     * Leading components for the PCA diagnostic; 0 computes the full decomposition.
+     */
+    private int numPcaComponents = 0;
 
     @Override
     protected void buildExperimentOptions( Options options ) {
@@ -67,6 +73,12 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                 "Only update the diagnostics without recomputing data (PCA, M-V, sample correlation, GEEQ; may be combined with other options)" );
         options.addOption( UPDATE_RANKS_OPTION, false, "Only update the expression intensity rank information (may be combined with other options)" );
         options.addOption( IGNORE_QUANTITATION_MISMATCH_OPTION, false, "Ignore mismatch between raw quantitations and that inferred from data" );
+        options.addOption( Option.builder( PCA_COMPONENTS_OPTION ).longOpt( "pca-components" )
+                .hasArg().type( Number.class )
+                .desc( "Compute only this many leading components for the PCA diagnostic instead of the full "
+                        + "decomposition, as 'pca -k' does, for datasets too large for it (e.g. single-cell pseudo-bulks "
+                        + "with thousands of samples). By default the full decomposition is computed." )
+                .get() );
         //  options.addOption( outputFileOption );
     }
 
@@ -75,6 +87,12 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         this.updateDiagnostics = commandLine.hasOption( UPDATE_DIAGNOSTICS_OPTION );
         this.updateRanks = commandLine.hasOption( UPDATE_RANKS_OPTION );
         this.ignoreQuantitationMismatch = commandLine.hasOption( IGNORE_QUANTITATION_MISMATCH_OPTION );
+        if ( commandLine.hasOption( PCA_COMPONENTS_OPTION ) ) {
+            this.numPcaComponents = ( ( Number ) commandLine.getParsedOptionValue( PCA_COMPONENTS_OPTION ) ).intValue();
+            if ( this.numPcaComponents < 1 ) {
+                throw new ParseException( "-" + PCA_COMPONENTS_OPTION + " must be at least 1." );
+            }
+        }
     }
 
     @Override
@@ -114,14 +132,14 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
             if ( this.updateDiagnostics ) {
                 log.info( "Updating diagnostics: " + ee );
-                this.preprocessorService.processDiagnostics( ee );
+                this.preprocessorService.processDiagnostics( ee, numPcaComponents );
                 // Note the auditing is done by the service.
                 addSuccessObject( ee, "Updated diagnostics." );
             }
         } else {
             try {
                 // this does all of the steps including batch correction
-                this.preprocessorService.process( ee, ignoreQuantitationMismatch );
+                this.preprocessorService.process( ee, ignoreQuantitationMismatch, false, numPcaComponents );
                 // Note the auditing is done by the service.
                 addSuccessObject( ee, "Post-processed." );
             } catch ( QuantitationTypeDetectionRelatedPreprocessingException e ) {
