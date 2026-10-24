@@ -110,6 +110,34 @@ public class SampleCoexpressionAnalysisServiceTest extends BaseSpringContextTest
     }
 
     /**
+     * The persisted matrix is the lower triangle, n * (n + 1) / 2 doubles, and reading it back from the database
+     * gives the matrix {@code compute} returned. Not slow-tagged, for the same reason as the test above.
+     */
+    @Test
+    public void testStoredMatrixIsTheLowerTriangle() throws Exception {
+        ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
+        processedExpressionDataVectorService.createProcessedDataVectors( ee, true );
+        DoubleMatrix<BioAssay, BioAssay> computed = sampleCoexpressionAnalysisService.compute( ee, sampleCoexpressionAnalysisService.prepare( ee ) );
+        assertNotNull( computed );
+        int n = computed.rows();
+
+        Long length = getJdbcTemplate().queryForObject( "select length(scm.COEXPRESSION_MATRIX) from SAMPLE_COEXPRESSION_MATRIX scm "
+                + "join ANALYSIS a on a.SAMPLE_COEXPRESSION_MATRIX_RAW_FK = scm.ID where a.EXPERIMENT_ANALYZED_FK = ?", Long.class, ee.getId() );
+        assertEquals( ( long ) n * ( n + 1 ) / 2 * 8, length );
+
+        DoubleMatrix<BioAssay, BioAssay> loaded = sampleCoexpressionAnalysisService.loadFullMatrix( ee );
+        assertNotNull( loaded );
+        assertEquals( computed.getRowNames(), loaded.getRowNames() );
+        assertEquals( computed.getColNames(), loaded.getColNames() );
+        for ( int i = 0; i < n; i++ ) {
+            for ( int j = 0; j < n; j++ ) {
+                assertEquals( Double.doubleToRawLongBits( computed.get( i, j ) ), Double.doubleToRawLongBits( loaded.get( i, j ) ) );
+            }
+        }
+        this.check( loaded );
+    }
+
+    /**
      * The run records how many design elements each filter removed. This is the only place the real filter, the
      * real aspect and a real database meet -- the mapping and the read-back are pinned by faster tests, but that
      * the event is actually written with a payload can only be seen here.

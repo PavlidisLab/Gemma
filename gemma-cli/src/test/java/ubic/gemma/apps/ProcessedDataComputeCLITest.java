@@ -157,7 +157,38 @@ public class ProcessedDataComputeCLITest extends BaseCliTest5 {
         assertThat( cli )
                 .withArguments( "-e", "GSE1", "-mdate", "-30d" )
                 .succeeds();
-        verify( preprocessorService ).process( ee, false );
+        // 0: without -k the PCA is the full decomposition
+        verify( preprocessorService ).process( ee, false, false, 0 );
+    }
+
+    /**
+     * {@code -k 10} reaches the PCA in a full run.
+     */
+    @Test
+    public void testPcaComponentsReachTheFullRun() {
+        assertThat( cli )
+                .withArguments( "-e", "GSE1", "-k", "10" )
+                .succeeds();
+        verify( preprocessorService ).process( ee, false, false, 10 );
+    }
+
+    /**
+     * {@code -diagupdate -k 10} reaches the PCA when only the diagnostics are updated.
+     */
+    @Test
+    public void testPcaComponentsReachTheDiagnosticsUpdate() {
+        assertThat( cli )
+                .withArguments( "-e", "GSE1", "-diagupdate", "-k", "10" )
+                .succeeds();
+        verify( preprocessorService ).processDiagnostics( ee, 10 );
+    }
+
+    @Test
+    public void testPcaComponentsMustBePositive() {
+        assertThat( cli )
+                .withArguments( "-e", "GSE1", "-k", "0" )
+                .fails();
+        verifyNoInteractions( preprocessorService );
     }
 
     private AuditEvent processedEventDaysAgo( int days ) {

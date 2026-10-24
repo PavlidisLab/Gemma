@@ -66,8 +66,8 @@ import java.util.stream.Collectors;
 
 import static ubic.gemma.core.analysis.expression.diff.BaselineSelection.getBaselineConditions;
 import static ubic.gemma.core.analysis.expression.diff.DiffExAnalyzerUtils.buildRDesignMatrix;
-import static ubic.gemma.persistence.util.ByteArrayUtils.bytesToDoubleMatrix;
-import static ubic.gemma.persistence.util.ByteArrayUtils.doubleMatrixToBytes;
+import static ubic.gemma.persistence.util.ByteArrayUtils.bytesToSymmetricMatrix;
+import static ubic.gemma.persistence.util.ByteArrayUtils.symmetricMatrixToLowerTriangleBytes;
 
 /**
  * Manage the "sample correlation/coexpression" matrices.
@@ -275,8 +275,15 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                 .format( SampleCoexpressionAnalysisServiceImpl.MSG_INFO_ANALYSIS_STATUS, comp, full, reg ) );
     }
 
+    /**
+     * Decode a stored matrix, in either of its two formats (see {@link #toSampleCoexpressionMatrix}).
+     *
+     * @throws UnreadableSampleCoexpressionMatrixException if the blob's length fits neither format for the dimension's
+     *                                                     bioassay count; that is a corrupt row, not an absent one, so
+     *                                                     it is not reported as null
+     */
     @Nullable
-    private DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
+    static DoubleMatrix<BioAssay, BioAssay> toDoubleMatrix( SampleCoexpressionMatrix matrix ) {
         byte[] matrixBytes = matrix.getCoexpressionMatrix();
 
         final List<BioAssay> bioAssays = matrix.getBioAssayDimension().getBioAssays();
@@ -288,8 +295,17 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                             matrix.getBioAssayDimension().getId() ) );
         }
 
+        // outside the try below: a blob whose length matches neither format used to be logged and served as no
+        // matrix at all, which reads the same as an experiment that was never analysed.
+        double[][] rawMatrix;
         try {
-            double[][] rawMatrix = bytesToDoubleMatrix( matrixBytes, numBa );
+            rawMatrix = bytesToSymmetricMatrix( matrixBytes, numBa );
+        } catch ( IllegalArgumentException e ) {
+            throw new UnreadableSampleCoexpressionMatrixException( String.format(
+                    "The stored sample correlation matrix for BioAssayDimension Id=%d cannot be read: %s",
+                    matrix.getBioAssayDimension().getId(), e.getMessage() ), e );
+        }
+        try {
             DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<>( rawMatrix );
             result.setRowNames( bioAssays );
             result.setColumnNames( bioAssays );
@@ -330,7 +346,21 @@ public class SampleCoexpressionAnalysisServiceImpl implements SampleCoexpression
                     bestBioAssayDimension.getBioAssays().size(), cormat.rows() ) );
         }
 
-        return SampleCoexpressionMatrix.Factory.newInstance( bestBioAssayDimension, doubleMatrixToBytes( cormat.getRawMatrix() ) );
+        return toSampleCoexpressionMatrix( bestBioAssayDimension, cormat );
+    }
+
+    /**
+     * Encode a correlation matrix for storage as its lower triangle, diagonal included: {@code n * (n + 1) / 2}
+     * doubles rather than {@code n * n}.
+     * <p>
+     * Storing the full matrix put anything over about 5,800 samples past the 256 MiB {@code max_allowed_packet} of
+     * the production database, in a single INSERT. Rows written before this change hold the full matrix and are
+     * still read as such; {@link #toDoubleMatrix} tells the two apart by length. The matrix is symmetric by
+     * construction ({@link MatrixStats#correlationMatrix(DoubleMatrix)} assigns each pair once to both cells), and
+     * the encoder refuses one that is not exactly so rather than drop half of it.
+     */
+    static SampleCoexpressionMatrix toSampleCoexpressionMatrix( BioAssayDimension bioAssayDimension, DoubleMatrix<BioAssay, BioAssay> cormat ) {
+        return SampleCoexpressionMatrix.Factory.newInstance( bioAssayDimension, symmetricMatrixToLowerTriangleBytes( cormat.getRawMatrix() ) );
     }
 
     private DoubleMatrix<BioAssay, BioAssay> dataToDoubleMat( ExpressionDataDoubleMatrix matrix ) {
