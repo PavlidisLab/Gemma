@@ -75,6 +75,11 @@ public class SampleCoexpressionMatrix extends AbstractIdentifiable {
     @Fetch(FetchMode.SELECT)
     @JoinColumn(name = "BIO_ASSAY_DIMENSION_FK", nullable = false, columnDefinition = "BIGINT")
     private BioAssayDimension bioAssayDimension;
+    /*
+     * Two formats, told apart by length against the dimension's n bioassays: n * n big-endian doubles (rows written
+     * before October 2026), or the lower triangle with its diagonal, n * (n + 1) / 2 doubles, row by row (everything
+     * written since). See ByteArrayUtils.symmetricMatrixToLowerTriangleBytes and bytesToSymmetricMatrix.
+     */
     @Lob
     @Column(name = "COEXPRESSION_MATRIX", nullable = false, columnDefinition = "LONGBLOB")
     private byte[] coexpressionMatrix;
