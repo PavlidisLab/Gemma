@@ -80,7 +80,19 @@ public interface PreprocessorService {
      *                                   and raising an exception
      * @throws PreprocessingException if there was a problem during the processing
      */
-    void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticFailure ) throws PreprocessingException;
+    default void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticFailure ) throws PreprocessingException {
+        process( ee, ignoreQuantitationMismatch, ignoreDiagnosticFailure, 0 );
+    }
+
+    /**
+     * Preprocess a dataset, computing only the leading components for the PCA diagnostic.
+     *
+     * @param numPcaComponents how many leading components the PCA computes; 0 computes the full decomposition. See
+     *                         {@link ubic.gemma.core.analysis.preprocess.svd.SVDService#svd(ExpressionExperiment, int)}.
+     * @see #process(ExpressionExperiment, boolean, boolean)
+     */
+    void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticFailure,
+            int numPcaComponents ) throws PreprocessingException;
 
     /**
      * Create or update the sample correlation, PCA and M-V data.
@@ -89,5 +101,14 @@ public interface PreprocessorService {
      * only a refresh is needed.
      * @param ee the expression experiment to process, it must be fully thawed with {@link ExpressionExperimentService#thaw(ExpressionExperiment)}
      */
-    void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException;
+    default void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException {
+        processDiagnostics( ee, 0 );
+    }
+
+    /**
+     * As {@link #processDiagnostics(ExpressionExperiment)}, computing only the leading components for the PCA.
+     *
+     * @param numPcaComponents how many leading components the PCA computes; 0 computes the full decomposition
+     */
+    void processDiagnostics( ExpressionExperiment ee, int numPcaComponents ) throws PreprocessingException;
 }

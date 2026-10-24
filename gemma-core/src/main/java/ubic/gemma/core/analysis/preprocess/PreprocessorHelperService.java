@@ -64,8 +64,10 @@ public interface PreprocessorHelperService {
     /**
      * Run SVD / PCA for diagnostics. A failure emits a
      * {@code FailedPCAAnalysisEvent} via the audit aspect.
+     *
+     * @param numComponents how many leading components to compute; 0 computes the full decomposition
      */
-    void processForPca( ExpressionExperiment ee ) throws SVDRelatedPreprocessingException;
+    void processForPca( ExpressionExperiment ee, int numComponents ) throws SVDRelatedPreprocessingException;
 
     /**
      * Compute and persist the sample-sample correlation matrix used for

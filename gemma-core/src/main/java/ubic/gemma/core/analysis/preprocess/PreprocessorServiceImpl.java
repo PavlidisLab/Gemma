@@ -70,7 +70,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private PreprocessorHelperService preprocessorHelperService;
 
     @Override
-    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure ) throws PreprocessingException {
+    public void process( ExpressionExperiment ee, boolean ignoreQuantitationMismatch, boolean ignoreDiagnosticsFailure,
+            int numPcaComponents ) throws PreprocessingException {
         StopWatch timer = new StopWatch();
         timer.start();
         if ( expressionExperimentService.getRawDataVectorCount( ee ) == 0 ) {
@@ -88,7 +89,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         preprocessorHelperService.batchCorrect( ee ); // will be a no-op in many cases
         processBatchInfo( ee ); // update status
         try {
-            processDiagnostics( ee ); // PCA, GEEQ, MV etc.
+            processDiagnostics( ee, numPcaComponents ); // PCA, GEEQ, MV etc.
         } catch ( PreprocessingException e ) {
             if ( ignoreDiagnosticsFailure ) {
                 log.warn( String.format( "Processing diagnostics failed for %s, will attempt to update DEAs anyway, but the plots might be incorrect.", ee.getShortName() ), e );
@@ -102,12 +103,12 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     @Override
-    public void processDiagnostics( ExpressionExperiment ee ) throws PreprocessingException {
+    public void processDiagnostics( ExpressionExperiment ee, int numPcaComponents ) throws PreprocessingException {
         // Calls routed through the helper bean so each step passes through a
         // Spring proxy and @AuditedOnError can fire on the catch path.
         preprocessorHelperService.processForSampleCorrelation( ee );
         preprocessorHelperService.processForMeanVarianceRelation( ee );
-        preprocessorHelperService.processForPca( ee );
+        preprocessorHelperService.processForPca( ee, numPcaComponents );
         // FIXME: OPT_MODE_ALL is overkill, but none of the options currently address the exact need. No big deal.
         try {
             geeqService.calculateScore( ee, GeeqService.ScoreMode.all );
