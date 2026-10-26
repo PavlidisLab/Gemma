@@ -1,5 +1,6 @@
 package ubic.gemma.core.loader.expression.singleCell.transform;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.file.PathUtils;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
@@ -38,6 +39,7 @@ import java.util.zip.GZIPInputStream;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 @ContextConfiguration
@@ -59,6 +61,70 @@ public class SingleCell10xMexFilterTest extends BaseTest5 {
 
     @Value("${gemma.download.path}/singleCellData/GEO")
     private Path downloadDir;
+
+    @Test
+    public void testUnsupportedChemistryIsRejected() {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        assumeThat( filter.getCellRangerExecutable() ).exists();
+        filter.setInputFile( Path.of( "input" ), SingleCellDataType.MEX );
+        filter.setOutputFile( Path.of( "output" ), SingleCellDataType.MEX );
+        filter.setGenome( "Homo sapiens" );
+        filter.setChemistry( "auto" );
+        assertThatThrownBy( filter::createScriptArgs )
+                .isInstanceOf( UnsupportedOperationException.class )
+                .hasMessageStartingWith( "Unsupported chemistry: auto." );
+        // descriptions are not accepted either, only keys from chemistry_defs.json
+        filter.setChemistry( "Single Cell 3' v3 (polyA)" );
+        assertThatThrownBy( filter::createScriptArgs )
+                .isInstanceOf( UnsupportedOperationException.class );
+        filter.setChemistry( "SC3Pv3-polyA" );
+        assertThat( filter.createScriptArgs() ).endsWith( "Homo sapiens", "SC3Pv3-polyA" );
+    }
+
+    /**
+     * Cell Ranger compares the chemistry with the description field of chemistry_defs.json, so the key validated by
+     * {@link SingleCell10xMexFilter} must be mapped to its description by the script.
+     * <p>
+     * See <a href="https://github.com/PavlidisLab/Gemma/issues/1700">#1700</a>.
+     */
+    @Test
+    public void testChemistryKeyIsMappedToDescription() throws IOException, InterruptedException {
+        SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        assumeThat( filter.getPythonExecutable() ).exists();
+        String script;
+        try ( InputStream is = requireNonNull( getClass().getResourceAsStream( "/ubic/gemma/core/loader/expression/singleCell/transform/filter-10x-mex.py" ) ) ) {
+            script = IOUtils.toString( is, StandardCharsets.UTF_8 );
+        }
+        String test = "import sys\n"
+                + "ns = {'__name__': 'filter_10x_mex'}\n"
+                + "exec(sys.stdin.read(), ns)\n"
+                + "f = ns['get_chemistry_description']\n"
+                + "assert f(None) is None\n"
+                + "for key in ['auto', 'SC3P_auto', \"Single Cell 3' v3 (polyA)\"]:\n"
+                + "    try:\n"
+                + "        f(key)\n"
+                + "        raise AssertionError('no error for ' + key)\n"
+                + "    except ValueError:\n"
+                + "        pass\n"
+                + "from cellranger.cell_calling import get_empty_drops_fdr\n"
+                + "print(f('SC3Pv3-polyA'))\n"
+                + "print(f('SC5P-R2'))\n"
+                + "print(get_empty_drops_fdr(f('SC3Pv3-polyA')))\n"
+                + "print(get_empty_drops_fdr(f('SC3Pv2')))\n";
+        ProcessBuilder builder = new ProcessBuilder( filter.getPythonExecutable().toString(), "-c", test )
+                .redirectErrorStream( true )
+                .redirectOutput( ProcessBuilder.Redirect.PIPE );
+        builder.environment().putAll( filter.createEnvironmentVariables() );
+        Process process = builder.start();
+        process.getOutputStream().write( script.getBytes( StandardCharsets.UTF_8 ) );
+        process.getOutputStream().close();
+        String output;
+        try ( InputStream is = process.getInputStream() ) {
+            output = IOUtils.toString( is, StandardCharsets.UTF_8 );
+        }
+        assertThat( process.waitFor() ).as( output ).isZero();
+        assertThat( output ).isEqualTo( "Single Cell 3' v3 (polyA)\nSingle Cell 5' R2-only\n0.001\n0.01\n" );
+    }
 
     @Test
     @Tag("geo")
