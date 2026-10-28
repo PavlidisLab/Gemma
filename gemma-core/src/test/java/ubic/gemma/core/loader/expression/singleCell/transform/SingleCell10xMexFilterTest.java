@@ -88,8 +88,10 @@ public class SingleCell10xMexFilterTest extends BaseTest5 {
      * See <a href="https://github.com/PavlidisLab/Gemma/issues/1700">#1700</a>.
      */
     @Test
+    @Tag("slow")
     public void testChemistryKeyIsMappedToDescription() throws IOException, InterruptedException {
         SingleCell10xMexFilter filter = ctx.getBean( SingleCell10xMexFilter.class );
+        Assumptions.assumeTrue( filter.isCpuSupported(), "The current CPU does not support AVX instructions." );
         assumeThat( filter.getPythonExecutable() ).exists();
         String script;
         try ( InputStream is = requireNonNull( getClass().getResourceAsStream( "/ubic/gemma/core/loader/expression/singleCell/transform/filter-10x-mex.py" ) ) ) {
