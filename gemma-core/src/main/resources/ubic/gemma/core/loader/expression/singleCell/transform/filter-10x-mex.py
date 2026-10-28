@@ -6,6 +6,7 @@ import pandas as pd
 import scipy.io as sp_io
 from cellranger import cr_io
 from cellranger.cell_calling_helpers import call_initial_cells, call_additional_cells, FilterMethod
+from cellranger.chemistry import CHEMISTRY_DEFS, CHEMISTRY_DESCRIPTION_FIELD
 from cellranger.feature_ref import FeatureDef, FeatureReference
 from cellranger.library_constants import GENE_EXPRESSION_LIBRARY_TYPE
 from cellranger.matrix import CountMatrix
@@ -24,6 +25,26 @@ def detect_gem_groups(mtx):
         
     gem_groups = sorted(gem_groups)
     return gem_groups
+
+
+def get_chemistry_description(chemistry_key):
+    """
+    Map a chemistry key from chemistry_defs.json (e.g. SC3Pv3-polyA) to its description (e.g. "Single Cell 3' v3 (polyA)").
+
+    Gemma validates and passes chemistry keys, but the Cell Ranger cell calling functions compare their
+    chemistry_description argument with the description field. Passing the key silently falls back to the default
+    EmptyDrops FDR of 0.01 instead of the chemistry-specific one (0.001 for 3' v3 and 5' chemistries).
+    See https://github.com/PavlidisLab/Gemma/issues/1700.
+    """
+    if chemistry_key is None:
+        return None
+    if chemistry_key not in CHEMISTRY_DEFS:
+        raise ValueError(f"Unsupported chemistry: {chemistry_key}. Possible values are: "
+                         + ', '.join(sorted(CHEMISTRY_DEFS.keys())) + ".")
+    description = CHEMISTRY_DEFS[chemistry_key].get(CHEMISTRY_DESCRIPTION_FIELD)
+    if not description:
+        raise ValueError(f"Chemistry {chemistry_key} has no description in chemistry_defs.json.")
+    return description
 
 
 def save_features_tsv(feature_ref, base_dir, compress):
@@ -84,11 +105,15 @@ def main():
     mtx_dir = sys.argv[1] 
     outdir = sys.argv[2] 
     genome_name = sys.argv[3]
-    # make chem optional
+    # the chemistry is optional, it is a key from chemistry_defs.json and must be passed to Cell Ranger as its
+    # description
     if len(sys.argv) > 4:
-        chem = sys.argv[4]
+        chem_key = sys.argv[4]
+        chem = get_chemistry_description(chem_key)
+        print(f"Using chemistry {chem_key} (description: {chem})")
     else:
         chem = None
+        print("No chemistry specified, Cell Ranger defaults will be used (EmptyDrops FDR of 0.01)")
     #
     if not mtx_dir and not outdir and not genome_name:
         raise ValueError("Both mtx_dir, outdir and genome_name must be provided.")
