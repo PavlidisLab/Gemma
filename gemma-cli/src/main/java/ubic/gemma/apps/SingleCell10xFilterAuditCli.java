@@ -33,11 +33,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -62,6 +66,7 @@ import java.util.stream.Collectors;
 public class SingleCell10xFilterAuditCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String OUTPUT_OPTION = "o";
+    private static final String GEO_LIST_OPTION = "geoList";
 
     /**
      * Chemistries whose description changes the cell calling parameters relative to the key, checked against Cell
@@ -91,7 +96,14 @@ public class SingleCell10xFilterAuditCli extends ExpressionExperimentManipulatin
 
     private Path outputFile;
     @Nullable
+    private Path geoListFile;
+    @Nullable
     private PrintWriter output;
+
+    public SingleCell10xFilterAuditCli() {
+        // troubled datasets were filtered too, and the audit only reads
+        setForce();
+    }
 
     @Nullable
     @Override
@@ -109,14 +121,51 @@ public class SingleCell10xFilterAuditCli extends ExpressionExperimentManipulatin
     protected void buildExperimentOptions( Options options ) {
         options.addRequiredOption( OUTPUT_OPTION, "output", true,
                 "TSV to write, one row per sample. A SHA-256 checksum is written next to it." );
+        options.addOption( GEO_LIST_OPTION, "geo-accessions-file", true,
+                "File of GEO series accessions (one per line) to audit instead of the usual dataset selection. Every"
+                        + " dataset with that accession is audited, split parts included, and accessions that match no"
+                        + " dataset are listed in a .not-loaded.txt file next to the output instead of failing the run." );
+    }
+
+    @Override
+    protected boolean selectsOwnExperiments( CommandLine commandLine ) {
+        return commandLine.hasOption( GEO_LIST_OPTION );
     }
 
     @Override
     protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
         outputFile = Paths.get( commandLine.getOptionValue( OUTPUT_OPTION ) );
+        if ( commandLine.hasOption( GEO_LIST_OPTION ) ) {
+            geoListFile = Paths.get( commandLine.getOptionValue( GEO_LIST_OPTION ) );
+        }
         if ( Files.exists( outputFile ) ) {
             throw new ParseException( outputFile + " already exists, refusing to overwrite it." );
         }
+    }
+
+    @Override
+    protected void doAuthenticatedWork() throws Exception {
+        if ( geoListFile == null ) {
+            super.doAuthenticatedWork();
+            return;
+        }
+        List<String> accessions = ubic.gemma.cli.util.FileUtils.readListFileToStrings( geoListFile );
+        Collection<ExpressionExperiment> ees = new TreeSet<>( Comparator.comparing( ExpressionExperiment::getId ) );
+        List<String> notLoaded = new ArrayList<>();
+        for ( String accession : accessions ) {
+            Collection<ExpressionExperiment> found = eeService.findByAccession( accession );
+            if ( found.isEmpty() ) {
+                notLoaded.add( accession );
+            } else {
+                ees.addAll( found );
+            }
+        }
+        Files.write( Paths.get( outputFile + ".not-loaded.txt" ), notLoaded, StandardCharsets.UTF_8 );
+        log.info( String.format( "%d of %d accessions in %s matched %d datasets; the other %d are listed in %s.not-loaded.txt.",
+                accessions.size() - notLoaded.size(), accessions.size(), geoListFile, ees.size(), notLoaded.size(), outputFile ) );
+        setEstimatedMaxTasks( ees.size() );
+        processExpressionExperiments( ees );
+        postprocessExpressionExperiments( ees );
     }
 
     @Override
