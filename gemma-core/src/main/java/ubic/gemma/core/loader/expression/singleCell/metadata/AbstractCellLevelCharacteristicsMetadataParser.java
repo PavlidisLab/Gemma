@@ -103,6 +103,7 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
         Set<BioAssay> assignedBioAssays = new HashSet<>();
 
         LinkedHashSet<String> categoryIds = new LinkedHashSet<>();
+        Map<String, String> nameByCategoryIdFromFile = new HashMap<>();
         Map<String, List<Characteristic>> characteristicsByCategoryId = new HashMap<>();
         Map<String, Map<Characteristic, Integer>> cellTypesToIdByCategoryId = new HashMap<>();
         Map<String, int[]> indicesByCategoryId = new HashMap<>();
@@ -198,6 +199,14 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
 
                 categoryIds.add( categoryId );
 
+                String name = getName( record );
+                if ( name != null ) {
+                    String previousName = nameByCategoryIdFromFile.putIfAbsent( categoryId, name );
+                    if ( previousName != null && !previousName.equals( name ) ) {
+                        throw new IllegalArgumentException( String.format( "Category %s is named both %s and %s.", categoryId, previousName, name ) );
+                    }
+                }
+
                 List<Characteristic> characteristics = characteristicsByCategoryId.computeIfAbsent( categoryId, k -> new ArrayList<>() );
                 Map<Characteristic, Integer> cellTypesToId = cellTypesToIdByCategoryId.computeIfAbsent( categoryId, k -> new HashMap<>() );
                 int[] indices = indicesByCategoryId.computeIfAbsent( categoryId, k -> {
@@ -249,6 +258,8 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
             for ( String cid : categoryIds ) {
                 nameByCategoryId.put( cid, names.get( i++ ) );
             }
+        } else if ( !nameByCategoryIdFromFile.isEmpty() ) {
+            nameByCategoryId = nameByCategoryIdFromFile;
         } else {
             nameByCategoryId = null;
         }
@@ -361,6 +372,14 @@ abstract class AbstractCellLevelCharacteristicsMetadataParser<T extends CellLeve
      */
     @Nullable
     protected abstract String getCategoryId( CSVRecord record );
+
+    /**
+     * The name of the cell-level characteristics a record belongs to, used when no names are passed to the parser.
+     */
+    @Nullable
+    protected String getName( CSVRecord record ) {
+        return null;
+    }
 
     @Nullable
     protected abstract String getValue( CSVRecord record );
