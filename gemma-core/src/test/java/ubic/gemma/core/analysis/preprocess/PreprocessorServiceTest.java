@@ -5,13 +5,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.preprocess.detect.InferredQuantitationMismatchException;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,6 +47,10 @@ class PreprocessorServiceTest {
     private PreprocessorHelperService preprocessorHelperService;
     @Mock
     private ExpressionDataFileService dataFileService;
+    @Mock
+    private DifferentialExpressionAnalyzerService analyzerService;
+    @Mock
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @InjectMocks
     private PreprocessorServiceImpl preprocessorService;
@@ -109,5 +120,33 @@ class PreprocessorServiceTest {
 
         preprocessorService.processDiagnostics( ee );
         verify( preprocessorHelperService ).processForPca( ee, 0 );
+    }
+
+    /**
+     * A redo that fails leaves that analysis on the previous data, so every analysis is still attempted and the error
+     * names each one that failed. It used to stop at the first, leaving the rest stale without a word.
+     */
+    @Test
+    void updateDEAsAttemptsEveryAnalysisAndNamesEachFailure() {
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ee.setShortName( "GSE100012" );
+        ee.setNumberOfDataVectors( 1 );
+        DifferentialExpressionAnalysis first = DifferentialExpressionAnalysis.Factory.newInstance();
+        first.setId( 1L );
+        DifferentialExpressionAnalysis second = DifferentialExpressionAnalysis.Factory.newInstance();
+        second.setId( 2L );
+        DifferentialExpressionAnalysis third = DifferentialExpressionAnalysis.Factory.newInstance();
+        third.setId( 3L );
+        when( differentialExpressionAnalysisService.findByExperiment( ee, true ) ).thenReturn( Arrays.asList( first, second, third ) );
+        when( analyzerService.redoAnalysis( ee, first ) ).thenThrow( new IllegalStateException( "no session" ) );
+        when( analyzerService.redoAnalysis( ee, third ) ).thenThrow( new IllegalStateException( "no session" ) );
+        when( analyzerService.redoAnalysis( ee, second ) ).thenReturn( Collections.emptyList() );
+
+        assertThatThrownBy( () -> ReflectionTestUtils.invokeMethod( preprocessorService, "updateDEAs", ee ) )
+                .isInstanceOf( PreprocessingException.class )
+                .hasMessageContaining( "Failed to redo 2 of 3 differential expression analyses" )
+                .hasMessageContaining( "1 (IllegalStateException: no session)" )
+                .hasMessageContaining( "3 (IllegalStateException: no session)" );
+        verify( analyzerService ).redoAnalysis( ee, second );
     }
 }
