@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +69,14 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
+    /**
+     * {@link #redoAnalyses} calls the audited {@link #redoAnalysis} through this, so that a failed redo writes its
+     * {@link FailedDifferentialExpressionAnalysisEvent}; a call on {@code this} bypasses the proxy. {@code @Lazy} breaks
+     * the self-reference cycle at construction.
+     */
+    @Lazy
+    @Autowired
+    private DifferentialExpressionAnalyzerService self;
     @Autowired
     private DifferentialExpressionAnalyzerAuditService differentialExpressionAnalyzerAuditService;
     @Autowired
@@ -223,7 +232,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         Collection<AnalysisException> analysisExceptions = new ArrayList<>();
         for ( DifferentialExpressionAnalysis dea : deas ) {
             try {
-                results.addAll( redoAnalysis( ee, dea, config ) );
+                results.addAll( self.redoAnalysis( ee, dea, config ) );
             } catch ( AnalysisException e ) {
                 if ( ignoreFailingAnalyses ) {
                     analysisExceptions.add( e );
