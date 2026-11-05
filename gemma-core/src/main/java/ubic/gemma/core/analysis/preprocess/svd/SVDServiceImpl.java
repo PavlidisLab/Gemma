@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.core.util.matrix.DenseDoubleMatrix;
 import ubic.gemma.core.util.matrix.DoubleMatrix;
 import ubic.gemma.core.util.math.CorrelationStats;
 import ubic.gemma.core.util.math.Distance;
@@ -183,15 +184,29 @@ public class SVDServiceImpl implements SVDService {
 
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( ee, vectors );
 
+        // a sample with no data at all (e.g. a pseudobulk sample of a cell type with no cells) would leave every row
+        // short of the present fraction the SVD requires; it is left out and gets no values in the components
+        List<BioMaterial> samplesWithData = samplesWithData( mat );
+        if ( samplesWithData.isEmpty() ) {
+            throw new SVDException( "No sample of " + ee.getShortName() + " has any data, SVD cannot be computed" );
+        }
+        ExpressionDataDoubleMatrix analysed = mat;
+        if ( samplesWithData.size() < mat.columns() ) {
+            SVDServiceImpl.log.info( String.format( "Leaving %d of %d samples with no data out of the SVD of %s.",
+                    mat.columns() - samplesWithData.size(), mat.columns(), ee.getShortName() ) );
+            analysed = mat.sliceColumns( samplesWithData );
+        }
+
         SVDServiceImpl.log.info( numComponents > 0 ? "Starting SVD, top " + numComponents + " components" : "Starting SVD" );
-        ExpressionDataSVD svd = new ExpressionDataSVD( mat, true, numComponents );
+        ExpressionDataSVD svd = new ExpressionDataSVD( analysed, true, numComponents );
 
         SVDServiceImpl.log.info( "SVD done, postprocessing and storing results." );
 
         /*
-         * Save the results
+         * Save the results. The eigenvectors are stored against every sample of the dimension, by position, so the
+         * samples left out get NaN.
          */
-        DoubleMatrix<BioMaterial, Integer> v = svd.getV();
+        DoubleMatrix<BioMaterial, Integer> v = expandToAllSamples( svd.getV(), mat );
 
         BioAssayDimension b = mat.getBioAssayDimension();
 
@@ -200,6 +215,40 @@ public class SVDServiceImpl implements SVDService {
                         SVDServiceImpl.MAX_NUM_COMPONENTS_TO_PERSIST, SVDServiceImpl.MAX_LOADINGS_TO_PERSIST );
 
         return self.getSvdFactorAnalysis( pca );
+    }
+
+    /**
+     * Samples of the matrix that have at least one value, in column order.
+     */
+    static List<BioMaterial> samplesWithData( ExpressionDataDoubleMatrix mat ) {
+        List<BioMaterial> samples = new ArrayList<>( mat.columns() );
+        for ( int j = 0; j < mat.columns(); j++ ) {
+            if ( Arrays.stream( mat.getColumnAsDoubles( j ) ).anyMatch( d -> !Double.isNaN( d ) ) ) {
+                samples.add( mat.getBioMaterialForColumn( j ) );
+            }
+        }
+        return samples;
+    }
+
+    /**
+     * Expand the right singular vectors of an SVD of some samples of the matrix to all of its samples, in column order,
+     * with NaN for the samples that were not part of the SVD.
+     */
+    static DoubleMatrix<BioMaterial, Integer> expandToAllSamples( DoubleMatrix<BioMaterial, Integer> v, ExpressionDataDoubleMatrix mat ) {
+        List<BioMaterial> samples = new ArrayList<>( mat.columns() );
+        for ( int j = 0; j < mat.columns(); j++ ) {
+            samples.add( mat.getBioMaterialForColumn( j ) );
+        }
+        DenseDoubleMatrix<BioMaterial, Integer> full = new DenseDoubleMatrix<>( samples.size(), v.columns() );
+        full.setRowNames( samples );
+        full.setColumnNames( v.getColNames() );
+        for ( int i = 0; i < samples.size(); i++ ) {
+            int row = v.containsRowName( samples.get( i ) ) ? v.getRowIndexByName( samples.get( i ) ) : -1;
+            for ( int k = 0; k < v.columns(); k++ ) {
+                full.set( i, k, row >= 0 ? v.get( row, k ) : Double.NaN );
+            }
+        }
+        return full;
     }
 
     @Override
