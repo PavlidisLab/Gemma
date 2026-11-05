@@ -14,6 +14,7 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,6 +37,9 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.persistence.service.expression.experiment.GeeqService;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(propagation = Propagation.NEVER)
@@ -140,7 +144,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     /**
      * Update DEA if needed.
      */
-    private void updateDEAs( ExpressionExperiment ee ) {
+    private void updateDEAs( ExpressionExperiment ee ) throws PreprocessingException {
         assert ee.getNumberOfDataVectors() != null;
 
         /*
@@ -152,8 +156,24 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         if ( !oldAnalyses.isEmpty() ) {
 
             PreprocessorServiceImpl.log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
+            // every analysis is attempted: one that fails is left as it was, computed on the previous data, so the
+            // error has to name each of them rather than stop at the first
+            Map<DifferentialExpressionAnalysis, RuntimeException> failures = new LinkedHashMap<>();
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-                this.analyzerService.redoAnalysis( ee, copyMe );
+                try {
+                    this.analyzerService.redoAnalysis( ee, copyMe );
+                } catch ( RuntimeException e ) {
+                    log.error( "Failed to redo " + copyMe + " for " + ee + "; it still holds results from the previous data.", e );
+                    failures.put( copyMe, e );
+                }
+            }
+            if ( !failures.isEmpty() ) {
+                PreprocessingException e = new PreprocessingException( ee, String.format( "Failed to redo %d of %d differential expression analyses, which still hold results from the previous data: %s",
+                        failures.size(), oldAnalyses.size(), failures.entrySet().stream()
+                                .map( f -> f.getKey().getId() + " (" + ExceptionUtils.getRootCauseMessage( f.getValue() ) + ")" )
+                                .collect( Collectors.joining( ", " ) ) ) );
+                failures.values().forEach( e::addSuppressed );
+                throw e;
             }
         }
     }

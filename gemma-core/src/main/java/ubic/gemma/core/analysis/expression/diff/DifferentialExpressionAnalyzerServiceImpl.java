@@ -185,11 +185,13 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     @Override
+    @AuditedOnError(value = FailedDifferentialExpressionAnalysisEvent.class, messageSpel = "'Redo of ' + #dea + ' failed: ' + #exception.message")
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee, DifferentialExpressionAnalysis dea ) {
         return redoAnalysis( ee, dea, new DifferentialExpressionAnalysisConfig() );
     }
 
     @Override
+    @AuditedOnError(value = FailedDifferentialExpressionAnalysisEvent.class, messageSpel = "'Redo of ' + #dea + ' failed: ' + #exception.message")
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis dea, DifferentialExpressionAnalysisConfig config ) {
         Assert.isTrue( !config.isDeleteOtherAnalyses(), "Deleting the other analyses is only supported for a fresh run, not a redo." );
