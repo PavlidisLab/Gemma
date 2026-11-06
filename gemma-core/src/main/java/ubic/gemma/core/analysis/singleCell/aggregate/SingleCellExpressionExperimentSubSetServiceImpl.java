@@ -132,6 +132,7 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
                 // from them with bioAssayDimensionService.findOrCreate(), which is the same shape
                 // redoAggregate() already relies on
                 assertReusable( existing, cellTypeName, samplesToSubset );
+                assignCellTypeFactorValue( existing, factor, factorValue );
                 reused.add( existing );
                 results.add( existing );
                 continue;
@@ -211,6 +212,34 @@ public class SingleCellExpressionExperimentSubSetServiceImpl implements SingleCe
                     existing.getSourceExperiment(), existing.getName(), actual.size(), expected.size(),
                     missing.isEmpty() ? "(none)" : String.join( ", ", missing ),
                     unexpected.isEmpty() ? "(none)" : String.join( ", ", unexpected ) ) );
+        }
+    }
+
+    /**
+     * Give every pseudo-bulk sample of a reused subset the cell type factor value it is reused for, as a new subset's
+     * samples get it at creation.
+     * <p>
+     * A subset can outlive its factor: when the cell type factor is recreated (a reload whose cell type assignment no
+     * longer matches it), removing the old factor takes its values off these samples and nothing assigned the new
+     * ones, so the aggregation that follows refused every pseudo-bulk assay as having no assigned cell type.
+     */
+    private void assignCellTypeFactorValue( ExpressionExperimentSubSet subset, ExperimentalFactor factor, FactorValue factorValue ) {
+        int reassigned = 0;
+        for ( BioAssay ba : subset.getBioAssays() ) {
+            BioMaterial bm = ba.getSampleUsed();
+            Set<FactorValue> current = bm.getFactorValues().stream()
+                    .filter( fv -> factor.equals( fv.getExperimentalFactor() ) )
+                    .collect( Collectors.toSet() );
+            if ( current.size() == 1 && current.contains( factorValue ) ) {
+                continue;
+            }
+            bm.getFactorValues().removeAll( current );
+            bm.getFactorValues().add( factorValue );
+            bioMaterialService.update( bm );
+            reassigned++;
+        }
+        if ( reassigned > 0 ) {
+            log.info( String.format( "Assigned %s to %d pseudo-bulk sample(s) of reused %s.", factorValue, reassigned, subset ) );
         }
     }
 

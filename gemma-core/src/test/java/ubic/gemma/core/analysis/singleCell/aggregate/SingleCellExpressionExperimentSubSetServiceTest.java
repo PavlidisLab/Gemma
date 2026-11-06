@@ -28,7 +28,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration
@@ -181,6 +184,88 @@ public class SingleCellExpressionExperimentSubSetServiceTest extends BaseTest5 {
         assertThat( secondRun )
                 .as( "the second run must hand back the subsets the first run created" )
                 .containsExactlyInAnyOrderElementsOf( firstRun );
+    }
+
+    /**
+     * A reused subset's pseudo-bulk samples get the value of the cell type factor they are reused for.
+     * <p>
+     * When a reload recreates the cell type factor, the old factor's values are removed from the pseudo-bulk samples
+     * and the subsets survive. Reuse used to hand them back as they were, and the aggregation then refused every
+     * pseudo-bulk assay as having no assigned cell type (GSE212527, 2026-11-05).
+     */
+    @Test
+    public void testReuseAssignsTheValuesOfARecreatedCellTypeFactor() {
+        CellTypeAssignment cta = new CellTypeAssignment();
+        ExpressionExperiment ee = new ExpressionExperiment();
+        ee.setName( "ee" );
+        ArrayDesign ad = new ArrayDesign();
+        SingleCellDimension scd = new SingleCellDimension();
+        for ( int i = 0; i < 2; i++ ) {
+            BioAssay ba = new BioAssay();
+            ba.setArrayDesignUsed( ad );
+            ba.setName( "ba" + i );
+            BioMaterial bm = new BioMaterial();
+            bm.setName( "bm" + i );
+            ba.setSampleUsed( bm );
+            bm.getBioAssaysUsedIn().add( ba );
+            ee.getBioAssays().add( ba );
+            scd.getBioAssays().add( ba );
+        }
+        ExperimentalFactor oldFactor = new ExperimentalFactor();
+        oldFactor.setId( 1L );
+        oldFactor.setType( FactorType.CATEGORICAL );
+        ExperimentalFactor newFactor = new ExperimentalFactor();
+        newFactor.setId( 2L );
+        newFactor.setType( FactorType.CATEGORICAL );
+        for ( int i = 0; i < 3; i++ ) {
+            Characteristic ct = Characteristic.Factory.newInstance( Categories.CELL_TYPE, "ct" + i, null );
+            cta.getCellTypes().add( ct );
+            FactorValue oldFv = FactorValue.Factory.newInstance( oldFactor, ct );
+            oldFv.setId( 10L + i );
+            oldFactor.getFactorValues().add( oldFv );
+            FactorValue newFv = FactorValue.Factory.newInstance( newFactor, ct );
+            newFv.setId( 20L + i );
+            newFactor.getFactorValues().add( newFv );
+        }
+
+        List<ExpressionExperimentSubSet> persisted = new ArrayList<>();
+        when( bioMaterialService.create( any( BioMaterial.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( bioAssayService.create( any( BioAssay.class ) ) ).thenAnswer( a -> a.getArgument( 0 ) );
+        when( expressionExperimentSubSetService.create( any( ExpressionExperimentSubSet.class ) ) ).thenAnswer( a -> {
+            ExpressionExperimentSubSet subset = a.getArgument( 0 );
+            persisted.add( subset );
+            return subset;
+        } );
+        when( expressionExperimentSubSetReadService.getSubSetsWithBioAssays( ee ) ).thenReturn( persisted );
+        when( singleCellExpressionExperimentService.getPreferredCellTypeAssignment( ee ) )
+                .thenReturn( Optional.of( cta ) );
+        when( singleCellExpressionExperimentService.getPreferredSingleCellDimensionWithoutCellIds( ee ) )
+                .thenReturn( Optional.of( scd ) );
+        SingleCellExperimentSubSetsCreationConfig config = SingleCellExperimentSubSetsCreationConfig.builder().build();
+
+        when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) ).thenReturn( Optional.of( oldFactor ) );
+        service.createSubSetsByCellType( ee, config );
+
+        // the factor is recreated: removing the old one takes its values off the pseudo-bulk samples
+        persisted.stream()
+                .flatMap( subset -> subset.getBioAssays().stream() )
+                .forEach( ba -> ba.getSampleUsed().getFactorValues().clear() );
+        when( singleCellExpressionExperimentService.getCellTypeFactor( ee ) ).thenReturn( Optional.of( newFactor ) );
+        // the mocks are shared by every test in this class
+        clearInvocations( bioMaterialService );
+        List<ExpressionExperimentSubSet> reused = service.createSubSetsByCellType( ee, config );
+
+        assertThat( reused ).hasSize( 3 ).allSatisfy( subset -> {
+            String cellTypeName = subset.getCharacteristics().iterator().next().getValue();
+            assertThat( subset.getBioAssays() ).hasSize( 2 ).allSatisfy( ba ->
+                    assertThat( ba.getSampleUsed().getFactorValues() )
+                            .singleElement()
+                            .satisfies( fv -> {
+                                assertThat( fv.getExperimentalFactor() ).isSameAs( newFactor );
+                                assertThat( fv.getCharacteristics().iterator().next().getSubject() ).isEqualTo( cellTypeName );
+                            } ) );
+        } );
+        verify( bioMaterialService, times( 6 ) ).update( any( BioMaterial.class ) );
     }
 
     /**
