@@ -1,5 +1,20 @@
 ## Updates
 
+### Update 3.1.0
+
+The tabular output of `cellLevelCharacteristics` and `singleCellDimension` now has a `name` column, and the
+characteristics are written in a fixed order: cell type assignments first, then the other cell-level characteristics,
+each sorted by name. Before, the order followed an unordered set, so the `category_id` column could number the same
+characteristics differently from one request to the next, and nothing in a row said which characteristics it belonged
+to. Two characteristics with the same category, such as two `umi_outlier` flags, could not be told apart. The new column
+is last, so a client reading the columns by position still finds the others where they were.
+
+`CellLevelCharacteristicsValueObject` gains `name` and `description`.
+
+A `cellLevelCharacteristics` file can be loaded back with `loadSingleCellData -clcFile` without `-clcName`: the
+characteristics are named after the `name` column. Cells absent from the target dataset are skipped with
+`-ignoreUnmatchedCellIds`.
+
 ### Update 3.0.0
 
 Correct the specification where it did not describe the API. None of this changes the wire; every

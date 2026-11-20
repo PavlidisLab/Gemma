@@ -122,6 +122,11 @@ public class ExpressionDataSVD {
         rowMissingFilter.setMinPresentFraction( ExpressionDataSVD.MIN_PRESENT_FRACTION_FOR_ROW );
         this.expressionData = rowMissingFilter.filter( this.expressionData );
 
+        // before the low-variance filter, which reads the data's quantitation type and an empty matrix has none
+        if ( this.expressionData.rows() == 0 ) {
+            throw new SVDException( "After filtering, matrix has no rows, SVD cannot be computed" );
+        }
+
         /*
          * Remove rows with no variance
          */

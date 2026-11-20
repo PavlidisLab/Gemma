@@ -21,6 +21,14 @@ import static java.util.Objects.requireNonNull;
 @Slf4j
 public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject<CellLevelCharacteristics> {
 
+    @Nullable
+    @Schema(description = "The name of the cell-level characteristics. Ones loaded before names were introduced may be unnamed.")
+    private String name;
+
+    @Nullable
+    @Schema(description = "A free-text description of the cell-level characteristics, such as how they were obtained.")
+    private String description;
+
     /**
      * The distinct labels cells are grouped under; see {@link CellLevelCharacteristics}.
      */
@@ -43,6 +51,8 @@ public class CellLevelCharacteristicsValueObject extends IdentifiableValueObject
 
     public CellLevelCharacteristicsValueObject( CellLevelCharacteristics cellLevelCharacteristics, boolean excludeCharacteristicIds ) {
         super( cellLevelCharacteristics );
+        this.name = cellLevelCharacteristics.getName();
+        this.description = cellLevelCharacteristics.getDescription();
         this.characteristics = cellLevelCharacteristics.getCharacteristics()
                 .stream().map( CharacteristicValueObject::new )
                 .collect( Collectors.toSet() );

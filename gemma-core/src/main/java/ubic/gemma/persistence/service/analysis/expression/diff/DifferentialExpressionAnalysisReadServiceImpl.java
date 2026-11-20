@@ -141,6 +141,16 @@ public class DifferentialExpressionAnalysisReadServiceImpl implements Differenti
 
         Hibernate.initialize( differentialExpressionAnalysis.getProtocol() );
 
+        // a redo recovers blocking factors from the protocol against the design of the experiment the analysis belongs
+        // to (the source experiment for a subset), and the analyzer runs without a transaction, so load it here
+        BioAssaySet analyzed = ( BioAssaySet ) Hibernate.unproxy( differentialExpressionAnalysis.getExperimentAnalyzed() );
+        ExpressionExperiment designOwner = analyzed instanceof ExpressionExperimentSubSet
+                ? ( ( ExpressionExperimentSubSet ) analyzed ).getSourceExperiment()
+                : analyzed instanceof ExpressionExperiment ? ( ExpressionExperiment ) analyzed : null;
+        if ( designOwner != null && designOwner.getExperimentalDesign() != null ) {
+            Hibernate.initialize( designOwner.getExperimentalDesign().getExperimentalFactors() );
+        }
+
         if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
             Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
         }

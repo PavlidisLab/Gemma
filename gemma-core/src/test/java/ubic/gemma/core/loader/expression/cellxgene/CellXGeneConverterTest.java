@@ -13,6 +13,7 @@ import ubic.gemma.core.config.SettingsConfig;
 import ubic.gemma.core.context.TestComponent;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.core.loader.expression.cellxgene.model.CollectionMetadata;
+import ubic.gemma.core.loader.expression.cellxgene.model.DatasetAsset;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetMetadata;
 import ubic.gemma.core.loader.expression.cellxgene.model.DatasetVersion;
 import ubic.gemma.core.loader.expression.singleCell.AnnDataSingleCellDataLoader;
@@ -55,6 +56,15 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreate
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
 public class CellXGeneConverterTest extends BaseTest5 {
 
+    /**
+     * Postnatal human brain development: RNA. The dataset is named by its permanent ID and resolved to its current
+     * version, as the loader does: CELLxGENE replaces the version, and the version ID, on every revision, so a
+     * hardcoded version stops existing (e6ef2a07-1b8e-49a8-a771-15b81971eac7 did on 2026-10-30).
+     */
+    private static final String
+            COLLECTION_ID = "f406a653-c079-4bf9-aab6-85846c27571d",
+            DATASET_ID = "56a4bc14-9407-45fd-8786-f7f6fc87c9dd";
+
     @Configuration
     @TestComponent
     @Import({ SettingsConfig.class, SingleCellTransformationConfig.class })
@@ -91,10 +101,10 @@ public class CellXGeneConverterTest extends BaseTest5 {
     public void test() throws IOException {
         ArrayDesign platform = new ArrayDesign();
         platform.setPrimaryTaxon( human );
-        CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
-        DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
-        DatasetVersion dv = new DatasetVersion( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd", "e6ef2a07-1b8e-49a8-a771-15b81971eac7", dm.getName() );
-        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
+        CollectionMetadata cm = fetcher.fetchCollectionMetadata( COLLECTION_ID );
+        DatasetVersion dv = fetcher.resolveDataset( COLLECTION_ID, DATASET_ID );
+        DatasetMetadata dm = CellXGeneUtils.getDatasetMetadata( cm, dv );
+        Path dataPath = downloadAnnData( dm );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder()
                         // this will skip the transpose and sort by sample steps
@@ -102,8 +112,8 @@ public class CellXGeneConverterTest extends BaseTest5 {
                         .build() );
         ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, dv, platform, Collections.emptySet(), "Clarence-2025", dataLoader, false );
         assertThat( ee.getAccession() ).isNotNull().satisfies( accession -> {
-            assertThat( accession.getAccession() ).isEqualTo( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd" );
-            assertThat( accession.getAccessionVersion() ).isEqualTo( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
+            assertThat( accession.getAccession() ).isEqualTo( DATASET_ID );
+            assertThat( accession.getAccessionVersion() ).isEqualTo( dv.getDatasetVersionId() );
             assertThat( accession.getUri() ).isEqualTo( "https://cellxgene.cziscience.com/collections/f406a653-c079-4bf9-aab6-85846c27571d" );
             assertThat( accession.getExternalDatabase().getName() ).isEqualTo( "CELLxGENE" );
         } );
@@ -172,15 +182,23 @@ public class CellXGeneConverterTest extends BaseTest5 {
                 CompositeSequence.Factory.newInstance( "ENSG00000215203", platform ),
                 CompositeSequence.Factory.newInstance( "ENSG00000215206", platform ) );
         platform.getCompositeSequences().addAll( designElements );
-        CollectionMetadata cm = fetcher.fetchCollectionMetadata( "f406a653-c079-4bf9-aab6-85846c27571d" );
-        DatasetMetadata dm = fetcher.fetchDatasetMetadata( "e6ef2a07-1b8e-49a8-a771-15b81971eac7" );
-        DatasetVersion dv = new DatasetVersion( "56a4bc14-9407-45fd-8786-f7f6fc87c9dd", "e6ef2a07-1b8e-49a8-a771-15b81971eac7", dm.getName() );
-        Path dataPath = fetcher.downloadDatasetAsset( "e6ef2a07-1b8e-49a8-a771-15b81971eac7", "dfc3b939-8c18-4fce-81f8-2adebb91d3db", FileType.H5AD );
+        CollectionMetadata cm = fetcher.fetchCollectionMetadata( COLLECTION_ID );
+        DatasetVersion dv = fetcher.resolveDataset( COLLECTION_ID, DATASET_ID );
+        DatasetMetadata dm = CellXGeneUtils.getDatasetMetadata( cm, dv );
+        Path dataPath = downloadAnnData( dm );
         AnnDataSingleCellDataLoader dataLoader = new CellXGeneAnnDataSingleCellDataConfigurer( dataPath, singleCellDataTransformationFactory )
                 .configureLoader( SingleCellDataLoaderConfig.builder().build() );
         dataLoader.setDesignElementToGeneMapper( new SimpleDesignElementMapper( designElements ) );
         ExpressionExperiment ee = cellxgeneConverter.convert( cm, dm, dv, platform, designElements, "Clarence-2025", dataLoader, true );
         assertThat( ee.getQuantitationTypes() ).hasSize( 1 );
         assertThat( ee.getSingleCellExpressionDataVectors() ).hasSize( 2 );
+    }
+
+    private Path downloadAnnData( DatasetMetadata dm ) throws IOException {
+        DatasetAsset asset = dm.getDatasetAssets().stream()
+                .filter( CellXGeneUtils::isAnnData )
+                .findFirst()
+                .orElseThrow( () -> new IllegalStateException( "CELLxGENE dataset " + dm.getId() + " has no H5AD asset." ) );
+        return fetcher.downloadDatasetAsset( dm.getId(), asset.getId(), FileType.H5AD );
     }
 }
