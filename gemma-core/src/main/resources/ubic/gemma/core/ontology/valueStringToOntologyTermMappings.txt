@@ -637,7 +637,7 @@ Infiltrating Ductal Carcinoma (IDC)	invasive ductal breast carcinoma	http://purl
 Inguinal adipose tissue	inguinal fat pad	http://purl.obolibrary.org/obo/UBERON_0010410	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 Insulin	insulin	http://purl.obolibrary.org/obo/CHEBI_145810	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
 Intermittent hypoxia	hypoxia	http://www.ebi.ac.uk/efo/EFO_0009444	treatment	http://www.ebi.ac.uk/efo/EFO_0000727
-Interneurons	interneuron	http://purl.obolibrary.org/obo/CL_0000099	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
+Interneurons	interneuron (sensu lato)	http://purl.obolibrary.org/obo/CL_0000099	cell type	http://www.ebi.ac.uk/efo/EFO_0000324
 intestinal	intestine	http://purl.obolibrary.org/obo/UBERON_0000160	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 intestine	intestine	http://purl.obolibrary.org/obo/UBERON_0000160	organism part	http://www.ebi.ac.uk/efo/EFO_0000635
 intrahepatic cholangiocarcinoma	intrahepatic cholangiocarcinoma	http://purl.obolibrary.org/obo/MONDO_0003210	disease	http://www.ebi.ac.uk/efo/EFO_0000408

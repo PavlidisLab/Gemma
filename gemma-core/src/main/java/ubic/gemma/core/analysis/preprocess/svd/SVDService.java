@@ -61,6 +61,19 @@ public interface SVDService {
     SVDResult svd( ExpressionExperiment ee ) throws SVDException;
 
     /**
+     * Compute and update the SVD analysis of the given experiment, computing only the leading components.
+     * <p>
+     * For datasets too large for the full decomposition. The stored PCA then holds {@code numComponents}
+     * eigenvalues and eigenvectors rather than one per sample; the variance fractions remain fractions of the total
+     * variance.
+     *
+     * @param numComponents how many leading components to compute; 0, or at least the number of samples, computes
+     *                      the full decomposition, as {@link #svd(ExpressionExperiment)} does
+     */
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    SVDResult svd( ExpressionExperiment ee, int numComponents ) throws SVDException;
+
+    /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
      *
      * @param ee the experiment

@@ -13,6 +13,9 @@ package ubic.gemma.core.ontology.search;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.file.PathUtils;
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -21,20 +24,23 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.text.Entity;
 import org.apache.jena.query.text.EntityDefinition;
 import org.apache.jena.query.text.TextDatasetFactory;
 import org.apache.jena.query.text.TextIndex;
+import org.apache.jena.query.text.TextQueryFuncs;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.tdb2.TDB2Factory;
+import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.store.FSDirectory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -57,11 +63,17 @@ import java.util.List;
  *
  * <p><b>Lifecycle.</b> Constructed by {@link ubic.gemma.core.ontology.OntologyConfig}
  * given the unified-TDB directory. The Lucene index is stored under
- * {@code <tdbDir>/.text/} alongside the TDB data. The dataset is opened
- * read-write so that future TDB load operations are auto-indexed by
- * jena-text's {@code TextDocProducer} listener; reads use a short
- * {@link ReadWrite#READ} transaction. The dataset is closed when the Spring
- * context shuts down.
+ * {@code <tdbDir>/.text/} alongside the TDB data. The store is TDB1, the
+ * format {@link ubic.gemma.core.ontology.jena.TdbOntologyService} reads and
+ * {@code gemma-cli updateUnifiedOntology} writes. jena-text only indexes what
+ * is written through the text dataset, and the CLI loads straight into TDB, so
+ * the CLI builds the index afterwards with {@link #buildIndex(Path)}; reads use
+ * a short {@link ReadWrite#READ} transaction. The dataset is closed when the
+ * Spring context shuts down.
+ *
+ * <p>A store that cannot be opened disables the service, with an error in the
+ * log, rather than failing the Spring context: one optional search backend
+ * must not take every other endpoint down with it.
  *
  * <p><b>Indexed fields.</b> The {@link EntityDefinition} mirrors the property
  * set baseCode's {@code OntologyIndexer.DEFAULT_INDEXABLE_PROPERTIES} used
@@ -134,25 +146,87 @@ public class JenaTextOntologySearchService implements OntologySearchService {
             }
             return;
         }
+        Dataset baseDataset = null;
+        Dataset opened = null;
         try {
             Files.createDirectories( tdbDir );
             Path indexDir = tdbDir.resolve( ".text" );
             Files.createDirectories( indexDir );
-            Dataset baseDataset = TDB2Factory.connectDataset( tdbDir.toString() );
-            EntityDefinition entityDef = buildEntityDefinition();
+            baseDataset = TDBFactory.createDataset( tdbDir.toString() );
             // FSDirectory is owned by the TextIndex for the life of the
             // service; do not close it eagerly. close() on the dataset cascades.
-            FSDirectory luceneDir = FSDirectory.open( indexDir );
-            TextIndex textIndex = TextDatasetFactory.createLuceneIndex(
-                    luceneDir,
-                    entityDef,
-                    new StandardAnalyzer()
-            );
-            this.textDataset = TextDatasetFactory.create( baseDataset, textIndex, true );
+            opened = TextDatasetFactory.create( baseDataset, createIndex( indexDir ), true );
             log.info( "JenaTextOntologySearchService initialised against TDB=" + tdbDir + ", index=" + indexDir );
-        } catch ( IOException e ) {
-            throw new UncheckedIOException( "Failed to initialise JenaTextOntologySearchService at " + tdbDir, e );
+        } catch ( IOException | RuntimeException e ) {
+            log.error( "JenaTextOntologySearchService: could not open the unified ontology at " + tdbDir
+                    + "; ontology search is disabled. Rebuild it with 'gemma-cli updateUnifiedOntology', or set"
+                    + " gemma.ontology.unified.enabled=false.", e );
+            if ( baseDataset != null ) {
+                TDBFactory.release( baseDataset );
+            }
         }
+        this.textDataset = opened;
+    }
+
+    /**
+     * Build the full-text index for the TDB store at {@code tdbDir}, replacing any index already under
+     * {@code <tdbDir>/.text/}.
+     * <p>
+     * jena-text only indexes triples written through a text dataset. A store loaded directly into TDB, as
+     * {@code updateUnifiedOntology} does, starts with an empty index, and every search against it returns nothing.
+     * The store must not be open elsewhere while this runs.
+     *
+     * @return the number of entries indexed
+     */
+    public static long buildIndex( Path tdbDir ) throws IOException {
+        Path indexDir = tdbDir.resolve( ".text" );
+        if ( Files.exists( indexDir ) ) {
+            PathUtils.deleteDirectory( indexDir );
+        }
+        Files.createDirectories( indexDir );
+        EntityDefinition entityDef = buildEntityDefinition();
+        Dataset ds = TDBFactory.createDataset( tdbDir.toString() );
+        long n = 0;
+        TextIndex textIndex = null;
+        try {
+            textIndex = createIndex( indexDir );
+            for ( String field : entityDef.fields() ) {
+                for ( Node predicate : entityDef.getPredicates( field ) ) {
+                    ExtendedIterator<Triple> it = ds.asDatasetGraph().getDefaultGraph().find( Node.ANY, predicate, Node.ANY );
+                    try {
+                        while ( it.hasNext() ) {
+                            Triple t = it.next();
+                            // entityFromQuad logs a warning for every non-literal value; skip them quietly
+                            if ( !t.getObject().isLiteral() ) {
+                                continue;
+                            }
+                            Entity entity = TextQueryFuncs.entityFromQuad( entityDef, Quad.defaultGraphIRI,
+                                    t.getSubject(), t.getPredicate(), t.getObject() );
+                            if ( entity != null ) {
+                                textIndex.addEntity( entity );
+                                n++;
+                            }
+                        }
+                    } finally {
+                        it.close();
+                    }
+                }
+            }
+            textIndex.commit();
+        } finally {
+            try {
+                if ( textIndex != null ) {
+                    textIndex.close();
+                }
+            } finally {
+                TDBFactory.release( ds );
+            }
+        }
+        return n;
+    }
+
+    private static TextIndex createIndex( Path indexDir ) throws IOException {
+        return TextDatasetFactory.createLuceneIndex( FSDirectory.open( indexDir ), buildEntityDefinition(), new StandardAnalyzer() );
     }
 
     private static EntityDefinition buildEntityDefinition() {

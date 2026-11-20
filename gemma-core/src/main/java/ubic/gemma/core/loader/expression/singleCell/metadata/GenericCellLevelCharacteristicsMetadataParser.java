@@ -23,8 +23,10 @@ import java.util.List;
  *     <li>category_id</li>
  *     <li>value</li>
  *     <li>value_uri</li>
+ *     <li>name (optional)</li>
  * </ul>
- * Characteristics are grouped by category ID which falls back to category URI or category if missing.
+ * Characteristics are grouped by category ID which falls back to category URI or category if missing. When no names
+ * are passed to the parser, each group is named after its {@code name} column.
  * @author poirigui
  */
 class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCharacteristicsMetadataParser<CellLevelCharacteristics> {
@@ -51,6 +53,12 @@ class GenericCellLevelCharacteristicsMetadataParser extends AbstractCellLevelCha
             categoryId = category;
         }
         return categoryId;
+    }
+
+    @Nullable
+    @Override
+    protected String getName( CSVRecord record ) {
+        return record.isMapped( "name" ) ? StringUtils.stripToNull( record.get( "name" ) ) : null;
     }
 
     @Override

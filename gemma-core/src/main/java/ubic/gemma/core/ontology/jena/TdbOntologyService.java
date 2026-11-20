@@ -2,7 +2,10 @@ package ubic.gemma.core.ontology.jena;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.tdb.TDBLoader;
 import org.apache.jena.tdb.base.file.Location;
+import org.apache.jena.tdb.base.file.LocationLock;
+import org.apache.jena.tdb.sys.TDBInternal;
 import org.apache.commons.io.file.PathUtils;
 import ubic.gemma.core.ontology.model.OntologyModel;
 
@@ -11,15 +14,41 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * An implementation based on Jena TDB.
+ * <p>
+ * The store is TDB1 ({@code org.apache.jena.tdb}), not TDB2. The model is read from request threads and the
+ * ontology loader thread with no transaction open, which TDB1 allows and TDB2 refuses with "Not in a transaction".
+ * {@link #createDataset(Path, List)} and {@link ubic.gemma.core.ontology.search.JenaTextOntologySearchService} open the
+ * same directory and must stay on the same TDB version.
  * @author poirigui
  */
 public class TdbOntologyService extends AbstractOntologyService {
+
+    /**
+     * Name of the lock file TDB1 keeps in a store directory. It records the PID of its owner, so it must not be copied
+     * into the read-only copy.
+     */
+    private static final String TDB_LOCK_FILE = "tdb.lock";
+
+    /**
+     * Load OWL/RDF files into a new TDB1 store at the given directory.
+     * <p>
+     * This is the format {@link TdbOntologyService} reads.
+     */
+    public static void createDataset( Path tdbDir, List<Path> sourceFiles ) {
+        Dataset ds = TDBFactory.createDataset( Location.create( tdbDir.toString() ) );
+        try {
+            TDBLoader.load( TDBInternal.getDatasetGraphTDB( ds ), sourceFiles.stream().map( Path::toString ).collect( Collectors.toList() ) );
+        } finally {
+            TDBFactory.release( ds );
+        }
+    }
 
     private final Path tdbDir;
     private final String modelName;
@@ -31,7 +60,11 @@ public class TdbOntologyService extends AbstractOntologyService {
     @Nullable
     private Path tempDir;
 
-    private boolean deleteTempDir = false;
+    /**
+     * Directory holding the read-only copy, created by this service and removed on {@link #close()}.
+     */
+    @Nullable
+    private Path copyDir;
 
     /**
      * @param readOnly open the TDB database in read-only mode, allowing multiple JVMs to share a common TDB. For this
@@ -50,35 +83,42 @@ public class TdbOntologyService extends AbstractOntologyService {
         if ( dataset == null ) {
             if ( readOnly ) {
                 // lock the location and make a copy
-                Location loc = Location.create( tdbDir.toString() );
-                loc.getLock().obtain();
+                LocationLock lock = Location.create( tdbDir.toString() ).getLock();
+                // Another dataset in this JVM (the ontology search service) may already hold the lock. Releasing
+                // it here would delete that dataset's lock file, so only release a lock this method took.
+                boolean alreadyOwned = lock.isOwned();
+                if ( !alreadyOwned ) {
+                    lock.obtain();
+                }
                 try {
-                    Set<Path> filesToLink;
-                    try ( Stream<Path> z = Files.list( tdbDir ) ) {
-                        filesToLink = z.collect( Collectors.toSet() );
-                    }
+                    // A fresh directory on every load: copying into a directory left over from an earlier run
+                    // fails with FileAlreadyExistsException on the first file.
                     if ( tempDir == null ) {
-                        log.info( "Creating temporary directory for read-only TDB model." );
-                        tempDir = Files.createTempDirectory( getOntologyName() + ".tdb" );
-                        deleteTempDir = true;
-                    } else if ( !Files.exists( tempDir ) ) {
-                        log.info( "Creating temporary directory at {} for read-only TDB model.", tempDir );
-                        Files.createDirectories( tempDir );
-                        deleteTempDir = true;
+                        copyDir = Files.createTempDirectory( getOntologyName() + ".tdb" );
                     } else {
-                        log.info( "Reusing existing temporary directory at {} for read-only TDB model. Note that the directory will not be removed.", tempDir );
-                        // never delete a temporary directory that wasn't created by this service (I've learned this the hard way!)
-                        deleteTempDir = false;
+                        Files.createDirectories( tempDir );
+                        copyDir = Files.createTempDirectory( tempDir, "tdb" );
                     }
-                    for ( Path p : filesToLink ) {
-                        Files.copy( p, tempDir.resolve( p.getFileName() ) );
+                    log.info( "Copying TDB model from {} to {} for read-only access.", tdbDir, copyDir );
+                    // TDB1 keeps a store in regular files; subdirectories (the search index under .text) are not
+                    // part of it.
+                    Set<Path> filesToCopy;
+                    try ( Stream<Path> z = Files.list( tdbDir ) ) {
+                        filesToCopy = z
+                                .filter( Files::isRegularFile )
+                                .filter( p -> !p.getFileName().toString().equals( TDB_LOCK_FILE ) )
+                                .collect( Collectors.toSet() );
+                    }
+                    for ( Path p : filesToCopy ) {
+                        Files.copy( p, copyDir.resolve( p.getFileName() ) );
                     }
                 } finally {
-                    loc.getLock().release();
+                    if ( !alreadyOwned ) {
+                        lock.release();
+                    }
                 }
-                log.info( "Reading read-only TDB model from {}.", tempDir );
-                assert tempDir != null;
-                dataset = TDBFactory.createDataset( tempDir.toString() );
+                log.info( "Reading read-only TDB model from {}.", copyDir );
+                dataset = TDBFactory.createDataset( copyDir.toString() );
             } else {
                 dataset = TDBFactory.createDataset( tdbDir.toString() );
             }
@@ -92,10 +132,10 @@ public class TdbOntologyService extends AbstractOntologyService {
     }
 
     /**
-     * Set the temporary directory used when opening the TDB in read-only mode.
+     * Set the directory under which the read-only copy of the TDB is made.
      * <p>
-     * This can only be set once, before the first model is loaded. Note that the directory will be removed when the
-     * service is closed.
+     * This can only be set once, before the first model is loaded. The copy goes in a new subdirectory, which is
+     * removed when the service is closed; the directory itself and anything else in it are left alone.
      */
     public void setTempDir( Path tempDir ) {
         if ( this.tempDir != null ) {
@@ -112,8 +152,8 @@ public class TdbOntologyService extends AbstractOntologyService {
             if ( dataset != null ) {
                 TDBFactory.release( dataset );
             }
-            if ( tempDir != null && deleteTempDir ) {
-                PathUtils.delete( tempDir );
+            if ( copyDir != null ) {
+                PathUtils.deleteDirectory( copyDir );
             }
         }
     }

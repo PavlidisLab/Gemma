@@ -19,7 +19,10 @@
 
 package ubic.gemma.apps;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.svd.SVDException;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
@@ -31,8 +34,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
+    private static final String COMPONENTS_OPTION = "k";
+
     @Autowired
     private SVDService svdService;
+
+    /**
+     * Leading components to compute; 0 computes the full decomposition.
+     */
+    private int numComponents = 0;
 
     @Override
     public String getCommandName() {
@@ -47,6 +57,24 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void buildExperimentOptions( Options options ) {
         super.addForceOption( options );
+        options.addOption( Option.builder( COMPONENTS_OPTION ).longOpt( "components" )
+                .hasArg().type( Number.class )
+                .desc( "Compute only this many leading components instead of the full decomposition, for datasets "
+                        + "too large for it (e.g. single-cell pseudo-bulks with thousands of samples); they match "
+                        + "the full decomposition to rounding. PCA consumers read the first 5. The stored PCA then has "
+                        + "this many eigenvalues rather than one per sample, and the computation has no time limit. "
+                        + "By default the full decomposition is computed." )
+                .get() );
+    }
+
+    @Override
+    protected void processExperimentOptions( CommandLine commandLine ) throws ParseException {
+        if ( commandLine.hasOption( COMPONENTS_OPTION ) ) {
+            this.numComponents = ( ( Number ) commandLine.getParsedOptionValue( COMPONENTS_OPTION ) ).intValue();
+            if ( this.numComponents < 1 ) {
+                throw new ParseException( "-" + COMPONENTS_OPTION + " must be at least 1." );
+            }
+        }
     }
 
     @Override
@@ -56,7 +84,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
             return;
         }
         log.info( "Processing: " + ee );
-        svdService.svd( ee );
-        addSuccessObject( ee, "Performed SVD." );
+        svdService.svd( ee, numComponents );
+        addSuccessObject( ee, numComponents > 0 ? "Performed SVD, top " + numComponents + " components." : "Performed SVD." );
     }
 }

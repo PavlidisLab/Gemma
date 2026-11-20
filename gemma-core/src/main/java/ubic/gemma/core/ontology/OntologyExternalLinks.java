@@ -92,7 +92,8 @@ public class OntologyExternalLinks {
         if ( prefix != null && pattern != null ) {
             return MessageFormat.format( pattern,
                     urlEncode( resource.getUri() ),
-                    urlEncode( resource.getLocalName() ),
+                    // a term built from just a URI and a label (e.g. a factor's category) has no local name
+                    urlEncode( resource.getLocalName() != null ? resource.getLocalName() : localNameFromUri( resource.getUri() ) ),
                     // do not URL-encode since the string is already a valid URI
                     resource.getUri().substring( prefix.length() ),
                     urlEncode( getOboId( resource ) ) );
@@ -100,6 +101,14 @@ public class OntologyExternalLinks {
             log.warn( "Unsupported ontology prefix for resource: " + resource.getUri() + ", will simply replace http:// with https://" );
             return resource.getUri().replaceFirst( "^http://", "https://" );
         }
+    }
+
+    /**
+     * Everything after the last {@code /} or {@code #} of the URI.
+     */
+    private static String localNameFromUri( String uri ) {
+        int i = Math.max( uri.lastIndexOf( '/' ), uri.lastIndexOf( '#' ) );
+        return i >= 0 && i + 1 < uri.length() ? uri.substring( i + 1 ) : uri;
     }
 
     @Nullable

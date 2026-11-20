@@ -158,9 +158,9 @@ public class PreprocessorHelperServiceImpl implements PreprocessorHelperService 
 
     @Override
     @AuditedOnError(FailedPCAAnalysisEvent.class)
-    public void processForPca( ExpressionExperiment ee ) throws SVDRelatedPreprocessingException {
+    public void processForPca( ExpressionExperiment ee, int numComponents ) throws SVDRelatedPreprocessingException {
         try {
-            svdService.svd( ee );
+            svdService.svd( ee, numComponents );
         } catch ( SVDException e ) {
             throw new SVDRelatedPreprocessingException( ee, e );
         }

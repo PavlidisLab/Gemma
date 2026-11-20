@@ -1,11 +1,5 @@
 package ubic.gemma.apps;
 
-import org.apache.jena.query.Dataset;
-import org.apache.jena.tdb.TDBFactory;
-import org.apache.jena.tdb.TDBLoader;
-import org.apache.jena.tdb.base.file.Location;
-import org.apache.jena.tdb.store.DatasetGraphTDB;
-import org.apache.jena.tdb.sys.TDBInternal;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -21,6 +15,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import ubic.gemma.core.ontology.jena.TdbOntologyService;
 import ubic.gemma.core.ontology.providers.OntologyService;
+import ubic.gemma.core.ontology.search.JenaTextOntologySearchService;
 import ubic.gemma.cli.util.AbstractCLI;
 import ubic.gemma.cli.util.ConsoleProgressReporterFactory;
 import ubic.gemma.core.loader.util.ftp.FTPClientFactory;
@@ -179,6 +174,7 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
         }
         try {
             createTdbDataset( newDir, downloadedFiles );
+            buildTextIndex( newDir );
             // FIXME: Jena cannot open a TDB directory in read-only mode, so we can't really use this right now.
             // removeWritePermissions( newDir );
             // make sure it works
@@ -198,23 +194,18 @@ public class UnifiedOntologyUpdaterCli extends AbstractCLI {
     }
 
     private void createTdbDataset( Path newDir, List<Path> downloadedFiles ) {
-        Location loc = Location.create( newDir.toString() );
-        // Jena 4.10 port (Phase 3 ontology Step 1): the Jena 2.13 API
-        //   TDBMaker.createDatasetGraphTDB(loc, StoreParams.getDftStoreParams())
-        //   TDBLoader.load(dsg, fileList, showProgress)
-        //   TDBMaker.releaseLocation(loc)
-        // no longer exists (TDBMaker.releaseLocation became package-private).
-        // Equivalent 4.x sequence: TDBFactory.createDataset(loc) ->
-        // TDBInternal.getDatasetGraphTDB(ds) -> TDBLoader.load(dsg, list) ->
-        // TDBFactory.release(ds). Progress is logged via Jena's own logger.
-        Dataset ds = TDBFactory.createDataset( loc );
-        try {
-            log.info( "Creating TDB dataset at " + newDir + "..." );
-            DatasetGraphTDB dataset = TDBInternal.getDatasetGraphTDB( ds );
-            TDBLoader.load( dataset, downloadedFiles.stream().map( Path::toString ).collect( Collectors.toList() ) );
-        } finally {
-            TDBFactory.release( ds );
-        }
+        log.info( "Creating TDB dataset at " + newDir + "..." );
+        TdbOntologyService.createDataset( newDir, downloadedFiles );
+    }
+
+    /**
+     * The search service reads this index; loading straight into TDB leaves it empty.
+     */
+    private void buildTextIndex( Path newDir ) throws IOException {
+        log.info( "Building the full-text index for " + newDir + "..." );
+        StopWatch timer = StopWatch.createStarted();
+        long n = JenaTextOntologySearchService.buildIndex( newDir );
+        log.info( String.format( "Indexed %d entries in %d ms.", n, timer.getTime() ) );
     }
 
     private void verifyTdbDataset( Path newDir ) {

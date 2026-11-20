@@ -261,7 +261,7 @@ public class FactorValueOntologyServiceImpl implements FactorValueOntologyServic
         }
 
         if ( ee != null ) {
-            Individual dataset = createIndividual( ontModel, entityUrlBuilder.fromHostUrl().entity( ee ).web().toUriString(), TGFVO.Dataset.getURI(), ee.getShortName(), null );
+            Individual dataset = createIndividual( ontModel, entityUrlBuilder.fromHostUrl().entity( ee ).ui().toString(), TGFVO.Dataset.getURI(), ee.getShortName(), null );
             dataset.addComment( ee.getName(), null );
             fvI.addProperty( TGFVO.belongsTo, dataset );
         } else {
