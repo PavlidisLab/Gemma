@@ -34,6 +34,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.pipeline.BatchRollup;
 import ubic.gemma.model.pipeline.PipelineJobBatch;
+import ubic.gemma.model.pipeline.PipelineJobBatchValueObject;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.pipeline.PipelineJobBatchService;
 import ubic.gemma.persistence.service.pipeline.RetrySpec;
@@ -272,8 +273,11 @@ public class AdminPipelineWebServiceRetryTest extends BaseJerseyTest5 {
     public void submit_passesMaxConcurrentThrough() {
         when( userManager.getCurrentUser() ).thenReturn( mock( User.class ) );
         when( expressionExperimentService.load( anyCollection() ) ).thenReturn( List.of( mock( ExpressionExperiment.class ) ) );
+        PipelineJobBatch batch = new PipelineJobBatch();
         when( pipelineJobBatchService.submit( eq( "test-pipeline" ), any(), any(), any(), any(), eq( 4 ) ) )
-                .thenReturn( new PipelineJobBatch() );
+                .thenReturn( batch );
+        // the endpoint answers with the batch re-read as a value object, not the entity submit() returns
+        when( pipelineJobBatchService.loadValueObject( any() ) ).thenReturn( PipelineJobBatchValueObject.from( batch ) );
         assertThat( target( "/admin/pipeline/batches" ).request()
                 .post( Entity.json( "{\"pipeline\":\"test-pipeline\",\"experimentIds\":[1],\"maxConcurrent\":4}" ) ) )
                 .hasStatus( Response.Status.OK );
