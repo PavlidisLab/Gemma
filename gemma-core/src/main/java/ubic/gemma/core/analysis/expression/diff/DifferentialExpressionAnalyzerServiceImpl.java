@@ -427,6 +427,24 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     }
 
     /**
+     * The experimental factors of the design an analysis belongs to, thawed. A subset analysis has no design of its
+     * own; its factors live on the source experiment.
+     */
+    private Collection<ExperimentalFactor> designFactorsOf( DifferentialExpressionAnalysis dea ) {
+        BioAssaySet analyzed = ( BioAssaySet ) Hibernate.unproxy( dea.getExperimentAnalyzed() );
+        ExpressionExperiment designOwner = analyzed instanceof ExpressionExperimentSubSet
+                ? ( ( ExpressionExperimentSubSet ) analyzed ).getSourceExperiment()
+                : analyzed instanceof ExpressionExperiment ? ( ExpressionExperiment ) analyzed : null;
+        if ( designOwner == null ) {
+            return Collections.emptySet();
+        }
+        designOwner = expressionExperimentService.thawLite( designOwner );
+        return designOwner.getExperimentalDesign() != null
+                ? designOwner.getExperimentalDesign().getExperimentalFactors()
+                : Collections.<ExperimentalFactor>emptySet();
+    }
+
+    /**
      * Extend a base configuration with the factors and interactions from the given differential expression analysis.
      */
     private DifferentialExpressionAnalysisConfig extendConfig( DifferentialExpressionAnalysisConfig baseConfig,
@@ -471,15 +489,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
          * experiment the analysis belongs to; nothing matching is left out of the redo rather than guessed.
          */
         if ( dea.getProtocol() != null && dea.getProtocol().getDescription() != null ) {
-            // A subset analysis has no design of its own; its factors live on the source experiment.
-            BioAssaySet analyzed = ( BioAssaySet ) Hibernate.unproxy( dea.getExperimentAnalyzed() );
-            ExpressionExperiment designOwner = analyzed instanceof ExpressionExperimentSubSet
-                    ? ( ( ExpressionExperimentSubSet ) analyzed ).getSourceExperiment()
-                    : analyzed instanceof ExpressionExperiment ? ( ExpressionExperiment ) analyzed : null;
-            Collection<ExperimentalFactor> designFactors = designOwner != null && designOwner.getExperimentalDesign() != null
-                    ? designOwner.getExperimentalDesign().getExperimentalFactors()
-                    : Collections.<ExperimentalFactor>emptySet();
             Collection<ExperimentalFactor> blockingFromOldExp = new HashSet<>();
+            Collection<ExperimentalFactor> designFactors = null;
             for ( String line : dea.getProtocol().getDescription().split( "\n" ) ) {
                 if ( line.equals( ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE ) ) {
                     config.setEstimateBlockingCorrelation( true );
@@ -487,6 +498,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 }
                 if ( !line.startsWith( BLOCKING_FACTORS_PROTOCOL_PREFIX ) ) {
                     continue;
+                }
+                if ( designFactors == null ) {
+                    // Only a paired analysis gets here. The design is read lazily and this method runs with no
+                    // session, so the experiment is thawed rather than navigated: reading it unconditionally broke
+                    // every redo, paired or not, with a LazyInitializationException.
+                    designFactors = designFactorsOf( dea );
                 }
                 // Factors are matched whole against the ", "-joined list rather than by splitting it, so a factor
                 // name containing ", " cannot be cut in two.

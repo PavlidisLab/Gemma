@@ -11,6 +11,7 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -79,6 +80,12 @@ public class DifferentialExpressionAnalyzerServiceRedoTest {
 
     @InjectMocks
     private DifferentialExpressionAnalyzerServiceImpl analyzerService;
+
+    @BeforeEach
+    public void thawLiteReturnsItsArgument() {
+        // the real one initializes the design; these fixtures are already initialized
+        when( expressionExperimentService.thawLite( any( ExpressionExperiment.class ) ) ).then( returnsFirstArg() );
+    }
 
     @Test
     public void testRedoingAWiderAnalysisDoesNotDeleteANarrowerOne() {
@@ -185,6 +192,26 @@ public class DifferentialExpressionAnalyzerServiceRedoTest {
         assertThat( config.getBlockingFactors() ).isEmpty();
         assertThat( config.isEstimateBlockingCorrelation() ).isFalse();
         assertThat( config.getFactorsToInclude() ).containsExactly( treatment );
+    }
+
+    /**
+     * 🛑 A redo that has no blocking factors to recover must not read the experiment's design at all. The recovery
+     * navigated the design unconditionally, and extendConfig runs with no session, so every redo -- paired or not --
+     * failed with a LazyInitializationException. The mock cannot reproduce a lazy proxy, so the assertion is that
+     * the design is never touched.
+     */
+    @Test
+    public void redoWithNoBlockingFactorsDoesNotReadTheDesign() {
+        ExperimentalFactor treatment = factor( 2L, "treatment" );
+        ExpressionExperiment ee = experimentWith( treatment );
+        // stands in for the uninitialized proxy a session-less caller is handed
+        ExperimentalDesign lazy = org.mockito.Mockito.mock( ExperimentalDesign.class );
+        when( lazy.getExperimentalFactors() ).thenThrow( new org.hibernate.LazyInitializationException( "no session" ) );
+        ee.setExperimentalDesign( lazy );
+        DifferentialExpressionAnalysis old = withProtocol( analysis( 200L, ee, Collections.singletonList( treatment ) ),
+                "# Factors: " + treatment + "\n# No interactions defined.\n" );
+
+        assertThat( extend( old ).getFactorsToInclude() ).containsExactly( treatment );
     }
 
     /**
