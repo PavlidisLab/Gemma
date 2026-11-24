@@ -36,6 +36,13 @@ public class DiffExAnalyzerUtils {
      */
     public static final String ESTIMATE_BLOCKING_CORRELATION_PROTOCOL_LINE = "# Blocking correlation estimated (mixed model)";
 
+    /**
+     * Written when an analysis has interactions. Tells a reader whether a main effect in it is the equal-weighted
+     * mean over the other factor's levels or the effect at the other factor's baseline.
+     */
+    public static final String CENTRED_INTERACTIONS_PROTOCOL_LINE = "# Interaction columns centred: each main effect is the equal-weighted mean of its effect over the other factor's levels";
+    public static final String UNCENTRED_INTERACTIONS_PROTOCOL_LINE = "# Interaction columns not centred: each main effect is its effect at the other factor's baseline level";
+
     public static final String BIO_MATERIAL_RNAME_PREFIX = "biomat_";
     public static final String FACTOR_RNAME_PREFIX = "fact.";
     public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
@@ -473,6 +480,8 @@ public class DiffExAnalyzerUtils {
                     .map( DiffExAnalyzerUtils::formatInteraction )
                     .collect( Collectors.joining( ", " ) ) );
             writer.append( "\n" );
+            writer.append( config.isCenterInteractions() ? CENTRED_INTERACTIONS_PROTOCOL_LINE : UNCENTRED_INTERACTIONS_PROTOCOL_LINE )
+                    .append( "\n" );
         } else {
             writer.append( "# No interactions defined.\n" );
         }
