@@ -1494,6 +1494,8 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
          * Determine the factors and interactions to include.
          */
         DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
+        // before addInteraction, which reads it
+        properDesignMatrix.setCenterInteractions( config.isCenterInteractions() );
 
         if ( !( interactionFactorLists == null ) && !interactionFactorLists.isEmpty() ) {
             for ( String[] in : interactionFactorLists ) {

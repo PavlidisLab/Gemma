@@ -75,6 +75,15 @@ public class DifferentialExpressionAnalysisConfig {
      */
     private final Map<ExperimentalFactor, ContrastCoding> contrastCoding = new HashMap<>();
 
+    /**
+     * Whether the interaction column is built from centred factor columns, so that each main effect in an
+     * interaction model is the equal-weighted mean of its effect over the other factor's levels rather than its
+     * effect at the other factor's baseline. On by default.
+     *
+     * @see ubic.gemma.core.util.math.linearmodels.DesignMatrix#setCenterInteractions(boolean)
+     */
+    private boolean centerInteractions = true;
+
     private final Set<Set<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
 
     /**
@@ -211,6 +220,7 @@ public class DifferentialExpressionAnalysisConfig {
         this.blockingFactors.addAll( baseConfig.getBlockingFactors() );
         this.estimateBlockingCorrelation = baseConfig.isEstimateBlockingCorrelation();
         this.interactionsToInclude.addAll( baseConfig.getInteractionsToInclude() );
+        this.centerInteractions = baseConfig.isCenterInteractions();
         this.persist = baseConfig.isPersist();
         this.deleteOtherAnalyses = baseConfig.isDeleteOtherAnalyses();
         this.subsetFactor = baseConfig.getSubsetFactor();
@@ -245,6 +255,14 @@ public class DifferentialExpressionAnalysisConfig {
      */
     public ContrastCoding getContrastCoding( ExperimentalFactor factor ) {
         return this.contrastCoding.getOrDefault( factor, ContrastCoding.TREATMENT );
+    }
+
+    public boolean isCenterInteractions() {
+        return centerInteractions;
+    }
+
+    public void setCenterInteractions( boolean centerInteractions ) {
+        this.centerInteractions = centerInteractions;
     }
 
     public void addFactorsToInclude( Collection<ExperimentalFactor> factors ) {

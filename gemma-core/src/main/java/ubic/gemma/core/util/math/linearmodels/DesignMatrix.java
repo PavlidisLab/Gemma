@@ -67,6 +67,18 @@ public class DesignMatrix {
     private final Set<String[]> interactions = new LinkedHashSet<>();
 
     /**
+     * Whether an interaction column is built from centred factor columns. Off, the interaction column is the
+     * product of two 0/1 columns and each main effect is that factor's effect at the other factor's baseline.
+     * On, each treatment-coded factor's column has {@code 1/levels} subtracted before the product, which spans the
+     * same model (the subtracted terms are main-effect columns and the intercept) but makes each main effect the
+     * equal-weighted mean of its effect over the other factor's levels. The interaction coefficient, the
+     * residuals and every overall p-value are unchanged.
+     *
+     * @see #setCenterInteractions(boolean)
+     */
+    private boolean centerInteractions = false;
+
+    /**
      * 
      * @return a collection of String arrays. If empty, there are no interactions. Each array represents an interaction
      *         in the model. The elements of the array are the terms included in the interaction, as Strings provided when calling addInteraction.
@@ -292,6 +304,18 @@ public class DesignMatrix {
                             continue;
                         }
 
+                        if ( centerInteractions ) {
+                            /*
+                             * After the estimability and redundancy checks, which look at the raw product: a
+                             * centred product is non-zero almost everywhere and would pass them all.
+                             */
+                            double c1 = centreForInteraction( t1 );
+                            double c2 = centreForInteraction( t2 );
+                            for ( int k = 0; k < col1i.length; k++ ) {
+                                matrix.set( k, this.matrix.columns() - 1, ( col1i[k] - c1 ) * ( col2i[k] - c2 ) );
+                            }
+                        }
+
                         usedInteractionTerms.add( t1 );
                         usedInteractionTerms.add( t2 );
 
@@ -310,6 +334,34 @@ public class DesignMatrix {
             this.interactions.add( usedInteractionTerms.toArray( new String[] {} ) );
         }
 
+    }
+
+    /**
+     * The amount subtracted from one of a factor's columns before it enters a centred interaction product: the
+     * equal-weight mean of the 0/1 indicator over the factor's levels. Zero for a factor with no levels (a
+     * continuous covariate) and for a sum-coded one, whose columns already average to zero over the levels.
+     */
+    private double centreForInteraction( String factorName ) {
+        List<String> levels = levelsForFactors.get( factorName );
+        if ( levels == null || levels.isEmpty() || getContrastCoding( factorName ) != ContrastCoding.TREATMENT ) {
+            return 0.0;
+        }
+        return 1.0 / levels.size();
+    }
+
+    /**
+     * Choose whether interaction columns are centred, and rebuild the design. See {@link #centerInteractions}.
+     */
+    public void setCenterInteractions( boolean center ) {
+        if ( center == this.centerInteractions ) {
+            return;
+        }
+        this.centerInteractions = center;
+        this.rebuild();
+    }
+
+    public boolean isCenterInteractions() {
+        return centerInteractions;
     }
 
     /**
