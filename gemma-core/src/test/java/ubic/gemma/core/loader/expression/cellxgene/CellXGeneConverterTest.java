@@ -52,6 +52,7 @@ import static ubic.gemma.core.util.test.Assumptions.assumeThatFreeMemoryIsGreate
 // Entrez as well. @NetworkAvailable does not hold it back — it skips only when the host
 // is unreachable.
 @Tag("slow")
+@Tag("network")
 @ExtendWith(NetworkAvailableExtension.class)
 @NetworkAvailable(url = "https://api.cellxgene.cziscience.com")
 public class CellXGeneConverterTest extends BaseTest5 {

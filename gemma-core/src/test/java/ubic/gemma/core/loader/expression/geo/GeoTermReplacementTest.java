@@ -47,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @Slf4j
 @Tag("slow")
+@Tag("network")
 @NetworkAvailable(url = "http://purl.obolibrary.org/")
 @ExtendWith(NetworkAvailableExtension.class)
 public class GeoTermReplacementTest {
