@@ -69,6 +69,46 @@ public class CenteredInteractionTest {
         assertThat( rows.get( rows.getRowIndexByName( "sexfemale" ), 0 ) ).isEqualTo( 1.25, offset( 1e-9 ) );
     }
 
+    /**
+     * 🛑 The interaction's contrasts are found whichever order its factors were named in. The term was named from
+     * the order given and its columns from the sorted order, so a term built from a HashSet iteration could match
+     * no column: the interaction kept its p-value and lost every contrast, silently. A redo hit it because it
+     * rebuilds the interaction from the old result sets' factors.
+     */
+    @Test
+    public void interactionContrastsAreFoundWhateverOrderTheFactorsWereNamedIn() {
+        // names as the analyzer writes them: fact.<id> for a factor, fv_<id> for a level
+        for ( boolean center : new boolean[] { false, true } ) {
+            for ( String[] order : new String[][] { { "fact.1", "fact.2" }, { "fact.2", "fact.1" } } ) {
+                ObjectMatrix<String, String, Object> design = new ObjectMatrixImpl<>( 30, 2 );
+                design.setColumnNames( java.util.Arrays.asList( "fact.1", "fact.2" ) );
+                List<String> rowNames = new ArrayList<>();
+                int[] cells = { 10, 3, 5, 12 };
+                int row = 0;
+                for ( int cell = 0; cell < 4; cell++ ) {
+                    for ( int i = 0; i < cells[cell]; i++, row++ ) {
+                        rowNames.add( "s" + row );
+                        design.set( row, 0, cell % 2 == 0 ? "fv_10" : "fv_11" );
+                        design.set( row, 1, cell < 2 ? "fv_20" : "fv_21" );
+                    }
+                }
+                design.setRowNames( rowNames );
+                DesignMatrix dm = new DesignMatrix( design, true );
+                dm.setCenterInteractions( center );
+                dm.addInteraction( order[0], order[1] );
+                dm.setBaseline( "fact.1", "fv_10" );
+                dm.setBaseline( "fact.2", "fv_20" );
+
+                LinearModelSummary s = new LeastSquaresFit( dm, response() ).summarize().get( 0 );
+                String interactionTerm = s.getFactorNames().stream().filter( n -> n.contains( ":" ) ).findFirst()
+                        .orElseThrow( () -> new AssertionError( "no interaction term in " + s.getFactorNames() ) );
+                assertThat( s.getContrastPValues( interactionTerm ) )
+                        .as( "centred=%s, given as %s:%s", center, order[0], order[1] )
+                        .isNotEmpty();
+            }
+        }
+    }
+
     /** Off, the design is the one every earlier analysis used. */
     @Test
     public void offIsTheOldProductOfIndicators() {
@@ -105,6 +145,10 @@ public class CenteredInteractionTest {
     }
 
     private static DesignMatrix design( boolean center ) {
+        return design( center, "disease", "sex" );
+    }
+
+    private static DesignMatrix design( boolean center, String first, String second ) {
         List<String> disease = new ArrayList<>();
         List<String> sex = new ArrayList<>();
         addCell( disease, sex, "control", "male", 10 );
@@ -123,7 +167,7 @@ public class CenteredInteractionTest {
 
         DesignMatrix dm = new DesignMatrix( design, true );
         dm.setCenterInteractions( center );
-        dm.addInteraction( "disease", "sex" );
+        dm.addInteraction( first, second );
         dm.setBaseline( "disease", "control" );
         dm.setBaseline( "sex", "male" );
         return dm;

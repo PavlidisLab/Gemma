@@ -243,9 +243,11 @@ public class DesignMatrix {
         // the column where the interaction "goes"
         int interactionIndex = terms.size();
 
+        // sorted before the term is named: the columns are named from the sorted order, and a term name from any
+        // other order never matches them when contrasts are collected
+        Arrays.sort( interactionTerms );
         String termName = StringUtils.join( interactionTerms, ":" );
         Set<String> usedInteractionTerms = new HashSet<>();
-        Arrays.sort( interactionTerms );
         for ( String t1 : interactionTerms ) {
 
             if ( doneTerms.contains( t1 ) ) continue;
