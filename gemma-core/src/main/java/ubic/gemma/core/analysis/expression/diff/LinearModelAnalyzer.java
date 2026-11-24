@@ -704,6 +704,10 @@ public class LinearModelAnalyzer implements DiffExAnalyzer {
                 for ( ExperimentalFactor factor : interactionTerms ) {
                     interactionFactorNames.add( DiffExAnalyzerUtils.nameForR( factor ) );
                 }
+                // The design matrix names the interaction's columns from its factors in sorted order. A term label
+                // in any other order matches none of them, and the interaction then has a p-value and no contrasts.
+                // The order here came from a HashSet, so a redo could land on either.
+                Collections.sort( interactionFactorNames );
 
                 interactionFactorLists.add( interactionFactorNames.toArray( new String[] {} ) );
 
